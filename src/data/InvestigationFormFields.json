@@ -82,55 +82,53 @@
             ]
         },
         {
-            "id": "InvestigationInformation",
-            "label": "Investigation Information",
-            "prompt": "Please provide the basic information of your Plant Phenotyping Project and when you submitted and published the Dataset.",
+            "id": "publicationInformation",
+            "label": "Publication Information",
+            "prompt": "Investigation - Please provide any publications relating to your experiment.",
+            "type": "publication"
+        },
+        {
+            "id": "studyInformation",
+            "label": "Study Information",
+            "prompt": "Please provide general information about your study",
             "type": "form",
             "fields": [
                 {
-                    "id": "InvestigationIdentifier",
-                    "label": "Investigation Identifier",
+                    "id": "studyIdentifier",
+                    "label": "Study Identifier",
                     "type": "text",
                     "placeholder": "EBI:12345678",
-                    "explanation": "Identifier comprising the unique name of the institution/database hosting the submission of the investigation data, and the accession number of the investigation in that institution.",
-                    "example": "EBI:12345678"
+                    "explanation": "Unique identifier comprising the name or identifier for the institution/database hosting the submission of the study data, and the identifier of the study in that institution.",
+                    "example": "EBI:12345678 \n http://phenome-fppn.fr/maugio/2013/t2351"
                 },
                 {
-                    "id": "InvestigationTitle",
-                    "label": "Investigation Title",
+                    "id": "studyTitle",
+                    "label": "Study Title",
                     "type": "text",
-                    "placeholder": "Investigation Title",
-                    "explanation": "A short title for the investigation.",
-                    "example": "Investigation of Sample X"
+                    "placeholder": "Study Title",
+                    "explanation": "Human-readable text summarising the study",
+                    "example": "2002 evaluation of flowering time for a panel of 375 maize lines at the experimental station of Maugio (France)."
                 },
                 {
-                    "id": "InvestigationDescription",
-                    "label": "Investigation Description",
+                    "id": "studyDescription",
+                    "label": "Study description",
                     "type": "textarea",
-                    "placeholder": "Description of the investigation",
-                    "explanation": "A text summarising the plant phenotyping project in more detail.",
-                    "example": "The migration of maize from tropical to temperate climates was accompanied by a dramatic evolution in flowering time. To gain insight into the genetic architecture of this adaptive trait, we conducted a 50K SNP-based genome-wide association and diversity investigation on a panel of tropical and temperate American and European representatives."
+                    "explanation": "Human-readable text describing the study",
+                    "example": "2002 evaluation of male and female flowering time for a panel of 375 maize lines representing the worldwide genetic diversity at the experimental station of Maugio, France."
                 },
                 {
-                    "id": "SubmissionDate",
-                    "label": "Submission Date",
+                    "id": "studyStartDate",
+                    "label": "Start date of study",
                     "type": "date",
-                    "explanation": "The date when the investigation data was submitted.",
-                    "example": "01-10-2023"
+                    "explanation": "Date and, if relevant, time when the experiment started",
+                    "example": "10-10-2023"
                 },
                 {
-                    "id": "PublicReleaseDate",
-                    "label": "Public Release Date",
+                    "id": "studyEndDate",
+                    "label": "End date of study",
                     "type": "date",
-                    "explanation": "Date when the investigation data will be publicly released.",
-                    "example": "01-10-2023"
-                },
-                {
-                    "id": "PublicReleaseDat2e",
-                    "label": "Public Release Date",
-                    "type": "date",
-                    "explanation": "Date when the investigation data will be publicly released.",
-                    "example": "01-10-2023"
+                    "explanation": "Date and, if relevant, time when the experiment ended",
+                    "example": "10-10-2023"
                 }
             ]
         }
