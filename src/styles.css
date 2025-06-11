@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+.App {
+    background-color: antiquewhite;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Basic Modern Profile */
+.profile-basic {
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #000;
+    transition: all 0.3s ease;
+}
+
+.profile-basic:hover {
+    transform: scale(1.1);
+    border-color: rgba(0, 0, 0, 1.0);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}

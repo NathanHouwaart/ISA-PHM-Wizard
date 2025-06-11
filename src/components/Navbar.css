@@ -1,0 +1,55 @@
+.active{
+    background-color: #1049ab;
+}
+
+nav{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #02060D;
+    top: 0;
+    position: sticky;
+    z-index: 9999;
+}
+
+nav .title {
+    font-size: 1.5em;
+    margin: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+nav .title:hover {
+    transform: scale(1.01);
+    color: #68788C;
+}
+
+nav ul {
+    display: flex;
+    margin-right: 5px;
+}
+
+nav ul li {
+    list-style: none;
+}
+
+nav ul li a {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 0.5rem;
+    margin: 0 0.5rem;
+    transition: all 0.3s ease;
+    border-radius: 1rem;
+}
+
+nav ul li a:hover{
+    transform: scale(1.1);
+}
+
+nav ul li a:not(.active):hover {
+    color: #68788C;
+}
+
