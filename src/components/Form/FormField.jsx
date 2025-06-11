@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 import AnimatedTooltip from '../Tooltip/AnimatedTooltip';
 import Author from '../Author/Author';
+import LicensePicker from './LicensePicker';
 
 function FormField({ 
     label, 
@@ -13,7 +14,8 @@ function FormField({
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
     rows = 3,             // for textarea
-    className = ''
+    className = '',
+    onHeightChange
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
     
@@ -21,8 +23,15 @@ function FormField({
         setShowTooltip(!showTooltip);
     };
 
+    // // NEW: Callback for when the tooltip's transition ends
+    // const handleTooltipTransitionEnd = () => {
+    //     if (onHeightChange) {
+    //         onHeightChange(); 
+    //     }
+    // };
+
     const renderInput = () => {
-        const baseClasses = "flex-1 px-4 ml-6 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white outline-none";
+        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-50 bg-gray-50 focus:bg-white outline-none";
         
         switch (type) {
             case 'textarea':
@@ -58,6 +67,16 @@ function FormField({
                         {/* Options would be passed as a prop */}
                     </select>
                 );
+            case 'license':
+                return (
+                    <LicensePicker 
+                        type="license"
+                        value={value}
+                        onChange={onChange}
+                        required={required}
+                        className={`${baseClasses} relative group ${className}`}
+                    />
+                )
             default:
                 return (
                     <input
@@ -73,14 +92,14 @@ function FormField({
     };
  
     return (
-        <div className="mb-6">
-            <div className="flex items-start"> {/* items-start for textarea alignment */}
+        <div className="space-y-2">
+            <div className="flex items-stretch "> {/* items-start for textarea alignment */}
                 <label className={`text-sm font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
                     {label}
                     {required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 
-                {renderInput()}
+                    {renderInput()}
                
                 <button 
                     type="button"

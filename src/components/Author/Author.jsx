@@ -1,5 +1,7 @@
-import React, { forwardRef, useState, useEffect, useRef } from 'react';
+import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'lucide-react';
+import useResizeObserver from '../../hooks/useResizeObserver';
+import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 // Author Card Component
 const AuthorCard = ({ author, onEdit, onRemove }) => {
@@ -11,7 +13,7 @@ const AuthorCard = ({ author, onEdit, onRemove }) => {
             {author.firstName[0]}{author.lastName[0]}
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{author.name}</h3>
+            <h3 className="text-xl font-semibold text-gray-900">{author.firstName} {author.midInitials} {author.lastName}</h3>
             <p className="text-gray-600">{author.role}</p>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
@@ -435,35 +437,17 @@ const AuthorsPage = forwardRef(({onHeightChange}, ref) => {
 
   const innerRef = useRef(null); // Ref for the actual div we want to measure
 
-  // Combine the forwarded ref with our internal ref
-  // This ensures the parent can still access this div
-  const setRefs = (node) => {
-    innerRef.current = node;
-    if (typeof ref === 'function') {
-      ref(node);
-    } else if (ref) {
-      ref.current = node;
-    }
-  };
 
-  // Use ResizeObserver to detect changes in this component's height
+  // Replaced the manual useRef and useEffect with the custom hook
+  const elementToObserveRef = useResizeObserver(onHeightChange);
+
+  // Combine the forwarded ref with the resize observer's ref
+  const combinedRef = useCombinedRefs(ref, elementToObserveRef);
+
   useEffect(() => {
-    if (!innerRef.current || !onHeightChange) return;
+    console.log(elementToObserveRef)
+  }, [elementToObserveRef]);
 
-    const resizeObserver = new ResizeObserver(entries => {
-      // We only expect one entry since we're observing a single element
-      // for (let entry of entries) {
-      onHeightChange(innerRef.current.offsetHeight);
-      // }
-    });
-    resizeObserver.observe(innerRef.current);
-
-    // Cleanup the observer when the component unmounts
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [onHeightChange]); // Re-run if onHeightChange callback itself changes (though useCallback will prevent this)
-  
 
   const handleAddAuthor = (authorData) => {
     setAuthors([...authors, authorData]);
@@ -490,7 +474,7 @@ const AuthorsPage = forwardRef(({onHeightChange}, ref) => {
   };
 
   return (
-    <div ref={setRefs} className="rounded-md bg-gray-50 p-6">
+    <div ref={combinedRef} className="rounded-md bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

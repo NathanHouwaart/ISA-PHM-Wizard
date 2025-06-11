@@ -16,6 +16,10 @@ const useCarouselNavigation = (totalSteps) => {
     setCurrentPage(Math.min(Math.max(pageIndex, 0), totalSteps - 1));
   }, [totalSteps]);
 
+  const isLastPage = useCallback((pageIndex) => {
+    return totalSteps-1 === pageIndex;
+  }, [totalSteps])
+
   // Calculate the CSS transform value
   const translateXValue = currentPage * -100;
 
@@ -26,6 +30,7 @@ const useCarouselNavigation = (totalSteps) => {
     handleForward,
     handlePrevious,
     goToPage,
+    isLastPage
   };
 };
 

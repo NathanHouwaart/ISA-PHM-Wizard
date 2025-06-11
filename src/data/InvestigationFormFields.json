@@ -2,6 +2,16 @@
 {
     "pages" : [
         {
+            "id": "IntroductionSlide",
+            "type": "introductionPage",
+            "label": "Introduction",
+            "prompt": "Welcome to the ISA-PHM wizard!",
+            "content" : [
+                "With this Wizard it is super easy to annotate measurements of your experiment with ISA-compliant metadata according to FAIR principles.",
+                "Click on the Next button to start the metadata annotation of the results data of your experiments."
+            ]
+        },
+        {
             "id": "InvestigationInformation",
             "label": "Investigation Information",
             "prompt": "Please provide the basic information of your Plant Phenotyping Project and when you submitted and published the Dataset.",
@@ -30,6 +40,14 @@
                     "placeholder": "Description of the investigation",
                     "explanation": "A text summarising the plant phenotyping project in more detail.",
                     "example": "The migration of maize from tropical to temperate climates was accompanied by a dramatic evolution in flowering time. To gain insight into the genetic architecture of this adaptive trait, we conducted a 50K SNP-based genome-wide association and diversity investigation on a panel of tropical and temperate American and European representatives."
+                },
+                {
+                    "id": "LicenceType",
+                    "label": "License",
+                    "type": "license",
+                    "placeholder": "Search for licence of your dataset",
+                    "explanation": "The license that comes with your datasaet",
+                    "example": "MIT"
                 },
                 {
                     "id": "SubmissionDate",
@@ -102,6 +120,13 @@
                 },
                 {
                     "id": "PublicReleaseDate",
+                    "label": "Public Release Date",
+                    "type": "date",
+                    "explanation": "Date when the investigation data will be publicly released.",
+                    "example": "01-10-2023"
+                },
+                {
+                    "id": "PublicReleaseDat2e",
                     "label": "Public Release Date",
                     "type": "date",
                     "explanation": "Date when the investigation data will be publicly released.",
