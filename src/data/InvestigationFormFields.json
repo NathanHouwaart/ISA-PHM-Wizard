@@ -85,7 +85,7 @@
             "id": "publicationInformation",
             "label": "Publication Information",
             "prompt": "Investigation - Please provide any publications relating to your experiment.",
-            "type": "publication"
+            "type": "publications"
         },
         {
             "id": "studyInformation",

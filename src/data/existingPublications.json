@@ -1,0 +1,20 @@
+[
+  {
+    "id": "p1",
+    "title": "Revolutionizing Cancer Treatment with Novel Immunotherapies",
+    "doi": "10.1016/j.cell.2023.01.001",
+    "pubMedId": "36625890",
+    "authorList": [
+        "a1", "a2"
+    ]
+  },
+  {
+    "id": "p2",
+    "title": "Advances in AI for Medical Image Analysis",
+    "doi": "10.1109/TMI.2022.3210987",
+    "pubMedId": "36543210",
+    "authorList": [
+        "a3", "a1"
+    ]
+  }
+]

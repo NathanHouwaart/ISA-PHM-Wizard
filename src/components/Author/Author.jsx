@@ -3,14 +3,17 @@ import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'luci
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
-// Author Card Component
+// Import the existingAuthors.json file directly
+import initialAuthorsData from '../../data/existingAuthors.json'; // Adjust the path as needed
+
+// Author Card Component (No changes needed)
 const AuthorCard = ({ author, onEdit, onRemove }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            {author.firstName[0]}{author.lastName[0]}
+            {author.firstName?.[0]}{author.lastName?.[0]}
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900">{author.firstName} {author.midInitials} {author.lastName}</h3>
@@ -50,7 +53,7 @@ const AuthorCard = ({ author, onEdit, onRemove }) => {
   );
 };
 
-// Author Form Component (for both adding and editing)
+// Author Form Component (No changes needed)
 const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
   const [formData, setFormData] = useState({
     firstName : author?.firstName || '',
@@ -67,18 +70,36 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
     phone: author?.phone || ''
   });
 
+  useEffect(() => {
+    setFormData({
+      firstName : author?.firstName || '',
+      midInitials : author?.midInitials || '',
+      lastName : author?.lastName || '',
+      email: author?.email || '',
+      role: author?.role || '',
+      bio: author?.bio || '',
+      location: author?.location || '',
+      website: author?.website || '',
+      joinDate: author?.joinDate || new Date().toISOString().split('T')[0],
+      expertise: author?.expertise || '',
+      department: author?.department || '',
+      phone: author?.phone || ''
+    });
+  }, [author]);
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.role.trim()) {
-      alert('Please fill in all required fields (Name, Email, Role)');
+      alert('Please fill in all required fields (First Name, Last Name, Email, Role)');
       return;
     }
-    
+
     const authorData = {
       ...formData,
-      id: author?.id || Date.now()
+      id: isEditing ? author.id : `author-${Date.now()}`
     };
-    
+
     onSave(authorData);
   };
 
@@ -119,7 +140,7 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
               required
               />
           </div>
-          <div  className='flex-grow'>
+          <div className='flex-grow'>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Mid Initials
             </label>
@@ -133,7 +154,7 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
               required={false}
               />
           </div>
-          <div  className='flex-grow'>
+          <div className='flex-grow'>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Last Name <span className="text-red-500">*</span>
             </label>
@@ -143,7 +164,7 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
               value={formData.lastName}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter full name"
+              placeholder="Enter Last Name"
               required
               />
           </div>
@@ -285,14 +306,14 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
   );
 };
 
-// Author Edit View Component (expanded view with all information)
+// Author Edit View Component (No changes needed)
 const AuthorEditView = ({ author, onSave, onCancel }) => {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-            {author.firstName[0]}{author.lastName[0]}
+            {author.firstName?.[0]}{author.lastName?.[0]}
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900">{author.firstName} {author.midInitials} {author.lastName}</h3>
@@ -386,7 +407,7 @@ const AuthorEditView = ({ author, onSave, onCancel }) => {
 
       <div className="flex justify-end">
         <button
-          onClick={() => onSave(author)}
+          onClick={() => onSave(author)} // This will call startEditMode and pass the current author
           className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
         >
           <Edit2 className="w-4 h-4" />
@@ -398,196 +419,159 @@ const AuthorEditView = ({ author, onSave, onCancel }) => {
 };
 
 // Main Authors Page Component
-const AuthorsPage = forwardRef(({onHeightChange}, ref) => {
-  const [authors, setAuthors] = useState([
-    {
-      id: 1,
-      firstName : 'Sarah',
-      midInitials: '',
-      lastName : 'Johnson',
-      email: 'sarah.johnson@example.com',
-      role: 'Senior Frontend Developer',
-      department: 'Engineering',
-      bio: 'Passionate about creating beautiful and functional user interfaces with over 5 years of experience in React and modern web technologies.',
-      location: 'San Francisco, CA',
-      website: 'https://sarahjohnson.dev',
-      joinDate: '2022-03-15',
-      expertise: 'React, TypeScript, CSS, UI/UX Design',
-      phone: '+1 (555) 123-4567'
-    },
-    {
-      id: 2,
-      firstName : 'Michael',
-      midInitials: '',
-      lastName : 'Chen',
-      email: 'michael.chen@example.com',
-      role: 'Backend Engineer',
-      department: 'Engineering',
-      bio: 'Full-stack developer with expertise in Node.js, Python, and cloud architecture. Loves solving complex problems and optimizing performance.',
-      location: 'New York, NY',
-      joinDate: '2021-08-20',
-      expertise: 'Node.js, Python, AWS, Docker, PostgreSQL',
-      phone: '+1 (555) 987-6543'
-    }
-  ]);
+const AuthorsPage = forwardRef(({ onHeightChange, authors, onAddAuthor, onEditAuthor, onRemoveAuthor }, ref) => {
+    // authors are now received as a prop from Contact.jsx
+    // REMOVE: const [authors, setAuthors] = useState(initialAuthorsData);
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingAuthor, setEditingAuthor] = useState(null);
-  const [viewingAuthor, setViewingAuthor] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [editingAuthor, setEditingAuthor] = useState(null);
+    const [viewingAuthor, setViewingAuthor] = useState(null);
 
-  const innerRef = useRef(null); // Ref for the actual div we want to measure
+    const elementToObserveRef = useResizeObserver(onHeightChange);
+    const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // These functions now call the props passed from Contact.jsx
+    const handleAddAuthor = (authorData) => {
+        onAddAuthor(authorData); // Call the prop
+        setShowAddForm(false);
+    };
 
-  // Replaced the manual useRef and useEffect with the custom hook
-  const elementToObserveRef = useResizeObserver(onHeightChange);
+    const handleEditAuthor = (authorData) => {
+        onEditAuthor(authorData); // Call the prop
+        setEditingAuthor(null);
+        setViewingAuthor(authorData);
+    };
 
-  // Combine the forwarded ref with the resize observer's ref
-  const combinedRef = useCombinedRefs(ref, elementToObserveRef);
+    const handleRemoveAuthor = (authorId) => {
+        if (window.confirm('Are you sure you want to remove this author?')) {
+            onRemoveAuthor(authorId); // Call the prop
+            setViewingAuthor(null);
+        }
+    };
 
-  useEffect(() => {
-    console.log(elementToObserveRef)
-  }, [elementToObserveRef]);
+    const startEditMode = (author) => {
+        setViewingAuthor(null);
+        setShowAddForm(false); // Close add form if open
+        setEditingAuthor(author);
+    };
 
+    return (
+        <div ref={combinedRef} className="rounded-md bg-gray-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Project Authors</h1>
+                        <p className="text-gray-600 mt-2">Manage all contributors and team members</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setShowAddForm(true);
+                            setEditingAuthor(null);
+                            setViewingAuthor(null);
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span>Add Author</span>
+                    </button>
+                </div>
 
-  const handleAddAuthor = (authorData) => {
-    setAuthors([...authors, authorData]);
-    setShowAddForm(false);
-  };
+                {/* Stats */}
+                <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-2xl font-bold text-gray-900">{authors.length}</p>
+                                <p className="text-sm text-gray-600">Total Authors</p>
+                            </div>
+                            <User className="w-8 h-8 text-blue-500" />
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-2xl font-bold text-gray-900">{new Set(authors.map(a => a.department).filter(Boolean)).size}</p>
+                                <p className="text-sm text-gray-600">Departments</p>
+                            </div>
+                            <MapPin className="w-8 h-8 text-green-500" />
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-2xl font-bold text-gray-900">{new Set(authors.map(a => a.location).filter(Boolean)).size}</p>
+                                <p className="text-sm text-gray-600">Locations</p>
+                            </div>
+                            <Calendar className="w-8 h-8 text-purple-500" />
+                        </div>
+                    </div>
+                </div>
 
-  const handleEditAuthor = (authorData) => {
-    setAuthors(authors.map(author => 
-      author.id === authorData.id ? authorData : author
-    ));
-    setEditingAuthor(null);
-    setViewingAuthor(null);
-  };
+                {/* Add Author Form */}
+                {showAddForm && (
+                    <div className="mb-8 w-full">
+                        <AuthorForm
+                            onSave={handleAddAuthor}
+                            onCancel={() => setShowAddForm(false)}
+                        />
+                    </div>
+                )}
 
-  const handleRemoveAuthor = (authorId) => {
-    if (window.confirm('Are you sure you want to remove this author?')) {
-      setAuthors(authors.filter(author => author.id !== authorId));
-    }
-  };
+                {/* Edit Author Form */}
+                {editingAuthor && (
+                    <div className="mb-8">
+                        <AuthorForm
+                            author={editingAuthor}
+                            onSave={handleEditAuthor}
+                            onCancel={() => setEditingAuthor(null)}
+                            isEditing={true}
+                        />
+                    </div>
+                )}
 
-  const startEditMode = (author) => {
-    setViewingAuthor(null);
-    setEditingAuthor(author);
-  };
+                {/* Author Detail View */}
+                {viewingAuthor && (
+                    <div className="mb-8">
+                        <AuthorEditView
+                            author={viewingAuthor}
+                            onSave={startEditMode}
+                            onCancel={() => setViewingAuthor(null)}
+                        />
+                    </div>
+                )}
 
-  return (
-    <div ref={combinedRef} className="rounded-md bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Project Authors</h1>
-            <p className="text-gray-600 mt-2">Manage all contributors and team members</p>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add Author</span>
-          </button>
+                {/* Authors Grid */}
+                <div className="w-full space-y-5">
+                    {authors.map(author => (
+                        <div key={author.id} onClick={() => setViewingAuthor(author)} className="cursor-pointer">
+                            {/* Only show AuthorCard if not in view/edit mode for this specific author */}
+                            {(viewingAuthor?.id !== author.id && editingAuthor?.id !== author.id) &&
+                                <AuthorCard
+                                    author={author}
+                                    onEdit={startEditMode}
+                                    onRemove={handleRemoveAuthor}
+                                />}
+                        </div>
+                    ))}
+                </div>
+
+                {authors.length === 0 && !showAddForm && !editingAuthor && !viewingAuthor && (
+                    <div className="text-center py-12">
+                        <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-medium text-gray-900 mb-2">No authors yet</h3>
+                        <p className="text-gray-500 mb-6">Get started by adding your first project author.</p>
+                        <button
+                            onClick={() => setShowAddForm(true)}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Add First Author
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
-
-        {/* Stats */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{authors.length}</p>
-                <p className="text-sm text-gray-600">Total Authors</p>
-              </div>
-              <User className="w-8 h-8 text-blue-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{new Set(authors.map(a => a.department)).size}</p>
-                <p className="text-sm text-gray-600">Departments</p>
-              </div>
-              <MapPin className="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{new Set(authors.map(a => a.location)).size}</p>
-                <p className="text-sm text-gray-600">Locations</p>
-              </div>
-              <Calendar className="w-8 h-8 text-purple-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* Add Author Form */}
-        {showAddForm && (
-          <div className="mb-8 w-full">
-            <AuthorForm
-              onSave={handleAddAuthor}
-              onCancel={() => setShowAddForm(false)}
-            />
-          </div>
-        )}
-
-        {/* Edit Author Form */}
-        {editingAuthor && (
-          <div className="mb-8">
-            <AuthorForm
-              author={editingAuthor}
-              onSave={handleEditAuthor}
-              onCancel={() => setEditingAuthor(null)}
-              isEditing={true}
-            />
-          </div>
-        )}
-
-        {/* Author Detail View */}
-        {viewingAuthor && (
-          <div className="mb-8">
-            <AuthorEditView
-              author={viewingAuthor}
-              onSave={startEditMode}
-              onCancel={() => setViewingAuthor(null)}
-            />
-          </div>
-        )}
-
-        {/* Authors Grid */}
-        <div className="w-full space-y-5">
-          {authors.map(author => (
-            <div key={author.id} onClick={() => setViewingAuthor(author)} className="cursor-pointer">
-              {(viewingAuthor !== author && editingAuthor !== author) &&
-                <AuthorCard
-                  author={author}
-                  onEdit={(author) => {
-                    startEditMode(author)
-                  }}
-                  onRemove={handleRemoveAuthor}
-              />}
-             
-            </div>
-          ))}
-        </div>
-
-        {authors.length === 0 && (
-          <div className="text-center py-12">
-            <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">No authors yet</h3>
-            <p className="text-gray-500 mb-6">Get started by adding your first project author.</p>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add First Author
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
 });
 
 export default AuthorsPage;

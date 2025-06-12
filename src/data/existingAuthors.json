@@ -1,0 +1,47 @@
+[
+  {
+    "id": "a1",
+    "firstName": "John",
+    "midInitials": "B.",
+    "lastName": "Boe",
+    "email": "john.doe@example.com",
+    "role": "Chief Scientist",
+    "bio": "A pioneer in quantum computing and AI, specializing in theoretical physics and machine learning applications.",
+    "location": "Cambridge, MA",
+    "website": "https://johndoe.dev",
+    "joinDate": "2019-01-10",
+    "expertise": "Quantum Computing, AI, Theoretical Physics",
+    "department": "Research & Development",
+    "phone": "+1 (111) 222-3333"
+  },
+  {
+    "id": "a2",
+    "firstName": "Jane",
+    "midInitials": "",
+    "lastName": "Smith",
+    "email": "jane.smith@example.com",
+    "role": "Lead Software Engineer",
+    "bio": "Expert in scalable backend systems and distributed databases. Passionate about open source and efficient code.",
+    "location": "Austin, TX",
+    "website": "https://janesmith.tech",
+    "joinDate": "2020-05-20",
+    "expertise": "Node.js, PostgreSQL, AWS, Microservices",
+    "department": "Engineering",
+    "phone": "+1 (444) 555-6666"
+  },
+  {
+    "id": "a3",
+    "firstName": "Alice",
+    "midInitials": "B.",
+    "lastName": "Johnson",
+    "email": "alice.j@example.com",
+    "role": "Product Manager",
+    "bio": "Drives product strategy and roadmaps, with a focus on user experience and market analysis. Experienced in SaaS products.",
+    "location": "Seattle, WA",
+    "website": "",
+    "joinDate": "2021-02-01",
+    "expertise": "Product Management, UX Research, Market Strategy",
+    "department": "Engineering",
+    "phone": "+1 (777) 888-9999"
+  }
+]
