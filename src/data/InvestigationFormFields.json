@@ -129,8 +129,19 @@
                     "type": "date",
                     "explanation": "Date and, if relevant, time when the experiment ended",
                     "example": "10-10-2023"
+                },
+                {
+                    "id": "country",
+                    "label": "country",
+                    "type": "text",
+                    "explanation": "Country of where the study was performed",
+                    "example": "Netherlands"
                 }
             ]
+        },
+        {
+            "id": "collection",
+            "type": "collection"
         }
     ]
 }

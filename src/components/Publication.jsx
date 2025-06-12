@@ -240,7 +240,7 @@ function TagInput({ label, tags, onAddTag, onRemoveTag, placeholder, required = 
 }
 
 // --- Publication Card Component ---
-const PublicationCard = ({ publication, onEdit, onRemove, getAuthorDetails }) => {
+export const PublicationCard = ({ publication, onEdit, onRemove, getAuthorDetails }) => {
   const authorNames = publication.authorList
     .map(authorId => getAuthorDetails(authorId))
     .filter(Boolean) // Filter out any undefined authors
@@ -315,7 +315,7 @@ const PublicationCard = ({ publication, onEdit, onRemove, getAuthorDetails }) =>
 };
 
 // --- PublicationForm Component ---
-const PublicationForm = ({ publication, onSave, onCancel, isEditing = false, allAvailableAuthors, onAddNewGlobalAuthor }) => {
+export const PublicationForm = ({ publication, onSave, onCancel, isEditing = false, allAvailableAuthors, onAddNewGlobalAuthor }) => {
   // State for form fields (authorList will store names for TagInput display)
   const [formData, setFormData] = useState({
     title: publication?.title || '',

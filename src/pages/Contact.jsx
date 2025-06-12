@@ -16,6 +16,12 @@ import useDynamicHeightContainer from '../hooks/useDynamicHeightContainer';
 // Data
 import InvestigationFormFields from '../data/InvestigationFormFields.json';
 import initialAuthorsData from '../data/existingAuthors.json'; // Import initial authors data here
+import initialStudies from "../data/existingStudies.json"
+
+import Collection from '../components/Collection';
+import usePublications from '../hooks/usePublications';
+import useStudies from '../hooks/useStudies';
+
 
 export const Contact = () => {
   const totalPages = InvestigationFormFields.pages.length;
@@ -134,6 +140,14 @@ export const Contact = () => {
                           onAddAuthor={handleAddAuthor} // Pass add handler
                           onEditAuthor={handleEditAuthor} // Pass edit handler
                           onRemoveAuthor={handleRemoveAuthor} // Pass remove handler
+                        />
+                      )}
+                      {page.type === "collection" && (
+                        <Collection
+                          ref={el => childRefs.current[index] = el}
+                          onHeightChange={handleChildHeightChange}
+                          itemHook={useStudies}
+                          initialItems={initialStudies}
                         />
                       )}
                     </div>

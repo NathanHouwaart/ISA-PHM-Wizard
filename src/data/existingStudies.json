@@ -1,0 +1,12 @@
+[
+    {
+        "id": "1",
+        "title" : "Test study",
+        "location" : "Amsterdam, NL"
+    },
+    {
+        "id": "2",
+        "title" : "Test study 2",
+        "location" : "Zwolle, NL"
+    }
+]
