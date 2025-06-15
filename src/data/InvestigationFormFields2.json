@@ -1,0 +1,78 @@
+[
+    {
+        "id": "InvestigationIdentifier",
+        "label": "Investigation Identifier",
+        "type": "text",
+        "placeholder": "EBI:12345678",
+        "explanation": "Identifier comprising the unique name of the institution/database hosting the submission of the investigation data, and the accession number of the investigation in that institution.",
+        "example": "EBI:12345678",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "InvestigationTitle",
+        "label": "Investigation Title",
+        "type": "text",
+        "placeholder": "Investigation Title",
+        "explanation": "A short title for the investigation.",
+        "example": "Investigation of Sample X",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "InvestigationDescription",
+        "label": "Investigation Description",
+        "type": "textarea",
+        "placeholder": "Description of the investigation",
+        "explanation": "A text summarising the plant phenotyping project in more detail.",
+        "example": "The migration of maize from tropical to temperate climates was accompanied by a dramatic evolution in flowering time. To gain insight into the genetic architecture of this adaptive trait, we conducted a 50K SNP-based genome-wide association and diversity investigation on a panel of tropical and temperate American and European representatives.",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "LicenceType",
+        "label": "License",
+        "type": "license",
+        "placeholder": "Search for licence of your dataset",
+        "explanation": "The license that comes with your datasaet",
+        "example": "MIT",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "SubmissionDate",
+        "label": "Submission Date",
+        "type": "date",
+        "explanation": "The date when the investigation data was submitted.",
+        "example": "01-10-2023",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "PublicReleaseDate",
+        "label": "Public Release Date",
+        "type": "date",
+        "explanation": "Date when the investigation data will be publicly released.",
+        "example": "01-10-2023",
+        "path": "Investigation",
+        "cardinality" : "1"
+    },
+    {
+        "id": "TestField",
+        "label": "Test Field",
+        "type": "text",
+        "explanation": "Sample text",
+        "example": "Sample text",
+        "path": "Investigation.Authors",
+        "cardinality" : "1..*"
+    },
+    {
+        "id": "AssayName",
+        "label": "Assay Name",
+        "type": "text",
+        "explanation": "Sample text",
+        "example": "Sample text",
+        "path": "Investigation.Studies.Assays.Authors",
+        "cardinality" : "1..*"
+    }
+]

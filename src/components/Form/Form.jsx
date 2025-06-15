@@ -1,25 +1,28 @@
 import React, { useState, forwardRef, useCallback, useEffect } from 'react'
 
 import FormField from './FormField'
-import InvestigationFormFields from '../../data/InvestigationFormFields.json'; // adjust the path as needed
+import InvestigationFormFields from '../../data/InvestigationFormFields2.json'; // adjust the path as needed
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
+import { useQuestionnaireForm } from '../../contexts/QuestionnaireFormContext';
 
 const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) => {
 
-    const [formData, setFormData] = useState(() => {
-        return formPageInfo.fields.reduce((acc, field) => {
-          acc[field.id] = '';
-          return acc;
-        }, {});
-      });
+    const {formData, handleInputChange, getNestedValue} = useQuestionnaireForm()
+    
+    // const [formData, setFormData] = useState(() => {
+    //     return formPageInfo.fields.reduce((acc, field) => {
+    //       acc[field.id] = '';
+    //       return acc;
+    //     }, {});
+    //   });
 
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+    // const handleInputChange = (field, value) => {
+    //     setFormData(prev => ({
+    //         ...prev,
+    //         [field]: value
+    //     }));
+    // };
 
     // Get the internal ref from useResizeObserver
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -33,19 +36,19 @@ const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) =>
 
     return (
         <div ref={combinedRef} className={`space-y-3 pt-1 pb-1 ${className}`}>
-            {formPageInfo.fields.map((field, index) => (
+            {InvestigationFormFields.map((field, index) => (
                 <FormField
                     key={index}
                     type={field.type}
                     label={field.label}
-                    value={formData[field.id]}
+                    value={getNestedValue(field.path + "." + field.id)}
                     onChange={(e) => {
                         if(e?.target?.value){
-                            handleInputChange(field.id, e.target.value)
+                            handleInputChange(field.path + "." + field.id, e.target.value)
                         }else if(typeof(e) === "string"){
-                            handleInputChange(field.id, e)
+                            handleInputChange(field.path + "." + field.id, e)
                         }else{
-                            handleInputChange(field.id, "")
+                            handleInputChange(field.path + "." + field.id, "")
                         }
                     }}
                     explanation={field.explanation}
