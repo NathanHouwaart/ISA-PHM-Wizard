@@ -8,22 +8,8 @@ import { useQuestionnaireForm } from '../../contexts/QuestionnaireFormContext';
 
 const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) => {
 
-    const {formData, handleInputChange, getNestedValue} = useQuestionnaireForm()
+    const {handleInputChange} = useQuestionnaireForm()
     
-    // const [formData, setFormData] = useState(() => {
-    //     return formPageInfo.fields.reduce((acc, field) => {
-    //       acc[field.id] = '';
-    //       return acc;
-    //     }, {});
-    //   });
-
-    // const handleInputChange = (field, value) => {
-    //     setFormData(prev => ({
-    //         ...prev,
-    //         [field]: value
-    //     }));
-    // };
-
     // Get the internal ref from useResizeObserver
     const elementToObserveRef = useResizeObserver(onHeightChange);
 
@@ -41,8 +27,8 @@ const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) =>
                     key={index}
                     type={field.type}
                     label={field.label}
-                    value={getNestedValue(field.path + "." + field.id)}
-                    onChange={(e) => {
+                    onBlur={(e) => {
+                        console.log("on Blur formfield")
                         if(e?.target?.value){
                             handleInputChange(field.path + "." + field.id, e.target.value)
                         }else if(typeof(e) === "string"){
@@ -55,7 +41,6 @@ const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) =>
                     example={field.example}
                     placeholder={field.placeholder}
                     rows={field.rows || 3} // default to 3 rows for textarea
-                    onHeightChange={onHeightChange}
                 />
             ))}
         </div>

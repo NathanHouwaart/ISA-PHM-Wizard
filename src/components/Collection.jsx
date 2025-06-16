@@ -6,7 +6,7 @@ import useCombinedRefs from '../hooks/useCombinedRefs';
 import { Book, Plus } from 'lucide-react';
 
 // --- Main Publications Page Component ---
-const Collection = forwardRef(({ page, onHeightChange, initialItems, itemHook }, ref) => {
+const Collection = forwardRef(({ onHeightChange, initialItems, itemHook }, ref) => {
     const [items, setItems] = useState(initialItems || []);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -26,15 +26,6 @@ const Collection = forwardRef(({ page, onHeightChange, initialItems, itemHook },
         setShowAddForm(false);
     };
 
-    //   const handleEdit = (publicationData) => {
-    //     setPublications(prevPublications =>
-    //       prevPublications.map(publication =>
-    //         publication.id === publicationData.id ? publicationData : publication
-    //       )
-    //     );
-    //     setEditingPublication(null);
-    //   };
-
       const handleRemove = (itemId) => {
         if (window.confirm('Are you sure you want to remove this item?')) {
           setItems(prevItems => prevItems.filter(item => item.id !== itemId));
@@ -45,13 +36,6 @@ const Collection = forwardRef(({ page, onHeightChange, initialItems, itemHook },
         setEditingItem(item);
         setShowAddForm(false); // Close add form if open
       };
-
-    //   const handleAddNewGlobalAuthor = useCallback((authorName) => {
-    //     const newAuthorObj = parseAuthorName(authorName);
-    //     onAddAuthor(newAuthorObj); // Call the global add author function
-    //     return newAuthorObj;
-    //   }, [onAddAuthor]);
-
 
     return (
         <div ref={combinedRef} className="rounded-md bg-gray-50 p-6">
@@ -79,14 +63,6 @@ const Collection = forwardRef(({ page, onHeightChange, initialItems, itemHook },
                                 item={editingItem}
                             />
                         }
-                        {/* <PublicationForm
-              publication={editingPublication}
-              onSave={editingPublication ? handleEditPublication : handleAddPublication}
-              onCancel={() => { setShowAddForm(false); setEditingPublication(null); }}
-              isEditing={!!editingPublication}
-              allAvailableAuthors={authors} // Pass the authors prop here
-              onAddNewGlobalAuthor={handleAddNewGlobalAuthor} // Pass the function to add authors globally
-            /> */}
                     </div>
                 )}
 
@@ -100,14 +76,6 @@ const Collection = forwardRef(({ page, onHeightChange, initialItems, itemHook },
                                 onEdit={startEditMode}
                                 onRemove={handleRemove}
                             />
-                            {/* {(editingPublication?.id !== publication.id) &&
-                <PublicationCard
-                  publication={publication}
-                  onEdit={startEditMode}
-                  onRemove={handleRemovePublication}
-                  getAuthorDetails={getAuthorDetails} // Pass the helper function
-                />
-              } */}
                         </div>
                     ))}
                 </div>

@@ -6,29 +6,32 @@ import LicensePicker from './LicensePicker';
 
 function FormField({ 
     label, 
-    value, 
-    onChange, 
-    placeholder, 
+    placeholder,
+    onBlur,
     required, 
     explanation, 
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
     rows = 3,             // for textarea
-    className = '',
-    onHeightChange
+    className = ''
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
+    const [fieldvalue, setFieldValue] = useState("");
     
     const handleTooltipToggle = () => {
         setShowTooltip(!showTooltip);
     };
 
-    // // NEW: Callback for when the tooltip's transition ends
-    // const handleTooltipTransitionEnd = () => {
-    //     if (onHeightChange) {
-    //         onHeightChange(); 
-    //     }
-    // };
+    const onChange = (e) => {
+        if(e?.target?.value){
+            setFieldValue(e.target.value)
+        }else if(typeof(e) === "string"){
+            setFieldValue(e)
+        }else{
+            setFieldValue("")
+        }
+    }
+                    
 
     const renderInput = () => {
         const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-50 bg-gray-50 focus:bg-white outline-none";
@@ -37,8 +40,9 @@ function FormField({
             case 'textarea':
                 return (
                     <textarea
-                        value={value}
+                        value={fieldvalue}
                         onChange={onChange}
+                        onBlur={onBlur}
                         placeholder={placeholder || example}
                         required={required}
                         rows={rows}
@@ -49,8 +53,9 @@ function FormField({
                 return (
                     <input
                         type="date"
-                        value={value}
+                        value={fieldvalue}
                         onChange={onChange}
+                        onBlur={onBlur}
                         required={required}
                         className={`${baseClasses} ${className}`}
                     />
@@ -58,8 +63,9 @@ function FormField({
             case 'select':
                 return (
                     <select
-                        value={value}
+                        value={fieldvalue}
                         onChange={onChange}
+                        onBlur={onBlur}
                         required={required}
                         className={`${baseClasses} ${className}`}
                     >
@@ -71,8 +77,9 @@ function FormField({
                 return (
                     <LicensePicker 
                         type="license"
-                        value={value}
+                        value={fieldvalue}
                         onChange={onChange}
+                        onBlur={onBlur}
                         required={required}
                         className={`${baseClasses} relative group ${className}`}
                     />
@@ -81,8 +88,9 @@ function FormField({
                 return (
                     <input
                         type={type}
-                        value={value}
+                        value={fieldvalue}
                         onChange={onChange}
+                        onBlur={onBlur}
                         placeholder={placeholder || example}
                         required={required}
                         className={`${baseClasses} ${className}`}

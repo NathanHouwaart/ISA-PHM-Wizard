@@ -1,0 +1,136 @@
+{
+    "id": "authors",
+    "path": "investigation.Authors",
+    "type" : "array",
+    "fields" : [
+        {
+            "id": "id",
+            "label": "User Id",
+            "type": "label",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },  
+        {
+            "id": "firstName",
+            "label": "First Name",
+            "type": "text",
+            "placeholder": "Enter First Name",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "midInitials",
+            "label": "Mid Initials",
+            "type": "text",
+            "placeholder": "Enter Mid Initials",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "lastName",
+            "label": "Last Name",
+            "type": "text",
+            "placeholder": "Enter Last Name",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "email",
+            "label": "Email",
+            "type": "text",
+            "placeholder": "Enter Email Address",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "role",
+            "label": "Role",
+            "type": "text",
+            "placeholder": "e.g., Senior Developer, Project Manager",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "department",
+            "label": "Department",
+            "type": "text",
+            "placeholder": "e.g., Engineering, Design",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "location",
+            "label": "Location",
+            "type": "text",
+            "placeholder": "e.g., New York, Remote",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "phone",
+            "label": "Phone",
+            "type": "text",
+            "placeholder": "Enter Phone Number",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "orcid",
+            "label": "Orcid",
+            "type": "text",
+            "placeholder": "e.g. https://orcid.org/0000-0002-0003-0004",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id" : "joinDate",
+            "label": "Join Date",
+            "type": "date",
+            "placeholder": "",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "expertise",
+            "label": "Expertise",
+            "type": "text",
+            "placeholder": "e.g. React, Node.js, Python, UI/UX Design",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        },
+        {
+            "id": "bio",
+            "label": "Bio",
+            "type": "text",
+            "placeholder": "Brief descrition about the author...",
+            "explanation": "",
+            "example": "",
+            "path": "Investigation.Authors",
+            "cardinality" : "1"
+        }
+    ]
+}

@@ -10,7 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^13.0.5",
+    "@rjsf/core": "^5.24.11",
+    "@rjsf/validator-ajv8": "^5.24.11",
     "@tailwindcss/vite": "^4.1.8",
+    "ajv": "^8.17.1",
+    "ajv-draft-04": "^1.0.0",
+    "ajv-formats": "^3.0.1",
     "classnames": "^2.5.1",
     "fuse.js": "^7.1.0",
     "immer": "^10.1.1",
@@ -30,6 +36,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "json-dereference": "^0.0.1",
     "vite": "^6.3.5",
     "vite-plugin-svgr": "^4.3.0"
   }

@@ -3,9 +3,9 @@ import { getLicenses } from '../../services/api';
 import Fuse from 'fuse.js';
 
 function LicensePicker({
-    type,
     value,
     onChange,
+    onBlur,
     placeholder,
     required,
     className
@@ -59,7 +59,8 @@ function LicensePicker({
     };
 
     // Handles when the input loses focus with a slight delay in order to execute functions
-    const handleInputBlur = () => {
+    const handleInputBlur = (e) => {
+        onBlur(e.target.value);
         setTimeout(() => {
             setShowSuggestions(false);
         }, 100); 
@@ -69,14 +70,14 @@ function LicensePicker({
         // The 'group' class is no longer strictly needed for focus-within logic but can remain for other styling
         <div className="relative group flex-1 w-full mr-6">
             <input
-                type={type}
+                type="text"
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
                 required={required}
                 className={`${className} w-full`} // Retaining your original class application
                 onFocus={handleInputFocus} // NEW: Handles input focus
-                onBlur={handleInputBlur}   // NEW: Handles input blur with delay
+                onBlur={(e) => handleInputBlur(e)}   // NEW: Handles input blur with delay
             />
 
             {/* Conditionally render suggestions based on showSuggestions state */}

@@ -5,6 +5,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 // Import the existingAuthors.json file directly
 import initialAuthorsData from '../../data/existingAuthors.json'; // Adjust the path as needed
+import AuthorsFormFields from '../../data/AuthorFormFields.json'
 
 // Author Card Component (No changes needed)
 const AuthorCard = ({ author, onEdit, onRemove }) => {
@@ -55,37 +56,25 @@ const AuthorCard = ({ author, onEdit, onRemove }) => {
 
 // Author Form Component (No changes needed)
 const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
-  const [formData, setFormData] = useState({
-    firstName : author?.firstName || '',
-    midInitials : author?.midInitials || '',
-    lastName : author?.lastName || '',
-    email: author?.email || '',
-    role: author?.role || '',
-    bio: author?.bio || '',
-    location: author?.location || '',
-    website: author?.website || '',
-    joinDate: author?.joinDate || new Date().toISOString().split('T')[0],
-    expertise: author?.expertise || '',
-    department: author?.department || '',
-    phone: author?.phone || ''
-  });
+
+  const initialFormState = AuthorsFormFields.reduce((acc, field) => {
+      acc[field.id] = ''; // Initialize each field with an empty string
+      return acc;
+  }, {});
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
-    setFormData({
-      firstName : author?.firstName || '',
-      midInitials : author?.midInitials || '',
-      lastName : author?.lastName || '',
-      email: author?.email || '',
-      role: author?.role || '',
-      bio: author?.bio || '',
-      location: author?.location || '',
-      website: author?.website || '',
-      joinDate: author?.joinDate || new Date().toISOString().split('T')[0],
-      expertise: author?.expertise || '',
-      department: author?.department || '',
-      phone: author?.phone || ''
-    });
-  }, [author]);
+      const newFormData = {};
+      AuthorsFormFields.forEach(field => {
+          // Use the field.id directly to access the author property.
+          // If author is null/undefined or the property doesn't exist, it defaults to ''
+          newFormData[field.id] = author?.[field.id] || '';
+      });
+
+      console.log("newFormData", newFormData)
+      setFormData(newFormData);
+  }, [author]); // Re-run this effect whenever the 'author' prop changes
 
 
   const handleSubmit = (e) => {
@@ -110,201 +99,142 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
     });
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-900">
-          {isEditing ? 'Edit Author' : 'Add New Author'}
-        </h3>
-        <button
-          onClick={onCancel}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </div>
+    // Define common Tailwind input classes
+    const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+    const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
+    const requiredAsterisk = <span className="text-red-500">*</span>;
 
-      <div className="space-y-4">
-        <div className='flex justify-between w-full flex-grow gap-4'>
-          <div className='flex-grow'>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter First Name"
-              required
-              />
-          </div>
-          <div className='flex-grow'>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mid Initials
-            </label>
-            <input
-              type="text"
-              name="midInitials"
-              value={formData.midInitials}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter Mid Initials"
-              required={false}
-              />
-          </div>
-          <div className='flex-grow'>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter Last Name"
-              required
-              />
-          </div>
+    // Helper function to render a field based on its type
+    const renderField = (field) => {
+        const value = formData[field.id] || ''; // Ensure value is never undefined
+
+        switch (field.type) {
+            case 'text':
+            case 'email':
+            case 'tel':
+            case 'url': // Using 'text' type in JSON for Orcid, but 'url' type input is also valid HTML5
+            case 'date':
+                return (
+                    <div className='flex-grow' key={field.id}>
+                        <label htmlFor={field.id} className={labelClasses}>
+                            {field.label} {field.cardinality === '1' && field.id !== 'id' && requiredAsterisk}
+                        </label>
+                        <input
+                            type={field.type === 'orcid' ? 'url' : field.type} // Explicitly handle 'orcid' as 'url' type input if desired
+                            id={field.id}
+                            name={field.id}
+                            value={value}
+                            onChange={handleChange}
+                            className={inputClasses}
+                            placeholder={field.placeholder}
+                            required={field.cardinality === '1' && field.id !== 'id'}
+                        />
+                    </div>
+                );
+            case 'textarea':
+                return (
+                    <div key={field.id}>
+                        <label htmlFor={field.id} className={labelClasses}>
+                            {field.label} {field.cardinality === '1' && requiredAsterisk}
+                        </label>
+                        <textarea
+                            id={field.id}
+                            name={field.id}
+                            value={value}
+                            onChange={handleChange}
+                            rows={3} // Default rows for textarea, can be added to JSON if needed
+                            className={inputClasses}
+                            placeholder={field.placeholder}
+                            required={field.cardinality === '1'}
+                        />
+                    </div>
+                );
+            case 'label': // For read-only display fields like 'id'
+                return (
+                    <div key={field.id} className='flex-grow'>
+                        <label className={labelClasses}>
+                            {field.label}
+                        </label>
+                        <p className="px-3 py-2 text-gray-800 bg-gray-50 border border-gray-200 rounded-lg">
+                            {value}
+                        </p>
+                    </div>
+                );
+            default:
+                return null; // Or render a fallback for unsupported types
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">
+                    {isEditing ? 'Edit Author' : 'Add New Author'}
+                </h3>
+                <button
+                    onClick={onCancel}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+
+            <div className="space-y-4">
+                {/* Dynamically render the 'id' field if it exists and is a 'label' type */}
+                {isEditing && AuthorsFormFields.find(field => field.id === 'id' && field.type === 'label') && (
+                    <div className='flex justify-between w-full flex-grow gap-4'>
+                        {renderField(AuthorsFormFields.find(field => field.id === 'id'))}
+                    </div>
+                )}
+
+
+                {/* Group First Name, Mid Initials, Last Name */}
+                <div className='flex justify-between w-full flex-grow gap-4'>
+                    {AuthorsFormFields.filter(field =>
+                        field.id === 'firstName' || field.id === 'midInitials' || field.id === 'lastName'
+                    ).map(renderField)}
+                </div>
+
+                {/* Grid for other fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {AuthorsFormFields.filter(field =>
+                        field.id !== 'id' && // Exclude already rendered 'id' field
+                        field.id !== 'firstName' &&
+                        field.id !== 'midInitials' &&
+                        field.id !== 'lastName' &&
+                        field.id !== 'expertise' && // Exclude single-line fields
+                        field.id !== 'bio' // Exclude textarea fields
+                    ).map(renderField)}
+                </div>
+
+                {/* Single line fields like Expertise */}
+                {AuthorsFormFields.filter(field => field.id === 'expertise').map(renderField)}
+
+                {/* Textarea for Bio */}
+                {AuthorsFormFields.filter(field => field.id === 'bio').map(renderField)}
+
+                <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button" // Change to "submit" if you want native form submission
+                        onClick={handleSubmit}
+                        className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+                    >
+                        <Save className="w-4 h-4" />
+                        <span>{isEditing ? 'Update Author' : 'Add Author'}</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter email address"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Role <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Senior Developer, Project Manager"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Engineering, Design"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., New York, Remote"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter phone number"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-            <input
-              type="url"
-              name="website"
-              value={formData.website}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
-            <input
-              type="date"
-              name="joinDate"
-              value={formData.joinDate}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Expertise</label>
-          <input
-            type="text"
-            name="expertise"
-            value={formData.expertise}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g., React, Node.js, Python, UI/UX Design"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Brief description about the author..."
-          />
-        </div>
-
-        <div className="flex justify-end space-x-3 pt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isEditing ? 'Update Author' : 'Add Author'}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+    );
+}
+;
 
 // Author Edit View Component (No changes needed)
 const AuthorEditView = ({ author, onSave, onCancel }) => {
@@ -422,6 +352,8 @@ const AuthorEditView = ({ author, onSave, onCancel }) => {
 const AuthorsPage = forwardRef(({ onHeightChange, authors, onAddAuthor, onEditAuthor, onRemoveAuthor }, ref) => {
     // authors are now received as a prop from Contact.jsx
     // REMOVE: const [authors, setAuthors] = useState(initialAuthorsData);
+
+    console.log(authors)
 
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingAuthor, setEditingAuthor] = useState(null);

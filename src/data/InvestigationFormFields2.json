@@ -56,23 +56,5 @@
         "example": "01-10-2023",
         "path": "Investigation",
         "cardinality" : "1"
-    },
-    {
-        "id": "TestField",
-        "label": "Test Field",
-        "type": "text",
-        "explanation": "Sample text",
-        "example": "Sample text",
-        "path": "Investigation.Authors",
-        "cardinality" : "1..*"
-    },
-    {
-        "id": "AssayName",
-        "label": "Assay Name",
-        "type": "text",
-        "explanation": "Sample text",
-        "example": "Sample text",
-        "path": "Investigation.Studies.Assays.Authors",
-        "cardinality" : "1..*"
     }
 ]
