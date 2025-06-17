@@ -3,11 +3,45 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr';
 
-// https://vite.dev/config/
+// vite.config.js
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
+import { Buffer } from 'buffer'; // Import Buffer here
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
     svgr()
   ],
-})
+  define: {
+    // This is important for making Buffer available globally
+    global: 'globalThis',
+    Buffer: ['buffer', 'Buffer'], // Provide Buffer
+    // Or, for older versions/more direct approach, though the above is preferred
+    // 'process.env': {} // If you get 'process is not defined' later
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global for web browser compatibility
+      define: {
+        global: 'globalThis'
+      },
+      // Enable esbuild polyfill plugins
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+          buffer: true,
+        }),
+        NodeModulesPolyfillPlugin()
+      ]
+    }
+  },
+  resolve: {
+    alias: {
+      // You might need to add aliases for specific modules that expect Node.js versions
+      // 'buffer': 'buffer', // This might be redundant with define but can help
+      // 'util': 'util', // if you encounter 'util is not defined'
+    }
+  }
+});

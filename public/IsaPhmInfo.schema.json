@@ -1,0 +1,384 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "IsaPhmInfo",
+    "type": "object",
+    "properties": {
+        "identifier": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "submission_date": {
+            "type": "string",
+            "format": "date"
+        },
+        "public_release_date": {
+            "type": "string",
+            "format": "date"
+        },
+        "publication": {
+            "$ref": "#/definitions/Publication"
+        },
+        "contacts": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Person"
+            }
+        },
+        "study_details": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/StudyInfo"
+            }
+        }
+    },
+    "required": [
+        "identifier",
+        "title",
+        "study_details"
+    ],
+    "definitions": {
+        "Characteristic": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
+                }
+            },
+            "required": ["category", "value"]
+        },
+        "StudyFactorValue": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            },
+            "required": ["name", "value"]
+        },
+        "Comment": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": ["name"]
+        },
+        "Publication": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "doi": {
+                    "type": "string"
+                },
+                "author_list": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
+                }
+            },
+            "required": ["title", "doi", "author_list", "status"]
+        },
+        "Person": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "mid_initials": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "format": "email"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "affiliation": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
+                }
+            }
+        },
+        "StudyInfo": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "submission_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "public_release_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "detail_preparation": {
+                    "type": "string"
+                },
+                "publication": {
+                    "$ref": "#/definitions/Publication"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Person"
+                    }
+                },
+                "experiment_type": {
+                    "type": "string",
+                    "enum": [
+                        "Diagnostic",
+                        "Degradation-c",
+                        "Degradation-tv"
+                    ]
+                },
+                "used_setup": {
+                    "$ref": "#/definitions/TestSetUp"
+                },
+                "fault_type": {
+                    "type": "string"
+                },
+                "fault_position": {
+                    "type": "string"
+                },
+                "fault_severity": {
+                    "type": "string"
+                },
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RunInfo"
+                    }
+                }
+            }
+        },
+        "TestSetUp": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "characteristics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Characteristic"
+                    }
+                },
+                "number_of_sensors": {
+                    "type": "integer"
+                },
+                "sensors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Sensor"
+                    }
+                }
+            }
+        },
+        "Sensor": {
+            "type": "object",
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                },
+                "measurement_type": {
+                    "type": "string"
+                },
+                "measurement_unit": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "technology_type": {
+                    "type": "string"
+                },
+                "technology_platform": {
+                    "type": "string"
+                },
+                "data_acquisition_unit": {
+                    "type": "string"
+                },
+                "sampling_rate": {
+                    "type": "string"
+                },
+                "sampling_unit": {
+                    "type": "string"
+                },
+                "sensor_location": {
+                    "type": "string"
+                },
+                "location_unit": {
+                    "type": "string"
+                },
+                "sensor_orientation": {
+                    "type": "string"
+                },
+                "orientation_unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssayInfo": {
+            "type": "object",
+            "properties": {
+                "used_sensor": {
+                    "$ref": "#/definitions/Sensor"
+                },
+                "file_details": {
+                    "$ref": "#/definitions/FileDetails"
+                }
+            }
+        },
+        "FileDetails": {
+            "type": "object",
+            "properties": {
+                "raw_file_name": {
+                    "type": "string"
+                },
+                "raw_file_location": {
+                    "type": "string"
+                },
+                "proccesed_file_name": {
+                    "type": "string"
+                },
+                "proccesed_file_location": {
+                    "type": "string"
+                },
+                "file_parameters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FileParameter"
+                    }
+                },
+                "number_of_columns": {
+                    "type": "integer"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "FileParameter": {
+            "type": "object",
+            "properties": {
+                "parameter": {
+                    "$ref": "#/definitions/ProtocolParameter"
+                },
+                "value": {
+                    "$ref": "#/definitions/ParameterValue"
+                }
+            },
+            "required": ["parameter", "value"]
+        },
+        "ProtocolParameter": {
+            "type": "object",
+            "properties": {
+                "parameter_name": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
+                }
+            }
+        },
+        "ParameterValue": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Comment"
+                    }
+                }
+            }
+        },
+        "RunInfo": {
+            "type": "object",
+            "properties": {
+                "run_conditions": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/StudyFactorValue" }
+                },
+                "assay_details": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/AssayInfo" }
+                }
+            },
+            "required": ["run_conditions", "assay_details"]
+        }
+    }
+}
