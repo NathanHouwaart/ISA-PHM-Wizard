@@ -584,7 +584,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 };
 
 // Main TestSetupForm Component
-const TestSetupForm = ({ testSetup, onSave, onCancel, isEditing = false }) => {
+const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const initialFormState = {
     name: '',
     location: '',
@@ -596,19 +596,22 @@ const TestSetupForm = ({ testSetup, onSave, onCancel, isEditing = false }) => {
 
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
+  const numberOfCharacteristics = formData.characteristics.length
 
   useEffect(() => {
-    if (testSetup) {
+    console.log("HERE")
+    console.log(item)
+    if (item) {
       setFormData({
-        name: testSetup.name || '',
-        location: testSetup.location || '',
-        characteristics: testSetup.characteristics || [],
-        sensors: testSetup.sensors || []
+        name: item.name || '',
+        location: item.location || '',
+        characteristics: item.characteristics || [],
+        sensors: item.sensors || []
       });
     } else {
       setFormData(initialFormState);
     }
-  }, [testSetup]);
+  }, [item]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -620,7 +623,7 @@ const TestSetupForm = ({ testSetup, onSave, onCancel, isEditing = false }) => {
     const testSetupData = {
       ...formData,
       number_of_sensors: numberOfSensors, // Include the calculated number
-      id: isEditing ? testSetup.id : `testsetup-${Date.now()}`
+      id: isEditing ? item.id : `testsetup-${Date.now()}`
     };
 
     onSave(testSetupData);
@@ -688,8 +691,26 @@ const TestSetupForm = ({ testSetup, onSave, onCancel, isEditing = false }) => {
                 required
               />
             </div>
+
+          <div>
+            <label htmlFor="number_of_characteristics" className={labelClasses}>
+              Number of Characteristics
+            </label>
+            <input
+              type="number"
+              id="number_of_characteristics"
+              name="number_of_characteristics"
+              value={numberOfCharacteristics}
+              className={`${inputClasses} bg-gray-100 cursor-not-allowed`}
+              placeholder="Calculated automatically"
+              readOnly
+              disabled
+              />
+            <p className="text-xs text-gray-500 mt-1">
+              This value is calculated automatically based on the characteristics you add below.
+            </p>
           </div>
-          <div className="max-w-xs">
+          <div>
             <label htmlFor="number_of_sensors" className={labelClasses}>
               Number of Sensors
             </label>
@@ -702,11 +723,12 @@ const TestSetupForm = ({ testSetup, onSave, onCancel, isEditing = false }) => {
               placeholder="Calculated automatically"
               readOnly
               disabled
-            />
+              />
             <p className="text-xs text-gray-500 mt-1">
               This value is calculated automatically based on the sensors you add below.
             </p>
           </div>
+        </div>
         </div>
 
         {/* Characteristics Section */}

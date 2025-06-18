@@ -45,6 +45,7 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
     };
 
     const startEditMode = (item) => {
+        console.log("Start edit modeeee")
         setEditingItem(item);
         setShowAddForm(false); // Close add form if open
     };
@@ -103,7 +104,8 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
                 </div>
 
                 {/* Add/Edit Form */}
-                {(showAddForm || editingItem) && (
+                {(showAddForm || editingItem) && 
+                    (
                     <div className="mb-8">
                         <FormComponent
                             item={editingItem}
