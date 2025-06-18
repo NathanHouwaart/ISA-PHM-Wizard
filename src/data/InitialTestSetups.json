@@ -1,0 +1,139 @@
+[
+    {
+        "id": "1",
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description" : "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
+            {
+                "category": "Motor",
+                "value": "WEG W21",
+                "unit": ""
+            },
+            {
+                "category": "MotorPower",
+                "value": "2.2",
+                "unit": "kW",
+                "comments": []
+            },
+            {
+                "category": "Hydraulic Pump",
+                "value": "Hydropack",
+                "unit": "",
+                "comments": [
+                    {
+                        "name": "Type number",
+                        "value": "0205820"
+                    }
+                ]
+            },
+            {
+                "category": "Hydraulic Motor",
+                "value": "Miksan Type 71 4C M",
+                "unit": "",
+                "comments": [
+                    {
+                        "name": "Type number",
+                        "value": "0205820"
+                    }
+                ]
+            },
+            {
+                "category": "Hydraulic Motor Power",
+                "value": "0.38",
+                "unit": "kW"
+            }
+        ],
+        "number_of_sensors": 3,
+        "sensors": [
+            {
+                "identifier": "s1",
+                "measurement_type": "pressure",
+                "measurement_unit": "bar",
+                "description": "measures pressure on the radial cylinder",
+                "technology_type": "pressure transmitter",
+                "technology_platform": "PT5401",
+                "data_acquisition_unit": "PLC S7-1200",
+                "sampling_rate": "50",
+                "sampling_unit": "Hz",
+                "sensor_location": "In radial cylinder tubes",
+                "location_unit": "",
+                "sensor_orientation": "Slightly rotated forward",
+                "orientation_unit": ""
+            },
+            {
+                "identifier": "s2",
+                "measurement_type": "pressure",
+                "measurement_unit": "bar",
+                "description": "measures pressure in the axial cylinder",
+                "technology_type": "pressure transmitter",
+                "technology_platform": "PT5401",
+                "data_acquisition_unit": "PLC S7-1200",
+                "sampling_rate": "50",
+                "sampling_unit": "Hz",
+                "sensor_location": "In Axial cylinder tubes",
+                "location_unit": "",
+                "sensor_orientation": "Slightly rotated forward",
+                "orientation_unit": ""
+            },
+            {
+                "identifier": "s3",
+                "measurement_type": "temperature",
+                "measurement_unit": "celcius",
+                "description": "measures temperature of bearing",
+                "technology_type": "PT",
+                "technology_platform": "PT100",
+                "data_acquisition_unit": "PLC S7-1200",
+                "sampling_rate": "10",
+                "sampling_unit": "Hz",
+                "sensor_location": "Bearing House",
+                "location_unit": "",
+                "sensor_orientation": "",
+                "orientation_unit": ""
+            }
+        ]
+    },
+    {
+        "id": "2",
+        "name": "Techport",
+        "location": "Amsterdam",
+        "characteristics": [
+            {
+                "category": "Motor",
+                "value": "MG160MA4042-H3"
+            },
+            {
+                "category": "Motor Bearing",
+                "value": "6309.C4"
+            },
+            {
+                "category": "Motor Speed Accuracy",
+                "value": "5",
+                "unit": "RPM"
+            },
+            {
+                "name": "Flow",
+                "value": "120",
+                "unit": "m^3/h"
+            }
+        ],
+        "number_of_sensors": 1,
+        "sensors": [
+            {
+                "identifier": "s1",
+                "measurement_type": "vibration",
+                "measurement_unit": "g",
+                "description": "data_collection.pdf",
+                "technology_type": "accelerometer",
+                "technology_platform": "Wilcoxon 786B-10",
+                "data_acquisition_unit": "NI (USB-4432)",
+                "sampling_rate": "2",
+                "sampling_unit": "kHz",
+                "sensor_location": "Electric Motor non-driven end bearing",
+                "location_unit": "",
+                "sensor_orientation": "vertical",
+                "orientation_unit": ""
+            }
+        ]
+    }
+]

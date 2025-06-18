@@ -1,13 +1,6 @@
 // hooks/useCombinedRefs.js
 import { useRef, useCallback } from 'react';
 
-/**
- * Combines multiple refs (forwarded ref, internal refs from other hooks)
- * into a single ref callback that can be attached to a DOM element.
- *
- * @param {...React.Ref<HTMLElement | null>} refs Any number of refs to combine.
- * @returns {(node: HTMLElement | null) => void} A ref callback to be used in JSX.
- */
 const useCombinedRefs = (...refs) => {
   return useCallback((node) => {
     refs.forEach(ref => {

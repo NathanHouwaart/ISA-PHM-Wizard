@@ -1,11 +1,11 @@
 import React from 'react';
 
-import Card from '../components/Study/StudyCard';
-import Form from '../components/Study/StudyForm';
-import View from '../components/Study/StudyView';
+import Card from '../components/TestSetup/TestSetupCard';
+import Form from '../components/TestSetup/TestSetupForm';
+import View from '../components/TestSetup/TestSetupView';
 
-export const useStudies = () => {
-    
+
+export const useTestSetups = () => {
     const getCard = () => {
         return Card;
     }
@@ -25,4 +25,4 @@ export const useStudies = () => {
     }
 }
 
-export default useStudies;
+export default useTestSetups;

@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * @param {number} currentPage The current active page index.
  * @param {number} [minHeight=200] The minimum height for the container in pixels. Defaults to 200.
  */
-const useDynamicHeightContainer = (currentPage, minHeight = 200) => { // MIN_HEIGHT is now a parameter
+const useDynamicHeightContainer = (currentPage = 0, minHeight = 200) => { // MIN_HEIGHT is now a parameter
   const childRefs = useRef([]);
   const [containerHeight, setContainerHeight] = useState('auto');
 

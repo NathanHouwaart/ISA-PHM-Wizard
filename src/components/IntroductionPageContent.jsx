@@ -15,7 +15,7 @@ const IntroductionPageContent = forwardRef(({ pageInfo, onHeightChange }, ref) =
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
 
     return (
-        <div ref={combinedRef} className="introduction-page-content-container">
+        <div ref={combinedRef}>
             {pageInfo.content.map((content, index) => (
                 <p key={index} className='text-lg font-semibold mx-20 mb-8 text-gray-700'>{content}</p>
             ))}
