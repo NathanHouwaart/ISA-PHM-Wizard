@@ -7,8 +7,6 @@ import { Book, Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
 
 // --- Sub-components for Collection ---
-// These are "dummy" components that serve as markers for where
-// the content should be rendered within the Collection component.
 export const CollectionTitle = ({ children }) => <>{children}</>;
 export const CollectionUndertitle = ({ children }) => <>{children}</>;
 export const CollectionAddButtonText = ({ children }) => <>{children}</>;
@@ -119,6 +117,7 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
                                 setShowAddForm(false);
                                 setEditingItem(null);
                             }}
+                            isEditing={editingItem ? true : false}
                         />
                     </div>
                 )}

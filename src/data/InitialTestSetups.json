@@ -48,7 +48,7 @@
         "sensors": [
             {
                 "identifier": "s1",
-                "measurement_type": "pressure",
+                "measurement_type": "Pressure",
                 "measurement_unit": "bar",
                 "description": "measures pressure on the radial cylinder",
                 "technology_type": "pressure transmitter",
@@ -63,7 +63,7 @@
             },
             {
                 "identifier": "s2",
-                "measurement_type": "pressure",
+                "measurement_type": "Pressure",
                 "measurement_unit": "bar",
                 "description": "measures pressure in the axial cylinder",
                 "technology_type": "pressure transmitter",
@@ -78,7 +78,7 @@
             },
             {
                 "identifier": "s3",
-                "measurement_type": "temperature",
+                "measurement_type": "Temperature",
                 "measurement_unit": "celcius",
                 "description": "measures temperature of bearing",
                 "technology_type": "PT",
@@ -121,7 +121,7 @@
         "sensors": [
             {
                 "identifier": "s1",
-                "measurement_type": "vibration",
+                "measurement_type": "Vibration",
                 "measurement_unit": "g",
                 "description": "data_collection.pdf",
                 "technology_type": "accelerometer",

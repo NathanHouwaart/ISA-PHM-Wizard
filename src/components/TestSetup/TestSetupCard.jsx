@@ -55,7 +55,7 @@ const TestSetupCard = ({ item, onEdit, onRemove }) => {
 
             {/* Description area */}
             <div className="mt-2 mb-3">
-              <p className="text-gray-700 text-sm italic">
+              <p className="text-gray-700 text-sm italic line-clamp-2">
                 {item.description || "No description available"}
               </p>
             </div>
