@@ -15,7 +15,7 @@ function Navbar() {
           <NavLink to={"/testsetups"}>Test Setups</NavLink>
         </li>
         <li>
-          <NavLink to={"contact"}>Contact</NavLink>
+          <NavLink to={"isaquestionnaire"}>ISA Questionnaire Form</NavLink>
         </li>
       </ul>
     </nav>

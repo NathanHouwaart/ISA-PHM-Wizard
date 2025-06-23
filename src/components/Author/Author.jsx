@@ -57,7 +57,7 @@ const AuthorCard = ({ author, onEdit, onRemove }) => {
 // Author Form Component (No changes needed)
 const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
 
-  const initialFormState = AuthorsFormFields.reduce((acc, field) => {
+  const initialFormState = AuthorsFormFields.fields.reduce((acc, field) => {
       acc[field.id] = ''; // Initialize each field with an empty string
       return acc;
   }, {});
@@ -66,7 +66,8 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
 
   useEffect(() => {
       const newFormData = {};
-      AuthorsFormFields.forEach(field => {
+      console.log(AuthorsFormFields)
+      AuthorsFormFields.fields.forEach(field => {
           // Use the field.id directly to access the author property.
           // If author is null/undefined or the property doesn't exist, it defaults to ''
           newFormData[field.id] = author?.[field.id] || '';
@@ -181,23 +182,23 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
 
             <div className="space-y-4">
                 {/* Dynamically render the 'id' field if it exists and is a 'label' type */}
-                {isEditing && AuthorsFormFields.find(field => field.id === 'id' && field.type === 'label') && (
+                {isEditing && AuthorsFormFields.fields.find(field => field.id === 'id' && field.type === 'label') && (
                     <div className='flex justify-between w-full flex-grow gap-4'>
-                        {renderField(AuthorsFormFields.find(field => field.id === 'id'))}
+                        {renderField(AuthorsFormFields.fields.find(field => field.id === 'id'))}
                     </div>
                 )}
 
 
                 {/* Group First Name, Mid Initials, Last Name */}
                 <div className='flex justify-between w-full flex-grow gap-4'>
-                    {AuthorsFormFields.filter(field =>
+                    {AuthorsFormFields.fields.filter(field =>
                         field.id === 'firstName' || field.id === 'midInitials' || field.id === 'lastName'
                     ).map(renderField)}
                 </div>
 
                 {/* Grid for other fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {AuthorsFormFields.filter(field =>
+                    {AuthorsFormFields.fields.filter(field =>
                         field.id !== 'id' && // Exclude already rendered 'id' field
                         field.id !== 'firstName' &&
                         field.id !== 'midInitials' &&
@@ -208,10 +209,10 @@ const AuthorForm = ({ author, onSave, onCancel, isEditing = false }) => {
                 </div>
 
                 {/* Single line fields like Expertise */}
-                {AuthorsFormFields.filter(field => field.id === 'expertise').map(renderField)}
+                {AuthorsFormFields.fields.filter(field => field.id === 'expertise').map(renderField)}
 
                 {/* Textarea for Bio */}
-                {AuthorsFormFields.filter(field => field.id === 'bio').map(renderField)}
+                {AuthorsFormFields.fields.filter(field => field.id === 'bio').map(renderField)}
 
                 <div className="flex justify-end space-x-3 pt-4">
                     <button
