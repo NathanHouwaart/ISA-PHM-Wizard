@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, isValidElement } from 'react'
 
 // Marker components with display names for better debugging
 export const AnimatedTooltipExplanation = ({ children }) => children;
@@ -13,8 +13,8 @@ function AnimatedTooltip({ isVisible, children, className = '' }) {
     const explanations = [];
     const examples = [];
     
-    React.Children.forEach(children, (child) => {
-        if (React.isValidElement(child)) {
+    children.forEach((child) => {
+        if (isValidElement(child)) {
             if (child.type === AnimatedTooltipExplanation) {
                 explanations.push(child.props.children);
             } else if (child.type === AnimatedTooltipExample) {

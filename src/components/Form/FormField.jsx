@@ -1,45 +1,52 @@
 import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltip';
-import Author from '../Author/Author';
 import LicensePicker from './LicensePicker';
 
-function FormField({ 
-    label, 
+export const FormFieldLabel = ({ children }) => children;
+FormFieldLabel.displayName = 'FormFieldLabel';
+
+
+function FormField({
+    name,
+    label,
     placeholder,
+    onChange,
     onBlur,
     required, 
     explanation, 
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
     rows = 3,             // for textarea
-    className = ''
+    className = '',
+    ...props
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
-    const [fieldvalue, setFieldValue] = useState("");
+    // const [fieldvalue, setFieldValue] = useState("");
     
     const handleTooltipToggle = () => {
         setShowTooltip(!showTooltip);
     };
 
-    const onChange = (e) => {
-        if(e?.target?.value){
-            setFieldValue(e.target.value)
-        }else if(typeof(e) === "string"){
-            setFieldValue(e)
-        }else{
-            setFieldValue("")
-        }
-    }
+    // const onChange = (e) => {
+    //     if(e?.target?.value){
+    //         setFieldValue(e.target.value)
+    //     }else if(typeof(e) === "string"){
+    //         setFieldValue(e)
+    //     }else{
+    //         setFieldValue("")
+    //     }
+    // }
                     
 
     const renderInput = () => {
-        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-250 bg-gray-50 focus:bg-white outline-none";
+        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white outline-none";
         
         switch (type) {
             case 'textarea':
                 return (
                     <textarea
+                        name={name}
                         value={fieldvalue}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -52,6 +59,7 @@ function FormField({
             case 'date':
                 return (
                     <input
+                        name={name}
                         type="date"
                         value={fieldvalue}
                         onChange={onChange}
@@ -63,6 +71,7 @@ function FormField({
             case 'select':
                 return (
                     <select
+                        name={name}
                         value={fieldvalue}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -87,6 +96,7 @@ function FormField({
             default:
                 return (
                     <input
+                        name={name}
                         type={type}
                         value={fieldvalue}
                         onChange={onChange}
