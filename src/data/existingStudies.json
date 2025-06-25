@@ -1,12 +1,31 @@
 [
     {
-        "id": "1",
-        "title" : "Test study",
-        "location" : "Amsterdam, NL"
+        "identifier": "S01",
+        "title" : "Test study 1",
+        "description" : "",
+        "submissionDate" : "10-10-2025",
+        "publicationDate" : ""
     },
     {
-        "id": "2",
+        "identifier": "S02",
         "title" : "Test study 2",
-        "location" : "Zwolle, NL"
+        "description" : "",
+        "submissionDate" : "",
+        "publicationDate" : ""
+    },
+    {
+        "identifier": "S03",
+        "title" : "Test study 3",
+        "description" : "",
+        "submissionDate" : "",
+        "publicationDate" : ""
+    },
+    {
+        "identifier": "S04",
+        "title" : "Test study 4",
+        "description" : "",
+        "submissionDate" : "",
+        "publicationDate" : ""
     }
 ]
+

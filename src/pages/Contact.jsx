@@ -20,7 +20,6 @@ import initialStudies from "../data/existingStudies.json"
 
 import usePublications from '../hooks/usePublications';
 import useStudies from '../hooks/useStudies';
-import { useQuestionnaireForm } from '../contexts/QuestionnaireFormContext';
 
 import Collection, {
   CollectionTitle,
@@ -32,13 +31,15 @@ import Collection, {
 } from '../components/Collection'; // Adjust the import path as needed
 import useTestSetups from '../hooks/useTestSetups';
 import PageWrapper from '../layout/PageWrapper';
+import { Switch } from '../components/ui/switch';
+import StudyPage from '../components/Study/StudyPage';
 
 export const Contact = () => {
   const totalPages = InvestigationFormFields.pages.length;
 
   // Lift authors state up to Contact.jsx
   const [authors, setAuthors] = useState(initialAuthorsData);
-  const { formData } = useQuestionnaireForm();
+  // const { formData } = useQuestionnaireForm();
 
   const {
     currentPage,
@@ -77,7 +78,6 @@ export const Contact = () => {
   const handleSubmit = () => {
     alert('Form submitted! Check console for data.');
     // In a real application, you'd collect data from all forms here
-    console.log("Form Data", formData)
   };
 
   return (
@@ -151,21 +151,35 @@ export const Contact = () => {
                     />
                   )}
                   {page.type === "collection" && (
-                    <Collection
+                    <StudyPage 
                       ref={el => childRefs.current[index] = el}
                       onHeightChange={handleChildHeightChange}
-                      itemHook={useStudies}
-                      initialItems={initialStudies}
-                    >
-                      <CollectionTitle>Test Setups</CollectionTitle>
-                      <CollectionUndertitle>View, add and edit test-setups to be used in ISA-PHM</CollectionUndertitle>
-                      <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
-                      <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
-                      <CollectionEmptyStateUndertitle>Click below to add your first test setup</CollectionEmptyStateUndertitle>
-                      <CollectionEmptyStateAddButtonText>Add Publication Now</CollectionEmptyStateAddButtonText>
-                    </Collection>
-                  )}
-                </div>
+                    />
+                  //   <div>
+                  //     <Switch
+                  //       className="w-16 h-8 data-[state=unchecked]:bg-gray-500 data-[state=checked]:bg-blue-600"
+                  //       thumbClassName="w-6 h-6 data-[state=unchecked]:translate-x-[2px] data-[state=checked]:translate-x-9"
+                  //       checked={field.value}
+                  //       onCheckedChange={field.onChange}
+                  //     />
+                  //      <span className='font-semibold text-2xl'>Toggle Grid Mode</span>
+                    
+                  //     <Collection
+                  //       ref={el => childRefs.current[index] = el}
+                  //       onHeightChange={handleChildHeightChange}
+                  //       itemHook={useStudies}
+                  //       initialItems={initialStudies}
+                  //     >
+                  //       <CollectionTitle>Test Setups</CollectionTitle>
+                  //       <CollectionUndertitle>View, add and edit test-setups to be used in ISA-PHM</CollectionUndertitle>
+                  //       <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
+                  //       <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
+                  //       <CollectionEmptyStateUndertitle>Click below to add your first test setup</CollectionEmptyStateUndertitle>
+                  //       <CollectionEmptyStateAddButtonText>Add Publication Now</CollectionEmptyStateAddButtonText>
+                  //     </Collection>
+                  // </div>
+                    )}
+                  </div>
               </div>
             ))}
           </div>

@@ -159,104 +159,124 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { RevoGrid, Template } from '@revolist/react-datagrid';
-import { Bold, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
 import PageWrapper from "../layout/PageWrapper";
 import "./About.css";
 
 const BoldCell = ({ value }) => {
   return (
     <div className="flex items-center justify-center">
-        <strong className=''>{value}</strong>
+      <strong className=''>{value}</strong>
     </div>
   );
 };
 
-
 const columns = [
   { prop: 'identifier', name: 'Identifier', size: 90, readonly: true, cellTemplate: Template(BoldCell) },
-  { prop: 'title', name: 'Title', size: 200},
+  { prop: 'title', name: 'Title', size: 200 },
   { prop: 'description', name: 'Description', size: 374 },
-  { prop: 'submissionDate', name: 'Submission Date', size: 120 },
-  { prop: 'publicationDate', name: 'Publication Date', size: 120 }
+  { prop: 'submissionDate', name: 'Submission Date', size: 150 },
+  { prop: 'publicationDate', name: 'Publication Date', size: 140 }
 ];
 
 export const About = () => {
   const [rows, setRows] = useState([
-    { identifier: 'S01' },
-    { identifier: 'S02' }
+    { identifier: 'S01', title: '', description: '', submissionDate: '', publicationDate: '' },
+    { identifier: 'S02', title: '', description: '', submissionDate: '', publicationDate: '' }
   ]);
 
   const history = useRef([]);
   const future = useRef([]);
 
+  // This useEffect will re-run on every render if `history`, `future`, or `rows` change.
+  // This is fine for debugging, but typically you might not need to log on every render.
+  useEffect(() => {
+    // console.log("Undo buffer: ", history.current);
+    // console.log("Redo buffer: ", future.current);
+    // console.log("rows changed", rows);
+  }, [history, future, rows]); // Added history and future to dependencies, although their .current values won't trigger re-renders.
+
   const pushToHistory = (prevData) => {
-    console.log(prevData)
     history.current.push(JSON.stringify(prevData));
     if (history.current.length > 100) history.current.shift(); // limit stack size
-    future.current = []; // clear redo stack
+    future.current = []; // clear redo stack on new action
   };
 
+  // Note: onBeforeautofill passes e.detail.changes which is an array of objects
+  // { type: 'change', row: number, col: number, prop: string, val: any }
   const handleRangeEdit = (e) => {
-    console.log("Range", e.detail)
-    
-    const prevData = [...rows];
-    pushToHistory(prevData)
-  }
+    const { detail: changes } = e;
+    if (changes && changes.length > 0) {
+      const prevData = [...rows]; // Capture current state before applying range changes
+      pushToHistory(prevData);
+
+      const newData = [...rows];
+      changes.forEach(change => {
+        const { row, prop, val } = change;
+        if (newData[row]) {
+          newData[row] = { ...newData[row], [prop]: val };
+        }
+      });
+      setRows(newData);
+    }
+  };
 
   const handleEdit = (e) => {
-    // e.preventDefault();
-
-    console.log("Edit", e.detail)
+    e.preventDefault();
 
     const { detail } = e;
-    // const newValue = detail.val;
-    // const rowIndex = detail.rowIndex;
-    // const prop = detail.prop;
-
-    const prevData = [...rows];
-    const newData = [...rows];
-    // newData[rowIndex] = { ...newData[rowIndex], [prop]: newValue };
+    const newValue = detail.val;
+    const oldValue = detail.value; // Get the old value to check if it actually changed
+    const rowIndex = detail.rowIndex;
+    const prop = detail.prop;
 
     // Only store if changed
-    if (e.detail.val !== e.detail.value) {
+    if (newValue !== oldValue) {
+      const prevData = [...rows]; // Capture the state *before* this edit
       pushToHistory(prevData);
-      // setRows(newData);
+
+      const newData = [...rows];
+      newData[rowIndex] = { ...newData[rowIndex], [prop]: newValue };
+      setRows(newData);
     }
   };
 
   const undo = () => {
-    console.log("undo");
-
     if (history.current.length === 0) return;
-    const prevState = JSON.parse(history.current.pop());
-    console.log("undo2 pusing ", JSON.stringify(rows));
+
+    // The state we are moving *from* (current `rows`) goes to `future`
     future.current.push(JSON.stringify(rows));
+
+    // The state we are moving *to* (previous state from `history`)
+    const prevState = JSON.parse(history.current.pop());
     setRows(prevState);
   };
 
-  useEffect((e) => {console.log("rows changed", rows)}, [rows])
-
   const redo = () => {
-    console.log("redo");
-    // console.log(future.current)
     if (future.current.length === 0) return;
-    console.log("redo 2");
-    const nextState = JSON.parse(future.current.pop());
+
+    // The state we are moving *from* (current `rows`) goes to `history`
     history.current.push(JSON.stringify(rows));
-    console.log("nextstate", nextState)
+
+    // The state we are moving *to* (next state from `future`)
+    const nextState = JSON.parse(future.current.pop());
     setRows(nextState);
   };
 
-  // 🔑 Add keyboard listeners
+  // Add keyboard listeners for undo/redo
   useEffect(() => {
     const keyHandler = (e) => {
-      // Make sure no cell editor is actively focused
+      // Make sure no cell editor is actively focused to prevent conflict with input operations
       const activeTag = document.activeElement?.tagName?.toLowerCase();
       const isEditing = activeTag === 'input' || activeTag === 'textarea';
 
       if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
-        e.preventDefault();  // Prevent default browser and input behavior
-        e.stopPropagation(); // Stop event from reaching the grid cell
+        // Only prevent default if we're actually handling the undo/redo
+        if (!isEditing) { // Prevent default only if not in an input/textarea
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
         if (e.key === 'z') {
           undo();
         } else if (e.key === 'y') {
@@ -267,11 +287,14 @@ export const About = () => {
 
     window.addEventListener('keydown', keyHandler, true); // capture phase
     return () => window.removeEventListener('keydown', keyHandler, true);
-  }, []);
+  }, [rows]); // Add `rows` to dependency array to ensure `undo` and `redo` always capture the latest `rows` value when called.
+              // Although useRef values are stable, the `rows` state itself changes.
 
   const addRow = () => {
-    const rowIndex = rows.length + 1;
+    // Before changing the state, push the current state to history
+    pushToHistory(rows);
 
+    const rowIndex = rows.length + 1;
     const newRow = columns.reduce((acc, col) => {
       if (col.prop === 'identifier') {
         acc[col.prop] = `S${rowIndex.toString().padStart(2, '0')}`;
@@ -282,13 +305,15 @@ export const About = () => {
     }, {});
 
     setRows((prev) => [...prev, newRow]);
-    console.log(rows)
   };
 
   const removeRow = () => {
+    if (rows.length === 0) return; // Prevent removing from an empty grid
+
+    // Before changing the state, push the current state to history
+    pushToHistory(rows);
     setRows((prev) => prev.slice(0, -1));
   };
-
 
   return (
     <PageWrapper >
@@ -296,17 +321,28 @@ export const About = () => {
       <div className="mb-2 space-x-2">
         <button
           onClick={addRow}
-          className="px-3 py-[2px] bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          className="px-3 py-[2px] bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-1"
         >
-          <span>Add study <Plus className="h-4 w-4"/> </span>
+          <span>Add study</span> <Plus className="h-4 w-4" />
         </button>
         <button
           onClick={removeRow}
-          className="px-3 py-[2px] bg-red-600 text-white rounded hover:bg-red-700 transition"
+          className="px-3 py-[2px] bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
         >
-          <span>Remove study <Minus className="h-4 w-4"/> </span>
+          <span>Remove study</span> <Minus className="h-4 w-4" />
         </button>
-
+        <button
+          onClick={undo}
+          className="px-3 py-[2px] bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center gap-1"
+        >
+          <span>Undo (Ctrl+Z)</span>
+        </button>
+        <button
+          onClick={redo}
+          className="px-3 py-[2px] bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center gap-1"
+        >
+          <span>Redo (Ctrl+Y)</span>
+        </button>
       </div>
       <div className="relative rounded-lg overflow-hidden border-purple-500 shadow-md border-2 h-[400px]">
         <RevoGrid

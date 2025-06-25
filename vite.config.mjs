@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr';
+import path from "path"
 
 // vite.config.js
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
@@ -39,9 +40,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // You might need to add aliases for specific modules that expect Node.js versions
-      // 'buffer': 'buffer', // This might be redundant with define but can help
-      // 'util': 'util', // if you encounter 'util is not defined'
+      "@": path.resolve(__dirname, "./src"),
     }
   }
 });

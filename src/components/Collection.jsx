@@ -6,6 +6,18 @@ import useCombinedRefs from '../hooks/useCombinedRefs';
 import { Book, Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
 export const CollectionUndertitle = ({ children }) => <>{children}</>;
@@ -16,12 +28,11 @@ export const CollectionEmptyStateAddButtonText = ({ children }) => <>{children}<
 
 
 // --- Main Collection Component ---
-const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, children }, ref) => {
-    const [items, setItems] = useState(initialItems || []);
+const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref) => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
 
-    const { getCard, getForm, getView } = itemHook();
+    const { items, setItems, getCard, getForm, getView } = itemHook();
 
     // Get the component references
     const CardComponent = getCard();
@@ -38,7 +49,7 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
 
     const handleRemove = (itemId) => {
         if (window.confirm('Are you sure you want to remove this item?')) {
-            setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+            setItems(prevItems => prevItems.filter(item => item.identifier !== itemId));
         }
     };
 
@@ -110,7 +121,7 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
                             onCancel={() => { setShowAddForm(false); setEditingItem(null); }} // Added cancel functionality
                             onSave={(updatedItem) => { // Assuming form returns updated item on save
                                 if (editingItem) {
-                                    setItems(prevItems => prevItems.map(item => item.id === updatedItem.id ? updatedItem : item));
+                                    setItems(prevItems => prevItems.map(item => item.identifier === updatedItem.identifier ? updatedItem : item));
                                 } else {
                                     setItems(prevItems => [...prevItems, updatedItem]);
                                 }
@@ -122,10 +133,10 @@ const Collection = forwardRef(({ onHeightChange, initialItems, itemHook, childre
                     </div>
                 )}
 
-                {/* Publications Grid */}
-                <div className="w-full space-y-5">
+                {/* Items Grid */}
+                <div className={`${grid ? "grid grid-cols-2 gap-5" : "w-full space-y-5"} `}>
                     {items.map(item => (
-                        <div key={item.id}>
+                        <div key={item.identifier}>
                             <CardComponent
                                 item={item}
                                 onEdit={startEditMode}

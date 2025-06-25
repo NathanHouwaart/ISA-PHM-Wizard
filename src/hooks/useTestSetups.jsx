@@ -3,9 +3,13 @@ import React from 'react';
 import Card from '../components/TestSetup/TestSetupCard';
 import Form from '../components/TestSetup/TestSetupForm';
 import View from '../components/TestSetup/TestSetupView';
+import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 
 export const useTestSetups = () => {
+
+    const { testSetups, setTestSetups } = useGlobalDataContext(); // Get studies and setStudies from global context
+    
     const getCard = () => {
         return Card;
     }
@@ -19,6 +23,8 @@ export const useTestSetups = () => {
     }
 
     return {
+        items: testSetups,
+        setItems: setTestSetups,
         getCard,
         getForm,
         getView

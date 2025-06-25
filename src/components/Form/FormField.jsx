@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
-import AnimatedTooltip from '../Tooltip/AnimatedTooltip';
+import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltip';
 import Author from '../Author/Author';
 import LicensePicker from './LicensePicker';
 
@@ -34,7 +34,7 @@ function FormField({
                     
 
     const renderInput = () => {
-        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-50 bg-gray-50 focus:bg-white outline-none";
+        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-250 bg-gray-50 focus:bg-white outline-none";
         
         switch (type) {
             case 'textarea':
@@ -106,7 +106,7 @@ function FormField({
                     {label}
                     {required && <span className="text-red-500 ml-1">*</span>}
                 </label>
-                
+
                     {renderInput()}
                
                 <button 
@@ -117,12 +117,11 @@ function FormField({
                     <HelpCircle className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors duration-200" />
                 </button>
             </div>
-            
-            <AnimatedTooltip 
-                isVisible={showTooltip}
-                explanation={explanation}
-                example={example}
-            />
+
+            <AnimatedTooltip isVisible={showTooltip}>
+                <AnimatedTooltipExplanation>{explanation}</AnimatedTooltipExplanation>
+                <AnimatedTooltipExample>{example}</AnimatedTooltipExample>
+            </AnimatedTooltip>
         </div>
     );
 }

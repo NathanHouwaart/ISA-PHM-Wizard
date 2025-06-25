@@ -21,7 +21,6 @@ import initialStudies from "../data/existingStudies.json"
 // import Collection from '../components/Collection';
 import usePublications from '../hooks/usePublications';
 import useStudies from '../hooks/useStudies';
-import { useQuestionnaireForm } from '../contexts/QuestionnaireFormContext';
 
 import Collection, {
   CollectionTitle,
