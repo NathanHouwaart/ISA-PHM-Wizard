@@ -47,7 +47,7 @@
         "number_of_sensors": 3,
         "sensors": [
             {
-                "identifier": "s1",
+                "id": "s1",
                 "measurement_type": "Pressure",
                 "measurement_unit": "bar",
                 "description": "measures pressure on the radial cylinder",
@@ -62,7 +62,7 @@
                 "orientation_unit": ""
             },
             {
-                "identifier": "s2",
+                "id": "s2",
                 "measurement_type": "Pressure",
                 "measurement_unit": "bar",
                 "description": "measures pressure in the axial cylinder",
@@ -77,7 +77,7 @@
                 "orientation_unit": ""
             },
             {
-                "identifier": "s3",
+                "id": "s3",
                 "measurement_type": "Temperature",
                 "measurement_unit": "celcius",
                 "description": "measures temperature of bearing",
@@ -120,7 +120,7 @@
         "number_of_sensors": 1,
         "sensors": [
             {
-                "identifier": "s1",
+                "id": "s1",
                 "measurement_type": "Vibration",
                 "measurement_unit": "g",
                 "description": "data_collection.pdf",

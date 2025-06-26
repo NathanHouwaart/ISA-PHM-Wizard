@@ -12,7 +12,7 @@
             ]
         },
         {
-            "id": "InvestigationInformation",
+            "id": "investigations",
             "label": "Investigation Information",
             "prompt": "Please provide the basic information of your Plant Phenotyping Project and when you submitted and published the Dataset.",
             "type": "form",

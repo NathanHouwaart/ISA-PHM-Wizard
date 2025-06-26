@@ -27,7 +27,7 @@ export const QuestionnaireFormProvider = ({ children }) => {
         
         const nestedData = {};
 
-        InvestigationFormFields2.forEach(item => {
+        InvestigationFormFields2.fields.forEach(item => {
                 const pathParts = item.path.split('.');
                 const itemId = item.id;
 

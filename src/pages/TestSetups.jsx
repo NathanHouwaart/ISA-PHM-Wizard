@@ -7,7 +7,7 @@ import "../styles.css";
 import Form from '../components/Form/Form';
 import AuthorsPage from '../components/Author/Author';
 import IntroductionPageContent from '../components/IntroductionPageContent';
-import PublicationsPage from '../components/Publication'; // Will be updated to accept authors prop
+import PublicationsPage from '../components/Publication/Publication'; // Will be updated to accept authors prop
 
 // Hooks
 import useCarouselNavigation from '../hooks/useCarouselNavigation';

@@ -20,7 +20,6 @@ const useDynamicHeightContainer = (currentPage = 0, minHeight = 200) => { // MIN
   // Callback for child components to report their height changes
   const handleChildHeightChange = useCallback((height) => {
     if (childRefs.current[currentPage] && childRefs.current[currentPage].offsetHeight === height) {
-       console.log("SettingContainerHeight with min height logic")
        setContainerHeight(applyMinHeight(height));
     }
   }, [currentPage, applyMinHeight]);

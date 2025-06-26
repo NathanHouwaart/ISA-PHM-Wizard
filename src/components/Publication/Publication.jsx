@@ -1,10 +1,10 @@
 import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Save, X, UserPen, Book } from 'lucide-react';
-import useResizeObserver from '../hooks/useResizeObserver';
-import useCombinedRefs from '../hooks/useCombinedRefs';
+import useResizeObserver from '../../hooks/useResizeObserver';
+import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 // Import the publication data with author IDs
-import initialPublicationsData from '../data/existingPublications.json';
+import initialPublicationsData from '../../data/existingPublications.json';
 
 // Helper to format author objects to display strings
 const formatAuthorName = (author) => {

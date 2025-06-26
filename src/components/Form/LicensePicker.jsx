@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getLicenses } from '../../services/api';
 import Fuse from 'fuse.js';
+import { cn } from '../../utils/utils';
 
 function LicensePicker({
+    name,
     value,
     onChange,
-    onBlur,
     placeholder,
     required,
     className
@@ -34,7 +35,8 @@ function LicensePicker({
     }, []);
 
     useEffect(() => {
-        if (value.length > 0 && fuse) {
+        console.log("VALUE", value)
+        if (value?.length > 0 && fuse) {
             const result = fuse.search(value, { limit: 10 });
             setSuggestions(result.map((r) => r.item));
             setShowSuggestions(result.length > 0); 
@@ -45,9 +47,10 @@ function LicensePicker({
     }, [value, fuse]);
 
     // Handle clicking on a suggestion
-    const handleSelect = (license) => {
-        onChange(license.name);     // Updates the form data with the selected license name
+    const handleSelect = (e) => {
+        onChange(e);     // Updates the form data with the selected license name
         setSuggestions([]);         // Clears suggestions from display
+        console.log("suggenstions set to false")
         setShowSuggestions(false);  // Hides the suggestions list
     };
 
@@ -68,33 +71,37 @@ function LicensePicker({
 
     return (
         // The 'group' class is no longer strictly needed for focus-within logic but can remain for other styling
-        <div className="relative group flex-1 w-full mr-6">
+        <>
             <input
+                name={name}
                 type="text"
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
                 required={required}
-                className={`${className} w-full`} // Retaining your original class application
+                className={cn(className, "w-full")} // Retaining your original class application
                 onFocus={handleInputFocus} // NEW: Handles input focus
-                onBlur={(e) => handleInputBlur(e)}   // NEW: Handles input blur with delay
             />
+
+            <div>
 
             {/* Conditionally render suggestions based on showSuggestions state */}
             {suggestions.length > 0 && showSuggestions && (
-                <ul className="absolute mt-1 ml-6 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-30 overflow-y-auto">
+                <ul className="absolute left-276 mt-10 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-30 overflow-y-auto">
                     {suggestions.map((license) => (
                         <li
+                            id={name}
                             key={license.licenseId}
                             className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
-                            onClick={() => handleSelect(license)} // Removed e.stopPropagation(), not needed with this approach
+                            onClick={handleSelect} // Removed e.stopPropagation(), not needed with this approach
                         >
                             {license.name}
                         </li>
                     ))}
                 </ul>
             )}
-        </div>
+            </div>
+        </>
     );
 }
 

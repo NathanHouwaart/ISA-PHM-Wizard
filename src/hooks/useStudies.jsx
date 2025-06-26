@@ -19,7 +19,7 @@ export const useStudies = () => {
     }
 
     const getView = () => {
-        return View;
+        return null;
     }
 
     return {

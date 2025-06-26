@@ -47,7 +47,7 @@ function AnimatedTooltip({ isVisible, children, className = '' }) {
         <div className={`overflow-hidden ${
             (isVisible) ? 'max-h-96 mt-2' : 'max-h-0 mt-0'
         }`}>
-            <div className={`p-4 bg-white border border-gray-200 rounded-lg shadow-md transform transition-all duration-[200ms] ease-in ${
+            <div className={`p-4 mb-2 bg-white border border-gray-200 rounded-lg shadow-md transform transition-all duration-[200ms] ease-in ${
                 isVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
             } ${className}`}>
                 {explanation && (

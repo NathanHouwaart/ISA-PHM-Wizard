@@ -2,81 +2,51 @@ import React, { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltip';
 import LicensePicker from './LicensePicker';
-
-export const FormFieldLabel = ({ children }) => children;
-FormFieldLabel.displayName = 'FormFieldLabel';
-
+import { cn } from '../../utils/utils';
 
 function FormField({
     name,
+    value,
     label,
     placeholder,
     onChange,
-    onBlur,
     required, 
     explanation, 
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
     rows = 3,             // for textarea
     className = '',
-    ...props
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
-    // const [fieldvalue, setFieldValue] = useState("");
     
     const handleTooltipToggle = () => {
         setShowTooltip(!showTooltip);
-    };
-
-    // const onChange = (e) => {
-    //     if(e?.target?.value){
-    //         setFieldValue(e.target.value)
-    //     }else if(typeof(e) === "string"){
-    //         setFieldValue(e)
-    //     }else{
-    //         setFieldValue("")
-    //     }
-    // }
-                    
+    };               
 
     const renderInput = () => {
-        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white outline-none";
+        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white outline-none";
         
         switch (type) {
             case 'textarea':
                 return (
                     <textarea
                         name={name}
-                        value={fieldvalue}
+                        value={value}
                         onChange={onChange}
-                        onBlur={onBlur}
                         placeholder={placeholder || example}
                         required={required}
                         rows={rows}
-                        className={`${baseClasses} resize-vertical ${className}`}
-                    />
-                );
-            case 'date':
-                return (
-                    <input
-                        name={name}
-                        type="date"
-                        value={fieldvalue}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        required={required}
-                        className={`${baseClasses} ${className}`}
+                        className={cn(baseClasses, "resize-vertical", className)}
                     />
                 );
             case 'select':
                 return (
                     <select
                         name={name}
-                        value={fieldvalue}
+                        value={value}
                         onChange={onChange}
-                        onBlur={onBlur}
                         required={required}
-                        className={`${baseClasses} ${className}`}
+                        className={cn(baseClasses, className)}
                     >
                         <option value="">{placeholder || "Select an option"}</option>
                         {/* Options would be passed as a prop */}
@@ -84,13 +54,14 @@ function FormField({
                 );
             case 'license':
                 return (
-                    <LicensePicker 
+                    <LicensePicker
+                        name={name}
                         type="license"
-                        value={fieldvalue}
+                        value={value}
+                        placeholder={placeholder}
                         onChange={onChange}
-                        onBlur={onBlur}
                         required={required}
-                        className={`${baseClasses} relative group ${className}`}
+                        className={cn(baseClasses, className)}
                     />
                 )
             default:
@@ -98,12 +69,11 @@ function FormField({
                     <input
                         name={name}
                         type={type}
-                        value={fieldvalue}
+                        value={value}
                         onChange={onChange}
-                        onBlur={onBlur}
                         placeholder={placeholder || example}
                         required={required}
-                        className={`${baseClasses} ${className}`}
+                        className={cn(baseClasses, className)}
                     />
                 );
         }

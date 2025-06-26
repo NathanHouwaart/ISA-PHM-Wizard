@@ -1,0 +1,38 @@
+{
+    "pageTitle": "Publications",
+    "pageUnderTitle": "Manage Project Publications",
+    "fields" : [
+        {
+            "id": "publicationTitle",
+            "label": "Publication Title",
+            "type" : "text",
+            "placeholder" : "Enter Publication Title",
+            "explanation" : "",
+            "example" : ""
+        },  
+               {
+            "id": "doi",
+            "label": "Digital Object Identifier (DOI)",
+            "type" : "text",
+            "placeholder" : "Enter DOI",
+            "explanation" : "",
+            "example" : ""
+        },  
+                {
+            "id": "pubMedId",
+            "label": "PubMed ID",
+            "type" : "text",
+            "placeholder" : "Enter PubMed ID",
+            "explanation" : "",
+            "example" : ""
+        },  
+        {
+            "id": "authors",
+            "label": "Authors",
+            "type" : "authorComboBox",
+            "placeholder" : "Add authors (e.g., John Doe, Jane Smith)",
+            "explanation" : "",
+            "example" : ""
+        }
+    ]
+}

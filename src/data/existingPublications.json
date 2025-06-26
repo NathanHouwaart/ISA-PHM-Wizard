@@ -1,6 +1,6 @@
 [
   {
-    "id": "p1",
+    "id": "p01",
     "title": "Revolutionizing Cancer Treatment with Novel Immunotherapies",
     "doi": "10.1016/j.cell.2023.01.001",
     "pubMedId": "36625890",
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "id": "p2",
+    "id": "p02",
     "title": "Advances in AI for Medical Image Analysis",
     "doi": "10.1109/TMI.2022.3210987",
     "pubMedId": "36543210",

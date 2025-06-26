@@ -172,7 +172,7 @@ const BoldCell = ({ value }) => {
 };
 
 const columns = [
-  { prop: 'identifier', name: 'Identifier', size: 90, readonly: true, cellTemplate: Template(BoldCell) },
+  { prop: 'id', name: 'Identifier', size: 90, readonly: true, cellTemplate: Template(BoldCell) },
   { prop: 'title', name: 'Title', size: 200 },
   { prop: 'description', name: 'Description', size: 374 },
   { prop: 'submissionDate', name: 'Submission Date', size: 150 },
@@ -181,8 +181,8 @@ const columns = [
 
 export const About = () => {
   const [rows, setRows] = useState([
-    { identifier: 'S01', title: '', description: '', submissionDate: '', publicationDate: '' },
-    { identifier: 'S02', title: '', description: '', submissionDate: '', publicationDate: '' }
+    { id: 'S01', title: '', description: '', submissionDate: '', publicationDate: '' },
+    { id: 'S02', title: '', description: '', submissionDate: '', publicationDate: '' }
   ]);
 
   const history = useRef([]);

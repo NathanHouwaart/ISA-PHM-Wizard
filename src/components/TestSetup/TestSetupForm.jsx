@@ -183,7 +183,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-1">
         {characteristics.map((characteristic, index) => {
           const isExpanded = expandedItems.has(index);
           const summary = `${characteristic.value || 'No value'} ${characteristic.unit}`;
@@ -356,7 +356,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
   const addSensor = () => {
     const newSensor = {
-      identifier: '',
+      id: '',
       measurement_type: '',
       measurement_unit: '',
       description: '',
@@ -441,7 +441,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-1">
         {sensors.map((sensor, index) => {
           const isExpanded = expandedSensors.has(index);
 
@@ -796,7 +796,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             rows={4}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label htmlFor="number_of_characteristics" className={labelClasses}>
                 Number of Characteristics
@@ -833,7 +833,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 This value is calculated automatically based on the sensors you add below.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Characteristics Section */}

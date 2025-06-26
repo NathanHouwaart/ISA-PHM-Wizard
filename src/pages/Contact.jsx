@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect, Children } from 'react'; // Import useEffect
 import classNames from 'classnames';
 
 import "../styles.css";
@@ -7,7 +7,7 @@ import "../styles.css";
 import Form from '../components/Form/Form';
 import AuthorsPage from '../components/Author/Author';
 import IntroductionPageContent from '../components/IntroductionPageContent';
-import PublicationsPage from '../components/Publication'; // Will be updated to accept authors prop
+import PublicationsPage from '../components/Publication/Publication'; // Will be updated to accept authors prop
 
 // Hooks
 import useCarouselNavigation from '../hooks/useCarouselNavigation';
@@ -33,6 +33,10 @@ import useTestSetups from '../hooks/useTestSetups';
 import PageWrapper from '../layout/PageWrapper';
 import { Switch } from '../components/ui/switch';
 import StudyPage from '../components/Study/StudyPage';
+import { InvestigationSlide } from '../components/Slides/InvestigationSlide';
+import { IntroductionSlide } from '../components/Slides/IntroductionSlide';
+import { AuthorSlide } from '../components/Slides/AuthorSlide';
+import PublicationSlide from '../components/Slides/PublicationSlide';
 
 export const Contact = () => {
   const totalPages = InvestigationFormFields.pages.length;
@@ -54,7 +58,7 @@ export const Contact = () => {
     containerHeight,
     childRefs,
     handleChildHeightChange,
-  } = useDynamicHeightContainer(currentPage, 250);
+  } = useDynamicHeightContainer(currentPage, 400);
 
   // Functions to manage authors state
   const handleAddAuthor = (authorData) => {
@@ -82,6 +86,7 @@ export const Contact = () => {
 
   return (
     <PageWrapper>
+      
       <h1 className="text-3xl font-bold text-gray-800 mb-8 pb-4 text-center border-b border-gray-300">
         ISA Questionnaire Form
       </h1>
@@ -114,40 +119,31 @@ export const Contact = () => {
                 key={index}
                 className='w-full overflow-hidden flex-shrink-0'
               >
-                <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mt-10 mb-2'>
-                  {page.label}
-                </h2>
-                <p className='text-center text-sm font text-gray-700 mb-10 pb-10 border-b border-gray-300'>{page.prompt}</p>
                 <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
                   {page.type === "introductionPage" && (
-                    <IntroductionPageContent
+                    <IntroductionSlide
                       ref={el => childRefs.current[index] = el}
                       pageInfo={page}
                       onHeightChange={handleChildHeightChange}
                     />
                   )}
                   {page.type === "form" && (
-                    <Form
+                    <InvestigationSlide
                       ref={el => childRefs.current[index] = el}
-                      formPageInfo={page}
                       onHeightChange={handleChildHeightChange}
-                    />
+                     /> 
                   )}
                   {page.type === "publications" && (
-                    <PublicationsPage
+                    <PublicationSlide
                       ref={el => childRefs.current[index] = el}
                       onHeightChange={handleChildHeightChange}
                       authors={authors}
                     />
                   )}
                   {page.type === "author" && (
-                    <AuthorsPage
+                    <AuthorSlide
                       ref={el => childRefs.current[index] = el}
                       onHeightChange={handleChildHeightChange}
-                      authors={authors} // Pass authors to AuthorsPage
-                      onAddAuthor={handleAddAuthor} // Pass add handler
-                      onEditAuthor={handleEditAuthor} // Pass edit handler
-                      onRemoveAuthor={handleRemoveAuthor} // Pass remove handler
                     />
                   )}
                   {page.type === "collection" && (

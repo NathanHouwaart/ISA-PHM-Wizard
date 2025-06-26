@@ -1,0 +1,8 @@
+{
+    "pageTitle": "Introduction",
+    "pageUnderTitle": "Welcome to the ISA-PHM wizard!",
+    "content" : [
+        "With this Wizard it is super easy to annotate measurements of your experiment with ISA-compliant metadata according to FAIR principles.",
+        "Click on the Next button to start the metadata annotation of the results data of your experiments."
+    ]
+}

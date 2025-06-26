@@ -7,16 +7,17 @@ import { Book, Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import classNames from 'classnames';
 
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
@@ -29,8 +30,10 @@ export const CollectionEmptyStateAddButtonText = ({ children }) => <>{children}<
 
 // --- Main Collection Component ---
 const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref) => {
+
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [viewingItem, setViewingItem] = useState(null);
 
     const { items, setItems, getCard, getForm, getView } = itemHook();
 
@@ -49,12 +52,13 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
 
     const handleRemove = (itemId) => {
         if (window.confirm('Are you sure you want to remove this item?')) {
-            setItems(prevItems => prevItems.filter(item => item.identifier !== itemId));
+            setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+            setViewingItem(null)
         }
     };
 
     const startEditMode = (item) => {
-        console.log("Start edit modeeee")
+        setViewingItem(null);
         setEditingItem(item);
         setShowAddForm(false); // Close add form if open
     };
@@ -113,42 +117,57 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 </div>
 
                 {/* Add/Edit Form */}
-                {(showAddForm || editingItem) && 
+                {(showAddForm || editingItem) &&
                     (
+                        <div className="mb-8">
+                            <FormComponent
+                                item={editingItem}
+                                onCancel={() => { setShowAddForm(false); setEditingItem(null); }} // Added cancel functionality
+                                onSave={(updatedItem) => { // Assuming form returns updated item on save
+                                    if (editingItem) {
+                                        setItems(prevItems => prevItems.map(item => item.id === updatedItem.id ? updatedItem : item));
+                                    } else {
+                                        setItems(prevItems => [...prevItems, updatedItem]);
+                                    }
+                                    setShowAddForm(false);
+                                    setEditingItem(null);
+                                    setViewingItem(null)
+                                }}
+                                isEditing={editingItem ? true : false}
+                            />
+                        </div>
+                    )}
+
+                {/* Author Detail View */}
+                {viewingItem && ViewComponent && (
                     <div className="mb-8">
-                        <FormComponent
-                            item={editingItem}
-                            onCancel={() => { setShowAddForm(false); setEditingItem(null); }} // Added cancel functionality
-                            onSave={(updatedItem) => { // Assuming form returns updated item on save
-                                if (editingItem) {
-                                    setItems(prevItems => prevItems.map(item => item.identifier === updatedItem.identifier ? updatedItem : item));
-                                } else {
-                                    setItems(prevItems => [...prevItems, updatedItem]);
-                                }
-                                setShowAddForm(false);
-                                setEditingItem(null);
-                            }}
-                            isEditing={editingItem ? true : false}
+                        <ViewComponent
+                            item={viewingItem}
+                            onSave={startEditMode}
+                            onCancel={() => setViewingItem(null)}
                         />
                     </div>
                 )}
 
                 {/* Items Grid */}
-                <div className={`${grid ? "grid grid-cols-2 gap-5" : "w-full space-y-5"} `}>
+                <div className={`${grid ? "grid grid-cols-2 gap-5" : "w-full space-y-2"}`}>
                     {items.map(item => (
-                        <div key={item.identifier}>
-                            <CardComponent
-                                item={item}
-                                onEdit={startEditMode}
-                                onRemove={handleRemove}
-                            />
-                        </div>
+                        (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
+                            <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => {ViewComponent && setViewingItem(item)}}>
+                                <CardComponent
+                                    item={item}
+                                    onEdit={startEditMode}
+                                    onRemove={handleRemove}
+                                />
+                            </div>
+                        )
                     ))}
                 </div>
 
+
                 {items.length === 0 && !showAddForm && !editingItem && (
                     <div className="text-center py-12">
-                        <Wrench className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
+                        <Wrench className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 mb-2">{emptyStateTitle}</h3>
                         <p className="text-gray-500 mb-6">{emptyStateUndertitle}</p>
                         <button

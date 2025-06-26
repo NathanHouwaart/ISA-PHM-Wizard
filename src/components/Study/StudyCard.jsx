@@ -42,7 +42,7 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
                   study.submissionDate ? (
                     <p className="flex">
                       <CalendarDays className="w-4 h-4 mr-1 mt-0.25" />
-                      <span>{study.submissionDate}</span>
+                      <span>{new Date(study.submissionDate).toLocaleDateString()}</span>
                     </p>) :
                     "not provided"}
                 </span>
@@ -53,7 +53,7 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
                   study.publicationDate ? (
                     <p className="flex">
                       <CalendarDays className="w-4 h-4 mr-1 mt-0.25" />
-                      <span>{study.publicationDate}</span>
+                      <span>{new Date(study.publicationDate).toLocaleDateString()}</span>
                     </p>) :
                     "not provided"}
                 </span>

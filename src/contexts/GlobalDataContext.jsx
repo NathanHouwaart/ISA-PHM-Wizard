@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import initialStudies from "../data/existingStudies.json"
 import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
+import initialPublications from "../data/existingPublications.json";
 
 const GlobalDataContext = createContext();
 
@@ -16,9 +17,10 @@ export const useGlobalDataContext = () => {
 
 export const GlobalDataProvider = ({ children }) => {
     const [studies, setStudies] = useState(initialStudies);
-    const [investigations, setInvestigations] = useState();
+    const [investigations, setInvestigations] = useState({});
     const [authors, setAuthors] = useState(initialAuthors);
     const [testSetups, setTestSetups] = useState(initialTestSetups);
+    const [publications, setPublications] = useState(initialPublications);
     // Add more state variables for other data types as needed
 
     // Example: Load/save all data to local storage (consider using a single key or multiple keys)
@@ -26,10 +28,11 @@ export const GlobalDataProvider = ({ children }) => {
         const storedData = localStorage.getItem('globalAppData');
         if (storedData) {
             const parsedData = JSON.parse(storedData);
-            setStudies(parsedData.studies || initialStudies);
-            setInvestigations(parsedData.investigations);
-            setAuthors(parsedData.authors || initialAuthors);
-            setTestSetups(parsedData.testSetups || initialTestSetups);
+            setStudies(parsedData?.studies || initialStudies || []);
+            setInvestigations(parsedData?.investigations || {});        // One investigation
+            setAuthors(parsedData?.authors || initialAuthors || []);
+            setTestSetups(parsedData?.testSetups || initialTestSetups || []);
+            setPublications(parsedData?.publications || initialPublications || []);
             // ... set other states
         }
     }, []);
@@ -39,11 +42,21 @@ export const GlobalDataProvider = ({ children }) => {
             studies,
             investigations,
             authors,
-            testSetups
+            testSetups,
+            publications
             // ... include other states
         };
         localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
     }, [studies, investigations, authors, testSetups]); // Add all dependent states here
+
+    const dataMap = {
+        studies: [studies, setStudies],
+        authors: [authors, setAuthors],
+        testSetups: [testSetups, setTestSetups],
+        investigations: [investigations, setInvestigations],
+        publications: [publications, setPublications],
+    };
+
 
     const value = {
         studies,
@@ -54,6 +67,9 @@ export const GlobalDataProvider = ({ children }) => {
         setInvestigations,
         authors,
         setAuthors,
+        publications,
+        setPublications,
+        dataMap
         // ... include other states and their setters
     };
 

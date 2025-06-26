@@ -1,27 +1,27 @@
 [
     {
-        "identifier": "S01",
+        "id": "S01",
         "title" : "Test study 1",
         "description" : "",
-        "submissionDate" : "10-10-2025",
+        "submissionDate" : "2025-10-10",
         "publicationDate" : ""
     },
     {
-        "identifier": "S02",
+        "id": "S02",
         "title" : "Test study 2",
         "description" : "",
         "submissionDate" : "",
         "publicationDate" : ""
     },
     {
-        "identifier": "S03",
+        "id": "S03",
         "title" : "Test study 3",
         "description" : "",
         "submissionDate" : "",
         "publicationDate" : ""
     },
     {
-        "identifier": "S04",
+        "id": "S04",
         "title" : "Test study 4",
         "description" : "",
         "submissionDate" : "",

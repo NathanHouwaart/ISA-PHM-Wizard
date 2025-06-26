@@ -1,7 +1,6 @@
 {
-    "id": "authors",
-    "path": "investigation.Authors",
-    "type" : "array",
+    "pageTitle": "Authors",
+    "pageUnderTitle": "Manage Project Authors",
     "fields" : [
         {
             "id": "id",
@@ -125,7 +124,7 @@
         {
             "id": "bio",
             "label": "Bio",
-            "type": "text",
+            "type": "textarea",
             "placeholder": "Brief descrition about the author...",
             "explanation": "",
             "example": "",

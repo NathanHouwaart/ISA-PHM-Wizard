@@ -5,20 +5,47 @@ import InvestigationFormFields from '../../data/InvestigationFormFields2.json'; 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useQuestionnaireForm } from '../../contexts/QuestionnaireFormContext';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
-const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) => {
+const Form = forwardRef(({formIdentifier, formPageInfo, className = '', onHeightChange}, ref) => {
 
-    const {handleInputChange} = useQuestionnaireForm()
-    
-    // Get the internal ref from useResizeObserver
-    const elementToObserveRef = useResizeObserver(onHeightChange);
 
-    // Combine the forwarded ref with the resize observer's ref
-    const combinedRef = useCombinedRefs(ref, elementToObserveRef);
+    // const {handleInputChange} = useQuestionnaireForm()
+    const { dataMap } = useGlobalDataContext();
+    console.log(formIdentifier)
+    console.log(dataMap)
+    const [globalData, setGlobalData] = dataMap[formIdentifier] || [[], () => {}];
+
+
+    const [formData, setFormData] = useState(() => {
+        return formPageInfo.fields.reduce((acc, field) => {
+            acc[field.id] = '';
+            return acc;
+        }, {});
+        });
+
+    const handleInputChange = (field, value) => {
+        console.log("HANDLE")
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
+        setGlobalData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     useEffect(() => {
-        console.log(elementToObserveRef)
-      }, [elementToObserveRef]);
+        console.log("globaldata: ", globalData)
+    }, [globalData])
+
+    // Get the internal ref from useResizeObserver
+        
+    // Combine the forwarded ref with the resize observer's ref
+    const elementToObserveRef = useResizeObserver(onHeightChange);
+    const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     return (
         <div ref={combinedRef} className={`space-y-3 pt-1 pb-1 ${className}`}>
@@ -27,14 +54,13 @@ const Form = forwardRef(({formPageInfo, className = '', onHeightChange}, ref) =>
                     key={index}
                     type={field.type}
                     label={field.label}
-                    onBlur={(e) => {
-                        console.log("on Blur formfield")
+                    onChange={(e) => {
                         if(e?.target?.value){
-                            handleInputChange(field.path + "." + field.id, e.target.value)
+                            handleInputChange(field.id, e.target.value)
                         }else if(typeof(e) === "string"){
-                            handleInputChange(field.path + "." + field.id, e)
+                            handleInputChange(field.id, e)
                         }else{
-                            handleInputChange(field.path + "." + field.id, "")
+                            handleInputChange(field.id, "")
                         }
                     }}
                     explanation={field.explanation}

@@ -7,42 +7,24 @@ import { BaseInput, FormField2, FormFieldLabel } from '../Form/Inputs';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
-  const initialFormState = {
-    identifier: '',
+
+  // Define your initial form state here, outside the component
+  const [formData, setFormData] = useState({
+    id: '',
     title: '',
     description: '',
     submissionDate: '',
-    publicationDate: '',
-    name: '',
-    location: '',
-    description: '',
-    characteristics: [],
-    sensors: []
-  };
-
-  const [formData, setFormData] = useState(initialFormState);
-
-  // Calculate number of sensors from sensors array
-  const numberOfSensors = formData.sensors.length;
-  const numberOfCharacteristics = formData.characteristics.length
+    publicationDate: ''
+  });
 
   useEffect(() => {
-    console.log(item)
-    if (item) {
       setFormData({
-        identifier : item.identifier || '',
-        title : item.title || '',
-        submissionDate : item.submissionDate || '',
-        publicationDate : item.publicationDate || '',
-        name: item.name || '',
-        location: item.location || '',
-        description: item.description || '',
-        characteristics: item.characteristics || [],
-        sensors: item.sensors || []
+        id: item?.id || '',
+        title: item?.title || '',
+        description: item?.description || '',
+        submissionDate: item?.submissionDate|| '',
+        publicationDate: item?.publicationDate || '',
       });
-    } else {
-      setFormData(initialFormState);
-    }
   }, [item]);
 
   const handleSubmit = (e) => {
@@ -52,18 +34,17 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
       return;
     }
 
-    const testSetupData = {
+    const studyData = {
       ...formData,
-      number_of_sensors: numberOfSensors, // Include the calculated number
-      id: isEditing && item.id ? item.id : `testsetup-${Date.now()}`
+      id: isEditing && item.id ? item.id : `studyForm-${Date.now()}`
     };
 
-    onSave(testSetupData);
+    onSave(studyData);
   };
 
   const handleChange = (e) => {
-      const { name, value } = e.target;
-      console.log(name)
+    const { name, value } = e.target;
+    console.log(name)
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -73,9 +54,6 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   useEffect(() => {
     console.log(formData);
   }, [formData])
-
-  const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-2";
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-300 max-h-[90vh] overflow-y-auto">
@@ -97,26 +75,46 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
         {/* Basic Information */}
         <div className="bg-gray-50 rounded-lg space-y-1 pt-2">
 
-            <FormField 
-                name={"title"} 
-                onChange={handleChange} 
-                label="Title" 
-                type='text' 
-                placeholder="Study Title" 
-                example="eg. BPFO Fault Severty 1 100%" 
-                explanation={"Title of the study"}
-            />
+          <FormField
+            name={"title"}
+            onChange={handleChange}
+            value={formData.title}
+            label="Title"
+            type='text'
+            placeholder="Study Title"
+            example="eg. BPFO Fault Severty 1 100%"
+            explanation={"Title of the study"}
+          />
 
-            <FormField name={"description"} label="Description" type='textarea' placeholder="Study Description" example="eg. BPFO Fault Severty 1 100%" explanation={"Title of the study"}/>
-
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div> */}
-                <FormField label="Submission Date" type='date' example="10-12-2024" explanation={"Date when Study was submitted"}/>
-            {/* </div> */}
-            {/* <div> */}
-                <FormField label="Publication Date" type='date' example="10-12-2024" explanation={"Date when Study was published"}/>
-            {/* </div> */}
-          {/* </div> */}
+          <FormField
+            name={"description"}
+            onChange={handleChange}
+            value={formData.description}
+            label="Description"
+            type='textarea'
+            placeholder="Study Description"
+            example="eg. BPFO Fault Severty 1 100%"
+            explanation={"Title of the study"}
+          />
+         
+          <FormField
+            name={"submissionDate"}
+            onChange={handleChange}
+            value={formData.submissionDate}
+            label="Submission Date"
+            type='date'
+            example="10-12-2024"
+            explanation={"Date when Study was submitted"} />
+          
+          <FormField
+            name={"publicationDate"}
+            onChange={handleChange}
+            value={formData.publicationDate}
+            label="Publication Date"
+            type='date'
+            example="10-12-2024"
+            explanation={"Date when Study was published"} />
+        
         </div>
 
 
