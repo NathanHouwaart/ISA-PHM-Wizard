@@ -5,6 +5,8 @@ import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
 
+ import investigationFormFields from '../data/InvestigationFormFields2.json'
+
 const GlobalDataContext = createContext();
 
 export const useGlobalDataContext = () => {
@@ -16,8 +18,15 @@ export const useGlobalDataContext = () => {
 };
 
 export const GlobalDataProvider = ({ children }) => {
+
+    const initialFormState = investigationFormFields.fields.reduce((acc, field) => {
+        acc[field.id] = ''; // Initialize each field with an empty string
+        return acc;
+    }, {});
+
+
     const [studies, setStudies] = useState(initialStudies);
-    const [investigations, setInvestigations] = useState({});
+    const [investigations, setInvestigations] = useState(initialFormState);
     const [authors, setAuthors] = useState(initialAuthors);
     const [testSetups, setTestSetups] = useState(initialTestSetups);
     const [publications, setPublications] = useState(initialPublications);
@@ -37,6 +46,9 @@ export const GlobalDataProvider = ({ children }) => {
         }
     }, []);
 
+   
+
+   
     useEffect(() => {
         const dataToStore = {
             studies,

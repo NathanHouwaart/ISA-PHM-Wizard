@@ -1,26 +1,7 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
-import classNames from 'classnames';
-
 import "../styles.css";
 
-// Components
-import Form from '../components/Form/Form';
-import AuthorsPage from '../components/Author/Author';
-import IntroductionPageContent from '../components/IntroductionPageContent';
-import PublicationsPage from '../components/Publication/Publication'; // Will be updated to accept authors prop
-
 // Hooks
-import useCarouselNavigation from '../hooks/useCarouselNavigation';
 import useDynamicHeightContainer from '../hooks/useDynamicHeightContainer';
-
-// Data
-import InvestigationFormFields from '../data/InvestigationFormFields.json';
-import initialAuthorsData from '../data/existingAuthors.json'; // Import initial authors data here
-import initialStudies from "../data/existingStudies.json"
-
-// import Collection from '../components/Collection';
-import usePublications from '../hooks/usePublications';
-import useStudies from '../hooks/useStudies';
 
 import Collection, {
   CollectionTitle,

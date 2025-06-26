@@ -19,14 +19,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     const { dataMap } = useGlobalDataContext();
     const [investigation, setInvestigation] = dataMap['investigations']
 
-    useEffect(() => {
-        const initialFormState = investigationFormFields.fields.reduce((acc, field) => {
-            acc[field.id] = ''; // Initialize each field with an empty string
-            return acc;
-        }, {});
-
-        setInvestigation(initialFormState)
-    }, [])
 
     function handleChange(e) {
         setInvestigation((prev) => ({
@@ -62,3 +54,5 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
             </div>
     );
 });
+
+export default InvestigationSlide;

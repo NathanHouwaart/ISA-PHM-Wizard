@@ -31,7 +31,24 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
                   </h3>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{study.title}</p>
+                  <p className='max-w-sm'>{study.title}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  {/* Description area */}
+                  <div className="mt-2 mb-3">
+                    <p
+                      className="min-h-10 text-gray-700 text-sm italic line-clamp-2"
+                    >
+                      {item.description || "No description available"}
+                    </p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className='max-w-sm'>{item.description || "No description available"}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

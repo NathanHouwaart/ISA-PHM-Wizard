@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { Save, X } from "lucide-react";
 import { TagInput } from "../Form/TagInput";

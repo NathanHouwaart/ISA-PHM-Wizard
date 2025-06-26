@@ -94,7 +94,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             type='textarea'
             placeholder="Study Description"
             example="eg. BPFO Fault Severty 1 100%"
-            explanation={"Title of the study"}
+            explanation={"Description of the study"}
           />
          
           <FormField

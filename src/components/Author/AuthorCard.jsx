@@ -19,10 +19,10 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
                 <Mail className="w-4 h-4" />
                 <span>{author.email}</span>
               </div>
-              {author.location && (
+              {author.address && (
                 <div className="flex items-center space-x-1">
                   <MapPin className="w-4 h-4" />
-                  <span>{author.location}</span>
+                  <span>{author.address}</span>
                 </div>
               )}
             </div>

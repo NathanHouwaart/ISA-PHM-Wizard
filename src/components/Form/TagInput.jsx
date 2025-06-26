@@ -83,16 +83,16 @@ export function TagInput({
   };
 
   return (
-    <div className="mb-4 relative">
+    <div className="relative">
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
-      <div className="flex flex-wrap gap-2 mb-2">
+      <div className={`flex flex-wrap gap-2 ${tags.length && 'mb-2'}`}>
         {tags.map((tag, index) => (
           <span
             key={tag + index}
-            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+            className="inline-flex items-center px-3 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
           >
             {tag}
             <button

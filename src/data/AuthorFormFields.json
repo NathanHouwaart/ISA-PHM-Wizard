@@ -5,11 +5,9 @@
         {
             "id": "id",
             "label": "User Id",
-            "type": "label",
+            "type": "null",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         },  
         {
             "id": "firstName",
@@ -17,9 +15,7 @@
             "type": "text",
             "placeholder": "Enter First Name",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         },
         {
             "id": "midInitials",
@@ -27,9 +23,7 @@
             "type": "text",
             "placeholder": "Enter Mid Initials",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         },
         {
             "id": "lastName",
@@ -37,9 +31,7 @@
             "type": "text",
             "placeholder": "Enter Last Name",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         },
         {
             "id": "email",
@@ -47,39 +39,7 @@
             "type": "text",
             "placeholder": "Enter Email Address",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id": "role",
-            "label": "Role",
-            "type": "text",
-            "placeholder": "e.g., Senior Developer, Project Manager",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id": "department",
-            "label": "Department",
-            "type": "text",
-            "placeholder": "e.g., Engineering, Design",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id": "location",
-            "label": "Location",
-            "type": "text",
-            "placeholder": "e.g., New York, Remote",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         },
         {
             "id": "phone",
@@ -87,9 +47,31 @@
             "type": "text",
             "placeholder": "Enter Phone Number",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
+        },
+        {
+            "id": "fax",
+            "label": "Fax",
+            "type": "text",
+            "placeholder": "Enter Fax Number",
+            "explanation": "",
+            "example": ""
+        },
+        {
+            "id": "role",
+            "label": "Role",
+            "type": "text",
+            "placeholder": "e.g., Author, Co-Author, Contributor",
+            "explanation": "",
+            "example": ""
+        },
+        {
+            "id": "address",
+            "label": "Address",
+            "type": "text",
+            "placeholder": "e.g 123 Main St, City, State, Zip",
+            "explanation": "",
+            "example": ""
         },
         {
             "id": "orcid",
@@ -97,39 +79,7 @@
             "type": "text",
             "placeholder": "e.g. https://orcid.org/0000-0002-0003-0004",
             "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id" : "joinDate",
-            "label": "Join Date",
-            "type": "date",
-            "placeholder": "",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id": "expertise",
-            "label": "Expertise",
-            "type": "text",
-            "placeholder": "e.g. React, Node.js, Python, UI/UX Design",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
-        },
-        {
-            "id": "bio",
-            "label": "Bio",
-            "type": "textarea",
-            "placeholder": "Brief descrition about the author...",
-            "explanation": "",
-            "example": "",
-            "path": "Investigation.Authors",
-            "cardinality" : "1"
+            "example": ""
         }
     ]
 }

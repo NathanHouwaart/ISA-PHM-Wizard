@@ -14,13 +14,13 @@ import Collection, {
     CollectionEmptyStateUndertitle,
     CollectionEmptyStateAddButtonText
 } from '../Collection';
-import { StudyTable } from './StudyTable';
+import { StudyTable } from '../Study/StudyTable';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 
-export const StudyPage = forwardRef(({ pageInfo, onHeightChange }, ref) => {
+export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
 
     const [value, setValue] = useState(true);
 
@@ -68,4 +68,4 @@ export const StudyPage = forwardRef(({ pageInfo, onHeightChange }, ref) => {
     );
 });
 
-export default StudyPage;
+export default StudySlide;

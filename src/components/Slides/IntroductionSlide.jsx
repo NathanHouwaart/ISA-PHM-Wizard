@@ -22,3 +22,5 @@ export const IntroductionSlide = forwardRef(({onHeightChange}, ref) => {
         </div>
     );
 });
+
+export default IntroductionSlide;

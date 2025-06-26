@@ -1,4 +1,4 @@
 export * from './About';
-export * from './Contact';
+export * from './IsaQuestionnaire';
 export * from './Home';
 export * from './TestSetups';

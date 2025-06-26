@@ -19,7 +19,7 @@ export const useTestSetups = () => {
     }
 
     const getView = () => {
-        return View;
+        return null;
     }
 
     return {

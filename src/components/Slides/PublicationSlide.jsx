@@ -27,7 +27,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
             </h2>
             <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{publicationFormFields.pageUnderTitle}</p>
 
-            <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-1'>
+            <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-2'>
                 <Collection
                     onHeightChange={() => { }}
                     itemHook={usePublications} // This hook will need to pull 'studies' from the global context

@@ -1,5 +1,4 @@
 import { Edit2, Trash2, UserPen } from "lucide-react";
-import React, {useCallback} from "react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { formatAuthorName } from "../../utils/utils";
 
@@ -8,7 +7,7 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
     const publication = item;
 
     const { authors } = useGlobalDataContext();
-    
+
     // Maps Author ID's stored in publication.authorList to actual Author Names
     const authorNames = publication.authorList
         .map(authorId => authors.find(author => author.id === authorId))
@@ -27,12 +26,13 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                         <h3 className="text-xl font-semibold text-gray-900">{publication.title}</h3>
                         {/* Displaying authors in PublicationCard - now looking up full details by ID */}
                         <div className='flex flex-wrap items-center space-x-1 mt-2 text-sm text-gray-500'>
-                            {authorNames.length > 0 && (
+                            {authorNames.length > 0 ? (
                                 <p className="text-gray-600 text-sm">
                                     <UserPen className="inline-block w-4 h-4 mr-1 text-gray-500" />
                                     {authorNames.join(', ')}
                                 </p>
-                            )}
+                            ) : <p className="text-gray-500 text-sm">No authors listed</p>
+                            }
                         </div>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                             <div className="flex items-center space-x-1">
