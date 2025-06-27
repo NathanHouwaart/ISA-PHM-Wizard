@@ -31,7 +31,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
         <div ref={combinedRef} >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mt-7 mb-2'>
+                <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
                   {investigationFormFields.pageTitle}
                 </h2>
                 <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{investigationFormFields.pageUnderTitle}</p>

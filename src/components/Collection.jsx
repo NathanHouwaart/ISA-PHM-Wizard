@@ -150,7 +150,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 )}
 
                 {/* Items Grid */}
-                <div className={`${grid ? "grid grid-cols-2 gap-5" : "w-full space-y-2"}`}>
+                <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-3" : "w-full space-y-2"}`}>
                     {items.map(item => (
                         (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
                             <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => {ViewComponent && setViewingItem(item)}}>

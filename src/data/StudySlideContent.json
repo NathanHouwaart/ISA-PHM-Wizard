@@ -1,0 +1,46 @@
+{
+    "pageTitle": "Studies",
+    "pageUnderTitle": "Manage Project Studies",
+    "fields" : [
+        {
+            "id": "publicationTitle",
+            "label": "Publication Title",
+            "type" : "text",
+            "placeholder" : "Enter Publication Title",
+            "explanation" : "",
+            "example" : ""
+        },  
+        { "id" : "title",
+        "label": "Title",
+        "type": "text",
+        "placeholder": "Study Title",
+        "explanation": "Title of the study",
+        "example": "eg. BPFO Fault Severity 1 100%"
+    
+    },
+        {
+            "id": "description",
+            "label": "Description",
+            "type": "textarea",
+            "placeholder": "Study Description",
+            "explanation": "Description of the study",
+            "example": "eg. BPFO Fault Severity 1 100%"
+        },
+        {
+            "id": "submissionDate",
+            "label": "Submission Date",
+            "type": "date",
+            "placeholder": "10-12-2024",
+            "explanation": "Date when Study was submitted",
+            "example": "10-12-2024"
+        },
+        {
+            "id": "publicationDate",
+            "label": "Publication Date",
+            "type": "date",
+            "placeholder": "10-12-2024",
+            "explanation": "Date when Study was published",
+            "example": "10-12-2024"
+        }
+    ]
+}

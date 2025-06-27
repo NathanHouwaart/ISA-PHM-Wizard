@@ -4,9 +4,12 @@ import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } f
 import { cn } from '../../utils/utils';
 import FormField from '../Form/FormField';
 import { BaseInput, FormField2, FormFieldLabel } from '../Form/Inputs';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
+
+  const {studies } = useGlobalDataContext();
 
   // Define your initial form state here, outside the component
   const [formData, setFormData] = useState({
@@ -36,7 +39,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const studyData = {
       ...formData,
-      id: isEditing && item.id ? item.id : `studyForm-${Date.now()}`
+      id: isEditing && item.id ? item.id : `s${String(studies.length + 1).padStart(2, '0')}`, // Generate a new ID if not editing}`
     };
 
     onSave(studyData);

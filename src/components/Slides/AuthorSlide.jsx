@@ -22,7 +22,7 @@ export const AuthorSlide = forwardRef(({ onHeightChange}, ref) => {
 
     return (
         <div ref={combinedRef}>
-            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mt-7 mb-2'>
+            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
                 {authorFormFields.pageTitle}
             </h2>
             <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{authorFormFields.pageUnderTitle}</p>

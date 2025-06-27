@@ -41,7 +41,7 @@ export const IsaQuestionnaire = () => {
 
       <Heading1> ISA Questionnaire Form </Heading1>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-7">
         {Array.from({ length: totalPages }).map((_, index) => (
           <div
             key={index}

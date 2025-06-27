@@ -5,7 +5,7 @@ import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
 
- import investigationFormFields from '../data/InvestigationFormFields2.json'
+import investigationFormFields from '../data/InvestigationFormFields2.json'
 
 const GlobalDataContext = createContext();
 
@@ -24,12 +24,16 @@ export const GlobalDataProvider = ({ children }) => {
         return acc;
     }, {});
 
+    
+    const [pageIsaQuestionnareState, setPageIsaQuestionnareState] = useState({});
+
 
     const [studies, setStudies] = useState(initialStudies);
     const [investigations, setInvestigations] = useState(initialFormState);
     const [authors, setAuthors] = useState(initialAuthors);
     const [testSetups, setTestSetups] = useState(initialTestSetups);
     const [publications, setPublications] = useState(initialPublications);
+    const [selectedTestSetup, setSelectedTestSetup] = useState(null);
     // Add more state variables for other data types as needed
 
     // Example: Load/save all data to local storage (consider using a single key or multiple keys)
@@ -55,11 +59,12 @@ export const GlobalDataProvider = ({ children }) => {
             investigations,
             authors,
             testSetups,
-            publications
+            publications,
+            selectedTestSetup
             // ... include other states
         };
         localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
-    }, [studies, investigations, authors, testSetups]); // Add all dependent states here
+    }, [studies, investigations, authors, testSetups, selectedTestSetup]); // Add all dependent states here
 
     const dataMap = {
         studies: [studies, setStudies],
@@ -67,6 +72,7 @@ export const GlobalDataProvider = ({ children }) => {
         testSetups: [testSetups, setTestSetups],
         investigations: [investigations, setInvestigations],
         publications: [publications, setPublications],
+        selectedTestSetup: [selectedTestSetup, setSelectedTestSetup]
     };
 
 
@@ -81,6 +87,8 @@ export const GlobalDataProvider = ({ children }) => {
         setAuthors,
         publications,
         setPublications,
+        selectedTestSetup,
+        setSelectedTestSetup,
         dataMap
         // ... include other states and their setters
     };

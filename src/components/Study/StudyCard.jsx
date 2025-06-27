@@ -87,7 +87,7 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
             <Edit2 className="w-4 h-4" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onRemove(item.identifier) }}
+            onClick={(e) => { e.stopPropagation(); onRemove(item.id) }}
             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Remove publication"
           >

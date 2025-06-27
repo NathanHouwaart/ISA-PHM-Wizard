@@ -6,6 +6,7 @@ import "./StudyTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import Paragraph from '../Typography/Paragraph';
 
 const BoldCell = ({ value }) => {
     return (
@@ -17,8 +18,8 @@ const BoldCell = ({ value }) => {
 
 const columns = [
     { prop: 'id', name: 'Identifier', size: 90, readonly: true, cellTemplate: Template(BoldCell) },
-    { prop: 'title', name: 'Title', size: 200 },
-    { prop: 'description', name: 'Description', size: 374 },
+    { prop: 'title', name: 'Title', size: 150 },
+    { prop: 'description', name: 'Description', size: 350 },
     { prop: 'submissionDate', name: 'Submission Date', size: 150 },
     { prop: 'publicationDate', name: 'Publication Date', size: 140 }
 ];
@@ -142,7 +143,7 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
 
         const rowIndex = studies.length + 1;
         const newRow = columns.reduce((acc, col) => {
-            if (col.prop === 'identifier') {
+            if (col.prop === 'id') {
                 acc[col.prop] = `S${rowIndex.toString().padStart(2, '0')}`;
             } else {
                 acc[col.prop] = '';
@@ -164,12 +165,15 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
     };
 
     return (
-        <div ref={combinedRef}>
-            <h2 className="text-2xl font-bold mb-4">Dynamic RevoGrid with Tailwind CSS</h2>
+        <div ref={combinedRef} className='p-6'>
+            <div>
+                <h1 className="text-3xl font-bold text-gray-900">Study Grid</h1>
+                <p className="text-gray-600 mt-2 text-left mb-4">Add all your studies in a grid like way</p>
+            </div>
             <div className="mb-2 space-x-2 flex">
                 <button
                     onClick={addRow}
-                    className="px-3 py-[2px] bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-1"
+                    className="px-3 py-[2px] bg-blue-600 text-left rounded hover:bg-blue-700 transition flex items-center gap-1"
                 >
                     <span>Add study</span> <Plus className="h-4 w-4" />
                 </button>
@@ -192,7 +196,7 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
                     <span>Redo (Ctrl+Y)</span>
                 </button>
             </div>
-            <div className="relative rounded-lg overflow-hidden border-purple-500 shadow-md border-2 h-[400px]">
+            <div className="relative rounded-lg border-gray-300 shadow border-1 h-[400px]">
                 <RevoGrid
                     rowSize={50}
                     columns={columns}
