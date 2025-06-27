@@ -17,7 +17,6 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     const { testSetups, selectedTestSetup, setSelectedTestSetup } = useGlobalDataContext();
-    console.log(testSetups)
 
     const [fuse, setFuse] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -67,14 +66,14 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
                     key={setup.id}
                     onClick={() => handleSelectSetup(setup)}
                     className={`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${selectedTestSetup?.id === setup.id
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'outline-blue-500 outline-5  border-transparent'
                             : 'border-gray-200 hover:border-gray-300'
                         }`} >
 
                         {selectedTestSetup?.id === setup.id && (
                 <div className="absolute bottom-4 right-4">
                   <div className="bg-blue-500 text-white rounded-full p-1">
-                    <Check size={16} />
+                    <Check size={20} />
                   </div>
                 </div>
               )}

@@ -1,0 +1,43 @@
+{
+    "pageTitle": "Study Variables",
+    "pageUnderTitle": "Manage Study Variables",
+    "fields" : [
+       {
+            "id" : "variableName",
+            "label": "Variable Name",
+            "type": "text",
+            "placeholder": "Enter Variable Name",
+            "explanation": "Name of the variable",
+            "example": "eg. Fault type"
+        },
+        {
+            "id": "type",
+            "label": "Type",
+            "type": "select",
+            "options": [
+                { "value" : "qualitativeFaultSpecification", "label": "Qualitative Fault Specification" },
+                { "value" : "quantitativeFaultSpecification", "label": "Quantitative Fault Specification" },
+                { "value" : "operatingCondition", "label": "Operating Condition" }
+            ],
+            "placeholder": "Select Variable Type",
+            "explanation": "Type of the variable",
+            "example": "Qualitative Fault Specification"
+        },
+        {
+            "id": "unit",
+            "label": "Unit",
+            "type": "text",
+            "placeholder": "(Optional) Enter Unit",
+            "explanation": "Unit of measurement for the variable",
+            "example": "e.g., RPM, bar, m^3/h"
+        },
+        {
+            "id": "description",
+            "label": "Description",
+            "type": "textarea",
+            "placeholder": "A brief description of the variable",
+            "explanation": "Description of the variable",
+            "example": "This variable represents the type of fault in the system"
+        }
+    ]
+}
