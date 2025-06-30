@@ -81,27 +81,27 @@ function FormField({
  
     return (
         <div className="space-y-2">
+            <label className={`text-sm ml-6 font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
+                {label}
+                {required && <span className="text-red-500 ml-1">*</span>}
+            </label>
             <div className="flex items-stretch "> {/* items-start for textarea alignment */}
-                <label className={`text-sm font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
-                    {label}
-                    {required && <span className="text-red-500 ml-1">*</span>}
-                </label>
 
                     {renderInput()}
                
-                <button 
+                {explanation && <button 
                     type="button"
                     onClick={handleTooltipToggle} 
                     className={`h-12 w-12 ml-3 flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200 flex-shrink-0 ${type === 'textarea' ? 'mt-1' : ''}`}
                 >
                     <HelpCircle className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors duration-200" />
-                </button>
+                </button>}
             </div>
 
-            <AnimatedTooltip isVisible={showTooltip}>
+            {explanation && <AnimatedTooltip isVisible={showTooltip}>
                 <AnimatedTooltipExplanation>{explanation}</AnimatedTooltipExplanation>
                 <AnimatedTooltipExample>{example}</AnimatedTooltipExample>
-            </AnimatedTooltip>
+            </AnimatedTooltip>}
         </div>
     );
 }

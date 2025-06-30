@@ -8,10 +8,10 @@ import { GlobalDataProvider } from '../../contexts/GlobalDataContext';
 import useStudies from '../../hooks/useStudies';
 import Collection, {
     CollectionTitle,
-    CollectionUndertitle,
+    CollectionSubtitle,
     CollectionAddButtonText,
     CollectionEmptyStateTitle,
-    CollectionEmptyStateUndertitle,
+    CollectionEmptyStateSubtitle,
     CollectionEmptyStateAddButtonText
 } from '../Collection';
 import { StudyTable } from '../Study/StudyTable';
@@ -20,6 +20,8 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 import studySlideContent from '../../data/studySlideContent.json'; // Assuming you have a JSON file for the content
+import { SlidePageTitle } from '../Typography/Heading2';
+import { SlidePageSubtitle } from '../Typography/Paragraph';
 
 export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
 
@@ -31,20 +33,24 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
 
     return (
         <div ref={combinedRef}>
-            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
+
+            <SlidePageTitle>
                 {studySlideContent.pageTitle}
-            </h2>
-            <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{studySlideContent.pageUnderTitle}</p>
+            </SlidePageTitle>
+
+            <SlidePageSubtitle>
+                {studySlideContent.pageSubtitle}
+            </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
-                
+
                 {/* Tab Navigation */}
                 <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
                     <button
                         onClick={() => setSelectedTab('simple-view')}
                         className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === 'simple-view'
-                                ? 'bg-white text-blue-700 shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
+                            ? 'bg-white text-blue-700 shadow-md'
+                            : 'text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Simple View
@@ -52,8 +58,8 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
                     <button
                         onClick={() => setSelectedTab('grid-view')}
                         className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === 'grid-view'
-                                ? 'bg-white text-blue-700 shadow-md'
-                                : 'text-gray-600 hover:bg-gray-200'
+                            ? 'bg-white text-blue-700 shadow-md'
+                            : 'text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Grid View
@@ -70,10 +76,10 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
                         grid={true}
                     >
                         <CollectionTitle>Studies</CollectionTitle>
-                        <CollectionUndertitle>View, add and edit Studies</CollectionUndertitle>
+                        <CollectionSubtitle>View, add and edit Studies</CollectionSubtitle>
                         <CollectionAddButtonText>Add Study</CollectionAddButtonText>
                         <CollectionEmptyStateTitle>No Studies Found</CollectionEmptyStateTitle>
-                        <CollectionEmptyStateUndertitle>Click below to add your first Study</CollectionEmptyStateUndertitle>
+                        <CollectionEmptyStateSubtitle>Click below to add your first Study</CollectionEmptyStateSubtitle>
                         <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
                     </Collection>
                 </div>

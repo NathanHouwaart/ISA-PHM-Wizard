@@ -21,10 +21,10 @@ import classNames from 'classnames';
 
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
-export const CollectionUndertitle = ({ children }) => <>{children}</>;
+export const CollectionSubtitle = ({ children }) => <>{children}</>;
 export const CollectionAddButtonText = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateTitle = ({ children }) => <>{children}</>;
-export const CollectionEmptyStateUndertitle = ({ children }) => <>{children}</>;
+export const CollectionEmptyStateSubtitle = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateAddButtonText = ({ children }) => <>{children}</>;
 
 
@@ -65,10 +65,10 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
 
     // Extract children components
     let title = 'Collection'; // Default title
-    let undertitle = 'Manage your collection items here.'; // Default undertitle
+    let subtitle = 'Manage your collection items here.'; // Default subtitle
     let addButtonText = 'Add Item';
     let emptyStateTitle = 'No Items Yet';
-    let emptyStateUndertitle = 'Get started by adding your first item.';
+    let emptyStateSubtitle = 'Get started by adding your first item.';
     let emptyStateAddButtonText = 'Add First Item';
 
     children.forEach(child => {
@@ -77,8 +77,8 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 case CollectionTitle:
                     title = child.props.children;
                     break;
-                case CollectionUndertitle:
-                    undertitle = child.props.children;
+                case CollectionSubtitle:
+                    subtitle = child.props.children;
                     break;
                 case CollectionAddButtonText:
                     addButtonText = child.props.children;
@@ -86,8 +86,8 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 case CollectionEmptyStateTitle:
                     emptyStateTitle = child.props.children;
                     break;
-                case CollectionEmptyStateUndertitle:
-                    emptyStateUndertitle = child.props.children;
+                case CollectionEmptyStateSubtitle:
+                    emptyStateSubtitle = child.props.children;
                     break;
                 case CollectionEmptyStateAddButtonText:
                     emptyStateAddButtonText = child.props.children;
@@ -105,7 +105,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-                        <Paragraph className="text-gray-600 mt-2">{undertitle}</Paragraph>
+                        <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>
                     </div>
                     <button
                         onClick={() => setShowAddForm(true)}
@@ -169,7 +169,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                     <div className="text-center py-12">
                         <Wrench className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-xl font-medium text-gray-900 mb-2">{emptyStateTitle}</h3>
-                        <p className="text-gray-500 mb-6">{emptyStateUndertitle}</p>
+                        <p className="text-gray-500 mb-6">{emptyStateSubtitle}</p>
                         <button
                             onClick={() => setShowAddForm(true)}
                             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"

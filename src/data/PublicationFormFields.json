@@ -1,6 +1,6 @@
 {
     "pageTitle": "Publications",
-    "pageUnderTitle": "Manage Project Publications",
+    "pageSubtitle": "Manage Project Publications",
     "fields" : [
         {
             "id": "publicationTitle",

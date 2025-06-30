@@ -8,12 +8,14 @@ import useAuthors from '../../hooks/useAuthors';
 
 import Collection, {
     CollectionTitle,
-    CollectionUndertitle,
+    CollectionSubtitle,
     CollectionAddButtonText,
     CollectionEmptyStateTitle,
-    CollectionEmptyStateUndertitle,
-    CollectionEmptyStateAddButtonText
+    CollectionEmptyStateSubtitle,
+    CollectionEmptyStateAddButtonText,
 } from '../Collection';
+import { SlidePageTitle } from '../Typography/Heading2';
+import { SlidePageSubtitle } from '../Typography/Paragraph';
 
 export const AuthorSlide = forwardRef(({ onHeightChange}, ref) => {
 
@@ -22,10 +24,14 @@ export const AuthorSlide = forwardRef(({ onHeightChange}, ref) => {
 
     return (
         <div ref={combinedRef}>
-            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
+
+            <SlidePageTitle>
                 {authorFormFields.pageTitle}
-            </h2>
-            <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{authorFormFields.pageUnderTitle}</p>
+            </SlidePageTitle>
+            
+            <SlidePageSubtitle>
+                {authorFormFields.pageSubtitle}
+            </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-4'>
                 <Collection
@@ -33,10 +39,10 @@ export const AuthorSlide = forwardRef(({ onHeightChange}, ref) => {
                     itemHook={useAuthors} // This hook will need to pull 'studies' from the global context
                 >
                     <CollectionTitle>Authors</CollectionTitle>
-                    <CollectionUndertitle>Add, Remove And Edit Authors</CollectionUndertitle>
+                    <CollectionSubtitle>Add, Remove And Edit Authors</CollectionSubtitle>
                     <CollectionAddButtonText>Add Author</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Authors Found</CollectionEmptyStateTitle>
-                    <CollectionEmptyStateUndertitle>Click below to add your first Author</CollectionEmptyStateUndertitle>
+                    <CollectionEmptyStateSubtitle>Click below to add your first Author</CollectionEmptyStateSubtitle>
                     <CollectionEmptyStateAddButtonText>Add Author Now</CollectionEmptyStateAddButtonText>
                 </Collection>
             </div>

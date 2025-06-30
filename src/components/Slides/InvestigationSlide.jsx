@@ -11,6 +11,10 @@ import investigationFormFields from '../../data/InvestigationFormFields2.json'
 import FormField from '../Form/FormField';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
+import { SlidePageTitle } from '../Typography/Heading2';
+import { SlidePageSubtitle } from '../Typography/Paragraph';
+
+
 export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -30,11 +34,15 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     return (
         <div ref={combinedRef} >
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
+                
+                <SlidePageTitle>
                   {investigationFormFields.pageTitle}
-                </h2>
-                <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{investigationFormFields.pageUnderTitle}</p>
+                </SlidePageTitle>
+                
+                <SlidePageSubtitle>
+                    {investigationFormFields.pageSubtitle}
+                </SlidePageSubtitle>
+                
                 <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg'>
                     {investigationFormFields.fields.map((item, index) => (
                         <FormField

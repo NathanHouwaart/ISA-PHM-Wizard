@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import { X, Save } from "lucide-react";
 
 import authorsFormFields from "../../data/AuthorFormFields.json"
+import FormField from "../Form/FormField";
 
 export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
@@ -49,6 +50,21 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
     // Helper function to render a field based on its type
     const renderField = (field) => {
         const value = formData[field.id] || ''; // Ensure value is never undefined
+
+        if(1){
+            return <FormField 
+                key={field.id}
+                name={field.id}
+                label={field.label}
+                type={field.type}
+                placeholder={field.placeholder}
+                explanation={field.explanation}
+                example={field.example}
+                onChange={handleChange}
+                value={value}
+                required={field.cardinality === '1' && field.id !== 'id'}
+            />;
+        }else{
 
         switch (field.type) {
             case 'text':
@@ -105,6 +121,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             default:
                 return null; // Or render a fallback for unsupported types
         }
+    }
     };
 
     return (
@@ -122,14 +139,6 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             </div>
 
             <div className="space-y-4">
-                {/* Dynamically render the 'id' field if it exists and is a 'label' type */}
-                {isEditing && authorsFormFields.fields.find(field => field.id === 'id' && field.type === 'label') && (
-                    <div className='flex justify-between w-full flex-grow gap-4'>
-                        {renderField(authorsFormFields.fields.find(field => field.id === 'id'))}
-                    </div>
-                )}
-
-
                 {/* Group First Name, Mid Initials, Last Name */}
                 <div className='flex justify-between w-full flex-grow gap-4'>
                     {authorsFormFields.fields.filter(field =>
@@ -140,12 +149,9 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {/* Grid for other fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {authorsFormFields.fields.filter(field =>
-                        field.id !== 'id' && // Exclude already rendered 'id' field
                         field.id !== 'firstName' &&
                         field.id !== 'midInitials' &&
-                        field.id !== 'lastName' &&
-                        field.id !== 'expertise' && // Exclude single-line fields
-                        field.id !== 'bio' // Exclude textarea fields
+                        field.id !== 'lastName'
                     ).map(renderField)}
                 </div>
 

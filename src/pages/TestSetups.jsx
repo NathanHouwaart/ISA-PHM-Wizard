@@ -5,10 +5,10 @@ import useDynamicHeightContainer from '../hooks/useDynamicHeightContainer';
 
 import Collection, {
   CollectionTitle,
-  CollectionUndertitle,
+  CollectionSubtitle,
   CollectionAddButtonText,
   CollectionEmptyStateTitle,
-  CollectionEmptyStateUndertitle,
+  CollectionEmptyStateSubtitle,
   CollectionEmptyStateAddButtonText
 } from '../components/Collection'; // Adjust the import path as needed
 import useTestSetups from '../hooks/useTestSetups';
@@ -38,10 +38,10 @@ export const TestSetups = () => {
               initialItems={initialTestSetups}
             >
               <CollectionTitle>Test Setups</CollectionTitle>
-              <CollectionUndertitle>View, add and edit test-setups to be used in ISA-PHM</CollectionUndertitle>
+              <CollectionSubtitle>View, add and edit test-setups to be used in ISA-PHM</CollectionSubtitle>
               <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
               <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
-              <CollectionEmptyStateUndertitle>Click below to add your first test setup</CollectionEmptyStateUndertitle>
+              <CollectionEmptyStateSubtitle>Click below to add your first test setup</CollectionEmptyStateSubtitle>
               <CollectionEmptyStateAddButtonText>Add test setup Now</CollectionEmptyStateAddButtonText>
             </Collection>
           }

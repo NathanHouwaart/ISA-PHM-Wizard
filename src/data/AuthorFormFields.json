@@ -1,6 +1,6 @@
 {
     "pageTitle": "Authors",
-    "pageUnderTitle": "Manage Project Authors",
+    "pageSubtitle": "Manage Project Authors",
     "fields" : [
         {
             "id": "id",

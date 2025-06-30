@@ -8,12 +8,14 @@ import usePublications from '../../hooks/usePublications';
 
 import Collection, {
     CollectionTitle,
-    CollectionUndertitle,
+    CollectionSubtitle,
     CollectionAddButtonText,
     CollectionEmptyStateTitle,
-    CollectionEmptyStateUndertitle,
+    CollectionEmptyStateSubtitle,
     CollectionEmptyStateAddButtonText
 } from '../Collection';
+import { SlidePageTitle } from '../Typography/Heading2';
+import { SlidePageSubtitle } from '../Typography/Paragraph';
 
 export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
 
@@ -22,10 +24,14 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
 
     return (
         <div ref={combinedRef}>
-            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
+            
+            <SlidePageTitle>
                 {publicationFormFields.pageTitle}
-            </h2>
-            <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{publicationFormFields.pageUnderTitle}</p>
+            </SlidePageTitle>
+
+            <SlidePageSubtitle>
+                {publicationFormFields.pageSubtitle}
+            </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-2'>
                 <Collection
@@ -33,10 +39,10 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
                     itemHook={usePublications} // This hook will need to pull 'studies' from the global context
                 >
                     <CollectionTitle>Publications</CollectionTitle>
-                    <CollectionUndertitle>Add, Remove And Edit Publications</CollectionUndertitle>
+                    <CollectionSubtitle>Add, Remove And Edit Publications</CollectionSubtitle>
                     <CollectionAddButtonText>Add Publication</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Publication Found</CollectionEmptyStateTitle>
-                    <CollectionEmptyStateUndertitle>Click below to add your first Publication</CollectionEmptyStateUndertitle>
+                    <CollectionEmptyStateSubtitle>Click below to add your first Publication</CollectionEmptyStateSubtitle>
                     <CollectionEmptyStateAddButtonText>Add Publication Now</CollectionEmptyStateAddButtonText>
                 </Collection>
             </div>

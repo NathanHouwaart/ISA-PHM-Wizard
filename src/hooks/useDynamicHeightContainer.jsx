@@ -14,7 +14,7 @@ const useDynamicHeightContainer = (currentPage = 0, minHeight = 200) => { // MIN
   // Helper function to apply the minimum height logic
   const applyMinHeight = useCallback((height) => {
     // Ensure the height is never less than minHeight
-    return Math.max(height, minHeight) + 'px';
+    return (Math.max(height, minHeight) + 5) + 'px';
   }, [minHeight]); // Dependency on the minHeight parameter
 
   // Callback for child components to report their height changes

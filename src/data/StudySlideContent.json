@@ -1,6 +1,6 @@
 {
     "pageTitle": "Studies",
-    "pageUnderTitle": "Manage Project Studies",
+    "pageSubtitle": "Manage Project Studies",
     "fields" : [
         {
             "id": "publicationTitle",

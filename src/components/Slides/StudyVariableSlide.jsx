@@ -6,6 +6,8 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { Edit, Edit2, Trash2 } from 'lucide-react';
+import { SlidePageTitle } from '../Typography/Heading2';
+import { SlidePageSubtitle } from '../Typography/Paragraph';
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
 
@@ -49,14 +51,16 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
 
     return (
         <div ref={combinedRef} >
-            <h2 className='text-2xl font-semibold text-gray-800 flex items-center justify-center mb-2'>
+            
+            <SlidePageTitle>
                 {studyVariableSlideContent.pageTitle}
-            </h2>
-            <p className='text-center text-sm font text-gray-700 mb-7 pb-7 border-b border-gray-300'>{studyVariableSlideContent.pageUnderTitle}</p>
+            </SlidePageTitle>
+
+            <SlidePageSubtitle>
+                {studyVariableSlideContent.pageSubtitle}
+            </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
-
-
 
                 {/* Tab Navigation */}
                 <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
@@ -170,7 +174,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                                     {/* Studies Grid - this is where the dynamic inputs are */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {Object.keys(selectedVariable.values).map((studyKey) => (
-                                            console.log(Object.keys(selectedVariable.values)) ||
                                             <div key={studyKey} className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm">
                                                 <label htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${studyKey}-${selectedVariableIndex}`} className="block text-xs font-semibold text-blue-800 mb-1">
                                                     Study {studyKey.replace('s', '')}

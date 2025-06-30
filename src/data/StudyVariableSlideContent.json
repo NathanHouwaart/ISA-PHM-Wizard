@@ -1,6 +1,6 @@
 {
     "pageTitle": "Study Variables",
-    "pageUnderTitle": "Manage Study Variables",
+    "pageSubtitle": "Manage Study Variables",
     "fields" : [
        {
             "id" : "variableName",

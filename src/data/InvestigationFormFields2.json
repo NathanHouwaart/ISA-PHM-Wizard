@@ -1,6 +1,6 @@
 {
     "pageTitle": "Investigation Information",
-    "pageUnderTitle": "Please provide the basic information of your Plant Phenotyping Project and when you submitted and published the Dataset.",
+    "pageSubtitle": "Please provide the basic information of your Plant Phenotyping Project and when you submitted and published the Dataset.",
     "fields": [
         {
             "id": "investigationIdentifier",
