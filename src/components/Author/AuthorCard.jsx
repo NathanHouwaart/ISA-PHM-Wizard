@@ -1,5 +1,7 @@
 import React from "react";
 import { Edit2, Mail, MapPin, Trash2 } from "lucide-react";
+import Heading3 from "../Typography/Heading3";
+import Paragraph, { CardParagraph } from "../Typography/Paragraph";
 
 
 export const AuthorCard = ({ item, onEdit, onRemove }) => {
@@ -12,8 +14,8 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
             {author.firstName?.[0]}{author.lastName?.[0]}
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{author.firstName} {author.midInitials} {author.lastName}</h3>
-            <p className="text-gray-600">{author.role}</p>
+            <Heading3>{author.firstName} {author.midInitials} {author.lastName}</Heading3>
+            <CardParagraph>{author.role}</CardParagraph>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Mail className="w-4 h-4" />

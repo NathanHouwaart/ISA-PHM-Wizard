@@ -1,5 +1,6 @@
 [
   {
+    "identifier": "v1",
     "variable": "Fault Type",
     "type": "Qualitative fault specification",
     "unit": "",
@@ -7,6 +8,7 @@
     "values": ["BPFO", "BPFO", "BPFO", "BPFO"]
   },
   {
+    "identifier": "v2",
     "variable": "Fault Position",
     "type": "Qualitative fault specification",
     "unit": "",
@@ -14,6 +16,7 @@
     "values": ["Center", "Left", "Right", "Top"]
   },
   {
+    "identifier": "v3",
     "variable": "Fault Severity",
     "type": "Quantitative fault specification",
     "unit": "",
@@ -23,6 +26,7 @@
     "values": [1, 2, 3, 4]
   },
   {
+    "identifier": "v4",
     "variable": "Motor Speed",
     "type": "Operating condition",
     "unit": "RPM",
@@ -31,6 +35,7 @@
     "values": [1000, 1000, 1000, 1000]
   },
   {
+    "identifier": "v5",
     "variable": "Discharge Pressure",
     "type": "Operating condition",
     "unit": "bar",
@@ -40,135 +45,8 @@
     "values": [1.0, 1.0, 1.0, 1.0]
   },
   {
-    "variable": "Flow",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow2",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
-    "type": "Operating condition",
-    "unit": "m^3/h",
-    "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
-  },
-  {
-    "variable": "Flow3",
+    "identifier": "v6",
+    "variable": "Volumetric Flow Rate",
     "type": "Operating condition",
     "unit": "m^3/h",
     "description": "The volumetric flow rate through the system.",

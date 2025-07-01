@@ -43,7 +43,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
                     {investigationFormFields.pageSubtitle}
                 </SlidePageSubtitle>
                 
-                <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg'>
+                <div className='bg-gray-50 p-4 space-y-3 pl-10 border-gray-300 border rounded-lg'>
                     {investigationFormFields.fields.map((item, index) => (
                         <FormField
                             key={index}

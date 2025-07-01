@@ -5,6 +5,7 @@ import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
 import initialStudyVariables from "../data/existingStudyVariables.json"; // Assuming you have a file for study variables
+import existingStudyToStudyVariableMapping from "../data/existingStudyToStudyVariableMapping.json";
 
 import investigationFormFields from '../data/InvestigationFormFields2.json'
 
@@ -36,6 +37,7 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(initialPublications);
     const [selectedTestSetup, setSelectedTestSetup] = useState(null);
     const [studyVariables, setStudyVariables] = useState(initialStudyVariables); // For study variables
+    const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(existingStudyToStudyVariableMapping);
 
     // Add more state variables for other data types as needed
 
@@ -50,6 +52,7 @@ export const GlobalDataProvider = ({ children }) => {
             setTestSetups(parsedData?.testSetups || initialTestSetups || []);
             setPublications(parsedData?.publications || initialPublications || []);
             setStudyVariables(parsedData?.studyVariables || initialStudyVariables || []); // Load study variables
+            setStudyToStudyVariableMapping(parsedData?.studyToStudyVariableMapping || existingStudyToStudyVariableMapping || []);
             // ... set other states
         }
     }, []);
@@ -63,11 +66,12 @@ export const GlobalDataProvider = ({ children }) => {
             testSetups,
             publications,
             selectedTestSetup,
-            studyVariables
+            studyVariables,
+            studyToStudyVariableMapping,
             // ... include other states
         };
         localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
-    }, [studies, investigations, authors, testSetups, selectedTestSetup, studyVariables]); // Add all dependent states here
+    }, [studies, investigations, authors, testSetups, selectedTestSetup, studyVariables, studyToStudyVariableMapping]); // Add all dependent states here
 
     const dataMap = {
         studies: [studies, setStudies],
@@ -76,7 +80,8 @@ export const GlobalDataProvider = ({ children }) => {
         investigations: [investigations, setInvestigations],
         publications: [publications, setPublications],
         selectedTestSetup: [selectedTestSetup, setSelectedTestSetup],
-        studyVariables: [studyVariables, setStudyVariables]
+        studyVariables: [studyVariables, setStudyVariables],
+        studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping]
     };
 
 
@@ -95,6 +100,8 @@ export const GlobalDataProvider = ({ children }) => {
         setSelectedTestSetup,
         studyVariables,
         setStudyVariables,
+        studyToStudyVariableMapping,
+        setStudyToStudyVariableMapping,
         dataMap
     };
 

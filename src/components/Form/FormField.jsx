@@ -24,8 +24,7 @@ function FormField({
     };               
 
     const renderInput = () => {
-        const baseClasses = "flex-1 px-4 ml-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white outline-none";
-        
+        const baseClasses = "w-full px-3 bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none";
         switch (type) {
             case 'textarea':
                 return (
@@ -80,19 +79,19 @@ function FormField({
     };
  
     return (
-        <div className="space-y-2">
-            <label className={`text-sm ml-6 font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
+        <div>
+            <label className={`text-sm ml-1 font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
                 {label}
                 {required && <span className="text-red-500 ml-1">*</span>}
             </label>
-            <div className="flex items-stretch "> {/* items-start for textarea alignment */}
+            <div className="flex flex-grow w-full pt-0.5 ml-0"> {/* items-start for textarea alignment */}
 
                     {renderInput()}
                
                 {explanation && <button 
                     type="button"
                     onClick={handleTooltipToggle} 
-                    className={`h-12 w-12 ml-3 flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200 flex-shrink-0 ${type === 'textarea' ? 'mt-1' : ''}`}
+                    className={`h-12 w-12 ml-3 mr-1 flex items-center justify-center group hover:bg-gray-200 rounded-full transition-colors duration-200 flex-shrink-0 ${type === 'textarea' ? 'mt-1' : ''}`}
                 >
                     <HelpCircle className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors duration-200" />
                 </button>}

@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react'
+import React, { forwardRef, useEffect, useMemo, useState } from 'react'
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
@@ -8,6 +8,9 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { Edit, Edit2, Trash2 } from 'lucide-react';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
+import { GridTable, BoldCell } from '../GridTable/GridTable';
+import { RevoGrid, Template } from '@revolist/react-datagrid';
+
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
 
@@ -17,12 +20,13 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
 
-    const { studyVariables, setStudyVariables } = useGlobalDataContext();
+    const { studyVariables, setStudyVariables, studies, studyToStudyVariableMapping, setStudyToStudyVariableMapping } = useGlobalDataContext();
+
     const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
 
     const selectedVariable = studyVariables[selectedVariableIndex];
 
-        // Function to render the appropriate input field for a specific study
+    // Function to render the appropriate input field for a specific study
     const renderInputField = (item, variableIndex, studyKey) => {
         const isNumeric = item.type.includes('Quantitative') || item.type.includes('Operating');
         const inputType = isNumeric ? 'number' : 'text';
@@ -49,9 +53,74 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
         );
     };
 
+
+    const [processedData, setProcessedData] = useState([]);
+    const [columns, setColumns] = useState([]);
+
+
+    // Standalone Effect to initialize columns for grid view
+    useEffect(() => {
+        console.log('Initializing columns for grid view...');
+
+        setColumns([
+            { prop: 'variable', name: 'Variable', size: 90, cellTemplate: Template(BoldCell) },
+            { prop: 'type', name: 'Variable Type' },
+            { prop: 'unit', name: 'Unit' },
+            { prop: 'description', name: 'Description', size: 350 },
+            ...studies.map((_, index) => ({
+                prop: `s${(index + 1).toString().padStart(2, '0')}`,
+                name: `S${(index + 1).toString().padStart(2, '0')}`,
+                size: 150
+            }))
+        ])
+    }, [studies]);
+
+
+    
+    useEffect(() => {
+        console.log('Processing study variables for grid view...');
+        const newProcessedData = studyVariables.map(row => {
+            const flattenedValues = {};
+            row.values.forEach((val, index) => {
+                flattenedValues[`s${(index + 1).toString().padStart(2, '0')}`] = val;
+            });
+            return {
+                ...row,
+                ...flattenedValues
+            };
+        });
+        setProcessedData(newProcessedData);
+    }, [studyVariables]);
+
+
+    useEffect(() => {
+
+        const unflattened = processedData.map(row => {
+            const values = Object.entries(row)
+                .filter(([key]) => /^s\d+$/.test(key))
+                .sort(([a], [b]) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
+                .map(([, val]) => val);
+
+            return {
+                variable: row.variable ?? '',
+                type: row.type ?? '',
+                unit: row.unit ?? '',
+                description: row.description ?? '',
+                values
+            };
+        });
+
+        if (JSON.stringify(studyVariables) === JSON.stringify(unflattened)) return; // Prevent unnecessary state update
+
+        setStudyVariables(unflattened);
+
+    }, [processedData]);
+
+
+
     return (
         <div ref={combinedRef} >
-            
+
             <SlidePageTitle>
                 {studyVariableSlideContent.pageTitle}
             </SlidePageTitle>
@@ -85,7 +154,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                 </div>
 
                 <div
-                    className={`flex max-h-[50vh] rounded transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-0 max-h-0" : "opacity-100"
+                    className={`flex rounded transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'simple-view' || selectedTab === 'details' ? "opacity-100 max-h-[50vh]" : "opacity-0 max-h-0"
                         }`}
                 >
                     {/* Sidebar for Variable Navigation */}
@@ -100,8 +169,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                                         setSelectedTab('details'); // Switch to details tab on variable select
                                     }}
                                     className={`w-full cursor-pointer text-left p-3 rounded-lg mb-2 transition-colors duration-200 ${index === selectedVariableIndex
-                                            ? 'bg-blue-600 text-white shadow-md'
-                                            : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                                         }`}
                                 >
                                     {item.variable}
@@ -109,7 +178,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                             ))}
                         </div>
                         <button
-                            onClick={() => {}}
+                            onClick={() => { }}
                             className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                         >
                             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -152,7 +221,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                                 {selectedVariable.unit && <span>Unit: <span className="font-semibold text-gray-800">{selectedVariable.unit}</span></span>}
                             </div>
 
-                                    {/* New: Fill All Studies Section
+                            {/* New: Fill All Studies Section
                                     <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200 flex items-center shadow-inner">
                                         <label htmlFor="fill-all-studies" className="text-sm font-medium text-gray-700 mr-3 whitespace-nowrap">Fill all studies with:</label>
                                         <input
@@ -171,33 +240,33 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                                         </button>
                                     </div> */}
 
-                                    {/* Studies Grid - this is where the dynamic inputs are */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        {Object.keys(selectedVariable.values).map((studyKey) => (
-                                            <div key={studyKey} className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm">
-                                                <label htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${studyKey}-${selectedVariableIndex}`} className="block text-xs font-semibold text-blue-800 mb-1">
-                                                    Study {studyKey.replace('s', '')}
-                                                </label>
-                                                {renderInputField(selectedVariable, selectedVariableIndex, studyKey)}
-                                            </div>
-                                        ))}
+                            {/* Studies Grid - this is where the dynamic inputs are */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {Object.keys(selectedVariable.values).map((studyKey) => (
+                                    <div key={studyKey} className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm">
+                                        <label htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${studyKey}-${selectedVariableIndex}`} className="block text-xs font-semibold text-blue-800 mb-1">
+                                            Study {studyKey.replace('s', '')}
+                                        </label>
+                                        {renderInputField(selectedVariable, selectedVariableIndex, studyKey)}
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                                    <svg className="w-16 h-16 mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"></path>
-                                    </svg>
-                                    <p>No parameter selected or available.</p>
-                                    <p>Click 'Add New' to get started!</p>
-                                </div>
-                            )}
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
+                            <svg className="w-16 h-16 mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"></path>
+                            </svg>
+                            <p>No parameter selected or available.</p>
+                            <p>Click 'Add New' to get started!</p>
+                        </div>
+                    )}
                 </div>
                 <div
                     className={`transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-100" : "opacity-0 max-h-0"
                         }`}
                 >
-
+                    <GridTable items={processedData} setItems={setProcessedData} columns={columns} ></GridTable>
                 </div>
             </div>
         </div>

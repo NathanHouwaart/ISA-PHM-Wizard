@@ -138,20 +138,21 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {/* Group First Name, Mid Initials, Last Name */}
-                <div className='flex justify-between w-full flex-grow gap-4'>
+                <div className='grid grid-cols-3 gap-x-8'>
                     {authorsFormFields.fields.filter(field =>
                         field.id === 'firstName' || field.id === 'midInitials' || field.id === 'lastName'
                     ).map(renderField)}
                 </div>
 
                 {/* Grid for other fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8">
                     {authorsFormFields.fields.filter(field =>
                         field.id !== 'firstName' &&
                         field.id !== 'midInitials' &&
-                        field.id !== 'lastName'
+                        field.id !== 'lastName' &&
+                        field.id !== 'id'
                     ).map(renderField)}
                 </div>
 

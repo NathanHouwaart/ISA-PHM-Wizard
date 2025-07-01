@@ -1,6 +1,7 @@
 import { Edit2, Trash2, UserPen } from "lucide-react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { formatAuthorName } from "../../utils/utils";
+import Heading3 from "../Typography/Heading3";
 
 export const PublicationCard = ({ item, onEdit, onRemove }) => {
 
@@ -23,9 +24,9 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                         {publication.title.split(" ").slice(0, 2).map(word => word[0]).join("")}
                     </div>
                     <div>
-                        <h3 className="text-xl font-semibold text-gray-900">{publication.title}</h3>
+                        <Heading3>{publication.title}</Heading3>
                         {/* Displaying authors in PublicationCard - now looking up full details by ID */}
-                        <div className='flex flex-wrap items-center space-x-1 mt-2 text-sm text-gray-500'>
+                        <div className='flex flex-wrap items-center space-x-1 mt-1 text-sm text-gray-500'>
                             {authorNames.length > 0 ? (
                                 <p className="text-gray-600 text-sm">
                                     <UserPen className="inline-block w-4 h-4 mr-1 text-gray-500" />
@@ -48,13 +49,11 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                                 </span>
                             </div>
                             <div className="flex items-center space-x-1">
-                                <p className='font-bold'>PubMedID - </p>
+                                <p className='font-bold'>Publication Satus - </p>
                                 <span>{
-                                    publication.doi ? (
-                                        <p className="text-blue-600 text-sm hover:underline">
-                                            <a href={`https://pubmed.ncbi.nlm.nih.gov/${publication.pubMedId}/`} target="_blank" rel="noopener noreferrer">
-                                                {publication.pubMedId}
-                                            </a>
+                                    publication.publicationStatus ? (
+                                        <p >
+                                                {publication.publicationStatus}
                                         </p>) :
                                         "not provided"}
                                 </span>

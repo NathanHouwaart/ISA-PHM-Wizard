@@ -1,0 +1,30 @@
+[
+   {
+    "studyId" : "S01",
+    "studyVariableId" : "SV01"
+   },
+{
+    "studyId" : "S01",
+    "studyVariableId" : "SV02"
+},
+{
+    "studyId" : "S01",
+    "studyVariableId" : "SV03"
+},
+{
+    "studyId" : "S02",
+    "studyVariableId" : "SV04"
+},
+{
+    "studyId" : "S02",
+    "studyVariableId" : "SV05"
+},
+{
+    "studyId" : "S03",
+    "studyVariableId" : "SV04"
+},
+{
+    "studyId" : "S04",
+    "studyVariableId" : "SV03"
+}
+]

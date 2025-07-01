@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+revo-grid[theme=custom] {
+    --revo-grid-background: #2f72b6;
+    --revo-grid-foreground: #c23434;
+    --revo-grid-text: rgba(0, 0, 0, 0.9);
+    --revo-grid-divider: #505050;
+    --revo-grid-border: rgba(255, 255, 255, 0.2);
+    --revo-grid-filter-panel-bg: #0f2a46;
+    --revo-grid-filter-panel-border: #505050;
+    --revo-grid-filter-panel-input-bg: #343a40;
+    --revo-grid-filter-panel-divider: #505050;
+    --revo-grid-header-bg: #343a40;
+    --revo-grid-header-color: #fff;
+    --revo-grid-header-border: #505050;
+    --revo-grid-cell-border: #424242;
+    --revo-grid-focused-bg: rgba(52, 58, 64, 0.5);
+    --revo-grid-row-hover: rgba(80, 80, 80, 0.5);
+    --revo-grid-row-headers-bg: rgba(14, 73, 133, 0.8);
+    --revo-grid-row-headers-color: rgba(161, 21, 21, 0.8);
+    --revo-grid-cell-disabled-bg: rgba(255, 255, 255, 0.07);
+}
+
+
+revogr-header .rgHeaderCell .header-content{
+    @apply font-semibold text-xs !text-black;
+    line-height: 27px;
+}
+
+.rowHeaders revogr-data .rgCell{
+    @apply font-semibold text-sm !text-black;
+    line-height: 27px;
+}
+
+div.rgCell{
+    @apply transform text-center pt-[7px];
+    text-overflow: ellipsis;
+    text-wrap: normal;
+    overflow-y: auto;
+    white-space: normal;
+    line-height: 1.2;
+    
+}
+
+
+/* div.rgCell.disabled{
+    @apply flex items-center justify-center
+} */
