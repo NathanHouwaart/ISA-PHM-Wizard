@@ -10,6 +10,7 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import { GridTable, BoldCell } from '../GridTable/GridTable';
 import { RevoGrid, Template } from '@revolist/react-datagrid';
+import StudyDataTransformer, { getStructuredVariables } from './StudyDataTransformer';
 
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
@@ -76,45 +77,41 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
     }, [studies]);
 
 
-    
-    useEffect(() => {
-        console.log('Processing study variables for grid view...');
-        const newProcessedData = studyVariables.map(row => {
-            const flattenedValues = {};
-            row.values.forEach((val, index) => {
-                flattenedValues[`s${(index + 1).toString().padStart(2, '0')}`] = val;
-            });
-            return {
-                ...row,
-                ...flattenedValues
-            };
-        });
-        setProcessedData(newProcessedData);
-    }, [studyVariables]);
+
+    // useEffect(() => {
+    //     console.log('Processing study variables for grid view...');
+    //     const newProcessedData = studyVariables.map(row => {
+    //         const flattenedValues = {};
+    //         row.values.forEach((val, index) => {
+    //             flattenedValues[`s${(index + 1).toString().padStart(2, '0')}`] = val;
+    //         });
+    //         return {
+    //             ...row,
+    //             ...flattenedValues
+    //         };
+    //     });
+    //     console.log('Processed Data:', newProcessedData);
+    //     setProcessedData(newProcessedData);
+    // }, [studyVariables]);
 
 
     useEffect(() => {
 
-        const unflattened = processedData.map(row => {
-            const values = Object.entries(row)
-                .filter(([key]) => /^s\d+$/.test(key))
-                .sort(([a], [b]) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
-                .map(([, val]) => val);
+        studyToStudyVariableMapping.forEach((mapping, index) => {
+            
+            const variable = studyVariables.find(v => v.id === mapping.studyVariableId);
+            const study    = studies.find(s => s.id === mapping.studyId);
+            
+            if(!variable || !study) {
+                console.warn(`Mapping not found for study ${mapping.studyId} or variable ${mapping.studyVariableId}`);
+                return;
+            }
 
-            return {
-                variable: row.variable ?? '',
-                type: row.type ?? '',
-                unit: row.unit ?? '',
-                description: row.description ?? '',
-                values
-            };
+            setProcessedData(getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping))
+
         });
 
-        if (JSON.stringify(studyVariables) === JSON.stringify(unflattened)) return; // Prevent unnecessary state update
-
-        setStudyVariables(unflattened);
-
-    }, [processedData]);
+    }, [studyVariables, studies, studyToStudyVariableMapping]);
 
 
 
@@ -267,6 +264,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange }, ref) => {
                         }`}
                 >
                     <GridTable items={processedData} setItems={setProcessedData} columns={columns} ></GridTable>
+                    {/* <StudyDataTransformer studyVariables={studyVariables} studies={studies} rawMeasurements={studyToStudyVariableMapping} /> */}
                 </div>
             </div>
         </div>

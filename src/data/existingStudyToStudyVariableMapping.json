@@ -1,30 +1,123 @@
 [
    {
-    "studyId" : "S01",
-    "studyVariableId" : "SV01"
+    "studyId" : "s01",
+    "studyVariableId" : "sv01",
+    "value": "BPFO"
    },
-{
-    "studyId" : "S01",
-    "studyVariableId" : "SV02"
-},
-{
-    "studyId" : "S01",
-    "studyVariableId" : "SV03"
-},
-{
-    "studyId" : "S02",
-    "studyVariableId" : "SV04"
-},
-{
-    "studyId" : "S02",
-    "studyVariableId" : "SV05"
-},
-{
-    "studyId" : "S03",
-    "studyVariableId" : "SV04"
-},
-{
-    "studyId" : "S04",
-    "studyVariableId" : "SV03"
-}
+      {
+    "studyId" : "s02",
+    "studyVariableId" : "sv01",
+    "value": "BPFO"
+   },
+      {
+    "studyId" : "s03",
+    "studyVariableId" : "sv01",
+    "value": "BPFO"
+   },
+      {
+    "studyId" : "s04",
+    "studyVariableId" : "sv01",
+    "value": "BPFO"
+   },
+      {
+    "studyId" : "s01",
+    "studyVariableId" : "sv02",
+    "value": "Center"
+   },
+   {
+    "studyId" : "s02",
+    "studyVariableId" : "sv02",
+    "value": "Center"
+   },
+   {
+    "studyId" : "s03",
+    "studyVariableId" : "sv02",
+    "value": "Center"
+   },
+   {
+    "studyId" : "s04",
+    "studyVariableId" : "sv02",
+    "value": "Center"
+   },
+    {
+    "studyId" : "s01",
+    "studyVariableId" : "sv03",
+    "value": 1
+   },
+   {
+    "studyId" : "s02",
+    "studyVariableId" : "sv03",
+    "value": 2
+   },
+   {
+    "studyId" : "s03",
+    "studyVariableId" : "sv03",
+    "value": 3
+   },
+   {
+    "studyId" : "s04",
+    "studyVariableId" : "sv03",
+    "value": 4
+   },
+    {
+    "studyId" : "s01",
+    "studyVariableId" : "sv04",
+    "value": 1000
+   },
+   {
+    "studyId" : "s02",
+    "studyVariableId" : "sv04",
+    "value": 1000
+   },
+   {
+    "studyId" : "s03",
+    "studyVariableId" : "sv04",
+    "value": 1000
+   },
+   {
+    "studyId" : "s04",
+    "studyVariableId" : "sv04",
+    "value": 1250
+   },
+    {
+    "studyId" : "s01",
+    "studyVariableId" : "sv05",
+    "value": 1
+   },
+   {
+    "studyId" : "s02",
+    "studyVariableId" : "sv05",
+    "value": 1.2
+   },
+   {
+    "studyId" : "s03",
+    "studyVariableId" : "sv05",
+    "value": 1.3
+   },
+   {
+    "studyId" : "s04",
+    "studyVariableId" : "sv05",
+    "value": 1.1
+   },
+    {
+    "studyId" : "s01",
+    "studyVariableId" : "sv06",
+    "value": 140
+   },
+   {
+    "studyId" : "s02",
+    "studyVariableId" : "sv06",
+    "value": 140
+   },
+   {
+    "studyId" : "s03",
+    "studyVariableId" : "sv06",
+    "value": 140
+   },
+   {
+    "studyId" : "s04",
+    "studyVariableId" : "sv06",
+    "value": 140
+   }
+
 ]

@@ -1,6 +1,6 @@
 [
   {
-    "identifier": "v1",
+    "id": "sv01",
     "variable": "Fault Type",
     "type": "Qualitative fault specification",
     "unit": "",
@@ -8,7 +8,7 @@
     "values": ["BPFO", "BPFO", "BPFO", "BPFO"]
   },
   {
-    "identifier": "v2",
+    "id": "sv02",
     "variable": "Fault Position",
     "type": "Qualitative fault specification",
     "unit": "",
@@ -16,7 +16,7 @@
     "values": ["Center", "Left", "Right", "Top"]
   },
   {
-    "identifier": "v3",
+    "id": "sv03",
     "variable": "Fault Severity",
     "type": "Quantitative fault specification",
     "unit": "",
@@ -26,7 +26,7 @@
     "values": [1, 2, 3, 4]
   },
   {
-    "identifier": "v4",
+    "id": "sv04",
     "variable": "Motor Speed",
     "type": "Operating condition",
     "unit": "RPM",
@@ -35,7 +35,7 @@
     "values": [1000, 1000, 1000, 1000]
   },
   {
-    "identifier": "v5",
+    "id": "sv05",
     "variable": "Discharge Pressure",
     "type": "Operating condition",
     "unit": "bar",
@@ -45,7 +45,7 @@
     "values": [1.0, 1.0, 1.0, 1.0]
   },
   {
-    "identifier": "v6",
+    "id": "sv06",
     "variable": "Volumetric Flow Rate",
     "type": "Operating condition",
     "unit": "m^3/h",
