@@ -1,12 +1,14 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { RevoGrid, Template } from '@revolist/react-datagrid';
-import { Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
+import { Bold, ConstructionIcon, Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
 import PageWrapper from "../../layout/PageWrapper";
 import "./StudyTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import Paragraph from '../Typography/Paragraph';
+import {v4 as uuidv4} from 'uuid';
+
 
 const BoldCell = ({ value }) => {
     return (
@@ -16,8 +18,15 @@ const BoldCell = ({ value }) => {
     );
 };
 
+const PatternCellTemplate = ({ prefix, rowIndex }) => {
+    // Generate the pattern based on the row index
+    const value = `${prefix}${(rowIndex + 1).toString().padStart(2, '0')}`;
+    return <BoldCell value={value} />;
+}
+
+
 const columns = [
-    { prop: 'id', name: 'Identifier', size: 90, readonly: true, cellTemplate: Template(BoldCell) },
+    { prop: 'id', name: 'Identifier', size: 100, readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'S' })},
     { prop: 'title', name: 'Title', size: 150 },
     { prop: 'description', name: 'Description', size: 350 },
     { prop: 'submissionDate', name: 'Submission Date', size: 150 },
@@ -28,9 +37,11 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
 
     const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
 
+
+    // Unused
     const [rows, setRows] = useState([
-        { id: 'S01', title: '', description: '', submissionDate: '', publicationDate: '' },
-        { id: 'S02', title: '', description: '', submissionDate: '', publicationDate: '' }
+        { id: 's01', title: '', description: '', submissionDate: '', publicationDate: '' },
+        { id: 's02', title: '', description: '', submissionDate: '', publicationDate: '' }
     ]);
 
     const history = useRef([]);
@@ -144,12 +155,14 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
         const rowIndex = studies.length + 1;
         const newRow = columns.reduce((acc, col) => {
             if (col.prop === 'id') {
-                acc[col.prop] = `S${rowIndex.toString().padStart(2, '0')}`;
+                acc[col.prop] = uuidv4();
             } else {
                 acc[col.prop] = '';
             }
             return acc;
         }, {});
+
+        console.log('Adding new row:', newRow);
 
         setRows((prev) => [...prev, newRow]);
         setStudies((prev) => [...prev, newRow]);

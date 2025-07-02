@@ -1,27 +1,27 @@
 [
     {
-        "id": "s01",
+        "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
         "title" : "Test study 1",
         "description" : "",
         "submissionDate" : "2025-10-10",
         "publicationDate" : ""
     },
     {
-        "id": "s02",
+        "id": "131179fe-1943-49ce-ad74-e719199fdd2d",
         "title" : "Test study 2",
         "description" : "",
         "submissionDate" : "",
         "publicationDate" : ""
     },
     {
-        "id": "s03",
+        "id": "83b49697-6f2d-49fd-a43e-3795341e21e4",
         "title" : "Test study 3",
         "description" : "",
         "submissionDate" : "",
         "publicationDate" : ""
     },
     {
-        "id": "s04",
+        "id": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
         "title" : "Test study 4",
         "description" : "",
         "submissionDate" : "",

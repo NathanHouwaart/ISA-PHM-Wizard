@@ -1,56 +1,52 @@
 [
   {
-    "id": "sv01",
+    "id": "fd14bdba-b880-4ead-b592-f59ca706d613",
     "variable": "Fault Type",
     "type": "Qualitative fault specification",
     "unit": "",
-    "description": "Describes the kind of fault detected in the system.",
-    "values": ["BPFO", "BPFO", "BPFO", "BPFO"]
+    "description": "Describes the kind of fault detected in the system."
   },
   {
-    "id": "sv02",
+    "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
     "variable": "Fault Position",
     "type": "Qualitative fault specification",
     "unit": "",
-    "description": "Indicates the physical location of the fault.",
-    "values": ["Center", "Left", "Right", "Top"]
+    "description": "Indicates the physical location of the fault."
   },
   {
-    "id": "sv03",
+    "id": "fac02919-811b-4653-9127-ce76807f2cd2",
     "variable": "Fault Severity",
     "type": "Quantitative fault specification",
     "unit": "",
     "description": "Measures the impact or intensity of the fault.",
     "min": 0,
-    "max": 10,
-    "values": [1, 2, 3, 4]
+    "max": 10
   },
   {
-    "id": "sv04",
+    "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
     "variable": "Motor Speed",
     "type": "Operating condition",
     "unit": "RPM",
     "description": "The rotational speed of the motor.",
-    "min": 0,
-    "values": [1000, 1000, 1000, 1000]
+    "min": 0
   },
   {
-    "id": "sv05",
+    "id": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
     "variable": "Discharge Pressure",
     "type": "Operating condition",
     "unit": "bar",
     "description": "Pressure at the discharge point of the system.",
     "min": 0,
-    "step": 0.1,
-    "values": [1.0, 1.0, 1.0, 1.0]
+    "step": 0.1
   },
   {
-    "id": "sv06",
+    "id": "c1dc436d-c95c-4784-921e-481d98716cd4",
     "variable": "Volumetric Flow Rate",
     "type": "Operating condition",
     "unit": "m^3/h",
     "description": "The volumetric flow rate through the system.",
-    "min": 0,
-    "values": [140, 140, 140, 140]
+    "min": 0
   }
 ]
+
+

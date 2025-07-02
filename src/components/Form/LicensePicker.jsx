@@ -35,7 +35,6 @@ function LicensePicker({
     }, []);
 
     useEffect(() => {
-        console.log("VALUE", value)
         if (value?.length > 0 && fuse) {
             const result = fuse.search(value, { limit: 10 });
             setSuggestions(result.map((r) => r.item));
@@ -50,7 +49,6 @@ function LicensePicker({
     const handleSelect = (e) => {
         onChange(e);     // Updates the form data with the selected license name
         setSuggestions([]);         // Clears suggestions from display
-        console.log("suggenstions set to false")
         setShowSuggestions(false);  // Hides the suggestions list
     };
 

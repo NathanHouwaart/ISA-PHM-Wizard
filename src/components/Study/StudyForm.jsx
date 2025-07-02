@@ -5,6 +5,7 @@ import { cn } from '../../utils/utils';
 import FormField from '../Form/FormField';
 import { BaseInput, FormField2, FormFieldLabel } from '../Form/Inputs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { v4 as uuidv4 } from 'uuid';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
@@ -39,7 +40,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const studyData = {
       ...formData,
-      id: isEditing && item.id ? item.id : `s${String(studies.length + 1).padStart(2, '0')}`, // Generate a new ID if not editing}`
+      id: isEditing && item.id ? item.id : uuidv4(), // Generate a new ID if not editing}`
     };
 
     onSave(studyData);

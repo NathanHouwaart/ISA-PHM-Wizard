@@ -62,16 +62,17 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
                 <div className='flex justify-center '>
                     <input type='text' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder='Search for Test Setups...' className='w-full max-w-md mx-auto mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500' />
                 </div>
-                <div className='grid grid-cols-1 gap-4 '>
+                <div className='grid grid-cols-1 gap-2 '>
 
 
                     {filteredSetups.map((setup, index) => (
                         <div
                             key={setup.id}
                             onClick={() => handleSelectSetup(setup)}
-                            className={`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${selectedTestSetup?.id === setup.id
-                                ? 'outline-blue-500 outline-5  border-transparent'
-                                : 'border-gray-200 hover:border-gray-300'
+                            className={`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 
+                                ${selectedTestSetup?.id === setup.id
+                                    ? 'outline-blue-500 outline-5  border-transparent'
+                                    : 'border-gray-200 hover:border-gray-300'
                                 }`} >
 
                             {selectedTestSetup?.id === setup.id && (

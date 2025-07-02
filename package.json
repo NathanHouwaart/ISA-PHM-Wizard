@@ -39,6 +39,7 @@
     "fuse.js": "^7.1.0",
     "immer": "^10.1.1",
     "json-schema-resolver": "^3.0.0",
+    "lodash.isequal": "^4.5.0",
     "lucide-react": "^0.513.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -47,7 +48,8 @@
     "react-transition-group": "^4.4.5",
     "shadcn": "^2.7.0",
     "tailwind-merge": "^3.3.1",
-    "use-immer": "^0.11.0"
+    "use-immer": "^0.11.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

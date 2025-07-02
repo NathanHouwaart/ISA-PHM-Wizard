@@ -9,9 +9,10 @@ import { Route } from "react-router-dom";
 import { About, IsaQuestionnaire, Home, TestSetups} from "./pages";
 import { GlobalDataProvider } from "./contexts/GlobalDataContext";
 
+
 function App() {
   return (
-    <div className="App">
+    <div className="App" >
       <Navbar />
       <GlobalDataProvider>
       <Routes>

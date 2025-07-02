@@ -1,66 +1,20 @@
 import React, { useEffect, useState } from 'react';
 
-const StudyDataTransformer = ({ studyVariables, studies, rawMeasurements }) => {
-  const [structuredVariables, setStructuredVariables] = useState([]);
 
-  useEffect(() => {
-    // Build a lookup: variableId -> studyId -> value
-    const valueMap = {};
-
-    rawMeasurements.forEach(({ studyId, studyVariableId, value }) => {
-      if (!valueMap[studyVariableId]) {
-        valueMap[studyVariableId] = {};
-      }
-      valueMap[studyVariableId][studyId] = value;
-    });
-
-    // Transform each variable by attaching its values per study
-    const merged = studyVariables.map((variable) => {
-      const id = variable.id;
-      const studyValues = valueMap[id] || {};
-
-      // Add a key for each study with its corresponding value (if any)
-      const studyEntries = {};
-      studies.forEach((study) => {
-        studyEntries[study.id] = studyValues[study.id] ?? null;
-      });
-
-      return {
-        ...variable,
-        ...studyEntries // dynamically add s01, s02, etc.
-      };
-    });
-
-    setStructuredVariables(merged);
-  }, [studyVariables, studies, rawMeasurements]);
-
-  return (
-    <div className="p-4">
-      <h2 className="text-lg font-bold mb-2">Structured Variables by Study</h2>
-      <pre className="bg-gray-100 p-4 rounded overflow-x-auto text-sm">
-        {JSON.stringify(structuredVariables, null, 2)}
-      </pre>
-    </div>
-  );
-};
-
+// Converts normalized global state to grid-compatible flat format
 export function getStructuredVariables(studyVariables, studies, rawMeasurements) {
-  // Build a lookup: variableId -> studyId -> value
   const valueMap = {};
 
   rawMeasurements.forEach(({ studyId, studyVariableId, value }) => {
-    if (!valueMap[studyVariableId]) {
-      valueMap[studyVariableId] = {};
-    }
+    if (!valueMap[studyVariableId]) valueMap[studyVariableId] = {};
     valueMap[studyVariableId][studyId] = value;
   });
 
-  // Transform each variable by attaching its values per study
+
   return studyVariables.map((variable) => {
     const id = variable.id;
     const studyValues = valueMap[id] || {};
 
-    // Add a key for each study with its corresponding value (if any)
     const studyEntries = {};
     studies.forEach((study) => {
       studyEntries[study.id] = studyValues[study.id] ?? null;
@@ -73,4 +27,26 @@ export function getStructuredVariables(studyVariables, studies, rawMeasurements)
   });
 }
 
-export default StudyDataTransformer;
+// Converts grid state back to normalized global mapping
+export function flattenGridDataToMappings(gridData, studies) {
+  const mappings = [];
+
+  gridData.forEach((row) => {
+    const variableId = row.id;
+
+    studies.forEach((study) => {
+      const value = row[study.id];
+      if (value !== undefined && value !== null && value !== '') {
+        mappings.push({
+          studyId: study.id,
+          studyVariableId: variableId,
+          value,
+        });
+      }
+    });
+  });
+
+
+  return mappings;
+}
+

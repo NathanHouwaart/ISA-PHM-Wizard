@@ -41,6 +41,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     const CardComponent = getCard();
     const FormComponent = getForm();
     const ViewComponent = getView();
+    
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
@@ -52,10 +53,18 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
 
     const handleRemove = (itemId) => {
         if (window.confirm('Are you sure you want to remove this item?')) {
-            setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-            setViewingItem(null)
+            setItems(prevItems => {
+                // 1. Filter out the study to remove
+                const filtered = prevItems.filter(item => item.id !== itemId);
+
+               
+
+                return filtered;
+            });
+            setViewingItem(null);
         }
     };
+
 
     const startEditMode = (item) => {
         setViewingItem(null);
@@ -150,10 +159,10 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 )}
 
                 {/* Items Grid */}
-                <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-3" : "w-full space-y-2"}`}>
+                <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-2" : "w-full space-y-2"}`}>
                     {items.map(item => (
                         (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
-                            <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => {ViewComponent && setViewingItem(item)}}>
+                            <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => { ViewComponent && setViewingItem(item) }}>
                                 <CardComponent
                                     item={item}
                                     onEdit={startEditMode}

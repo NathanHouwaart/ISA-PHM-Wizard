@@ -1,19 +1,26 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { RevoGrid, Template } from '@revolist/react-datagrid';
-import { Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
+import { Bold, Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
 import PageWrapper from "../../layout/PageWrapper";
 import "./GridTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import Paragraph from '../Typography/Paragraph';
-import { plugin } from 'postcss';
+import { v4 as uuidv4 } from 'uuid';
 
 export const BoldCell = ({ value }) => {
     return (
         <div className="flex items-center justify-center">
             <strong className=''>{value}</strong>
         </div>
+    );
+};
+
+export const GrayCell = ({ value }) => {
+    return (
+        
+            <BoldCell value={value} />
     );
 };
 
@@ -61,9 +68,8 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
 
 
     const handleEdit = (e) => {
-        console.log('handleEdit', e);
+        
         e.preventDefault();
-
         const { detail } = e;
         const newValue = detail.val;
         const oldValue = detail.value; // Get the old value to check if it actually changed
@@ -139,7 +145,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
         const rowIndex = items.length + 1;
         const newRow = columns.reduce((acc, col) => {
             if (col.prop === 'id') {
-                acc[col.prop] = `S${rowIndex.toString().padStart(2, '0')}`;
+                acc[col.prop] = uuidv4(); 
             } else {
                 acc[col.prop] = '';
             }

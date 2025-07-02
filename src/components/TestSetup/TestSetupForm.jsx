@@ -688,8 +688,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const numberOfCharacteristics = formData.characteristics.length
 
   useEffect(() => {
-    console.log("HERE")
-    console.log(item)
     if (item) {
       setFormData({
         name: item.name || '',

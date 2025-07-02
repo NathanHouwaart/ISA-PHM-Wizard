@@ -12,8 +12,6 @@ const Form = forwardRef(({formIdentifier, formPageInfo, className = '', onHeight
 
     // const {handleInputChange} = useQuestionnaireForm()
     const { dataMap } = useGlobalDataContext();
-    console.log(formIdentifier)
-    console.log(dataMap)
     const [globalData, setGlobalData] = dataMap[formIdentifier] || [[], () => {}];
 
 
@@ -25,7 +23,6 @@ const Form = forwardRef(({formIdentifier, formPageInfo, className = '', onHeight
         });
 
     const handleInputChange = (field, value) => {
-        console.log("HANDLE")
         setFormData(prev => ({
             ...prev,
             [field]: value

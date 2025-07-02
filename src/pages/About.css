@@ -22,25 +22,77 @@ revo-grid[theme=custom] {
 }
 
 
-revogr-header .rgHeaderCell .header-content{
-    @apply font-semibold text-xs !text-black;
-    line-height: 27px;
+/* --- Header Bar Styling (light gray gradient) --- */
+revogr-header {
+  @apply bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm rounded-t-md;
+  border-bottom: 1px solid #d1d5db; /* gray-300 */
 }
 
-.rowHeaders revogr-data .rgCell{
-    @apply font-semibold text-sm !text-black;
-    line-height: 27px;
+revogr-header .rgHeaderCell .header-content {
+  @apply font-semibold text-xs tracking-wide select-none;
+  padding: 0 12px;
+  line-height: 1.5; /* Keep compact */
 }
 
-div.rgCell{
-    @apply transform text-center pt-[7px];
-    text-overflow: ellipsis;
-    text-wrap: normal;
-    overflow-y: auto;
-    white-space: normal;
-    line-height: 1.2;
-    
+/* --- Row Headers (first column) --- */
+.rowHeaders revogr-data .rgCell {
+  @apply font-semibold text-sm text-gray-800 bg-gray-50;
+  padding-left: 14px;
+  border-right: 1px solid #e5e7eb;
+  user-select: none;
 }
+
+/* --- Main Data Cells --- */
+div.rgCell {
+  @apply text-center text-sm text-gray-900 bg-white pt-[7px] px-3;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
+  border-radius: 0; /* square cells */
+}
+
+/* Target the first column by its prop name */
+.rgCell[data-rgcol="variable"] {
+  background-color: #ec1c00; /* Tailwind gray-100 */
+    color: #ffffff; /* white text */
+    font-weight: bold;
+    text-align: left; /* Align text to the left */
+    padding-left: 12px; /* Add some padding for better spacing */
+    border-right: 1px solid #e5e7eb; /* Right border for separation */
+    border-radius: 0; /* square cells */
+}
+
+
+/* --- Hover Effect --- */
+div.rgCell:hover {
+  @apply bg-blue-50;
+}
+
+/* --- Focus/Selection Outline Only --- */
+div.rgCell:focus,
+div.rgCell.selected {
+  outline: 2px solid #3b82f6;  /* Tailwind blue-500 */
+  outline-offset: -2px;
+  border-radius: 0.5rem; /* only outline is rounded */
+  background-color: #ffffff;
+  color: #1e3a8a; /* dark blue text on focus */
+}
+
+/* --- Scrollbars --- */
+div.rgCell::-webkit-scrollbar {
+  width: 6px;
+}
+div.rgCell::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded;
+}
+div.rgCell::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded;
+}
+
 
 
 /* div.rgCell.disabled{
