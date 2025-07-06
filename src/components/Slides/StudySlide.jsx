@@ -3,7 +3,7 @@ import React, { useEffect, useState, forwardRef } from 'react';
 import { Switch } from '../ui/switch';
 
 // Import the single global provider
-import { GlobalDataProvider } from '../../contexts/GlobalDataContext';
+import { GlobalDataProvider, useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
 import useStudies from '../../hooks/useStudies';
 import Collection, {
@@ -22,8 +22,10 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import studySlideContent from '../../data/studySlideContent.json'; // Assuming you have a JSON file for the content
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
+import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 
-export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
+export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const [value, setValue] = useState(false);
     const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
@@ -31,6 +33,16 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    const { setScreenWidth } = useGlobalDataContext();
+
+    if (selectedTab === 'grid-view' && currentPage === 5) {
+        setScreenWidth("max-w-[100rem]");
+        console.log("Setting screen width to max-w-7xl for grid view on StudySlide");
+    } else if (currentPage === 5) {
+        setScreenWidth("max-w-5xl");
+        console.log("Setting screen width to max-w-5xl for simple view on StudySlide");
+    }
+    
     return (
         <div ref={combinedRef}>
 
@@ -43,33 +55,16 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
+               <TabSwitcher
+                    selectedTab={selectedTab}
+                    onTabChange={setSelectedTab}
+                    tabs={[
+                        { id: 'simple-view', label: 'Simple View' },
+                        { id: 'grid-view', label: 'Grid View' }
+                    ]}
+                />
 
-                {/* Tab Navigation */}
-                <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
-                    <button
-                        onClick={() => setSelectedTab('simple-view')}
-                        className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === 'simple-view'
-                            ? 'bg-white text-blue-700 shadow-md'
-                            : 'text-gray-600 hover:bg-gray-200'
-                            }`}
-                    >
-                        Simple View
-                    </button>
-                    <button
-                        onClick={() => setSelectedTab('grid-view')}
-                        className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === 'grid-view'
-                            ? 'bg-white text-blue-700 shadow-md'
-                            : 'text-gray-600 hover:bg-gray-200'
-                            }`}
-                    >
-                        Grid View
-                    </button>
-                </div>
-
-                <div
-                    className={`rounded transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-0 max-h-0" : "opacity-100"
-                        }`}
-                >
+                <TabPanel isActive={selectedTab === 'simple-view'}>
                     <Collection
                         onHeightChange={() => { }}
                         itemHook={useStudies} // This hook will need to pull 'studies' from the global context
@@ -82,16 +77,14 @@ export const StudySlide = forwardRef(({ onHeightChange }, ref) => {
                         <CollectionEmptyStateSubtitle>Click below to add your first Study</CollectionEmptyStateSubtitle>
                         <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
                     </Collection>
-                </div>
-                <div
-                    className={`transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-100" : "opacity-0 max-h-0"
-                        }`}
-                >
+                </TabPanel>
+
+               <TabPanel isActive={selectedTab === 'grid-view'}>
                     <StudyTable
                         ref={ref}
                         onHeightChange={() => { }}
                     />
-                </div>
+                </TabPanel>
             </div>
         </div>
     );

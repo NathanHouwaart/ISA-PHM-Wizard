@@ -22,79 +22,95 @@ revo-grid[theme=custom] {
 }
 
 
-/* --- Header Bar Styling (light gray gradient) --- */
+/* --- General Grid Wrapper --- */
+revo-grid {
+  @apply font-sans text-sm;
+  overflow: hidden;
+  background-color: #f9fafb; /* Tailwind gray-50 */
+}
+
+/* --- Header Bar Styling --- */
 revogr-header {
-  @apply bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm rounded-t-md;
-  border-bottom: 1px solid #d1d5db; /* gray-300 */
+  @apply bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm;
+  border-bottom: 3px solid #000; /* strong black underline */
 }
 
-revogr-header .rgHeaderCell .header-content {
-  @apply font-semibold text-xs tracking-wide select-none;
-  padding: 0 12px;
-  line-height: 1.5; /* Keep compact */
+
+
+revogr-header .rgHeaderCell {
+  border-right: 1px solid #d1d5db; /* Tailwind gray-300 */
 }
 
-/* --- Row Headers (first column) --- */
-.rowHeaders revogr-data .rgCell {
-  @apply font-semibold text-sm text-gray-800 bg-gray-50;
-  padding-left: 14px;
-  border-right: 1px solid #e5e7eb;
+
+div.header-content {
+  @apply font-bold text-sm text-center tracking-wide select-none pt-1;
+}
+
+/* --- First Column (Row Headers) --- */
+
+.colPinStart revogr-data .rgCell {
+  @apply font-bold text-gray-800 bg-gray-50 text-sm text-center px-2;
   user-select: none;
 }
 
-/* --- Main Data Cells --- */
+revogr-edit{
+  @apply text-sm text-gray-900 bg-white px-2 pt-1 border-0;
+}
+
 div.rgCell {
-  @apply text-center text-sm text-gray-900 bg-white pt-[7px] px-3;
+  @apply text-sm text-gray-900 bg-white px-2 pt-1;
   line-height: 1.4;
-  text-overflow: ellipsis;
   white-space: normal;
-  overflow-wrap: break-word;
+  word-break: break-word;
   overflow-y: auto;
-  border-bottom: 1px solid #e5e7eb;
+  text-overflow: ellipsis;
+  border-bottom: 2px solid #e5e7eb; /* gray-200 */
   transition: background-color 0.15s ease;
-  border-radius: 0; /* square cells */
 }
 
-/* Target the first column by its prop name */
-.rgCell[data-rgcol="variable"] {
-  background-color: #ec1c00; /* Tailwind gray-100 */
-    color: #ffffff; /* white text */
-    font-weight: bold;
-    text-align: left; /* Align text to the left */
-    padding-left: 12px; /* Add some padding for better spacing */
-    border-right: 1px solid #e5e7eb; /* Right border for separation */
-    border-radius: 0; /* square cells */
+/* --- Hover Styling --- */
+.rgCol revogr-data .rgCell:hover {
+  @apply bg-blue-200 cursor-pointer;
 }
 
-
-/* --- Hover Effect --- */
-div.rgCell:hover {
-  @apply bg-blue-50;
-}
-
-/* --- Focus/Selection Outline Only --- */
-div.rgCell:focus,
-div.rgCell.selected {
-  outline: 2px solid #3b82f6;  /* Tailwind blue-500 */
+/* --- Focused / Selected Cell Styling --- */
+.rgCol revogr-data .rgCell:focus,
+.rgCol revogr-data .rgCell.selected {
+  outline: 2px solid #3b82f6; /* Tailwind blue-500 */
   outline-offset: -2px;
-  border-radius: 0.5rem; /* only outline is rounded */
-  background-color: #ffffff;
-  color: #1e3a8a; /* dark blue text on focus */
+  border-radius: 0.5rem;
+  background-color: #fff;
+  color: #1e3a8a; /* Tailwind blue-900 */
 }
 
-/* --- Scrollbars --- */
-div.rgCell::-webkit-scrollbar {
-  width: 6px;
+/* --- Scrollbar Styling --- */
+.rgCol revogr-data .rgCell::-webkit-scrollbar,
+.colPinStart revogr-data .rgCell::-webkit-scrollbar {
+  width: 12px;
+  height: 6px;
 }
-div.rgCell::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded;
+.rgCol revogr-data .rgCell::-webkit-scrollbar-thumb,
+.colPinStart revogr-data .rgCell::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded w-20;
 }
-div.rgCell::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded;
+.rgCol revogr-data .rgCell::-webkit-scrollbar-track,
+.colPinStart revogr-data .rgCell::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded 
 }
 
+/* --- Row Hover Highlight --- */
+.rgRow:hover .rgCell {
+  background-color: #ebf8ff; /* light blue row highlight */
+}
 
-
-/* div.rgCell.disabled{
-    @apply flex items-center justify-center
-} */
+/* --- Optional: Autofill Handle and Selection Styling --- */
+.selection-border-range {
+  border: 2px solid #3b82f6 !important;
+  border-radius: 4px;
+}
+div.autofill-handle {
+  background-color: #3b82f6;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}

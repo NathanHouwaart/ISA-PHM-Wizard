@@ -41,7 +41,7 @@ export const IsaQuestionnaire = () => {
 
       <Heading1> ISA Questionnaire Form </Heading1>
 
-      <div className="flex justify-center mb-7">
+      <div className="flex justify-center mb-5">
         {Array.from({ length: totalPages }).map((_, index) => (
           <div
             key={index}
@@ -56,7 +56,7 @@ export const IsaQuestionnaire = () => {
         ))}
       </div>
 
-      <div className="space-y-10">
+      <div className="space-y-6">
         <div
           className="relative overflow-hidden transition-all duration-300 ease-in-out"
         >
@@ -72,6 +72,7 @@ export const IsaQuestionnaire = () => {
                     <SlideComponent
                       ref={el => childRefs.current[index] = el}
                       onHeightChange={handleChildHeightChange}
+                      currentPage={currentPage}
                     />
                   </div>
                 </div>
@@ -80,7 +81,7 @@ export const IsaQuestionnaire = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between  mb-4 ">
+        <div className="flex items-center justify-center space-x-4">
           <button
             type="button"
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -91,23 +92,11 @@ export const IsaQuestionnaire = () => {
             <span>Previous</span>
           </button>
 
-          <button
-            type="button"
-            className="flex items-center space-x-2 min-w-1rem px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl"
-            onClick={handleForward}
-            disabled={currentPage === totalPages - 1}
-          >
-            <span>Next</span>
-            <span>&gt;</span>
-          </button>
-        </div>
-
-        <div className="pt-6">
-          <button
+           <button
             type="button"
             onClick={handleSubmit}
             className={cn(
-              "w-full py-4 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
+              "w-xl py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
               {
                 "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed": !isLastPage(currentPage),
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
@@ -116,6 +105,16 @@ export const IsaQuestionnaire = () => {
             disabled={!isLastPage(currentPage)}
           >
             Submit Form
+          </button>
+
+          <button
+            type="button"
+            className="flex items-center space-x-2 min-w-1rem px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl"
+            onClick={handleForward}
+            disabled={currentPage === totalPages - 1}
+          >
+            <span>Next</span>
+            <span>&gt;</span>
           </button>
         </div>
       </div>

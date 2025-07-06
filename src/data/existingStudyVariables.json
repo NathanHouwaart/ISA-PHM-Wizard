@@ -4,14 +4,16 @@
     "variable": "Fault Type",
     "type": "Qualitative fault specification",
     "unit": "",
-    "description": "Describes the kind of fault detected in the system."
+    "description": "Describes the kind of fault detected in the system.",
+    "min": 0
   },
   {
     "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
     "variable": "Fault Position",
     "type": "Qualitative fault specification",
     "unit": "",
-    "description": "Indicates the physical location of the fault."
+    "description": "Indicates the physical location of the fault.",
+    "min": 0
   },
   {
     "id": "fac02919-811b-4653-9127-ce76807f2cd2",

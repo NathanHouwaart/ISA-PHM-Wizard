@@ -17,14 +17,6 @@ export const BoldCell = ({ value }) => {
     );
 };
 
-export const GrayCell = ({ value }) => {
-    return (
-        
-            <BoldCell value={value} />
-    );
-};
-
-
 export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, plugins }, ref) => {
 
     const history = useRef([]);
@@ -142,15 +134,13 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
         // Before changing the state, push the current state to history
         pushToHistory(items);
 
-        const rowIndex = items.length + 1;
         const newRow = columns.reduce((acc, col) => {
-            if (col.prop === 'id') {
-                acc[col.prop] = uuidv4(); 
-            } else {
-                acc[col.prop] = '';
-            }
+            acc[col.prop] = '';
             return acc;
         }, {});
+
+        newRow.id = uuidv4(); // Ensure each new row has a unique ID
+        console.log("Adding new row:", newRow);
 
         setItems((prev) => [...prev, newRow]);
     };

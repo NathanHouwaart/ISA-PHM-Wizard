@@ -22,26 +22,6 @@ revo-grid[theme=custom] {
 }
 
 
-revogr-header .rgHeaderCell .header-content{
-    @apply font-semibold text-xs !text-black;
-    line-height: 27px;
-}
-
-.rowHeaders revogr-data .rgCell{
-    @apply font-semibold text-sm !text-black;
-    line-height: 27px;
-}
-
-div.rgCell{
-    @apply transform text-center pt-[7px];
-    text-overflow: ellipsis;
-    text-wrap: normal;
-    overflow-y: auto;
-    white-space: normal;
-    line-height: 1.2;
-    
-}
-
 
 /* div.rgCell.disabled{
     @apply flex items-center justify-center

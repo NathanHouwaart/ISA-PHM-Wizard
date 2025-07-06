@@ -15,12 +15,12 @@ function App() {
     <div className="App" >
       <Navbar />
       <GlobalDataProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/testsetups" element={<TestSetups />} />
-        <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/testsetups" element={<TestSetups />} />
+          <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
+        </Routes>
       </GlobalDataProvider>
     </div>
   );

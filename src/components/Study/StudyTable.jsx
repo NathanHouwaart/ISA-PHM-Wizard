@@ -7,7 +7,7 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import Paragraph from '../Typography/Paragraph';
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 
 const BoldCell = ({ value }) => {
@@ -26,14 +26,22 @@ const PatternCellTemplate = ({ prefix, rowIndex }) => {
 
 
 const columns = [
-    { prop: 'id', name: 'Identifier', size: 100, readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'S' })},
-    { prop: 'title', name: 'Title', size: 150 },
-    { prop: 'description', name: 'Description', size: 350 },
-    { prop: 'submissionDate', name: 'Submission Date', size: 150 },
-    { prop: 'publicationDate', name: 'Publication Date', size: 140 }
+    {
+        prop: 'id', name: 'Identifier', size: 150, pin: "colPinStart", readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'S' }), cellProperties: () => {
+            return {
+                style: {
+                    "border-right": "3px solid black"
+                }
+            }
+        }
+    },
+    { prop: 'title', name: 'Title', size: 250 },
+    { prop: 'description', name: 'Description', size: 550 },
+    { prop: 'submissionDate', name: 'Submission Date', size: 250 },
+    { prop: 'publicationDate', name: 'Publication Date', size: 250 }
 ];
 
-export const StudyTable = forwardRef(({onHeightChange }, ref) => {
+export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
     const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
 
@@ -162,8 +170,6 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
             return acc;
         }, {});
 
-        console.log('Adding new row:', newRow);
-
         setRows((prev) => [...prev, newRow]);
         setStudies((prev) => [...prev, newRow]);
     };
@@ -214,8 +220,9 @@ export const StudyTable = forwardRef(({onHeightChange }, ref) => {
                     rowSize={50}
                     columns={columns}
                     source={studies}
+                    autoSizeColumn={true}
                     editable
-                    resize={true}
+                    stretch={true}
                     range={{ y: studies.length, x: studies.length }}
                     style={{ width: '100%', height: '100%' }}
                     onBeforeedit={handleEdit}

@@ -6,6 +6,7 @@ import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
 import initialStudyVariables from "../data/existingStudyVariables.json"; // Assuming you have a file for study variables
 import existingStudyToStudyVariableMapping from "../data/existingStudyToStudyVariableMapping.json";
+import existingStudyToSensorMeasurementMapping from "../data/existingStudyToSensorMeasurementMapping.json";
 
 import investigationFormFields from '../data/InvestigationFormFields2.json'
 
@@ -26,7 +27,7 @@ export const GlobalDataProvider = ({ children }) => {
         return acc;
     }, {});
 
-    
+
     // const [pageIsaQuestionnareState, setPageIsaQuestionnareState] = useState({});
 
 
@@ -37,7 +38,15 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(initialPublications);
     const [selectedTestSetup, setSelectedTestSetup] = useState(null);
     const [studyVariables, setStudyVariables] = useState(initialStudyVariables); // For study variables
+
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(existingStudyToStudyVariableMapping);
+    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(existingStudyToSensorMeasurementMapping); // For study measurements
+
+    const [screenWidth, setScreenWidth] = useState("max-w-5xl");
+
+    useEffect(() => {
+        console.log("study variables", studyVariables);
+    }, [studyVariables]);
 
     // Add more state variables for other data types as needed
 
@@ -53,11 +62,12 @@ export const GlobalDataProvider = ({ children }) => {
             setPublications(parsedData?.publications || initialPublications || []);
             setStudyVariables(parsedData?.studyVariables || initialStudyVariables || []); // Load study variables
             setStudyToStudyVariableMapping(parsedData?.studyToStudyVariableMapping || existingStudyToStudyVariableMapping || []);
+            setStudyToStudyVariableMapping(parsedData?.studyToSensorMeasurementMapping || existingStudyToSensorMeasurementMapping || []);
             // ... set other states
         }
     }, []);
 
-      
+
     useEffect(() => {
         const dataToStore = {
             studies,
@@ -68,10 +78,17 @@ export const GlobalDataProvider = ({ children }) => {
             selectedTestSetup,
             studyVariables,
             studyToStudyVariableMapping,
+            studyToSensorMeasurementMapping,
             // ... include other states
         };
         localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
-    }, [studies, investigations, authors, testSetups, selectedTestSetup, studyVariables, studyToStudyVariableMapping]); // Add all dependent states here
+    },
+        [
+            studies, investigations, authors, testSetups,
+            selectedTestSetup, studyVariables, studyToStudyVariableMapping,
+            studyToSensorMeasurementMapping
+        ]
+    ); // Add all dependent states here
 
     const dataMap = {
         studies: [studies, setStudies],
@@ -81,7 +98,9 @@ export const GlobalDataProvider = ({ children }) => {
         publications: [publications, setPublications],
         selectedTestSetup: [selectedTestSetup, setSelectedTestSetup],
         studyVariables: [studyVariables, setStudyVariables],
-        studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping]
+        studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
+        studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
+        screenWidth: [screenWidth, setScreenWidth]
     };
 
 
@@ -102,6 +121,10 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyVariables,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping,
+        studyToSensorMeasurementMapping,
+        setStudyToSensorMeasurementMapping,
+        screenWidth,
+        setScreenWidth,
         dataMap
     };
 
