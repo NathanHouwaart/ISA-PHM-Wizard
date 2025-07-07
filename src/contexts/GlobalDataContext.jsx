@@ -4,7 +4,7 @@ import initialStudies from "../data/existingStudies.json"
 import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
-import initialStudyVariables from "../data/existingStudyVariables.json"; // Assuming you have a file for study variables
+import initialStudyVariables from "../data/existingStudyVariables.json";
 import existingStudyToStudyVariableMapping from "../data/existingStudyToStudyVariableMapping.json";
 import existingStudyToSensorMeasurementMapping from "../data/existingStudyToSensorMeasurementMapping.json";
 
@@ -20,6 +20,21 @@ export const useGlobalDataContext = () => {
     return context;
 };
 
+// Helper function to read from local storage and parse
+const loadFromLocalStorage = (key, initialValue) => {
+    try {
+        const storedData = localStorage.getItem(key);
+        if (storedData) {
+            return JSON.parse(storedData);
+        }
+    } catch (error) {
+        console.error("Error parsing data from localStorage", error);
+        // Fallback to initial value if parsing fails
+    }
+    return initialValue;
+};
+
+// Main Data Provider Component
 export const GlobalDataProvider = ({ children }) => {
 
     const initialFormState = investigationFormFields.fields.reduce((acc, field) => {
@@ -27,51 +42,54 @@ export const GlobalDataProvider = ({ children }) => {
         return acc;
     }, {});
 
+    // Lazy initialization for all state variables from localStorage
+    const [studies, setStudies] = useState(() => loadFromLocalStorage('globalAppData_studies', initialStudies));
+    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage('globalAppData_investigations', initialFormState));
+    const [authors, setAuthors] = useState(() => loadFromLocalStorage('globalAppData_authors', initialAuthors));
+    const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', initialTestSetups));
+    const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
+    const [selectedTestSetup, setSelectedTestSetup] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetup', null));
+    const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
 
-    // const [pageIsaQuestionnareState, setPageIsaQuestionnareState] = useState({});
-
-
-    const [studies, setStudies] = useState(initialStudies);
-    const [investigations, setInvestigations] = useState(initialFormState);
-    const [authors, setAuthors] = useState(initialAuthors);
-    const [testSetups, setTestSetups] = useState(initialTestSetups);
-    const [publications, setPublications] = useState(initialPublications);
-    const [selectedTestSetup, setSelectedTestSetup] = useState(null);
-    const [studyVariables, setStudyVariables] = useState(initialStudyVariables); // For study variables
-
-    const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(existingStudyToStudyVariableMapping);
-    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState([]); // For study measurements
+    const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
+    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
 
+    // Effect for saving all data to local storage
+    // This useEffect will run whenever any of its dependencies change, saving the latest state.
     useEffect(() => {
-        console.log("study variables", studyToStudyVariableMapping);
-    }, [studyToStudyVariableMapping]);
+        const dataToStore = {
+            studies,
+            investigations,
+            authors,
+            testSetups,
+            publications,
+            selectedTestSetup,
+            studyVariables,
+            studyToStudyVariableMapping,
+            studyToSensorMeasurementMapping,
+        };
+        
+        localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
+        localStorage.setItem('globalAppData_investigations', JSON.stringify(investigations));
+        localStorage.setItem('globalAppData_authors', JSON.stringify(authors));
+        localStorage.setItem('globalAppData_testSetups', JSON.stringify(testSetups));
+        localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
+        localStorage.setItem('globalAppData_selectedTestSetup', JSON.stringify(selectedTestSetup));
+        localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
+        localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
+        localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
 
-    // Add more state variables for other data types as needed
+    }, [
+        studies, investigations, authors, testSetups,
+        publications, selectedTestSetup, studyVariables,
+        studyToStudyVariableMapping, studyToSensorMeasurementMapping
+    ]);
 
-    // Example: Load/save all data to local storage (consider using a single key or multiple keys)
-    useEffect(() => {
-        const storedData = localStorage.getItem('globalAppData');
-        if (storedData) {
-            const parsedData = JSON.parse(storedData);
-            console.log("Parsed Data from Local Storage:", parsedData);
-            setStudies(parsedData?.studies || initialStudies || []);
-            setInvestigations(parsedData?.investigations || {});        // One investigation
-            setAuthors(parsedData?.authors || initialAuthors || []);
-            setTestSetups(parsedData?.testSetups || initialTestSetups || []);
-            setSelectedTestSetup(parsedData?.selectedTestSetup || null);
-            setPublications(parsedData?.publications || initialPublications || []);
-            setStudyVariables(parsedData?.studyVariables || initialStudyVariables || []); // Load study variables
-            setStudyToStudyVariableMapping(parsedData?.studyToStudyVariableMapping || existingStudyToStudyVariableMapping || []);
-            setStudyToSensorMeasurementMapping(parsedData?.studyToSensorMeasurementMapping || existingStudyToSensorMeasurementMapping || []);
-            // ... set other states
-        }
-    }, []);
 
     function submitData() {
         // Function to handle data submission
-        // This could be an API call or any other logic you want to implement
         console.log("Data submitted:", {
             studies,
             investigations,
@@ -95,32 +113,6 @@ export const GlobalDataProvider = ({ children }) => {
             }, null, 2)
         )
     }
-
-
-
-
-    useEffect(() => {
-        const dataToStore = {
-            studies,
-            investigations,
-            authors,
-            testSetups,
-            publications,
-            selectedTestSetup,
-            studyVariables,
-            studyToStudyVariableMapping,
-            studyToSensorMeasurementMapping,
-            // ... include othmer states
-        };
-        console.log("Data to be stored in localStorage:", dataToStore);
-        localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
-    },
-        [
-            studies, investigations, authors, testSetups,
-            selectedTestSetup, studyVariables, studyToStudyVariableMapping,
-            studyToSensorMeasurementMapping
-        ]
-    ); // Add all dependent states here
 
     const dataMap = {
         studies: [studies, setStudies],

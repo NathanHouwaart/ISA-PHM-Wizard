@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useMemo, useState } from 'react'
+import React, { forwardRef, useEffect, useMemo, useState, useRef } from 'react';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
@@ -38,7 +38,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     // State for managing the edit modal
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentEditIndex, setCurrentEditIndex] = useState(null);
-    const [tempEditData, setTempEditData] = useState({ variable: '', type: '', unit: '', description: '' });
+    // tempEditData is not being used in your provided code
+    // const [tempEditData, setTempEditData] = useState({ variable: '', type: '', unit: '', description: '' });
 
     const { setScreenWidth } = useGlobalDataContext();
 
@@ -57,70 +58,70 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
-    const selectedVariable = studyVariables[selectedVariableIndex];
-
-    // Function to render the appropriate input field for a specific study
-    const renderInputField = (item, variableIndex, mapping) => {
-        const isNumeric = item.type.includes('Quantitative') || item.type.includes('Operating');
-        const inputType = isNumeric ? 'number' : 'text';
-
-        return (
-            <div className="relative flex items-center w-full">
-                {item.unit && (
-                    <span className="absolute right-2 text-gray-500 text-sm pointer-events-none">
-                        {item.unit}
-                    </span>
-                )}
-                <input
-                    type={inputType}
-                    value={mapping.value}
-                    onChange={(e) => handleInputChange(variableIndex, mapping, e.target.value)}
-                    className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out pl-3 pr-3 text-sm`}
-                    min={isNumeric && item.min !== undefined ? item.min : undefined}
-                    max={isNumeric && item.max !== undefined ? item.max : undefined}
-                    step={isNumeric && item.step !== undefined ? item.step : undefined}
-                    placeholder={isNumeric ? 'Enter number' : 'Enter text'}
-                />
-            </div>
-        );
-    };
+    // Derived selectedVariable for convenience
+    const selectedVariable = useMemo(() => studyVariables[selectedVariableIndex], [studyVariables, selectedVariableIndex]);
 
 
-    const [processedData, setProcessedData] = useState([]);
-    const [columns, setColumns] = useState([]);
-
-    // --------- Global → Grid Sync ---------
-    const gridData = useMemo(() => {
+    // Data derived from global state for the grid
+    const gridDataFromGlobal = useMemo(() => {
         console.log("Processing study variables for grid data... with studies:", studies, "and mapping:", studyToStudyVariableMapping);
         const vars = getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
         return vars;
     }, [studyVariables, studies, studyToStudyVariableMapping]);
 
-    // Apply flattened data to local state only when global data changes
-    useEffect(() => {
-        if (!isEqual(processedData, gridData)) {
-            setProcessedData(gridData);
-        }
-    }, []);
+    // Local state for the grid, initialized from global data
+    const [processedData, setProcessedData] = useState([]);
+    const [columns, setColumns] = useState([]);
 
-    // --------- Grid → Global Sync ---------
+    // Ref to track if the processedData update originated from user interaction or global state sync
+    const isUpdatingFromGlobal = useRef(false);
+
+    // --- Global Data to Local Grid Data Sync ---
+    // This useEffect synchronizes `processedData` with `gridDataFromGlobal`
+    // It runs when `gridDataFromGlobal` changes (i.e., when global state updates).
+    // It uses a ref to prevent triggering the `processedData` to global sync.
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            const flattened = flattenGridDataToMappings(processedData, studies) 
+        if (!isEqual(processedData, gridDataFromGlobal)) {
+            console.log("Global data changed, updating processedData...");
+            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
+            setProcessedData(gridDataFromGlobal);
+        }
+    }, [gridDataFromGlobal]); // Depend on the memoized global data for updates
+
+
+    // --- Local Grid Data to Global Data Sync ---
+    // This useEffect synchronizes global state when `processedData` changes.
+    // It checks the ref to ensure it only runs if the change *wasn't* initiated by `gridDataFromGlobal` (global sync).
+    useEffect(() => {
+        // If the update originated from `gridDataFromGlobal`, just reset the flag and don't re-sync to global.
+        if (isUpdatingFromGlobal.current) {
+            isUpdatingFromGlobal.current = false;
+            console.log("ProcessedData updated from global, skipping global sync.");
+            return;
+        }
+
+        // Only sync to global if processedData actually changed and it wasn't a global-initiated update
+        // Using a timeout to debounce and prevent rapid updates during multi-cell edits (e.g., paste)
+        const timeoutId = setTimeout(() => {
+            console.log("ProcessedData changed locally, updating global state...");
+            const flattened = flattenGridDataToMappings(processedData, studies);
             setStudyToStudyVariableMapping(flattened);
 
-            // Filter out UUID keys from processedData
-            setStudyVariables(
-                processedData.map((variable) =>
-                    Object.fromEntries(
-                        Object.entries(variable).filter(([key]) => !isUUID(key))
-                    )
+            // Filter out UUID keys from processedData to update studyVariables
+            const updatedStudyVariables = processedData.map((variable) =>
+                Object.fromEntries(
+                    Object.entries(variable).filter(([key]) => !isUUID(key))
                 )
             );
-        }, 0);
+            // Only update if truly different to avoid unnecessary renders and potential loops
+            if (!isEqual(studyVariables, updatedStudyVariables)) {
+                setStudyVariables(updatedStudyVariables);
+            }
+        }, 100); // Debounce time in ms
 
-        return () => clearTimeout(timeout);
-    }, [processedData, studies]);
+        return () => clearTimeout(timeoutId);
+    }, [processedData, studies, setStudyToStudyVariableMapping, setStudyVariables, studyVariables]); // Depend on processedData and relevant setters/state
+
 
     // Open the edit modal
     const openEditModal = (index) => {
@@ -137,20 +138,35 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     // Handler for when the EditVariableModal saves changes
     const handleVariableDetailsSave = (updatedData) => {
         if (currentEditIndex !== null) {
-            const newData = [...processedData];
-            // Update the specific variable with the new details
-            newData[currentEditIndex] = {
-                ...newData[currentEditIndex], // Keep existing values, etc.
-                variable: updatedData.variable,
-                type: updatedData.type,
-                unit: updatedData.unit,
-                description: updatedData.description,
-            };
-            setProcessedData(newData);
+            setProcessedData(prevData => {
+                const newData = [...prevData];
+                // Update the specific variable with the new details
+                newData[currentEditIndex] = {
+                    ...newData[currentEditIndex], // Keep existing values, etc.
+                    variable: updatedData.variable,
+                    type: updatedData.type,
+                    unit: updatedData.unit,
+                    description: updatedData.description,
+                };
+                return newData;
+            });
         }
     };
 
-    const className = 'bg-gray-500'
+    // Remove a variable from processedData (which will then sync to global)
+    const removeParameter = (indexToRemove) => {
+        setProcessedData(prevData => {
+            const newData = prevData.filter((_, index) => index !== indexToRemove);
+            // Adjust selected index if the removed item was before it
+            if (selectedVariableIndex >= newData.length && newData.length > 0) {
+                setSelectedVariableIndex(newData.length - 1);
+            } else if (newData.length === 0) {
+                setSelectedVariableIndex(0); // No variables left
+            }
+            return newData;
+        });
+    };
+
     // Standalone Effect to initialize columns for grid view
     useEffect(() => {
         setColumns([
@@ -172,15 +188,15 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                 size: 150
             }))
         ])
-    }, [studies]);
+    }, [studies]); // Depend on studies, so columns update if studies change
 
     const handleInputChange = (variableIndex, mapping, value) => {
         setProcessedData(prevData => {
             const newData = [...prevData];
-
             const entry = newData.find(variable => variable.id === mapping.studyVariableId)
-            entry[mapping.studyId] = value; // Update the specific study's value
-
+            if (entry) { // Ensure entry exists
+                entry[mapping.studyId] = value; // Update the specific study's value
+            }
             return newData;
         });
     };
@@ -193,12 +209,20 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
             description: '',
             id: crypto.randomUUID(), // Generate a unique ID
         };
-        setProcessedData(prevData => [...prevData, newVariable]);
 
-        setSelectedVariableIndex(processedData.length); // Select the new variable
+        setProcessedData(prevData => {
+            const updatedData = [...prevData, newVariable];
+            setSelectedVariableIndex(updatedData.length - 1); // Select the new variable
+            return updatedData;
+        });
+
         setSelectedTab('details'); // Switch to details tab on new variable creation
-        openEditModal(processedData.length); // Open edit modal for new variable
+        // The modal will open when selectedVariableIndex is set and processedData updates.
+        // It's better to open the modal based on the newly selected index
+        setIsEditModalOpen(true);
+        setCurrentEditIndex(processedData.length); // This will be the index of the new variable
     };
+
 
     return (
         <div ref={combinedRef} >
@@ -243,9 +267,10 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                     <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                         <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Variables</h3>
                         <div className="overflow-y-auto flex-grow">
+                            {/* Use selectedVariable?.id as key if available, otherwise fallback to index */}
                             {studyVariables.map((item, index) => (
                                 <button
-                                    key={item.variable + index} // Use index in key as variable name can change
+                                    key={item.id || index}
                                     onClick={() => {
                                         setSelectedVariableIndex(index);
                                         setSelectedTab('details'); // Switch to details tab on variable select
@@ -306,27 +331,23 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             {/* Studies Grid - this is where the dynamic inputs are */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {studies.map((study, index) => {
-                                    const existingMapping = studyToStudyVariableMapping.find(
-                                        (m) => m.studyVariableId === selectedVariable.id && m.studyId === study.id
+                                    // Find the corresponding mapping in processedData for the selected variable and current study
+                                    const processedDataEntry = processedData.find(
+                                        (variable) => variable.id === selectedVariable.id
                                     );
-
-                                    // Fallback if no mapping exists yet
-                                    const mapping = existingMapping || {
-                                        studyVariableId: selectedVariable.id,
-                                        studyId: study.id,
-                                        value: ''
-                                    };
+                                    // Get the value for the current study from the processedData entry
+                                    const value = processedDataEntry ? processedDataEntry[study.id] : '';
 
                                     return (
                                         <div
                                             key={index}
                                             className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                                         >
-                                            <FormField 
+                                            <FormField
                                                 label={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
                                                 name={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
-                                                value={mapping.value}
-                                                onChange={(e) => handleInputChange(selectedVariableIndex, mapping, e.target.value)}
+                                                value={value || ''} // Ensure value is not undefined
+                                                onChange={(e) => handleInputChange(selectedVariableIndex, { studyVariableId: selectedVariable.id, studyId: study.id }, e.target.value)}
                                                 placeholder={"Enter value"}
                                             />
                                         </div>
@@ -365,4 +386,4 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     );
 });
 
-export default StudyVariableSlide
+export default StudyVariableSlide;
