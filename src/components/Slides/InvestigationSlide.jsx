@@ -33,7 +33,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
     return (
         <div ref={combinedRef} >
-            <div className="max-w-7xl mx-auto">
                 
                 <SlidePageTitle>
                   {investigationFormFields.pageTitle}
@@ -58,7 +57,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
                         />
                     ))}
                     </div>
-                </div>
             </div>
     );
 });

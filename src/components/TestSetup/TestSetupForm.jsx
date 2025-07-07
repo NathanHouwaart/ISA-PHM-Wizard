@@ -729,7 +729,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const labelClasses = "block text-sm font-medium text-gray-700 mb-2";
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-gray-900">
@@ -746,7 +746,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
       <div className="p-6 space-y-6">
         {/* Basic Information */}
-        <div className="bg-gray-50 rounded-lg space-y-4">
+        <div className="p-4 bg-gray-50 rounded-lg space-y-4">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

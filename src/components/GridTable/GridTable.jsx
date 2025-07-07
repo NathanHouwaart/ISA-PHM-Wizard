@@ -17,7 +17,7 @@ export const BoldCell = ({ value }) => {
     );
 };
 
-export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, plugins }, ref) => {
+export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, disableAdd = false, plugins }, ref) => {
 
     const history = useRef([]);
     const future = useRef([]);
@@ -60,7 +60,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
 
 
     const handleEdit = (e) => {
-        
+
         e.preventDefault();
         const { detail } = e;
         const newValue = detail.val;
@@ -140,7 +140,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
         }, {});
 
         newRow.id = uuidv4(); // Ensure each new row has a unique ID
-        console.log("Adding new row:", newRow);
+        // console.log("Adding new row:", newRow);
 
         setItems((prev) => [...prev, newRow]);
     };
@@ -160,18 +160,21 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
                 <p className="text-gray-600 mt-2 text-left mb-4">Add all your items in a grid like way</p>
             </div>
             <div className="mb-2 space-x-2 flex">
-                <button
-                    onClick={addRow}
-                    className="px-3 py-[2px] bg-blue-600 text-left rounded hover:bg-blue-700 transition flex items-center gap-1"
-                >
-                    <span>Add study</span> <Plus className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={removeRow}
-                    className="px-3 py-[2px] bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
-                >
-                    <span>Remove study</span> <Minus className="h-4 w-4" />
-                </button>
+                {!disableAdd &&
+                    <>
+                        <button
+                            onClick={addRow}
+                            className="px-3 py-[2px] bg-blue-600 text-left rounded hover:bg-blue-700 transition flex items-center gap-1"
+                        >
+                            <span>Add study</span> <Plus className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={removeRow}
+                            className="px-3 py-[2px] bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
+                        >
+                            <span>Remove study</span> <Minus className="h-4 w-4" />
+                        </button>
+                    </>}
                 <button
                     onClick={undo}
                     className="px-3 py-[2px] bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center gap-1"

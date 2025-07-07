@@ -17,6 +17,7 @@ import Heading1 from '../components/Typography/Heading1';
 import Paragraph from '../components/Typography/Paragraph';
 
 import initialTestSetups from '../data/InitialTestSetups.json'
+import { useEffect } from "react";
 
 export const TestSetups = () => {
 
@@ -26,9 +27,10 @@ export const TestSetups = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer();
 
+
   return (
     <PageWrapper>
-      <div className='space-y-6 w-full overflow-hidden flex-shrink-0' >
+      <div className='space-y-6 w-ful overflow-hidden flex-shrink-0' >
         <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
           {
             <Collection

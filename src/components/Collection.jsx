@@ -56,9 +56,6 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
             setItems(prevItems => {
                 // 1. Filter out the study to remove
                 const filtered = prevItems.filter(item => item.id !== itemId);
-
-               
-
                 return filtered;
             });
             setViewingItem(null);
@@ -109,9 +106,9 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
 
     return (
         <div ref={combinedRef} className="rounded-md bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="pl-3 flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
                         <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>

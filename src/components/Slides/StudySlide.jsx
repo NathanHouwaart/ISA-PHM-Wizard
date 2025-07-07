@@ -35,13 +35,15 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const { setScreenWidth } = useGlobalDataContext();
 
-    if (selectedTab === 'grid-view' && currentPage === 5) {
-        setScreenWidth("max-w-[100rem]");
-        console.log("Setting screen width to max-w-7xl for grid view on StudySlide");
-    } else if (currentPage === 5) {
-        setScreenWidth("max-w-5xl");
-        console.log("Setting screen width to max-w-5xl for simple view on StudySlide");
-    }
+     useEffect(() => {
+            if (selectedTab === 'grid-view' && currentPage === 5) {
+                setScreenWidth("max-w-[100rem]");
+                // console.log("Setting screen width to max-w-7xl for grid view on MeasurementOutputSlide");
+            } else if (currentPage === 5) {
+                setScreenWidth("max-w-5xl");
+                // console.log("Setting screen width to max-w-5xl for simple view on MeasurementOutputSlide");
+            }
+        }, [selectedTab, currentPage, setScreenWidth]);
     
     return (
         <div ref={combinedRef}>

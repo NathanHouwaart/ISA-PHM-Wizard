@@ -12,6 +12,7 @@ import PageWrapper from '../layout/PageWrapper';
 import { slides } from "../components/Slides/slides";
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
+import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -31,9 +32,12 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
+  const {submitData} = useGlobalDataContext();
+
   const handleSubmit = () => {
     alert('Form submitted! Check console for data.');
     // In a real application, you'd collect data from all forms here
+    submitData();
   };
 
   return (

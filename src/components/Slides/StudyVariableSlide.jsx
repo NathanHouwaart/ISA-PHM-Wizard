@@ -13,6 +13,8 @@ import { RevoGrid, Template } from '@revolist/react-datagrid';
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
 import { validate as isUUID } from 'uuid';
+import EditVariableModal from '../EditModal';
+import FormField from '../Form/FormField';
 
 const GrayCell = () => {
     return {
@@ -29,23 +31,31 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-
     const { studyVariables, setStudyVariables, studies, studyToStudyVariableMapping, setStudyToStudyVariableMapping } = useGlobalDataContext();
 
-
     const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
-    
+
+    // State for managing the edit modal
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [currentEditIndex, setCurrentEditIndex] = useState(null);
+    const [tempEditData, setTempEditData] = useState({ variable: '', type: '', unit: '', description: '' });
+
     const { setScreenWidth } = useGlobalDataContext();
 
+    // Define available variable types for the dropdown
+    const variableTypes = [
+        'Qualitative fault specification',
+        'Quantitative fault specification',
+        'Operating condition'
+    ];
+
     useEffect(() => {
-         if (selectedTab === 'grid-view' && currentPage === 6) {
-             setScreenWidth("max-w-[100rem]");
-             console.log("Setting screen width to max-w-7xl for grid view on MeasurementOutputSlide");
-         } else if (currentPage === 6) {
-             setScreenWidth("max-w-5xl");
-             console.log("Setting screen width to max-w-5xl for simple view on MeasurementOutputSlide");
-         }
-     }, [selectedTab, currentPage, setScreenWidth]);
+        if (selectedTab === 'grid-view' && currentPage === 6) {
+            setScreenWidth("max-w-[100rem]");
+        } else if (currentPage === 6) {
+            setScreenWidth("max-w-5xl");
+        }
+    }, [selectedTab, currentPage, setScreenWidth]);
 
     const selectedVariable = studyVariables[selectedVariableIndex];
 
@@ -81,8 +91,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
     // --------- Global → Grid Sync ---------
     const gridData = useMemo(() => {
+        console.log("Processing study variables for grid data... with studies:", studies, "and mapping:", studyToStudyVariableMapping);
         const vars = getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
-        console.log("Grid Data:", vars);
         return vars;
     }, [studyVariables, studies, studyToStudyVariableMapping]);
 
@@ -96,8 +106,9 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     // --------- Grid → Global Sync ---------
     useEffect(() => {
         const timeout = setTimeout(() => {
-            setStudyToStudyVariableMapping(flattenGridDataToMappings(processedData, studies));
-            
+            const flattened = flattenGridDataToMappings(processedData, studies) 
+            setStudyToStudyVariableMapping(flattened);
+
             // Filter out UUID keys from processedData
             setStudyVariables(
                 processedData.map((variable) =>
@@ -111,6 +122,33 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         return () => clearTimeout(timeout);
     }, [processedData, studies]);
 
+    // Open the edit modal
+    const openEditModal = (index) => {
+        setCurrentEditIndex(index);
+        setIsEditModalOpen(true);
+    };
+
+    // Close the edit modal
+    const closeEditModal = () => {
+        setIsEditModalOpen(false);
+        setCurrentEditIndex(null);
+    };
+
+    // Handler for when the EditVariableModal saves changes
+    const handleVariableDetailsSave = (updatedData) => {
+        if (currentEditIndex !== null) {
+            const newData = [...processedData];
+            // Update the specific variable with the new details
+            newData[currentEditIndex] = {
+                ...newData[currentEditIndex], // Keep existing values, etc.
+                variable: updatedData.variable,
+                type: updatedData.type,
+                unit: updatedData.unit,
+                description: updatedData.description,
+            };
+            setProcessedData(newData);
+        }
+    };
 
     const className = 'bg-gray-500'
     // Standalone Effect to initialize columns for grid view
@@ -139,12 +177,27 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     const handleInputChange = (variableIndex, mapping, value) => {
         setProcessedData(prevData => {
             const newData = [...prevData];
-            
+
             const entry = newData.find(variable => variable.id === mapping.studyVariableId)
             entry[mapping.studyId] = value; // Update the specific study's value
-           
+
             return newData;
         });
+    };
+
+    const addNewVariable = () => {
+        const newVariable = {
+            variable: 'New Variable',
+            type: 'Qualitative fault specification',
+            unit: '',
+            description: '',
+            id: crypto.randomUUID(), // Generate a unique ID
+        };
+        setProcessedData(prevData => [...prevData, newVariable]);
+
+        setSelectedVariableIndex(processedData.length); // Select the new variable
+        setSelectedTab('details'); // Switch to details tab on new variable creation
+        openEditModal(processedData.length); // Open edit modal for new variable
     };
 
     return (
@@ -207,7 +260,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             ))}
                         </div>
                         <button
-                            onClick={() => { }}
+                            onClick={addNewVariable}
                             className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                         >
                             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -251,7 +304,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             </div>
 
                             {/* Studies Grid - this is where the dynamic inputs are */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {studies.map((study, index) => {
                                     const existingMapping = studyToStudyVariableMapping.find(
                                         (m) => m.studyVariableId === selectedVariable.id && m.studyId === study.id
@@ -269,25 +322,16 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                                             key={index}
                                             className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                                         >
-                                            <label
-                                                // htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${study.id}-${selectedVariableIndex}`}
-                                                className="block text-xs font-semibold text-blue-800 mb-1"
-                                            >
-                                                Study S{(index + 1).toString().padStart(2, '0')}
-                                            </label>
-                                            {renderInputField(selectedVariable, selectedVariableIndex, mapping)}
+                                            <FormField 
+                                                label={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
+                                                name={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
+                                                value={mapping.value}
+                                                onChange={(e) => handleInputChange(selectedVariableIndex, mapping, e.target.value)}
+                                                placeholder={"Enter value"}
+                                            />
                                         </div>
                                     );
                                 })}
-
-                                {/* {Object.keys(selectedVariable.values).map((studyKey) => (
-                                    <div key={studyKey} className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm">
-                                        <label htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${studyKey}-${selectedVariableIndex}`} className="block text-xs font-semibold text-blue-800 mb-1">
-                                            Study {studyKey.replace('s', '')}
-                                        </label>
-                                        {renderInputField(selectedVariable, selectedVariableIndex, studyKey)}
-                                    </div>
-                                ))} */}
                             </div>
                         </div>
                     ) : (
@@ -299,13 +343,22 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             <p>Click 'Add New' to get started!</p>
                         </div>
                     )}
+                    {/* Edit Variable Details Modal */}
+                    {isEditModalOpen && currentEditIndex !== null && (
+                        <EditVariableModal
+                            isOpen={isEditModalOpen}
+                            onClose={closeEditModal}
+                            onSave={handleVariableDetailsSave}
+                            initialVariableData={processedData[currentEditIndex]}
+                            variableTypes={variableTypes}
+                        />
+                    )}
                 </div>
                 <div
                     className={`revo-grid-container transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-100" : "opacity-0 max-h-0"
                         }`}
                 >
                     <GridTable items={processedData} setItems={setProcessedData} columns={columns} ></GridTable>
-                    {/* <StudyDataTransformer studyVariables={studyVariables} studies={studies} rawMeasurements={studyToStudyVariableMapping} /> */}
                 </div>
             </div>
         </div>

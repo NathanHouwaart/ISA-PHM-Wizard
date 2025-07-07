@@ -48,7 +48,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name)
+    // console.log(name)
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -56,7 +56,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   };
 
   useEffect(() => {
-    console.log(formData);
+    // console.log(formData);
   }, [formData])
 
   return (

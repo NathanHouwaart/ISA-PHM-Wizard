@@ -40,13 +40,13 @@ export const GlobalDataProvider = ({ children }) => {
     const [studyVariables, setStudyVariables] = useState(initialStudyVariables); // For study variables
 
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(existingStudyToStudyVariableMapping);
-    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(existingStudyToSensorMeasurementMapping); // For study measurements
+    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState([]); // For study measurements
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
 
     useEffect(() => {
-        console.log("study variables", studyVariables);
-    }, [studyVariables]);
+        console.log("study variables", studyToStudyVariableMapping);
+    }, [studyToStudyVariableMapping]);
 
     // Add more state variables for other data types as needed
 
@@ -55,17 +55,48 @@ export const GlobalDataProvider = ({ children }) => {
         const storedData = localStorage.getItem('globalAppData');
         if (storedData) {
             const parsedData = JSON.parse(storedData);
+            console.log("Parsed Data from Local Storage:", parsedData);
             setStudies(parsedData?.studies || initialStudies || []);
             setInvestigations(parsedData?.investigations || {});        // One investigation
             setAuthors(parsedData?.authors || initialAuthors || []);
             setTestSetups(parsedData?.testSetups || initialTestSetups || []);
+            setSelectedTestSetup(parsedData?.selectedTestSetup || null);
             setPublications(parsedData?.publications || initialPublications || []);
             setStudyVariables(parsedData?.studyVariables || initialStudyVariables || []); // Load study variables
             setStudyToStudyVariableMapping(parsedData?.studyToStudyVariableMapping || existingStudyToStudyVariableMapping || []);
-            setStudyToStudyVariableMapping(parsedData?.studyToSensorMeasurementMapping || existingStudyToSensorMeasurementMapping || []);
+            setStudyToSensorMeasurementMapping(parsedData?.studyToSensorMeasurementMapping || existingStudyToSensorMeasurementMapping || []);
             // ... set other states
         }
     }, []);
+
+    function submitData() {
+        // Function to handle data submission
+        // This could be an API call or any other logic you want to implement
+        console.log("Data submitted:", {
+            studies,
+            investigations,
+            authors,
+            publications,
+            selectedTestSetup,
+            studyVariables,
+            studyToStudyVariableMapping,
+            studyToSensorMeasurementMapping
+        });
+
+        console.log(
+            JSON.stringify({
+                "identifier": investigations.investigationIdentifier,
+                "title": investigations.investigationTitle,
+                "description": investigations.investigationDescription,
+                "license": investigations.license,
+                "submission_date": investigations.submissionDate,
+                "public_release_date": investigations.publicReleaseDate,
+                "publications": publications,
+            }, null, 2)
+        )
+    }
+
+
 
 
     useEffect(() => {
@@ -79,8 +110,9 @@ export const GlobalDataProvider = ({ children }) => {
             studyVariables,
             studyToStudyVariableMapping,
             studyToSensorMeasurementMapping,
-            // ... include other states
+            // ... include othmer states
         };
+        console.log("Data to be stored in localStorage:", dataToStore);
         localStorage.setItem('globalAppData', JSON.stringify(dataToStore));
     },
         [
@@ -100,7 +132,8 @@ export const GlobalDataProvider = ({ children }) => {
         studyVariables: [studyVariables, setStudyVariables],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
-        screenWidth: [screenWidth, setScreenWidth]
+        screenWidth: [screenWidth, setScreenWidth],
+        submitData: [submitData]
     };
 
 
@@ -125,7 +158,8 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToSensorMeasurementMapping,
         screenWidth,
         setScreenWidth,
-        dataMap
+        dataMap,
+        submitData
     };
 
     return (

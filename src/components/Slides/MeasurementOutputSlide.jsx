@@ -4,7 +4,7 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import { Edit, Edit2, Trash2 } from 'lucide-react';
+import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import { GridTable, BoldCell } from '../GridTable/GridTable';
@@ -12,6 +12,7 @@ import { RevoGrid, Template } from '@revolist/react-datagrid';
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
 import { validate as isUUID } from 'uuid';
+import FormField from '../Form/FormField';
 
 const GrayCell = () => {
     return {
@@ -39,10 +40,10 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 7) {
             setScreenWidth("max-w-[100rem]");
-            console.log("Setting screen width to max-w-7xl for grid view on MeasurementOutputSlide");
+            // console.log("Setting screen width to max-w-7xl for grid view on MeasurementOutputSlide");
         } else if (currentPage === 7) {
             setScreenWidth("max-w-5xl");
-            console.log("Setting screen width to max-w-5xl for simple view on MeasurementOutputSlide");
+            // console.log("Setting screen width to max-w-5xl for simple view on MeasurementOutputSlide");
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
@@ -50,9 +51,10 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
 
     // Function to render the appropriate input field for a specific study
     const renderInputField = (item, variableIndex, mapping) => {
-
+        
 
         return (
+            <>
             <div className="relative flex items-center w-full">
                 {item.unit && (
                     <span className="absolute right-2 text-gray-500 text-sm pointer-events-none">
@@ -64,11 +66,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                     value={mapping.value}
                     onChange={(e) => handleInputChange(variableIndex, mapping, e.target.value)}
                     className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out pl-3 pr-3 text-sm`}
-                    placeholder={'Enter text'}
+                    placeholder={'Enter Filename'}
                 />
             </div>
+            </>
         );
     };
+
+
 
 
     const [processedData, setProcessedData] = useState([]);
@@ -77,11 +82,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     // --------- Global → Grid Sync ---------
     const gridData = useMemo(() => {
         if (!selectedTestSetup || !studies || !studyToSensorMeasurementMapping) {
-            console.warn("Missing data for grid processing:", { selectedTestSetup, studies, studyToSensorMeasurementMapping });
+            // console.warn("Missing data for grid processing:", { selectedTestSetup, studies, studyToSensorMeasurementMapping });
             return [];
         }
         const vars = getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorMeasurementMapping);
-        console.log("Grid data processed:", vars);
+        // console.log("Grid data processed:", vars);
         return vars;
     }, [studies, selectedTestSetup, studyToSensorMeasurementMapping]);
 
@@ -90,14 +95,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
         if (!isEqual(processedData, gridData)) {
             setProcessedData(gridData);
         }
-        console.log("Processed data updated:", gridData);
+        // console.log("Processed data updated:", gridData);
     }, [selectedTestSetup, testSetups]);
 
     // --------- Grid → Global Sync ---------
     useEffect(() => {
         const timeout = setTimeout(() => {
             const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-            console.log("Flattened mappings:", flattenedMappings);
+            // console.log("Flattened mappings:", flattenedMappings);
             setStudyToSensorMeasurementMapping(flattenedMappings);
 
             // // Filter out UUID keys from processedData
@@ -141,10 +146,10 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     const handleInputChange = (variableIndex, mapping, value) => {
         setProcessedData(prevData => {
             const newData = [...prevData];
-         
+
             const entry = newData.find(sensor => sensor.id === mapping.sensorId)
             entry[mapping.studyId] = value; // Update the specific study's value
-         
+
             return newData;
         });
     };
@@ -208,19 +213,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                                 </button>
                             ))}
                         </div>
-                        <button
-                            onClick={() => { }}
-                            className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
-                        >
-                            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path>
-                            </svg>
-                            Add New
-                        </button>
+
                     </div>
 
                     {/* Conditional rendering of tab content */}
-                    {selectedStudy ? (
+                    {selectedStudy && selectedTestSetup ? (
                         <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
                             {/* Variable Header, Edit/Remove Buttons */}
                             <div className='mb-4 border-b pb-4'>
@@ -228,29 +225,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                                     <h2 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
                                         {selectedStudy.title}
                                     </h2>
-                                    <div className="flex space-x-3">
-                                        <button
-                                            onClick={() => openEditModal(selectedStudyIndex)}
-                                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                                            title="Edit Variable Details"
-                                        >
-                                            <Edit2 className="w-4 h-4 mr-2" />
-                                            Edit Details
-                                        </button>
-                                        <button
-                                            onClick={() => removeParameter(selectedStudyIndex)}
-                                            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                                            title="Remove Parameter"
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Remove
-                                        </button>
-                                    </div>
+
                                 </div>
                                 <p className="text-md text-gray-700 mt-2">{selectedStudy.description ? selectedStudy.description : "no description available"}</p>
                             </div>
                             {/* Studies Grid - this is where the dynamic inputs are */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {selectedTestSetup?.sensors.map((sensor, index) => {
                                     const existingMapping = studyToSensorMeasurementMapping.find(
                                         (m) => m.studyId === selectedStudy.id && m.sensorId === sensor.id
@@ -268,13 +248,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                                             key={index}
                                             className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                                         >
-                                            <label
-                                                // htmlFor={`${selectedVariable.variable.replace(/\s/g, '-')}-${study.id}-${selectedVariableIndex}`}
-                                                className="block text-xs font-semibold text-blue-800 mb-1"
-                                            >
-                                                Sensor S{(index + 1).toString().padStart(2, '0')}
-                                            </label>
-                                            {renderInputField(selectedStudy, selectedStudyIndex, mapping)}
+                                            <FormField 
+                                                label={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
+                                                name={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
+                                                value={mapping.value}
+                                                onChange={(e) => handleInputChange(selectedStudyIndex, mapping, e.target.value)}
+                                                placeholder={"Enter filename"}
+                                            />
+                                            
                                         </div>
                                     );
                                 })}
@@ -290,12 +271,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                             </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                            <svg className="w-16 h-16 mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"></path>
-                            </svg>
-                            <p>No parameter selected or available.</p>
-                            <p>Click 'Add New' to get started!</p>
+                        <div className='flex flex-grow align-center'>
+                            <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
+                                <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500"></PlusCircleIcon>
+                                <p>No test setup selected</p>
+                                <p>Go to the 'Test-Setup' slide (5) and select a test-setup</p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -303,7 +284,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                     className={`revo-grid-container transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-100" : "opacity-0 max-h-0"
                         }`}
                 >
-                    <GridTable items={processedData} setItems={setProcessedData} columns={columns} ></GridTable>
+                    <GridTable items={processedData} setItems={setProcessedData} columns={columns} disableAdd={true}></GridTable>
                     {/* <StudyDataTransformer studyVariables={studyVariables} studies={studies} rawMeasurements={studyToStudyVariableMapping} /> */}
                 </div>
             </div>
