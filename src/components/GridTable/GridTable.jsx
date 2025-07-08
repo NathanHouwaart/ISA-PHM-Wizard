@@ -19,9 +19,11 @@ export const BoldCell = ({ value }) => {
 
 export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, disableAdd = false, plugins }, ref) => {
 
-    const history = useRef([]);
+    const gridRef = useRef(null);
+    const cursorPosition = useRef(null);
     const future = useRef([]);
-
+    const history = useRef([]);
+    
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
@@ -58,10 +60,73 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
         setItems(updatedData);
     };
 
+    useEffect(() => {
+        const currentpos = cursorPosition
+        const grid = gridRef.current;
+        if (!grid) return;
+
+        const handleBeforePasteApply = (e) => {
+            const { parsed } = e.detail;
+            
+            // Find the active/selected cell (fallback to 0,0)
+
+            const colOffset = columns.filter(col => col?.pin === 'colPinStart').length;
+            
+            var startRow = cursorPosition.current.rowIndex ?? 0;
+            var startCol = 0;
+            
+            if (currentpos.current.type === 'colPinStart'){
+                startCol = cursorPosition.current.colIndex ?? 0;
+            }else{
+                startCol = cursorPosition.current.colIndex + colOffset;
+            }
+
+
+            // Save for undo
+            pushToHistory(items);
+
+            // Apply pasted data manually
+            const newData = [...items];
+
+            parsed.forEach((rowValues, rowOffset) => {
+                const rowIdx = startRow + rowOffset;
+                if (!newData[rowIdx]) return;
+
+                rowValues.forEach((cellValue, colOffset) => {
+                    const colIdx = startCol + colOffset;
+                    const col = columns[colIdx];
+                    if (col?.prop) {
+                        newData[rowIdx] = {
+                            ...newData[rowIdx],
+                            [col.prop]: cellValue
+                        };
+                    }
+                });
+            });
+
+            setItems(newData);
+
+            // Override RevoGrid's default paste
+            e.preventDefault();
+        };
+
+        if (grid) {
+            grid.addEventListener('beforepasteapply', handleBeforePasteApply);
+        }
+
+        return () => {
+            if (grid) {
+                grid.removeEventListener('beforepasteapply', handleBeforePasteApply);
+            }
+        };
+    }, [items, columns]);
+
 
     const handleEdit = (e) => {
 
         e.preventDefault();
+
+        // console.log("Handling edit:", e);
         const { detail } = e;
         const newValue = detail.val;
         const oldValue = detail.value; // Get the old value to check if it actually changed
@@ -190,6 +255,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
             </div>
             <div className="relative rounded-lg border-gray-300 shadow border-1 h-[400px]">
                 <RevoGrid
+                    ref={gridRef}
                     rowSize={50}
                     columns={columns}
                     source={items}
@@ -201,6 +267,9 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
                     style={{ width: '100%', height: '100%' }}
                     onBeforeedit={handleEdit}
                     onBeforeautofill={handleRangeEdit}
+                    onBeforecellfocus={(e) => {
+                        cursorPosition.current = e.detail;
+                    }}
                 />
             </div>
         </div>
