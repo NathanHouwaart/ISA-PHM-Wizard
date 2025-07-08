@@ -25,13 +25,13 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
     // if (!isOpen || !initialVariableData) return null; // Don't render if not open or no data
 
     return (
-        <div className="absolute inset-0 p-0 bg-gray-600/75 flex items-center justify-center z-999 overflow-auto">
+        <div className="absolute inset-0 p-0 rounded-md bg-blue-500/25 flex items-center justify-center z-999 overflow-auto">
             <div  style={{scale: 0.9}} className="bg-white rounded-lg m-0 shadow-xl p-6 w-full max-w-md transform scale-100 transition-transform duration-300 ease-out">
                 <h4 className="text-2xl font-bold text-gray-800 text-center ">
                     Edit Details for: 
                 </h4>
                 <h4 className="text-2xl font-bold text-gray-800 mb-5 py-2 border-b text-center">
-                    <span className="text-blue-700">{initialVariableData.variable}</span>
+                    <span className="text-blue-700">{initialVariableData?.variable}</span>
                 </h4>
 
                 <div className="mb-4">
@@ -40,7 +40,7 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                         type="text"
                         id="variable-name"
                         name="variable"
-                        value={tempEditData.variable}
+                        value={tempEditData?.variable}
                         onChange={handleModalInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -51,7 +51,7 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                     <select
                         id="variable-type"
                         name="type"
-                        value={tempEditData.type}
+                        value={tempEditData?.type}
                         onChange={handleModalInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                     >
@@ -67,7 +67,7 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                         type="text"
                         id="variable-unit"
                         name="unit"
-                        value={tempEditData.unit}
+                        value={tempEditData?.unit}
                         onChange={handleModalInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         placeholder="e.g., RPM, bar, m^3/h"
@@ -79,7 +79,7 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                     <textarea
                         id="variable-description"
                         name="description"
-                        value={tempEditData.description}
+                        value={tempEditData?.description}
                         onChange={handleModalInputChange}
                         rows="3"
                         

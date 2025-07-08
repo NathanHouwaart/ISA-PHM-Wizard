@@ -175,16 +175,18 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
             const activeTag = document.activeElement?.tagName?.toLowerCase();
             const isEditing = activeTag === 'input' || activeTag === 'textarea';
 
-            if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
+            const key = (e.key).toLowerCase();
+
+            if (e.ctrlKey && (key === 'z' || key === 'y')) {
                 // Only prevent default if we're actually handling the undo/redo
                 if (!isEditing) { // Prevent default only if not in an input/textarea
                     e.preventDefault();
                     e.stopPropagation();
                 }
 
-                if (e.key === 'z') {
+                if (key === 'z') {
                     undo();
-                } else if (e.key === 'y') {
+                } else if (key === 'y') {
                     redo();
                 }
             }
@@ -205,7 +207,6 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
         }, {});
 
         newRow.id = uuidv4(); // Ensure each new row has a unique ID
-        // console.log("Adding new row:", newRow);
 
         setItems((prev) => [...prev, newRow]);
     };
@@ -242,13 +243,15 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
                     </>}
                 <button
                     onClick={undo}
-                    className="px-3 py-[2px] bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center gap-1"
+                    className={`duration-200 px-3 py-[2px] bg-gray-600/75 text-white rounded  transition flex items-center gap-1
+                        ${history.current.length === 0 ? 'cursor-not-allowed bg-gray-600 opacity-75' : 'hover:from-blue-600 hover:to-blue-700 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-600'}`}
                 >
                     <span>Undo (Ctrl+Z)</span>
                 </button>
                 <button
                     onClick={redo}
-                    className="px-3 py-[2px] bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center gap-1"
+                    className={`duration-200 px-3 py-[2px] bg-gray-600/75 text-white rounded  transition flex items-center gap-1
+                        ${future.current.length === 0 ? 'cursor-not-allowed bg-gray-600 opacity-75' : 'hover:from-blue-600 hover:to-blue-700 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-600'}`}
                 >
                     <span>Redo (Ctrl+Y)</span>
                 </button>
@@ -261,7 +264,6 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
                     source={items}
                     columnTypes={plugins}
                     editable
-                    // theme=''
                     resize={true}
                     range={{ y: items.length, x: items.length }}
                     style={{ width: '100%', height: '100%' }}

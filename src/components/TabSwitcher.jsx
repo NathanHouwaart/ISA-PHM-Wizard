@@ -10,7 +10,7 @@ const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
                     className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
-                        ? 'bg-white text-blue-700 shadow-md'
+                        ? 'bg-white text-blue-600 shadow-md'
                         : 'text-gray-600 hover:bg-gray-200'
                         }`}
                 >

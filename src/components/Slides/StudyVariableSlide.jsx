@@ -31,17 +31,19 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { studyVariables, setStudyVariables, studies, studyToStudyVariableMapping, setStudyToStudyVariableMapping } = useGlobalDataContext();
+    const { 
+        studies, 
+        studyVariables, 
+        setScreenWidth, 
+        setStudyVariables, 
+        studyToStudyVariableMapping, 
+        setStudyToStudyVariableMapping } = useGlobalDataContext(); 
 
     const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
 
     // State for managing the edit modal
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentEditIndex, setCurrentEditIndex] = useState(null);
-    // tempEditData is not being used in your provided code
-    // const [tempEditData, setTempEditData] = useState({ variable: '', type: '', unit: '', description: '' });
-
-    const { setScreenWidth } = useGlobalDataContext();
 
     // Define available variable types for the dropdown
     const variableTypes = [
@@ -117,7 +119,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
             if (!isEqual(studyVariables, updatedStudyVariables)) {
                 setStudyVariables(updatedStudyVariables);
             }
-        }, 100); // Debounce time in ms
+        }, 0); // Debounce time in ms
 
         return () => clearTimeout(timeoutId);
     }, [processedData, studies, setStudyToStudyVariableMapping, setStudyVariables, studyVariables]); // Depend on processedData and relevant setters/state
@@ -260,8 +262,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                 </div>
 
                 <div
-                    className={`flex rounded transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'simple-view' || selectedTab === 'details' ? "opacity-100 max-h-[50vh]" : "opacity-0 max-h-0"
-                        }`}
+                    className={`flex rounded transition-opacity overflow-hidden duration-500 ease-in-out 
+                        ${selectedTab === 'simple-view' || selectedTab === 'details' ? "opacity-100 max-h-[50vh] min-h-[40vh]" : "opacity-0 max-h-0"}`} 
                 >
                     {/* Sidebar for Variable Navigation */}
                     <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">
@@ -356,16 +358,18 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                            <svg className="w-16 h-16 mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"></path>
-                            </svg>
-                            <p>No parameter selected or available.</p>
-                            <p>Click 'Add New' to get started!</p>
+                        <div className='mx-auto'>
+                            <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
+                                <svg className="w-16 h-16 mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd"></path>
+                                </svg>
+                                <p>No parameter selected or available.</p>
+                                <p>Click 'Add New' to get started!</p>
+                            </div>
                         </div>
                     )}
                     {/* Edit Variable Details Modal */}
-                    {isEditModalOpen && currentEditIndex !== null && (
+                    <div className={`transition-all duration-200 ${(isEditModalOpen && currentEditIndex !== null) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}> 
                         <EditVariableModal
                             isOpen={isEditModalOpen}
                             onClose={closeEditModal}
@@ -373,7 +377,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                             initialVariableData={processedData[currentEditIndex]}
                             variableTypes={variableTypes}
                         />
-                    )}
+                    
+                    </div>
                 </div>
                 <div
                     className={`revo-grid-container transition-opacity overflow-hidden duration-500 ease-in-out ${selectedTab === 'grid-view' ? "opacity-100" : "opacity-0 max-h-0"
