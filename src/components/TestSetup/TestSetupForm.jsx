@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Trash, Trash2, HelpCircle, ChevronDown, ChevronRight, Bold } from 'lucide-react';
-import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltip';
+import { X, Save, Trash, Trash2, HelpCircle, ChevronDown, ChevronRight, Bold, Heading, Plus, Icon, Circle } from 'lucide-react';
+import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import { cn } from '../../utils/utils';
+import FormField from '../Form/FormField';
+import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import Heading3 from '../Typography/Heading3';
+import { Form, set } from 'react-hook-form';
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
+import IconTooltipButton from '../Widgets/IconTooltipButton';
+import TextTooltipButton from '../Widgets/TextTooltipButton';
+import { TableTooltip } from '../Widgets/TableTooltip';
 
 // Comment Component
 const CommentEditor = ({ comments = [], onCommentsChange }) => {
@@ -99,6 +113,7 @@ const CommentEditor = ({ comments = [], onCommentsChange }) => {
 const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => {
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [activeTooltips, setActiveTooltips] = useState(new Set());
+  const [activeTooltip, setActiveTooltip] = useState(false);
 
 
   const addCharacteristic = () => {
@@ -167,22 +182,44 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold text-gray-900">
+      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
+        <Heading3>
           Characteristics
           <span className="text-sm font-normal text-gray-500 ml-2">
             ({characteristics.length} items)
           </span>
-        </h4>
-        <button
-          type="button"
-          onClick={addCharacteristic}
-          className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-        >
-          Add Characteristic
-        </button>
+        </Heading3>
+
+
+        <div className='flex items-center space-x-2'>
+          <IconTooltipButton
+            icon={Plus}
+            onClick={addCharacteristic}
+            tooltipText={"Add characteristic"}
+          />
+
+          <IconTooltipButton
+            icon={HelpCircle}
+            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
+            tooltipText={"Help"}
+          />
+        </div>
       </div>
 
+      <div>
+        <TableTooltip isVisible={activeTooltip}
+          explanations={[
+            <><b>Category:</b> Category of the characteristic you are describing</>,
+            <><b>Value:</b> Value of the characteristic you are describing</>,
+            <><b>Unit:</b> Unit of the characteristic you are describing (may be optional)</>
+          ]}
+          examples={[
+            { category: "Motor", value: "WEG W21", unit: "N/A" },
+            { category: "Motor Power", value: "2.2", unit: "kW" },
+            { category: "Hydraulic Pump", value: "Hydropack", unit: "N/A" }
+          ]}
+        />
+      </div>
       <div className="space-y-1">
         {characteristics.map((characteristic, index) => {
           const isExpanded = expandedItems.has(index);
@@ -209,16 +246,16 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                   <span className="text-xs text-gray-500">
                     {characteristic.comments?.length || 0} comments
                   </span>
-                  <button
-                    type="button"
+
+                  <IconTooltipButton
+                    icon={Trash2}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeCharacteristic(index);
                     }}
-                    className="px-2 py-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-sm transition-colors"
-                  >
-                    <Trash2 className='w-4 h-4' />
-                  </button>
+                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                    tooltipText={"Remove characteristic"}
+                  />
                   <span className="text-gray-400">
                     {isExpanded ?
                       <ChevronDown className="w-4 h-4 text-gray-500" /> :
@@ -232,103 +269,36 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                 <div className="border-t border-gray-200 p-4 bg-white">
                   <div className="flex items-start gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Category <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={characteristic.category}
-                          onChange={(e) => updateCharacteristic(index, 'category', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter category"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Value <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={characteristic.value}
-                          onChange={(e) => updateCharacteristic(index, 'value', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter value"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Unit
-                        </label>
-                        <input
-                          type="text"
-                          value={characteristic.unit}
-                          onChange={(e) => updateCharacteristic(index, 'unit', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter unit"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0 mt-6">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); toggleTooltip(index) }}
-                        className="h-12 w-12 flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200"
-                      >
-                        <HelpCircle className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors duration-200" />
-                      </button>
-                    </div>
+                      <FormField
+                        name={`characteristic-${index}-category`}
+                        value={characteristic.category}
+                        onChange={(e) => updateCharacteristic(index, 'category', e.target.value)}
+                        label="Category"
+                        type="text"
+                        placeholder="Enter category"
+                      />
 
+                      <FormField
+                        name={`characteristic-${index}-value`}
+                        value={characteristic.value}
+                        onChange={(e) => updateCharacteristic(index, 'value', e.target.value)}
+                        label="Value"
+                        type="text"
+                        placeholder="Enter value"
+                      />
+
+                      <FormField
+                        name={`characteristic-${index}-unit`}
+                        value={characteristic.unit}
+                        onChange={(e) => updateCharacteristic(index, 'unit', e.target.value)}
+                        label="Unit"
+                        type="text"
+                        placeholder="Enter unit (optional)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
                   </div>
 
-                  <div className="">
-                    <AnimatedTooltip isVisible={activeTooltips.has(index)}>
-                      {/* Explanations */}
-                      <AnimatedTooltipExplanation><b>Category: </b>Category of the characteristic you are describing</AnimatedTooltipExplanation>
-                      <AnimatedTooltipExplanation><b>Value: </b>Value of the characteristic you are describing</AnimatedTooltipExplanation>
-                      <AnimatedTooltipExplanation><b>Unit: </b>Unit of the characteristic you are describing (may be optional)</AnimatedTooltipExplanation>
-
-                      {/* Examples */}
-                      <AnimatedTooltipExample>
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              {["Category", "Unit", "Value"].map((header, index) => (
-                                <th
-                                  key={index} // Using index as key is acceptable here since headers are static
-                                  className="px-6 py-3 text-left text-xs text-gray-500 uppercase" /* Applied rounded corners to first/last header cells */
-                                >
-                                  <b>{header}</b>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          {/* Table Body */}
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {[
-                              { category: "Motor", value: "WEG W21", unit: "N/A" },
-                              { category: "Motor Power", value: "2.2", unit: "kW" },
-                              { category: "Hydraulic Pump", value: "Hydropack", unit: "N/A" }
-                            ].map((row, rowIndex) => (
-                              <tr key={row.id} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                  {row.category}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                  {row.value}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                  {row.unit}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </AnimatedTooltipExample>
-                    </AnimatedTooltip>
-                  </div>
                   <CommentEditor
                     comments={characteristic.comments || []}
                     onCommentsChange={(comments) => updateComments(index, comments)}
@@ -353,6 +323,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 // Sensors Component
 const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const [expandedSensors, setExpandedSensors] = useState(new Set());
+  const [activeTooltip, setActiveTooltip] = useState(false);
 
   const addSensor = () => {
     const newSensor = {
@@ -425,20 +396,43 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold text-gray-900">
+      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
+        <Heading3>
           Sensors
           <span className="text-sm font-normal text-gray-500 ml-2">
             ({sensors.length} items)
           </span>
-        </h4>
-        <button
-          type="button"
-          onClick={addSensor}
-          className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-        >
-          Add Sensor
-        </button>
+        </Heading3>
+
+
+        <div className='flex items-center space-x-2'>
+          <IconTooltipButton
+            icon={Plus}
+            onClick={addSensor}
+            tooltipText={"Add characteristic"}
+          />
+
+          <IconTooltipButton
+            icon={HelpCircle}
+            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
+            tooltipText={"Help"}
+          />
+        </div>
+      </div>
+
+      <div>
+        <TableTooltip isVisible={activeTooltip}
+          explanations={[
+            <><b>Category:</b> Category of the characteristic you are describing</>,
+            <><b>Value:</b> Value of the characteristic you are describing</>,
+            <><b>Unit:</b> Unit of the characteristic you are describing (may be optional)</>
+          ]}
+          examples={[
+            { category: "Motor", value: "WEG W21", unit: "N/A" },
+            { category: "Motor Power", value: "2.2", unit: "kW" },
+            { category: "Hydraulic Pump", value: "Hydropack", unit: "N/A" }
+          ]}
+        />
       </div>
 
       <div className="space-y-1">
@@ -464,16 +458,15 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
+                  <IconTooltipButton
+                    icon={Trash2}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeSensor(index);
                     }}
-                    className="px-2 py-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded text-sm transition-colors"
-                  >
-                    <Trash2 className='h-4 w-4' />
-                  </button>
+                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                    tooltipText={"Remove sensor"}
+                  />
                   <span className="text-gray-400">
                     {isExpanded ?
                       <ChevronDown className="w-4 h-4 text-gray-500" /> :
@@ -491,47 +484,33 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       Basic Information
                     </h6>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <label className={labelClasses}>Identifier</label>
-                        <input
-                          type="text"
-                          value={"s" + (index + 1)}
-                          onChange={(e) => updateSensor(index, 'identifier', e.target.value)}
-                          className={cn(inputClasses, "bg-gray-300")}
-                          disabled={true}
-                        />
-                      </div>
+                      <FormField
+                        name={`sensor-${index}-technology_platform`}
+                        value={sensor.technology_platform}
+                        onChange={(e) => updateSensor(index, 'technology_platform', e.target.value)}
+                        label="Technology Platform"
+                        type="text"
+                        placeholder="Enter technology platform"
+                      />
 
-                      <div>
-                        <label className={labelClasses}>Technology Platform</label>
-                        <input
-                          type="text"
-                          value={sensor.technology_platform}
-                          onChange={(e) => updateSensor(index, 'technology_platform', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter technology platform"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Technology Type</label>
-                        <input
-                          type="text"
-                          value={sensor.technology_type}
-                          onChange={(e) => updateSensor(index, 'technology_type', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter technology type"
-                        />
-                      </div>
+                      <FormField
+                        name={`sensor-${index}-technology_type`}
+                        value={sensor.technology_type}
+                        onChange={(e) => updateSensor(index, 'technology_type', e.target.value)}
+                        label="Technology Type"
+                        type="text"
+                        placeholder="Enter technology type"
+                      />
                     </div>
                     <div>
-                      <label className={labelClasses}>Description</label>
-                      <textarea
-                        type="text"
+                      <FormField
+                        name={`sensor-${index}-description`}
                         value={sensor.description}
                         onChange={(e) => updateSensor(index, 'description', e.target.value)}
-                        className={inputClasses}
+                        label="Description"
+                        type="textarea"
                         placeholder="Enter description"
-                        rows={4}
+                        className='min-h-20'
                       />
                     </div>
                   </div>
@@ -542,27 +521,24 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       Measurement
                     </h6>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <label className={labelClasses}>Measurement Type</label>
-                        <input
-                          type="text"
-                          value={sensor.measurement_type}
-                          onChange={(e) => updateSensor(index, 'measurement_type', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter measurement type"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Measurement Unit</label>
-                        <input
-                          type="text"
-                          value={sensor.measurement_unit}
-                          onChange={(e) => updateSensor(index, 'measurement_unit', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter measurement unit"
-                        />
-                      </div>
 
+                      <FormField
+                        name={`sensor-${index}-measurement_type`}
+                        value={sensor.measurement_type}
+                        onChange={(e) => updateSensor(index, 'measurement_type', e.target.value)}
+                        label="Measurement Type"
+                        type="text"
+                        placeholder="Enter measurement type"
+                      />
+
+                      <FormField
+                        name={`sensor-${index}-measurement_unit`}
+                        value={sensor.measurement_unit}
+                        onChange={(e) => updateSensor(index, 'measurement_unit', e.target.value)}
+                        label="Measurement Unit"
+                        type="text"
+                        placeholder="Enter measurement unit"
+                      />
                     </div>
                   </div>
 
@@ -572,37 +548,32 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       Data Acquisition
                     </h6>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div>
-                        <label className={labelClasses}>Data Acquisition Unit</label>
-                        <input
-                          type="text"
-                          value={sensor.data_acquisition_unit}
-                          onChange={(e) => updateSensor(index, 'data_acquisition_unit', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter data acquisition unit"
-                        />
-                      </div>
+                      <FormField
+                        name={`sensor-${index}-data_acquisition_unit`}
+                        value={sensor.data_acquisition_unit}
+                        onChange={(e) => updateSensor(index, 'data_acquisition_unit', e.target.value)}
+                        label="Data Acquisition Unit"
+                        type="text"
+                        placeholder="Enter data acquisition unit"
+                      />
 
-                      <div>
-                        <label className={labelClasses}>Sampling Rate</label>
-                        <input
-                          type="text"
-                          value={sensor.sampling_rate}
-                          onChange={(e) => updateSensor(index, 'sampling_rate', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter sampling rate"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Sampling Unit</label>
-                        <input
-                          type="text"
-                          value={sensor.sampling_unit}
-                          onChange={(e) => updateSensor(index, 'sampling_unit', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter sampling unit"
-                        />
-                      </div>
+                      <FormField
+                        name={`sensor-${index}-sampling_rate`}
+                        value={sensor.sampling_rate}
+                        onChange={(e) => updateSensor(index, 'sampling_rate', e.target.value)}
+                        label="Sampling Rate"
+                        type="text"
+                        placeholder="Enter sampling rate"
+                      />
+
+                      <FormField
+                        name={`sensor-${index}-sampling_unit`}
+                        value={sensor.sampling_unit}
+                        onChange={(e) => updateSensor(index, 'sampling_unit', e.target.value)}
+                        label="Sampling Unit"
+                        type="text"
+                        placeholder="Enter sampling unit"
+                      />
                     </div>
                   </div>
 
@@ -612,46 +583,42 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       Location & Orientation
                     </h6>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div>
-                        <label className={labelClasses}>Sensor Location</label>
-                        <input
-                          type="text"
-                          value={sensor.sensor_location}
-                          onChange={(e) => updateSensor(index, 'sensor_location', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter sensor location"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Location Unit</label>
-                        <input
-                          type="text"
-                          value={sensor.location_unit}
-                          onChange={(e) => updateSensor(index, 'location_unit', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter location unit"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Sensor Orientation</label>
-                        <input
-                          type="text"
-                          value={sensor.sensor_orientation}
-                          onChange={(e) => updateSensor(index, 'sensor_orientation', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter sensor orientation"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Orientation Unit</label>
-                        <input
-                          type="text"
-                          value={sensor.orientation_unit}
-                          onChange={(e) => updateSensor(index, 'orientation_unit', e.target.value)}
-                          className={inputClasses}
-                          placeholder="Enter orientation unit"
-                        />
-                      </div>
+                      <FormField
+                        name={`sensor-${index}-sensor_location`}
+                        value={sensor.sensor_location}
+                        onChange={(e) => updateSensor(index, 'sensor_location', e.target.value)}
+                        label="Sensor Location"
+                        type="text"
+                        placeholder="Enter sensor location"
+                      />
+
+                      <FormField
+                        name={`sensor-${index}-location_unit`}
+                        value={sensor.location_unit}
+                        onChange={(e) => updateSensor(index, 'location_unit', e.target.value)}
+                        label="Location Unit"
+                        type="text"
+                        placeholder="Enter location unit"
+                      />
+
+                      <FormField
+                        name={`sensor-${index}-sensor_orientation`}
+                        value={sensor.sensor_orientation}
+                        onChange={(e) => updateSensor(index, 'sensor_orientation', e.target.value)}
+                        label="Sensor Orientation"
+                        type="text"
+                        placeholder="Enter sensor orientation"
+                      />
+
+                      <FormField
+                        name={`sensor-${index}-orientation_unit`}
+                        value={sensor.orientation_unit}
+                        onChange={(e) => updateSensor(index, 'orientation_unit', e.target.value)}
+                        label="Orientation Unit"
+                        type="text"
+                        placeholder="Enter orientation unit"
+                      />
+
                     </div>
                   </div>
                 </div>
@@ -682,6 +649,9 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  const [selectedTab, setSelectedTab] = useState('basic-info');
+  const [activeTooltips, setActiveTooltips] = useState(false);
+
 
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
@@ -725,6 +695,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     }));
   };
 
+  const toggleTooltip = () => {
+    setActiveTooltips(prev => !prev)
+  };
+
   const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm";
   const labelClasses = "block text-sm font-medium text-gray-700 mb-2";
 
@@ -744,130 +718,117 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Basic Information */}
-        <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="p-4">
+        <TabSwitcher
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          tabs={[
+            { id: 'basic-info', label: 'Basic Information' },
+            { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})` },
+            { id: 'sensors', label: `Sensors (${numberOfSensors})` },
+          ]}
+        />
+
+        <TabPanel isActive={selectedTab === 'basic-info'}>
+
+          <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+
             <div>
-              <label htmlFor="name" className={labelClasses}>
-                Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
+              {/* Basic Information */}
+              <div className="p-2 flex justify-between items-center border-b border-b-gray-300">
+                <Heading3>
+                  Basic Information
+                </Heading3>
+
+                <IconTooltipButton icon={HelpCircle} onClick={toggleTooltip} tooltipText={"Help"} />
+              </div>
+
+              <TableTooltip
+                isVisible={activeTooltips}
+                explanations={["This section contains the basic information about the test setup including its name, location, and description",
+                  <><b>- Name:</b> Name of the test setup</>,
+                  <><b>- Location:</b> Location of the test setup</>,
+                  <><b>- Description:</b> A brief description of the test setup</>
+                ]}
+                examples={[
+                  { name: "Test Setup xxx", location: "Utrecht, Hogeschool Utrecht", description: "This is a test setup for testing the performance of the new motor." },
+                  { name: "Test Setup yyy", location: "Amsterdam, Hogeschool van Amsterrdam (HvA)", description: "This is a test setup for testing the performance of the new hydraulic pump." },
+                ]} />
+
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <FormField
+                name={'name'}
+                type='text'
                 value={formData.name}
+                label={'Name'}
+                placeholder={'Enter test setup name'}
                 onChange={handleChange}
-                className={inputClasses}
-                placeholder="Enter test setup name"
                 required
               />
-            </div>
-            <div>
-              <label htmlFor="location" className={labelClasses}>
-                Location <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
+
+              <FormField
+                name={'location'}
+                type='text'
                 value={formData.location}
+                label={'Location'}
+                placeholder={'Enter test setup location'}
                 onChange={handleChange}
-                className={inputClasses}
-                placeholder="Enter location"
                 required
               />
             </div>
+
+            <FormField
+              name="description"
+              type="textarea"
+              value={formData.description}
+              label="Description"
+              placeholder="Enter a brief description of the test setup"
+              onChange={handleChange}
+              rows={4}
+              className='min-h-20'
+            />
           </div>
-          <label htmlFor="location" className={labelClasses}>
-            Description
-          </label>
-          <textarea
-            type="text"
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className={inputClasses}
-            placeholder="Enter description"
-            rows={4}
+        </TabPanel>
+
+        <TabPanel isActive={selectedTab === 'characteristics'}>
+          {/* Characteristics Section */}
+          <CharacteristicsEditor
+            characteristics={formData.characteristics}
+            onCharacteristicsChange={(characteristics) =>
+              setFormData(prev => ({ ...prev, characteristics }))
+            }
           />
+        </TabPanel>
 
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label htmlFor="number_of_characteristics" className={labelClasses}>
-                Number of Characteristics
-              </label>
-              <input
-                type="number"
-                id="number_of_characteristics"
-                name="number_of_characteristics"
-                value={numberOfCharacteristics}
-                className={`${inputClasses} bg-gray-100 cursor-not-allowed`}
-                placeholder="Calculated automatically"
-                readOnly
-                disabled
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This value is calculated automatically based on the characteristics you add below.
-              </p>
-            </div>
-            <div>
-              <label htmlFor="number_of_sensors" className={labelClasses}>
-                Number of Sensors
-              </label>
-              <input
-                type="number"
-                id="number_of_sensors"
-                name="number_of_sensors"
-                value={numberOfSensors}
-                className={`${inputClasses} bg-gray-100 cursor-not-allowed`}
-                placeholder="Calculated automatically"
-                readOnly
-                disabled
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This value is calculated automatically based on the sensors you add below.
-              </p>
-            </div>
-          </div> */}
-        </div>
+        <TabPanel isActive={selectedTab === 'sensors'}>
+          {/* Sensors Section */}
+          <SensorsEditor
+            sensors={formData.sensors}
+            onSensorsChange={(sensors) =>
+              setFormData(prev => ({ ...prev, sensors }))
+            }
+          />
+        </TabPanel>
+      </div>
 
-        {/* Characteristics Section */}
-        <CharacteristicsEditor
-          characteristics={formData.characteristics}
-          onCharacteristicsChange={(characteristics) =>
-            setFormData(prev => ({ ...prev, characteristics }))
-          }
-        />
+      {/* Action Buttons */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-3">
+        <TextTooltipButton
+          onClick={onCancel}
+          tooltipText={"Cancel"}
+          className="cursor-pointer px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          <span>Cancel</span>
+        </TextTooltipButton>
 
-        {/* Sensors Section */}
-        <SensorsEditor
-          sensors={formData.sensors}
-          onSensorsChange={(sensors) =>
-            setFormData(prev => ({ ...prev, sensors }))
-          }
-        />
-
-        {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isEditing ? 'Update Test Setup' : 'Add Test Setup'}</span>
-          </button>
-        </div>
+        <TextTooltipButton
+          onClick={handleSubmit}
+          tooltipText={isEditing ? 'Update Test Setup' : 'Add Test Setup'}
+        >
+          <Save className="w-4 h-4" />
+          <span>{isEditing ? 'Update Test Setup' : 'Add Test Setup'}</span>
+        </TextTooltipButton>
       </div>
     </div>
   );

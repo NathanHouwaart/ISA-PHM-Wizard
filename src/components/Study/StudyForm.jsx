@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Trash, Trash2, HelpCircle, ChevronDown, ChevronRight, Bold } from 'lucide-react';
-import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltip';
+import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import { cn } from '../../utils/utils';
 import FormField from '../Form/FormField';
-import { BaseInput, FormField2, FormFieldLabel } from '../Form/Inputs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { v4 as uuidv4 } from 'uuid';
 
