@@ -42,10 +42,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
     const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
 
-    // State for managing the edit modal
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [currentEditIndex, setCurrentEditIndex] = useState(null);
-
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 6) {
             setScreenWidth("max-w-[100rem]");
@@ -53,9 +49,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
             setScreenWidth("max-w-5xl");
         }
     }, [selectedTab, currentPage, setScreenWidth]);
-
-    // Derived selectedVariable for convenience
-    const selectedVariable = useMemo(() => studyVariables[selectedVariableIndex], [studyVariables, selectedVariableIndex]);
 
 
     // Data derived from global state for the grid
@@ -72,9 +65,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     const isUpdatingFromGlobal = useRef(false);
 
     // --- Global Data to Local Grid Data Sync ---
-    // This useEffect synchronizes `processedData` with `gridDataFromGlobal`
-    // It runs when `gridDataFromGlobal` changes (i.e., when global state updates).
-    // It uses a ref to prevent triggering the `processedData` to global sync.
     useEffect(() => {
         if (!isEqual(processedData, gridDataFromGlobal)) {
             console.log("Global data changed, updating processedData...");
@@ -85,13 +75,9 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
 
     // --- Local Grid Data to Global Data Sync ---
-    // This useEffect synchronizes global state when `processedData` changes.
-    // It checks the ref to ensure it only runs if the change *wasn't* initiated by `gridDataFromGlobal` (global sync).
     useEffect(() => {
-        // If the update originated from `gridDataFromGlobal`, just reset the flag and don't re-sync to global.
         if (isUpdatingFromGlobal.current) {
             isUpdatingFromGlobal.current = false;
-            console.log("ProcessedData updated from global, skipping global sync.");
             return;
         }
 
@@ -205,7 +191,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                    
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <GridTable
-                        
+
                         items={processedData} 
                         setItems={setProcessedData} 
                         columns={columns} 
