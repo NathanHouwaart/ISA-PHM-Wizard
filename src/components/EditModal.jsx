@@ -31,7 +31,7 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                     Edit Details for: 
                 </h4>
                 <h4 className="text-2xl font-bold text-gray-800 mb-5 py-2 border-b text-center">
-                    <span className="text-blue-700">{initialVariableData?.variable}</span>
+                    <span className="text-blue-700">{initialVariableData?.name}</span>
                 </h4>
 
                 <div className="mb-4">
@@ -39,8 +39,8 @@ const EditVariableModal = ({ isOpen, onClose, onSave, initialVariableData, varia
                     <input
                         type="text"
                         id="variable-name"
-                        name="variable"
-                        value={tempEditData?.variable}
+                        name="name"
+                        value={tempEditData?.name}
                         onChange={handleModalInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />

@@ -4,7 +4,7 @@ import { HelpCircle } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip'
 import { cn } from '../../utils/utils';
 
-function IconToolTipButton( {icon, onClick, tooltipText, className} ) {
+export function IconToolTipButton( {icon, onClick, tooltipText, className} ) {
 
     const Icon = icon || HelpCircle;
 

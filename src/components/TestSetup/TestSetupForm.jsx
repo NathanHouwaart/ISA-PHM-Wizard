@@ -6,6 +6,7 @@ import FormField from '../Form/FormField';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { Form, set } from 'react-hook-form';
+import { v4 as uuid4 } from 'uuid';
 
 import {
   Tooltip,
@@ -118,6 +119,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
   const addCharacteristic = () => {
     const newCharacteristic = {
+      id: uuid4(),
       category: '',
       value: '',
       unit: '',
@@ -324,10 +326,11 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const [expandedSensors, setExpandedSensors] = useState(new Set());
   const [activeTooltip, setActiveTooltip] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('basic-information');
 
   const addSensor = () => {
     const newSensor = {
-      id: '',
+      id: uuid4(),
       measurement_type: '',
       measurement_unit: '',
       description: '',
@@ -391,9 +394,6 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
     return `${platform} - ${samplingRate} ${samplingUnit}`;
   };
 
-  const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
-
   return (
     <div className="bg-gray-50 rounded-lg p-4">
       <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
@@ -409,7 +409,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
           <IconTooltipButton
             icon={Plus}
             onClick={addSensor}
-            tooltipText={"Add characteristic"}
+            tooltipText={"Add Sensor"}
           />
 
           <IconTooltipButton
@@ -423,14 +423,13 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
       <div>
         <TableTooltip isVisible={activeTooltip}
           explanations={[
-            <><b>Category:</b> Category of the characteristic you are describing</>,
-            <><b>Value:</b> Value of the characteristic you are describing</>,
-            <><b>Unit:</b> Unit of the characteristic you are describing (may be optional)</>
+            <><b>Basic Information:</b> Basic Information about the sensor</>,
+            <><b>- Technology Platform:</b> Platform of the sensor</>,
+            <><b>- Technology Type:</b> Technology Type of the sensor</>,
+            <><b>- Description:</b> Description of the sensor</>
           ]}
           examples={[
-            { category: "Motor", value: "WEG W21", unit: "N/A" },
-            { category: "Motor Power", value: "2.2", unit: "kW" },
-            { category: "Hydraulic Pump", value: "Hydropack", unit: "N/A" }
+            { "technology Platform": "PT5401", "Technology Type": "PT", description: "measures pressure on the radial cylinder"},
           ]}
         />
       </div>
@@ -477,6 +476,9 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
               </div>
 
               {isExpanded && (
+
+                <div>
+                  
                 <div className="border-t border-gray-200 p-4 bg-white space-y-6">
                   {/* Basic Information */}
                   <div className='space-y-3'>
@@ -622,6 +624,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                     </div>
                   </div>
                 </div>
+                
+              </div>
               )}
             </div>
           );

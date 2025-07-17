@@ -1,13 +1,11 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { RevoGrid, Template } from '@revolist/react-datagrid';
-import { Bold, Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
-import PageWrapper from "../../layout/PageWrapper";
+import { RevoGrid } from '@revolist/react-datagrid';
+import { Minus, Plus, Redo, Undo } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
 import "./GridTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import Paragraph from '../Typography/Paragraph';
 import { v4 as uuidv4 } from 'uuid';
+import TooltipButton from '../Widgets/TextTooltipButton';
 
 export const BoldCell = ({ value }) => {
     return (
@@ -23,7 +21,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
     const cursorPosition = useRef(null);
     const future = useRef([]);
     const history = useRef([]);
-    
+
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
@@ -67,17 +65,17 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
 
         const handleBeforePasteApply = (e) => {
             const { parsed } = e.detail;
-            
+
             // Find the active/selected cell (fallback to 0,0)
 
             const colOffset = columns.filter(col => col?.pin === 'colPinStart').length;
-            
+
             var startRow = cursorPosition.current.rowIndex ?? 0;
             var startCol = 0;
-            
-            if (currentpos.current.type === 'colPinStart'){
+
+            if (currentpos.current.type === 'colPinStart') {
                 startCol = cursorPosition.current.colIndex ?? 0;
-            }else{
+            } else {
                 startCol = cursorPosition.current.colIndex + colOffset;
             }
 
@@ -221,40 +219,51 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
 
     return (
         <div ref={combinedRef} className='p-6'>
-            <div>
+            {/* <div>
                 <h1 className="text-3xl font-bold text-gray-900">Item Grid</h1>
                 <p className="text-gray-600 mt-2 text-left mb-4">Add all your items in a grid like way</p>
-            </div>
+            </div> */}
+
             <div className="mb-2 space-x-2 flex">
                 {!disableAdd &&
                     <>
-                        <button
+                        <TooltipButton
+                            tooltipText="Add a new row to the grid"
                             onClick={addRow}
-                            className="px-3 py-[2px] bg-blue-600 text-left rounded hover:bg-blue-700 transition flex items-center gap-1"
+                            className="px-3 py-[2px] bg-blue-600 text-left hover:bg-blue-700 transition flex items-center gap-1"
                         >
-                            <span>Add study</span> <Plus className="h-4 w-4" />
-                        </button>
-                        <button
+                            <span>Add Row</span> <Plus className="h-4 w-4" />
+                        </TooltipButton>
+                        <TooltipButton
+                            tooltipText="Remove the last row from the grid"
                             onClick={removeRow}
-                            className="px-3 py-[2px] bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center gap-1"
+                            className="px-3 py-[2px] bg-red-600 text-left hover:bg-red-700 transition flex items-center gap-1"
                         >
-                            <span>Remove study</span> <Minus className="h-4 w-4" />
-                        </button>
+                            <span>Remove Row</span> <Minus className="h-4 w-4" />
+                        </TooltipButton>
                     </>}
-                <button
+
+                <TooltipButton
+                    tooltipText="Undo the last change (Ctrl+Z)"
                     onClick={undo}
-                    className={`duration-200 px-3 py-[2px] bg-gray-600/75 text-white rounded  transition flex items-center gap-1
-                        ${history.current.length === 0 ? 'cursor-not-allowed bg-gray-600 opacity-75' : 'hover:from-blue-600 hover:to-blue-700 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-600'}`}
+                    className={`px-3 py-[2px] ${history.current.length === 0
+                        ? 'pointer-events-none from-gray-600 to-gray-600 opacity-75'
+                        : 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'}`}
                 >
                     <span>Undo (Ctrl+Z)</span>
-                </button>
-                <button
+                    <Undo className="h-4 w-4" />
+                </TooltipButton>
+                <TooltipButton
+                    tooltipText="Redo the last undone change (Ctrl+Y)"
                     onClick={redo}
-                    className={`duration-200 px-3 py-[2px] bg-gray-600/75 text-white rounded  transition flex items-center gap-1
-                        ${future.current.length === 0 ? 'cursor-not-allowed bg-gray-600 opacity-75' : 'hover:from-blue-600 hover:to-blue-700 cursor-pointer bg-gradient-to-r from-blue-500 to-blue-600'}`}
+                    className={`px-3 py-[2px] ${future.current.length === 0
+                        ? 'pointer-events-none from-gray-600 to-gray-600 opacity-75'
+                        : 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'}`}
                 >
                     <span>Redo (Ctrl+Y)</span>
-                </button>
+                    <Redo className="h-4 w-4 transform" />
+                </TooltipButton>
+
             </div>
             <div className="relative rounded-lg border-gray-300 shadow border-1 h-[400px]">
                 <RevoGrid

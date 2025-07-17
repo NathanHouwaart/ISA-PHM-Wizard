@@ -1,7 +1,7 @@
 [
   {
     "id": "fd14bdba-b880-4ead-b592-f59ca706d613",
-    "variable": "Fault Type",
+    "name": "Fault Type",
     "type": "Qualitative fault specification",
     "unit": "",
     "description": "Describes the kind of fault detected in the system.",
@@ -9,7 +9,7 @@
   },
   {
     "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
-    "variable": "Fault Position",
+    "name": "Fault Position",
     "type": "Qualitative fault specification",
     "unit": "",
     "description": "Indicates the physical location of the fault.",
@@ -17,7 +17,7 @@
   },
   {
     "id": "fac02919-811b-4653-9127-ce76807f2cd2",
-    "variable": "Fault Severity",
+    "name": "Fault Severity",
     "type": "Quantitative fault specification",
     "unit": "",
     "description": "Measures the impact or intensity of the fault.",
@@ -26,7 +26,7 @@
   },
   {
     "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-    "variable": "Motor Speed",
+    "name": "Motor Speed",
     "type": "Operating condition",
     "unit": "RPM",
     "description": "The rotational speed of the motor.",
@@ -34,7 +34,7 @@
   },
   {
     "id": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-    "variable": "Discharge Pressure",
+    "name": "Discharge Pressure",
     "type": "Operating condition",
     "unit": "bar",
     "description": "Pressure at the discharge point of the system.",
@@ -43,7 +43,7 @@
   },
   {
     "id": "c1dc436d-c95c-4784-921e-481d98716cd4",
-    "variable": "Volumetric Flow Rate",
+    "name": "Volumetric Flow Rate",
     "type": "Operating condition",
     "unit": "m^3/h",
     "description": "The volumetric flow rate through the system.",

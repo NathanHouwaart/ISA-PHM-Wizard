@@ -19,7 +19,7 @@ export function getStructuredVariables(studyVariables, studies, rawMeasurements)
     valueMap[studyVariableId][studyId] = value;
   });
 
-
+  console.log("studyVariables:", studyVariables);
   return studyVariables.map((variable) => {
     const id = variable.id;
     const studyValues = valueMap[id] || {};

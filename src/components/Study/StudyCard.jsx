@@ -20,18 +20,18 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
         <div className="flex grow-0 items-center space-x-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex flex-none items-center justify-center text-white font-bold text-xl">
             {/* Display initials from the first two words of the title, if available */}
-            {study.title.split(" ").slice(0, 2).map(word => word[0]).join("")}
+            {study.name.split(" ").slice(0, 2).map(word => word[0]).join("")}
           </div>
           <div>
             <TooltipProvider>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
                   <h3 className="line-clamp-1 text-xl font-semibold text-gray-900 mr-4">
-                    {study.title}
+                    {study.name}
                   </h3>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='max-w-sm'>{study.title}</p>
+                  <p className='max-w-sm'>{study.name}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

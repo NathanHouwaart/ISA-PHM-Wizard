@@ -14,7 +14,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   // Define your initial form state here, outside the component
   const [formData, setFormData] = useState({
     id: '',
-    title: '',
+    name: '',
     description: '',
     submissionDate: '',
     publicationDate: ''
@@ -23,7 +23,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   useEffect(() => {
       setFormData({
         id: item?.id || '',
-        title: item?.title || '',
+        name: item?.name || '',
         description: item?.description || '',
         submissionDate: item?.submissionDate|| '',
         publicationDate: item?.publicationDate || '',
@@ -32,7 +32,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
+    if (!formData.name.trim()) {
       alert('Please fill in all required fields (Name, Location)');
       return;
     }
@@ -79,9 +79,9 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
         <div className="bg-gray-50 rounded-lg space-y-1 pt-2">
 
           <FormField
-            name={"title"}
+            name={"name"}
             onChange={handleChange}
-            value={formData.title}
+            value={formData.name}
             label="Title"
             type='text'
             placeholder="Study Title"
