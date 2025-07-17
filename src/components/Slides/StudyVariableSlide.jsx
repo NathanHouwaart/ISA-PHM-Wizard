@@ -191,7 +191,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                    
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <GridTable
-
                         items={processedData} 
                         setItems={setProcessedData} 
                         columns={columns} 

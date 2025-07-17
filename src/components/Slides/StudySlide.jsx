@@ -24,16 +24,51 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import useCarouselNavigation from '../../hooks/useCarouselNavigation';
+import { GridTable } from '../GridTable/GridTable';
+import { Template } from '@revolist/react-datagrid';
+
+const BoldCell = ({ value }) => {
+    return (
+        <div className="flex items-center justify-center">
+            <strong className=''>{value}</strong>
+        </div>
+    );
+};
+
+const PatternCellTemplate = ({ prefix, rowIndex }) => {
+    // Generate the pattern based on the row index
+    const value = `${prefix}${(rowIndex + 1).toString().padStart(2, '0')}`;
+    return <BoldCell value={value} />;
+}
+
+
+const columns = [
+    {
+        prop: 'id', name: 'Identifier', size: 150, pin: "colPinStart", readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'S' }), cellProperties: () => {
+            return {
+                style: {
+                    "border-right": "3px solid black"
+                }
+            }
+        }
+    },
+    { prop: 'name', name: 'Title', size: 250 },
+    { prop: 'description', name: 'Description', size: 510 },
+    { prop: 'submissionDate', name: 'Submission Date', size: 250 },
+    { prop: 'publicationDate', name: 'Publication Date', size: 250 }
+];
+
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
-    const [value, setValue] = useState(false);
     const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { setScreenWidth } = useGlobalDataContext();
+    const { setScreenWidth, studies, setStudies } = useGlobalDataContext();
+
+    console.log("StudySlide studies:", studies);
 
      useEffect(() => {
             if (selectedTab === 'grid-view' && currentPage === 5) {
@@ -82,9 +117,10 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                 </TabPanel>
 
                <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <StudyTable
-                        ref={ref}
-                        onHeightChange={() => { }}
+                    <GridTable
+                        columns={columns}
+                        items={studies}
+                        setItems={setStudies}
                     />
                 </TabPanel>
             </div>
