@@ -1,21 +1,33 @@
 // src/components/TabSwitcher.js
 import React from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { TooltipButton } from './Widgets/TextTooltipButton';
 
 const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
     return (
         <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
             {tabs.map((tab) => (
-                <button
+                // <button
+                //     key={tab.id}
+                //     onClick={() => onTabChange(tab.id)}
+                //     className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
+                //         ? 'bg-white text-blue-600 shadow-md'
+                //         : 'text-gray-600 hover:bg-gray-200'
+                //         }`}
+                // >
+                //     {tab.label}
+                // </button>
+                 <TooltipButton 
                     key={tab.id}
-                    onClick={() => onTabChange(tab.id)}
-                    className={`cursor-pointer flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
+                    className={`bg-transparent cursor-pointer w-full justify-around py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
                         ? 'bg-white text-blue-600 shadow-md'
                         : 'text-gray-600 hover:bg-gray-200'
                         }`}
+                    onClick={() => onTabChange(tab.id)}
+                    tooltipText={tab.tooltip}
                 >
                     {tab.label}
-                </button>
+                </TooltipButton>
             ))}
         </div>
     );

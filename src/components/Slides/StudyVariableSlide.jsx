@@ -11,10 +11,8 @@ import { GridTable, BoldCell } from '../GridTable/GridTable';
 import { Template } from '@revolist/react-datagrid';
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
-import { validate as isUUID } from 'uuid';
-import EntityMappingPanel from '../EntityMappingPanel';
-import StudyVariableMappingCard from '../StudyVariableMappingCard';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import EntityMappingPanel from '../EntityMappingPanel';
 import { useVariables } from '../../hooks/useVariables';
 
 const GrayCell = () => {
@@ -38,7 +36,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         setScreenWidth, 
         setStudyVariables, 
         studyToStudyVariableMapping, 
-        setStudyToStudyVariableMapping } = useGlobalDataContext(); 
+        setStudyToStudyVariableMapping 
+    } = useGlobalDataContext(); 
 
     const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
 
@@ -50,10 +49,10 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
-
-    // Data derived from global state for the grid
+    // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
         const vars = getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
+        console.log("Grid data generated 2:", vars);
         return vars;
     }, [studyVariables, studies, studyToStudyVariableMapping]);
 
@@ -83,40 +82,26 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
         // Only sync to global if processedData actually changed and it wasn't a global-initiated update
         // Using a timeout to debounce and prevent rapid updates during multi-cell edits (e.g., paste)
-        const timeoutId = setTimeout(() => {
+        const timeout = setTimeout(() => {
             console.log("ProcessedData changed locally, updating global state...");
             const flattened = flattenGridDataToMappings(processedData, studies);
             setStudyToStudyVariableMapping(flattened);
 
-            // Filter out UUID keys from processedData to update studyVariables
-            const updatedStudyVariables = processedData.map((variable) =>
-                Object.fromEntries(
-                    Object.entries(variable).filter(([key]) => !isUUID(key))
-                )
-            );
-            // Only update if truly different to avoid unnecessary renders and potential loops
-            if (!isEqual(studyVariables, updatedStudyVariables)) {
-                setStudyVariables(updatedStudyVariables);
-            }
+            // // Filter out UUID keys from processedData to update studyVariables
+            // const updatedStudyVariables = processedData.map((variable) =>
+            //     Object.fromEntries(
+            //         Object.entries(variable).filter(([key]) => !isUUID(key))
+            //     )
+            // );
+            // // Only update if truly different to avoid unnecessary renders and potential loops
+            // if (!isEqual(studyVariables, updatedStudyVariables)) {
+            //     setStudyVariables(updatedStudyVariables);
+            // }
         }, 0); // Debounce time in ms
 
-        return () => clearTimeout(timeoutId);
-    }, [processedData, studies, setStudyToStudyVariableMapping, setStudyVariables, studyVariables]); // Depend on processedData and relevant setters/state
+        return () => clearTimeout(timeout);
+    }, [processedData, studies, studyVariables]); // Depend on processedData and relevant setters/state
 
-
-    // Remove a variable from processedData (which will then sync to global)
-    const removeParameter = (indexToRemove) => {
-        setProcessedData(prevData => {
-            const newData = prevData.filter((_, index) => index !== indexToRemove);
-            // Adjust selected index if the removed item was before it
-            if (selectedVariableIndex >= newData.length && newData.length > 0) {
-                setSelectedVariableIndex(newData.length - 1);
-            } else if (newData.length === 0) {
-                setSelectedVariableIndex(0); // No variables left
-            }
-            return newData;
-        });
-    };
 
     // Standalone Effect to initialize columns for grid view
     useEffect(() => {
@@ -170,8 +155,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
                     tabs={[
-                        { id: 'simple-view', label: 'Simple View' },
-                        { id: 'grid-view', label: 'Grid View' }
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'View study variables in a simple list format' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'View study variables in a grid format for better data management' }
                     ]}
                 />
 
@@ -179,13 +164,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                     <EntityMappingPanel 
                         name={"Variables"} 
                         itemHook={useVariables}
-                        items={studyVariables} 
-                        setItems={setStudyVariables} 
                         mappings={studyToStudyVariableMapping} 
-                        mappingCardComponent={StudyVariableMappingCard} 
                         handleInputChange={handleInputChange}
-                        setProcessedData={setProcessedData}
-                        removeParameter={removeParameter}
                     />
                 </TabPanel>
                    

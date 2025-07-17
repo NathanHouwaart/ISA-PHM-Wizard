@@ -50,7 +50,7 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetup, setSelectedTestSetup] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetup', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
-
+    
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
 
@@ -80,6 +80,8 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
+
+        console.log("Global data saved to localStorage:", dataToStore);
 
     }, [
         studies, investigations, authors, testSetups,

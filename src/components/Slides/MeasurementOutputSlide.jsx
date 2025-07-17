@@ -1,19 +1,20 @@
-import React, { forwardRef, useEffect, useMemo, useState } from 'react'
+import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import { GridTable, BoldCell } from '../GridTable/GridTable';
-import { RevoGrid, Template } from '@revolist/react-datagrid';
+import { Template } from '@revolist/react-datagrid';
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
-import { validate as isUUID } from 'uuid';
-import FormField from '../Form/FormField';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import EntityMappingPanel from '../EntityMappingPanel';
+import useMeasurements from '../../hooks/useMeasurements';
+import FormField from '../Form/FormField';
+import { PlusCircleIcon } from 'lucide-react';
 
 const GrayCell = () => {
     return {
@@ -31,12 +32,16 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
 
-    const { selectedTestSetup, testSetups, studies, studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping } = useGlobalDataContext();
-
+    const {
+        studies,
+        testSetups,
+        setScreenWidth,
+        selectedTestSetup,
+        studyToSensorMeasurementMapping,
+        setStudyToSensorMeasurementMapping
+    } = useGlobalDataContext();
 
     const [selectedStudyIndex, setSelectedStudyIndex] = useState(0); // State to track selected variable index
-
-    const { setScreenWidth } = useGlobalDataContext();
 
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 7) {
@@ -130,8 +135,8 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
                     tabs={[
-                        { id: 'simple-view', label: 'Simple View' },
-                        { id: 'grid-view', label: 'Grid View' }
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'View measurements in a simple list format' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'View measurements in a grid format for better data management' }
                     ]}
                 />
 
@@ -218,7 +223,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable items={processedData} setItems={setProcessedData} columns={columns} disableAdd={true}></GridTable>
+                    <GridTable 
+                        items={processedData} 
+                        setItems={setProcessedData} 
+                        columns={columns} 
+                        disableAdd
+                    />
                 </TabPanel>
             </div>
         </div>

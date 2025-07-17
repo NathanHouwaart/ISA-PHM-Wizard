@@ -68,15 +68,11 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const { setScreenWidth, studies, setStudies } = useGlobalDataContext();
 
-    console.log("StudySlide studies:", studies);
-
      useEffect(() => {
             if (selectedTab === 'grid-view' && currentPage === 5) {
                 setScreenWidth("max-w-[100rem]");
-                // console.log("Setting screen width to max-w-7xl for grid view on MeasurementOutputSlide");
             } else if (currentPage === 5) {
                 setScreenWidth("max-w-5xl");
-                // console.log("Setting screen width to max-w-5xl for simple view on MeasurementOutputSlide");
             }
         }, [selectedTab, currentPage, setScreenWidth]);
     
@@ -96,8 +92,8 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
                     tabs={[
-                        { id: 'simple-view', label: 'Simple View' },
-                        { id: 'grid-view', label: 'Grid View' }
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'View studies in a simple list format' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'View studies in a grid format for better data management' }
                     ]}
                 />
 

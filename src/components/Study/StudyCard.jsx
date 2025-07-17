@@ -20,7 +20,7 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
         <div className="flex grow-0 items-center space-x-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex flex-none items-center justify-center text-white font-bold text-xl">
             {/* Display initials from the first two words of the title, if available */}
-            {study.name.split(" ").slice(0, 2).map(word => word[0]).join("")}
+            {study?.name.split(" ").slice(0, 2).map(word => word[0]).join("")}
           </div>
           <div>
             <TooltipProvider>
