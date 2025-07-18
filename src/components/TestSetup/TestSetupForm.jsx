@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
 import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
-import TextTooltipButton from '../Widgets/TextTooltipButton';
+import { TooltipButton} from '../Widgets/TooltipButton';
 import { TableTooltip } from '../Widgets/TableTooltip';
 
 // Comment Component
@@ -818,21 +818,21 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
       {/* Action Buttons */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-3">
-        <TextTooltipButton
+        <TooltipButton
           onClick={onCancel}
           tooltipText={"Cancel"}
           className="cursor-pointer px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
         >
           <span>Cancel</span>
-        </TextTooltipButton>
+        </TooltipButton>
 
-        <TextTooltipButton
+        <TooltipButton
           onClick={handleSubmit}
           tooltipText={isEditing ? 'Update Test Setup' : 'Add Test Setup'}
         >
           <Save className="w-4 h-4" />
           <span>{isEditing ? 'Update Test Setup' : 'Add Test Setup'}</span>
-        </TextTooltipButton>
+        </TooltipButton>
       </div>
     </div>
   );

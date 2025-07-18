@@ -84,8 +84,9 @@ export function TagInput({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className={`text-sm ml-1 font-medium text-gray-700 w-24 text-right`}>
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
       </label>
 
       <div className={`flex flex-wrap gap-2 ${tags.length && 'mb-2'}`}>
@@ -116,7 +117,7 @@ export function TagInput({
           onKeyDown={handleInputKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={handleInputBlur}
-          className="flex-grow px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 text-base bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none"
           placeholder={placeholder}
           aria-autocomplete="list"
           aria-controls="autocomplete-list"

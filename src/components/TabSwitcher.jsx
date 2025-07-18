@@ -1,7 +1,7 @@
 // src/components/TabSwitcher.js
 import React from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import { TooltipButton } from './Widgets/TextTooltipButton';
+import { TooltipButton } from './Widgets/TooltipButton';
 
 const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
     return (

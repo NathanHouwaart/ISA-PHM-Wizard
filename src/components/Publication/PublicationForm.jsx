@@ -3,10 +3,11 @@ import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { Save, X } from "lucide-react";
 import { TagInput } from "../Form/TagInput";
 import { formatAuthorName } from "../../utils/utils";
+import FormField from "../Form/FormField";
 
 export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-    const publication = item;
+  const publication = item;
   const { authors } = useGlobalDataContext();
 
   const [formData, setFormData] = useState({
@@ -78,46 +79,33 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
       </div>
 
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Publication Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter Publication Title"
-            required
-          />
-        </div>
+        <FormField
+          label="Publication Title"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+          placeholder="Enter Publication Title"
+        />
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-grow">
+
           <div className="flex-grow">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Digital Object Identifier (DOI)
-            </label>
-            <input
-              type="text"
+            <FormField
+              label="Digital Object Identifier (DOI)"
               name="doi"
               value={formData.doi}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter DOI"
             />
           </div>
-
           <div className="flex-grow">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              PubMed ID
-            </label>
-            <input
-              type="text"
+
+            <FormField
+              label="PubMed ID"
               name="pubMedId"
               value={formData.pubMedId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter PubMed ID"
             />
           </div>

@@ -5,7 +5,7 @@ import "./GridTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { v4 as uuidv4 } from 'uuid';
-import TooltipButton from '../Widgets/TextTooltipButton';
+import TooltipButton from '../Widgets/TooltipButton';
 
 export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, disableAdd = false, plugins }, ref) => {
 

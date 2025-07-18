@@ -18,6 +18,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import classNames from 'classnames';
+import TooltipButton from './Widgets/TooltipButton';
 
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
@@ -73,6 +74,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     let title = 'Collection'; // Default title
     let subtitle = 'Manage your collection items here.'; // Default subtitle
     let addButtonText = 'Add Item';
+    let addButtonTooltip = 'Add a new item to the collection';
     let emptyStateTitle = 'No Items Yet';
     let emptyStateSubtitle = 'Get started by adding your first item.';
     let emptyStateAddButtonText = 'Add First Item';
@@ -88,6 +90,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                     break;
                 case CollectionAddButtonText:
                     addButtonText = child.props.children;
+                    addButtonTooltip = child.props.children + ' to the collection';
                     break;
                 case CollectionEmptyStateTitle:
                     emptyStateTitle = child.props.children;
@@ -113,13 +116,15 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                         <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
                         <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>
                     </div>
-                    <button
+                    <TooltipButton
                         onClick={() => setShowAddForm(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        tooltipText={addButtonTooltip}
                     >
                         <Plus className="w-5 h-5" />
                         <span>{addButtonText}</span>
-                    </button>
+                    </TooltipButton>
+
+                    
                 </div>
 
                 {/* Add/Edit Form */}

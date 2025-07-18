@@ -13,7 +13,7 @@ import { slides } from "../components/Slides/slides";
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import TooltipButton from '../components/Widgets/TextTooltipButton';
+import TooltipButton from '../components/Widgets/TooltipButton';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;

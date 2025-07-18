@@ -24,9 +24,6 @@ import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/u
 import isEqual from 'lodash.isequal';
 
 
-
-
-
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
@@ -81,7 +78,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
 
         const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
         setStudyToSensorMeasurementMapping(flattenedMappings);
-        
+
     }, [processedData, studies]);
 
 
