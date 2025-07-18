@@ -51,8 +51,9 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
     // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
+        // console.log("data for grid view:", studyVariables, studies, studyToStudyVariableMapping);
         const vars = getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
-        console.log("Grid data generated 2:", vars);
+        // console.log("Grid data generated 2:", vars);
         return vars;
     }, [studyVariables, studies, studyToStudyVariableMapping]);
 

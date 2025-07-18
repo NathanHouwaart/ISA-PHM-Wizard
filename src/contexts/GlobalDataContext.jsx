@@ -41,7 +41,7 @@ export const GlobalDataProvider = ({ children }) => {
         acc[field.id] = ''; // Initialize each field with an empty string
         return acc;
     }, {});
-
+    
     // Lazy initialization for all state variables from localStorage
     const [studies, setStudies] = useState(() => loadFromLocalStorage('globalAppData_studies', initialStudies));
     const [investigations, setInvestigations] = useState(() => loadFromLocalStorage('globalAppData_investigations', initialFormState));
