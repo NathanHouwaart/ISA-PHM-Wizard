@@ -171,4 +171,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     );
 });
 
+MeasurementOutputSlide.displayName = "Measurement Output"; // Set display name for better debugging
+
 export default MeasurementOutputSlide;

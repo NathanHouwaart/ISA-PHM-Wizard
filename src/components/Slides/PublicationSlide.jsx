@@ -51,4 +51,6 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
     );
 });
 
+PublicationSlide.displayName = "Publications"; // Set display name for better debugging
+
 export default PublicationSlide;

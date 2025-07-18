@@ -182,4 +182,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     );
 });
 
+StudyVariableSlide.displayName = "Study Variables"; // Set display name for better debugging
+
 export default StudyVariableSlide;

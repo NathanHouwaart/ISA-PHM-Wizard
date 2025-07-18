@@ -13,6 +13,7 @@ import { slides } from "../components/Slides/slides";
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import TooltipButton from '../components/Widgets/TextTooltipButton';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -47,15 +48,18 @@ export const IsaQuestionnaire = () => {
 
       <div className="flex justify-center mb-5">
         {Array.from({ length: totalPages }).map((_, index) => (
-          <div
+          <TooltipButton
             key={index}
+            tooltipText={`${slides[index].displayName} slide`}
             onClick={() => goToPage(index)}
-            className={`h-3 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer ${index === currentPage
-              ? 'bg-blue-500'
-              : index < currentPage
-                ? 'bg-green-400'
-                : 'bg-gray-300'
-              }`}
+            className={cn(
+              "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer",
+              index === currentPage
+                ? 'bg-blue-500'
+                : index < currentPage
+                  ? 'bg-green-400'
+                  : 'bg-gray-300'
+            )}
           />
         ))}
       </div>

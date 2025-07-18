@@ -124,4 +124,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
     );
 });
 
+StudySlide.displayName = "Studies"; // Set display name for better debugging
+
 export default StudySlide;

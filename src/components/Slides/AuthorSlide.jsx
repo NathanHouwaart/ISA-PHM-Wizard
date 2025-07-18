@@ -51,4 +51,6 @@ export const AuthorSlide = forwardRef(({ onHeightChange}, ref) => {
     );
 });
 
+AuthorSlide.displayName = "Authors"; // Set display name for better debugging
+
 export default AuthorSlide;

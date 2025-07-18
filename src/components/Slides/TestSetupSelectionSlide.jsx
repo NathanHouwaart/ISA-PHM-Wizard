@@ -91,4 +91,6 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
     );
 });
 
+TestSetupSelectionSlide.displayName = "Test Setup Selection"; // Set display name for better debugging
+
 export default TestSetupSelectionSlide;

@@ -30,4 +30,6 @@ export const IntroductionSlide = forwardRef(({onHeightChange}, ref) => {
     );
 });
 
+IntroductionSlide.displayName = "Introduction"; // Set display name for better debugging
+
 export default IntroductionSlide;
