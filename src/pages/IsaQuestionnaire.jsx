@@ -47,10 +47,10 @@ export const IsaQuestionnaire = () => {
       <Heading1> ISA Questionnaire Form </Heading1>
 
       <div className="flex justify-center mb-5">
-        {Array.from({ length: totalPages }).map((_, index) => (
+        {slides.map((slide, index) => (
           <TooltipButton
             key={index}
-            tooltipText={`${slides[index].displayName} slide`}
+            tooltipText={`${slide.displayName} slide`}
             onClick={() => goToPage(index)}
             className={cn(
               "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer",
