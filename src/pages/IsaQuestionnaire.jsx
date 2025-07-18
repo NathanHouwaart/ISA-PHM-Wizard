@@ -89,41 +89,38 @@ export const IsaQuestionnaire = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-center space-x-4">
-          <button
-            type="button"
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl"
+        <div className="flex items-center justify-center space-x-4 mx-5">
+          <TooltipButton
             onClick={handlePrevious}
-            disabled={currentPage === 0}
+            tooltipText="Go to previous page"
+            className={`text-center text-white font-semibold `}
           >
-            <span>&lt;</span>
-            <span>Previous</span>
-          </button>
+            <span className='w-30'>&lt; Previous</span>
+          </TooltipButton>
+        
 
-           <button
-            type="button"
+           <TooltipButton
+            tooltipText="Submit the form"
             onClick={handleSubmit}
             className={cn(
-              "w-xl py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
+              "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
               {
-                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed": !isLastPage(currentPage),
+                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": !isLastPage(currentPage),
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
               }
             )}
             disabled={!isLastPage(currentPage)}
           >
-            Submit Form
-          </button>
+            <span className='w-md'>Submit Form</span>
+          </TooltipButton>
 
-          <button
-            type="button"
-            className="flex items-center space-x-2 min-w-1rem px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-lg hover:shadow-xl"
+        <TooltipButton
             onClick={handleForward}
-            disabled={currentPage === totalPages - 1}
+            tooltipText="Go to next page"
+            className={`text-white font-semibold `}
           >
-            <span>Next</span>
-            <span>&gt;</span>
-          </button>
+            <span className='w-30'>Next &gt;</span>
+          </TooltipButton>
         </div>
       </div>
     </PageWrapper>

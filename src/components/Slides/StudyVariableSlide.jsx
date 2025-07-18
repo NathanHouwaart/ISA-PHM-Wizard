@@ -1,27 +1,31 @@
-import React, { forwardRef, useEffect, useMemo, useState, useRef } from 'react';
+import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 
+// Import hooks
+import useVariables from '../../hooks/useVariables';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
-import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
+// Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+
+// Import components
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
-import { GridTable, BoldCell } from '../GridTable/GridTable';
-import { Template } from '@revolist/react-datagrid';
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import isEqual from 'lodash.isequal';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
-import { useVariables } from '../../hooks/useVariables';
 
-const GrayCell = () => {
-    return {
-        style: {
-            "background-color": '#e7e8e9',
-        }
-    }
-}
+// Data Grid Imports
+import { Template } from '@revolist/react-datagrid';
+import { GridTable } from '../GridTable/GridTable';
+import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
+
+// Import utility functions
+import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
+import isEqual from 'lodash.isequal';
+
+// Import content data
+import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
+
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
@@ -30,16 +34,14 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { 
-        studies, 
-        studyVariables, 
-        setScreenWidth, 
-        setStudyVariables, 
-        studyToStudyVariableMapping, 
-        setStudyToStudyVariableMapping 
-    } = useGlobalDataContext(); 
-
-    const [selectedVariableIndex, setSelectedVariableIndex] = useState(0); // State to track selected variable index
+    const {
+        studies,
+        studyVariables,
+        setScreenWidth,
+        setStudyVariables,
+        studyToStudyVariableMapping,
+        setStudyToStudyVariableMapping
+    } = useGlobalDataContext();
 
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 6) {
@@ -49,58 +51,35 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
-    // --------- Global → Grid Sync ---------
-    const gridDataFromGlobal = useMemo(() => {
-        // console.log("data for grid view:", studyVariables, studies, studyToStudyVariableMapping);
-        const vars = getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
-        // console.log("Grid data generated 2:", vars);
-        return vars;
-    }, [studyVariables, studies, studyToStudyVariableMapping]);
 
-    // Local state for the grid, initialized from global data
     const [processedData, setProcessedData] = useState([]);
     const [columns, setColumns] = useState([]);
-
-    // Ref to track if the processedData update originated from user interaction or global state sync
     const isUpdatingFromGlobal = useRef(false);
+
+    // --------- Global → Grid Sync ---------
+    const gridDataFromGlobal = useMemo(() => {
+        return getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
+    }, [studyVariables, studies, studyToStudyVariableMapping]);
+
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
         if (!isEqual(processedData, gridDataFromGlobal)) {
-            console.log("Global data changed, updating processedData...");
             isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
             setProcessedData(gridDataFromGlobal);
         }
     }, [gridDataFromGlobal]); // Depend on the memoized global data for updates
 
-
-    // --- Local Grid Data to Global Data Sync ---
+    // --------- Grid → Global Sync ---------
     useEffect(() => {
         if (isUpdatingFromGlobal.current) {
             isUpdatingFromGlobal.current = false;
             return;
         }
 
-        // Only sync to global if processedData actually changed and it wasn't a global-initiated update
-        // Using a timeout to debounce and prevent rapid updates during multi-cell edits (e.g., paste)
-        const timeout = setTimeout(() => {
-            console.log("ProcessedData changed locally, updating global state...");
-            const flattened = flattenGridDataToMappings(processedData, studies);
-            setStudyToStudyVariableMapping(flattened);
+        const flattened = flattenGridDataToMappings(processedData, studies);
+        setStudyToStudyVariableMapping(flattened);
 
-            // // Filter out UUID keys from processedData to update studyVariables
-            // const updatedStudyVariables = processedData.map((variable) =>
-            //     Object.fromEntries(
-            //         Object.entries(variable).filter(([key]) => !isUUID(key))
-            //     )
-            // );
-            // // Only update if truly different to avoid unnecessary renders and potential loops
-            // if (!isEqual(studyVariables, updatedStudyVariables)) {
-            //     setStudyVariables(updatedStudyVariables);
-            // }
-        }, 0); // Debounce time in ms
-
-        return () => clearTimeout(timeout);
     }, [processedData, studies, studyVariables]); // Depend on processedData and relevant setters/state
 
 
@@ -121,7 +100,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
             },
             ...studies.map((study, index) => ({
                 prop: study.id,
-                name: `S${(index + 1).toString().padStart(2, '0')}`,
+                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
                 size: 150
             }))
         ])
@@ -138,7 +117,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         });
     };
 
-    
+
     return (
         <div ref={combinedRef} >
 
@@ -162,19 +141,19 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <EntityMappingPanel 
-                        name={"Variables"} 
+                    <EntityMappingPanel
+                        name={"Variables"}
                         itemHook={useVariables}
-                        mappings={studyToStudyVariableMapping} 
+                        mappings={studyToStudyVariableMapping}
                         handleInputChange={handleInputChange}
                     />
                 </TabPanel>
-                   
+
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <GridTable
-                        items={processedData} 
-                        setItems={setProcessedData} 
-                        columns={columns} 
+                        items={processedData}
+                        setItems={setProcessedData}
+                        columns={columns}
                     />
                 </TabPanel>
             </div>

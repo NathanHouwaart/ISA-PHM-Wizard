@@ -44,7 +44,7 @@ const PatternCellTemplate = ({ prefix, rowIndex }) => {
 
 const columns = [
     {
-        prop: 'id', name: 'Identifier', size: 150, pin: "colPinStart", readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'S' }), cellProperties: () => {
+        prop: 'id', name: 'Identifier', size: 150, pin: "colPinStart", readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }), cellProperties: () => {
             return {
                 style: {
                     "border-right": "3px solid black"

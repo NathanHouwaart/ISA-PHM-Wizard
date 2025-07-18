@@ -9,7 +9,7 @@ import {
 } from '../ui/tooltip'
 import { cn } from '../../utils/utils'
 
-export function TooltipButton({ className, onClick, tooltipText, children }) {
+export function TooltipButton({ className, onClick, tooltipText, children, disabled = false }) {
     return (
         <TooltipProvider>
             <Tooltip delayDuration={300}>
@@ -18,6 +18,7 @@ export function TooltipButton({ className, onClick, tooltipText, children }) {
                         type="button"
                         onClick={onClick}
                         className={cn("cursor-pointer px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-lg transition-colors duration-200 flex items-center space-x-2", className)}
+                        disabled={disabled}
                     >
                         {children}
                     </button>

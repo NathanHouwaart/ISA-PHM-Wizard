@@ -1,28 +1,31 @@
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 
+// Import hooks
+import useMeasurements from '../../hooks/useMeasurements';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
+// Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+
+// Import components
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
-import { GridTable, BoldCell } from '../GridTable/GridTable';
-import { Template } from '@revolist/react-datagrid';
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import isEqual from 'lodash.isequal';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
-import useMeasurements from '../../hooks/useMeasurements';
-import FormField from '../Form/FormField';
-import { PlusCircleIcon } from 'lucide-react';
 
-const GrayCell = () => {
-    return {
-        style: {
-            "background-color": '#e7e8e9',
-        }
-    }
-}
+// Data Grid Imports
+import { Template } from '@revolist/react-datagrid';
+import { GridTable } from '../GridTable/GridTable';
+import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+
+// Import utility functions
+import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
+import isEqual from 'lodash.isequal';
+
+
+
+
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
@@ -31,18 +34,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-
     const {
         studies,
         testSetups,
         setScreenWidth,
         selectedTestSetup,
-        isInitialized,
         studyToSensorMeasurementMapping,
         setStudyToSensorMeasurementMapping
     } = useGlobalDataContext();
-
-    const [selectedStudyIndex, setSelectedStudyIndex] = useState(0); // State to track selected variable index
 
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 7) {
@@ -52,48 +51,46 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
-    const selectedStudy = studies[selectedStudyIndex];
 
     const [processedData, setProcessedData] = useState([]);
     const [columns, setColumns] = useState([]);
+    const isUpdatingFromGlobal = useRef(false);
 
     // --------- Global → Grid Sync ---------
-    const gridData = useMemo(() => {
+    const gridDataFromGlobal = useMemo(() => {
         if (!selectedTestSetup || !studies || !studyToSensorMeasurementMapping) {
             return [];
         }
-        console.log("Grid data input:", selectedTestSetup, studies, studyToSensorMeasurementMapping);
-        const vars = getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorMeasurementMapping);
-        console.log("Grid data generated:", vars);
-        return vars;
+        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorMeasurementMapping);
     }, [studies, selectedTestSetup, studyToSensorMeasurementMapping]);
 
-    // Apply flattened data to local state only when global data changes
+    // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
-
-        if (!isEqual(processedData, gridData)) {
-            setProcessedData(gridData);
+        if (!isEqual(processedData, gridDataFromGlobal)) {
+            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
+            setProcessedData(gridDataFromGlobal);
         }
     }, [selectedTestSetup, testSetups]);
 
     // --------- Grid → Global Sync ---------
     useEffect(() => {
+        if (isUpdatingFromGlobal.current) {
+            isUpdatingFromGlobal.current = false;
+            return;
+        }
 
-        // const timeout = setTimeout(() => {
-            const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-            setStudyToSensorMeasurementMapping(flattenedMappings);
-        // }, 0);
-
-        // return () => clearTimeout(timeout);
+        const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
+        setStudyToSensorMeasurementMapping(flattenedMappings);
+        
     }, [processedData, studies]);
 
 
     // Standalone Effect to initialize columns for grid view
     useEffect(() => {
         setColumns([
-            { prop: 'id', name: 'Id', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(BoldCell), cellProperties: GrayCell, },
-            { prop: 'measurement_type', name: 'Type', size: 150, readonly: true },
-            { prop: 'measurement_unit', name: 'Unit', readonly: true },
+            { prop: 'id', name: 'Identifier', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(PatternCellTemplate, { prefix : "Sensor S"}), cellProperties: GrayCell, },
+            { prop: 'measurementType', name: 'Type', size: 150, readonly: true },
+            { prop: 'measurementUnit', name: 'Unit', readonly: true },
             {
                 prop: 'description', name: 'Description', size: 350, readonly: true, cellProperties: () => {
                     return {
@@ -105,7 +102,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
             },
             ...studies.map((study, index) => ({
                 prop: study.id,
-                name: `S${(index + 1).toString().padStart(2, '0')}`,
+                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
                 size: 150
             }))
         ])
@@ -147,14 +144,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                     
                     <EntityMappingPanel
-                        name={`Sensor output`}
+                        name={`Sensor Output Mapping`}
+                        tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
                         mappings={studyToSensorMeasurementMapping}
                         handleInputChange={handleInputChange}
                         disableAdd
                     />
-
              
                 </TabPanel>
 

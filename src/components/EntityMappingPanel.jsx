@@ -7,7 +7,7 @@ import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 
-export function EntityMappingPanel({ name, itemHook, mappings, handleInputChange, disableAdd = false }) {
+export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false }) {
 
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
 
@@ -34,7 +34,7 @@ export function EntityMappingPanel({ name, itemHook, mappings, handleInputChange
                                 : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                                 }`}
                         >
-                            {item.name}
+                            { tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name }
                         </button>
                     ))}
                 </div>

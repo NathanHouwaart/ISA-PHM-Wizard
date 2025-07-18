@@ -7,14 +7,6 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { v4 as uuidv4 } from 'uuid';
 import TooltipButton from '../Widgets/TextTooltipButton';
 
-export const BoldCell = ({ value }) => {
-    return (
-        <div className="flex items-center justify-center">
-            <strong className=''>{value}</strong>
-        </div>
-    );
-};
-
 export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, disableAdd = false, plugins }, ref) => {
 
     const gridRef = useRef(null);

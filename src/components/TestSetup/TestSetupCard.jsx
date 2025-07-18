@@ -22,7 +22,7 @@ const TestSetupCard = ({ item, onEdit, onRemove }) => {
   // Get unique measurement types from sensors
   const getMeasurementTypes = (sensors) => {
     if (!sensors || sensors.length === 0) return [];
-    const types = [...new Set(sensors.map(sensor => sensor.measurement_type))];
+    const types = [...new Set(sensors.map(sensor => sensor.measurementType))];
     return types;
   };
 

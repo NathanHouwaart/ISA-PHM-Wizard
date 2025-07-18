@@ -1,22 +1,26 @@
 [
     {
-        "id": "1",
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa",
         "name": "Wentelteef",
         "location": "Hogeschool van Amsterdam (HvA)",
         "description" : "Hydraulic testing equipment with dual pressure monitoring system",
         "characteristics": [
             {
+                "id": "3527339b-14c1-451d-886c-69a50962c656",
                 "category": "Motor",
                 "value": "WEG W21",
-                "unit": ""
+                "unit": "",
+                "comments": []
             },
             {
+                "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
                 "category": "MotorPower",
                 "value": "2.2",
                 "unit": "kW",
                 "comments": []
             },
             {
+                "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
                 "category": "Hydraulic Pump",
                 "value": "Hydropack",
                 "unit": "",
@@ -28,6 +32,7 @@
                 ]
             },
             {
+                "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
                 "category": "Hydraulic Motor",
                 "value": "Miksan Type 71 4C M",
                 "unit": "",
@@ -39,100 +44,112 @@
                 ]
             },
             {
+                "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
                 "category": "Hydraulic Motor Power",
                 "value": "0.38",
-                "unit": "kW"
+                "unit": "kW",
+                "comments": []
             }
         ],
         "number_of_sensors": 3,
         "sensors": [
             {
-                "id": "s1",
-                "measurement_type": "Pressure",
-                "measurement_unit": "bar",
+                "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+                "measurementType": "Pressure",
+                "measurementUnit": "bar",
                 "description": "measures pressure on the radial cylinder",
-                "technology_type": "pressure transmitter",
-                "technology_platform": "PT5401",
-                "data_acquisition_unit": "PLC S7-1200",
-                "sampling_rate": "50",
-                "sampling_unit": "Hz",
-                "sensor_location": "In radial cylinder tubes",
-                "location_unit": "",
-                "sensor_orientation": "Slightly rotated forward",
-                "orientation_unit": ""
+                "technologyType": "pressure transmitter",
+                "technologyPlatform": "PT5401",
+                "dataAcquisitionUnit": "PLC S7-1200",
+                "samplingRate": "50",
+                "samplingUnit": "Hz",
+                "sensorLocation": "In radial cylinder tubes",
+                "locationUnit": "",
+                "sensorOrientation": "Slightly rotated forward",
+                "orientationUnit": ""
             },
             {
-                "id": "s2",
-                "measurement_type": "Pressure",
-                "measurement_unit": "bar",
+                "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+                "measurementType": "Pressure",
+                "measurementUnit": "bar",
                 "description": "measures pressure in the axial cylinder",
-                "technology_type": "pressure transmitter",
-                "technology_platform": "PT5401",
-                "data_acquisition_unit": "PLC S7-1200",
-                "sampling_rate": "50",
-                "sampling_unit": "Hz",
-                "sensor_location": "In Axial cylinder tubes",
-                "location_unit": "",
-                "sensor_orientation": "Slightly rotated forward",
-                "orientation_unit": ""
+                "technologyType": "pressure transmitter",
+                "technologyPlatform": "PT5401",
+                "dataAcquisitionUnit": "PLC S7-1200",
+                "samplingRate": "50",
+                "samplingUnit": "Hz",
+                "sensorLocation": "In Axial cylinder tubes",
+                "locationUnit": "",
+                "sensorOrientation": "Slightly rotated forward",
+                "orientationUnit": ""
             },
             {
-                "id": "s3",
-                "measurement_type": "Temperature",
-                "measurement_unit": "celcius",
+                "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+                "measurementType": "Temperature",
+                "measurementUnit": "celcius",
                 "description": "measures temperature of bearing",
-                "technology_type": "PT",
-                "technology_platform": "PT100",
-                "data_acquisition_unit": "PLC S7-1200",
-                "sampling_rate": "10",
-                "sampling_unit": "Hz",
-                "sensor_location": "Bearing House",
-                "location_unit": "",
-                "sensor_orientation": "",
-                "orientation_unit": ""
+                "technologyType": "PT",
+                "technologyPlatform": "PT100",
+                "dataAcquisitionUnit": "PLC S7-1200",
+                "samplingRate": "10",
+                "samplingUnit": "Hz",
+                "sensorLocation": "Bearing House",
+                "locationUnit": "",
+                "sensorOrientation": "",
+                "orientationUnit": ""
             }
         ]
     },
     {
-        "id": "2",
+        "id": "3e2257b1-9be2-40a5-b88c-9addcbca6ba0",
         "name": "Techport",
         "location": "Amsterdam",
         "characteristics": [
             {
+                "id": "b375a4bf-7614-4f39-a54f-46c22e827865",
                 "category": "Motor",
-                "value": "MG160MA4042-H3"
+                "value": "MG160MA4042-H3",
+                "unit": "",
+                "comments": []
             },
             {
+                "id": "f8d13881-5c9b-4d2b-91d3-f34080edc662",
                 "category": "Motor Bearing",
-                "value": "6309.C4"
+                "value": "6309.C4",
+                "unit": "",
+                "comments": []
             },
             {
+                "id": "c4d2b1a3-5e6f-4b8c-9f0e-1a2b3c4d5e6f",
                 "category": "Motor Speed Accuracy",
                 "value": "5",
-                "unit": "RPM"
+                "unit": "RPM",
+                "comments": []
             },
             {
+                "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3g4h5i6j",
                 "name": "Flow",
                 "value": "120",
-                "unit": "m^3/h"
+                "unit": "m^3/h",
+                "comments": []
             }
         ],
         "number_of_sensors": 1,
         "sensors": [
             {
-                "id": "s1",
-                "measurement_type": "Vibration",
-                "measurement_unit": "g",
+                "id": "38623db8-0a99-4b6d-b0d2-32eba8ca1528",
+                "measurementType": "Vibration",
+                "measurementUnit": "g",
                 "description": "data_collection.pdf",
-                "technology_type": "accelerometer",
-                "technology_platform": "Wilcoxon 786B-10",
-                "data_acquisition_unit": "NI (USB-4432)",
-                "sampling_rate": "2",
-                "sampling_unit": "kHz",
-                "sensor_location": "Electric Motor non-driven end bearing",
-                "location_unit": "",
-                "sensor_orientation": "vertical",
-                "orientation_unit": ""
+                "technologyType": "accelerometer",
+                "technologyPlatform": "Wilcoxon 786B-10",
+                "dataAcquisitionUnit": "NI (USB-4432)",
+                "samplingRate": "2",
+                "samplingUnit": "kHz",
+                "sensorLocation": "Electric Motor non-driven end bearing",
+                "locationUnit": "",
+                "sensorOrientation": "vertical",
+                "orientationUnit": ""
             }
         ]
     }

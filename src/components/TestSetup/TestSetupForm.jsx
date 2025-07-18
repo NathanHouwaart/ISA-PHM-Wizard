@@ -14,7 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
-import IconTooltipButton from '../Widgets/IconTooltipButton';
+import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
 import TextTooltipButton from '../Widgets/TextTooltipButton';
 import { TableTooltip } from '../Widgets/TableTooltip';
 
@@ -331,18 +331,18 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const addSensor = () => {
     const newSensor = {
       id: uuid4(),
-      measurement_type: '',
-      measurement_unit: '',
+      measurementType: '',
+      measurementUnit: '',
       description: '',
-      technology_type: '',
-      technology_platform: '',
-      data_acquisition_unit: '',
-      sampling_rate: '',
-      sampling_unit: '',
-      sensor_location: '',
-      location_unit: '',
-      sensor_orientation: '',
-      orientation_unit: ''
+      technologyType: '',
+      technologyPlatform: '',
+      dataAcquisitionUnit: '',
+      samplingRate: '',
+      samplingUnit: '',
+      sensorLocation: '',
+      locationUnit: '',
+      sensorOrientation: '',
+      orientationUnit: ''
     };
     const newSensors = [...sensors, newSensor];
     onSensorsChange(newSensors);
@@ -387,9 +387,9 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
   const getSensorSummary = (sensor) => {
 
-    const platform = sensor.technology_platform;
-    const samplingRate = sensor.sampling_rate;
-    const samplingUnit = sensor.sampling_unit;
+    const platform = sensor.technologyPlatform;
+    const samplingRate = sensor.samplingRate;
+    const samplingUnit = sensor.samplingUnit;
 
     return `${platform} - ${samplingRate} ${samplingUnit}`;
   };
@@ -429,7 +429,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
             <><b>- Description:</b> Description of the sensor</>
           ]}
           examples={[
-            { "technology Platform": "PT5401", "Technology Type": "PT", description: "measures pressure on the radial cylinder"},
+            { "technology Platform": "PT5401", "Technology Type": "PT", description: "measures pressure on the radial cylinder" },
           ]}
         />
       </div>
@@ -452,7 +452,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                     </span>
                   </div>
                   <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{sensor.measurement_type} ({sensor.measurement_unit}): </span>
+                    <span className='font-bold'>{sensor.measurementType} ({sensor.measurementUnit}): </span>
                     {getSensorSummary(sensor)}
                   </span>
                 </div>
@@ -478,154 +478,154 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
               {isExpanded && (
 
                 <div>
-                  
-                <div className="border-t border-gray-200 p-4 bg-white space-y-6">
-                  {/* Basic Information */}
-                  <div className='space-y-3'>
-                    <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                      Basic Information
-                    </h6>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <FormField
-                        name={`sensor-${index}-technology_platform`}
-                        value={sensor.technology_platform}
-                        onChange={(e) => updateSensor(index, 'technology_platform', e.target.value)}
-                        label="Technology Platform"
-                        type="text"
-                        placeholder="Enter technology platform"
-                      />
 
-                      <FormField
-                        name={`sensor-${index}-technology_type`}
-                        value={sensor.technology_type}
-                        onChange={(e) => updateSensor(index, 'technology_type', e.target.value)}
-                        label="Technology Type"
-                        type="text"
-                        placeholder="Enter technology type"
-                      />
+                  <div className="border-t border-gray-200 p-4 bg-white space-y-6">
+                    {/* Basic Information */}
+                    <div className='space-y-3'>
+                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                        Basic Information
+                      </h6>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <FormField
+                          name={`sensor-${index}-technologyPlatform`}
+                          value={sensor.technologyPlatform}
+                          onChange={(e) => updateSensor(index, 'technologyPlatform', e.target.value)}
+                          label="Technology Platform"
+                          type="text"
+                          placeholder="Enter technology platform"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-technologyType`}
+                          value={sensor.technologyType}
+                          onChange={(e) => updateSensor(index, 'technologyType', e.target.value)}
+                          label="Technology Type"
+                          type="text"
+                          placeholder="Enter technology type"
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          name={`sensor-${index}-description`}
+                          value={sensor.description}
+                          onChange={(e) => updateSensor(index, 'description', e.target.value)}
+                          label="Description"
+                          type="textarea"
+                          placeholder="Enter description"
+                          className='min-h-20'
+                        />
+                      </div>
                     </div>
+
+                    {/* Measurement Information */}
                     <div>
-                      <FormField
-                        name={`sensor-${index}-description`}
-                        value={sensor.description}
-                        onChange={(e) => updateSensor(index, 'description', e.target.value)}
-                        label="Description"
-                        type="textarea"
-                        placeholder="Enter description"
-                        className='min-h-20'
-                      />
+                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                        Measurement
+                      </h6>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                        <FormField
+                          name={`sensor-${index}-measurementType`}
+                          value={sensor.measurementType}
+                          onChange={(e) => updateSensor(index, 'measurementType', e.target.value)}
+                          label="Measurement Type"
+                          type="text"
+                          placeholder="Enter measurement type"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-measurementUnit`}
+                          value={sensor.measurementUnit}
+                          onChange={(e) => updateSensor(index, 'measurementUnit', e.target.value)}
+                          label="Measurement Unit"
+                          type="text"
+                          placeholder="Enter measurement unit"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Data Acquisition */}
+                    <div>
+                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                        Data Acquisition
+                      </h6>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <FormField
+                          name={`sensor-${index}-dataAcquisitionUnit`}
+                          value={sensor.dataAcquisitionUnit}
+                          onChange={(e) => updateSensor(index, 'dataAcquisitionUnit', e.target.value)}
+                          label="Data Acquisition Unit"
+                          type="text"
+                          placeholder="Enter data acquisition unit"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-samplingRate`}
+                          value={sensor.samplingRate}
+                          onChange={(e) => updateSensor(index, 'samplingRate', e.target.value)}
+                          label="Sampling Rate"
+                          type="text"
+                          placeholder="Enter sampling rate"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-samplingUnit`}
+                          value={sensor.samplingUnit}
+                          onChange={(e) => updateSensor(index, 'samplingUnit', e.target.value)}
+                          label="Sampling Unit"
+                          type="text"
+                          placeholder="Enter sampling unit"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Location & Orientation */}
+                    <div>
+                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                        Location & Orientation
+                      </h6>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <FormField
+                          name={`sensor-${index}-sensorLocation`}
+                          value={sensor.sensorLocation}
+                          onChange={(e) => updateSensor(index, 'sensorLocation', e.target.value)}
+                          label="Sensor Location"
+                          type="text"
+                          placeholder="Enter sensor location"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-locationUnit`}
+                          value={sensor.locationUnit}
+                          onChange={(e) => updateSensor(index, 'locationUnit', e.target.value)}
+                          label="Location Unit"
+                          type="text"
+                          placeholder="Enter location unit"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-sensorOrientation`}
+                          value={sensor.sensorOrientation}
+                          onChange={(e) => updateSensor(index, 'sensorOrientation', e.target.value)}
+                          label="Sensor Orientation"
+                          type="text"
+                          placeholder="Enter sensor orientation"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-orientationUnit`}
+                          value={sensor.orientationUnit}
+                          onChange={(e) => updateSensor(index, 'orientationUnit', e.target.value)}
+                          label="Orientation Unit"
+                          type="text"
+                          placeholder="Enter orientation unit"
+                        />
+
+                      </div>
                     </div>
                   </div>
 
-                  {/* Measurement Information */}
-                  <div>
-                    <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                      Measurement
-                    </h6>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                      <FormField
-                        name={`sensor-${index}-measurement_type`}
-                        value={sensor.measurement_type}
-                        onChange={(e) => updateSensor(index, 'measurement_type', e.target.value)}
-                        label="Measurement Type"
-                        type="text"
-                        placeholder="Enter measurement type"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-measurement_unit`}
-                        value={sensor.measurement_unit}
-                        onChange={(e) => updateSensor(index, 'measurement_unit', e.target.value)}
-                        label="Measurement Unit"
-                        type="text"
-                        placeholder="Enter measurement unit"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Data Acquisition */}
-                  <div>
-                    <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                      Data Acquisition
-                    </h6>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <FormField
-                        name={`sensor-${index}-data_acquisition_unit`}
-                        value={sensor.data_acquisition_unit}
-                        onChange={(e) => updateSensor(index, 'data_acquisition_unit', e.target.value)}
-                        label="Data Acquisition Unit"
-                        type="text"
-                        placeholder="Enter data acquisition unit"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-sampling_rate`}
-                        value={sensor.sampling_rate}
-                        onChange={(e) => updateSensor(index, 'sampling_rate', e.target.value)}
-                        label="Sampling Rate"
-                        type="text"
-                        placeholder="Enter sampling rate"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-sampling_unit`}
-                        value={sensor.sampling_unit}
-                        onChange={(e) => updateSensor(index, 'sampling_unit', e.target.value)}
-                        label="Sampling Unit"
-                        type="text"
-                        placeholder="Enter sampling unit"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Location & Orientation */}
-                  <div>
-                    <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                      Location & Orientation
-                    </h6>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <FormField
-                        name={`sensor-${index}-sensor_location`}
-                        value={sensor.sensor_location}
-                        onChange={(e) => updateSensor(index, 'sensor_location', e.target.value)}
-                        label="Sensor Location"
-                        type="text"
-                        placeholder="Enter sensor location"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-location_unit`}
-                        value={sensor.location_unit}
-                        onChange={(e) => updateSensor(index, 'location_unit', e.target.value)}
-                        label="Location Unit"
-                        type="text"
-                        placeholder="Enter location unit"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-sensor_orientation`}
-                        value={sensor.sensor_orientation}
-                        onChange={(e) => updateSensor(index, 'sensor_orientation', e.target.value)}
-                        label="Sensor Orientation"
-                        type="text"
-                        placeholder="Enter sensor orientation"
-                      />
-
-                      <FormField
-                        name={`sensor-${index}-orientation_unit`}
-                        value={sensor.orientation_unit}
-                        onChange={(e) => updateSensor(index, 'orientation_unit', e.target.value)}
-                        label="Orientation Unit"
-                        type="text"
-                        placeholder="Enter orientation unit"
-                      />
-
-                    </div>
-                  </div>
                 </div>
-                
-              </div>
               )}
             </div>
           );
@@ -713,12 +713,12 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           <h3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Test Setup' : 'Add New Test Setup'}
           </h3>
-          <button
+          <IconToolTipButton
+            icon={X}
+            tooltipText="Exit (doesn't save)"
             onClick={onCancel}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+            className={"text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"}
+          />
         </div>
       </div>
 
@@ -727,9 +727,9 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
           tabs={[
-            { id: 'basic-info', label: 'Basic Information' },
-            { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})` },
-            { id: 'sensors', label: `Sensors (${numberOfSensors})` },
+            { id: 'basic-info', label: 'Basic Information', tooltip: 'Basic Information about the test setup' },
+            { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
+            { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
           ]}
         />
 
