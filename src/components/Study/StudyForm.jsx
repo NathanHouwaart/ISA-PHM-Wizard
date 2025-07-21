@@ -5,30 +5,22 @@ import { cn } from '../../utils/utils';
 import FormField from '../Form/FormField';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { v4 as uuidv4 } from 'uuid';
+import TooltipButton from '../Widgets/TooltipButton';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const {studies } = useGlobalDataContext();
+  const { studies } = useGlobalDataContext();
 
   // Define your initial form state here, outside the component
   const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    description: '',
-    submissionDate: '',
-    publicationDate: ''
+    id: item?.id || '',
+    name: item?.name || '',
+    description: item?.description || '',
+    submissionDate: item?.submissionDate || '',
+    publicationDate: item?.publicationDate || '',
   });
 
-  useEffect(() => {
-      setFormData({
-        id: item?.id || '',
-        name: item?.name || '',
-        description: item?.description || '',
-        submissionDate: item?.submissionDate|| '',
-        publicationDate: item?.publicationDate || '',
-      });
-  }, [item]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -46,17 +38,12 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    // console.log(name)
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  useEffect(() => {
-    // console.log(formData);
-  }, [formData])
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-300 max-h-[90vh] overflow-y-auto">
@@ -65,18 +52,19 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
           <h3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Study' : 'Add new Study'}
           </h3>
-          <button
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={onCancel}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            tooltipText="Close"
           >
             <X className="w-5 h-5" />
-          </button>
+          </TooltipButton>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="px-6 space-y-6">
         {/* Basic Information */}
-        <div className="bg-gray-50 rounded-lg space-y-1 pt-2">
+        <div className="rounded-lg space-y-2 pt-2">
 
           <FormField
             name={"name"}
@@ -99,7 +87,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             example="eg. BPFO Fault Severty 1 100%"
             explanation={"Description of the study"}
           />
-         
+
           <FormField
             name={"submissionDate"}
             onChange={handleChange}
@@ -108,7 +96,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             type='date'
             example="10-12-2024"
             explanation={"Date when Study was submitted"} />
-          
+
           <FormField
             name={"publicationDate"}
             onChange={handleChange}
@@ -117,27 +105,28 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             type='date'
             example="10-12-2024"
             explanation={"Date when Study was published"} />
-        
+
         </div>
 
 
         {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-3">
-          <button
-            type="button"
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 pr-0 flex justify-end space-x-3">
+          <TooltipButton
             onClick={onCancel}
-            className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            tooltipText="Cancel"
           >
-            Cancel
-          </button>
-          <button
-            type="button"
+            <span>Cancel</span>
+          </TooltipButton>
+          <TooltipButton
+            type="button" // Change to "submit" if you want native form submission
             onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+            tooltipText={isEditing ? 'Update Study' : 'Add Study'}
           >
             <Save className="w-4 h-4" />
             <span>{isEditing ? 'Update Study' : 'Add Study'}</span>
-          </button>
+          </TooltipButton>
         </div>
       </div>
     </div>

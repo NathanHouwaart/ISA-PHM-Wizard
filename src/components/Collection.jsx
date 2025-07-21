@@ -161,6 +161,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 )}
 
                 {/* Items Grid */}
+                {!showAddForm && !editingItem &&
                 <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-2" : "w-full space-y-2"}`}>
                     {items.map(item => (
                         (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
@@ -174,6 +175,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                         )
                     ))}
                 </div>
+}
 
 
                 {items.length === 0 && !showAddForm && !editingItem && (

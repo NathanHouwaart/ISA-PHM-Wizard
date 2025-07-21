@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle } from 'lucide-react';
 import TestSetupForm from './TestSetupForm';
+import TooltipButton from '../Widgets/TooltipButton';
 
 const TestSetupCard = ({ item, onEdit, onRemove }) => {
   // Create abbreviation from item name
@@ -83,20 +84,22 @@ const TestSetupCard = ({ item, onEdit, onRemove }) => {
           </div>
         </div>
         <div className="flex space-x-2">
-          <button
+          <TooltipButton
+            tooltipText="Edit item"
             onClick={(e) => { e.stopPropagation(); onEdit(item) }}
-            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit item"
+            className="bg-transparent p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
             <Edit2 className="w-4 h-4" />
-          </button>
-          <button
+          </TooltipButton>
+
+          <TooltipButton
+            tooltipText="Remove item"
             onClick={(e) => { e.stopPropagation(); onRemove(item.id) }}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Remove item"
+            className="bg-transparent p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </TooltipButton>
+          
         </div>
       </div>
     </div>

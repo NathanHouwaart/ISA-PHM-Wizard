@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // Import hooks
 import useMeasurements from '../../hooks/useMeasurements';
@@ -22,9 +22,10 @@ import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
 // Import utility functions
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
+import useProcessingProtocols from '../../hooks/useProcessingProtocols';
 
 
-export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
 
@@ -36,16 +37,20 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
         testSetups,
         setScreenWidth,
         selectedTestSetupId,
+        setTestSetups,
         studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
+        setStudyToSensorMeasurementMapping,
+        sensorToProcessingProtocolMapping,
+        setSensorToProcessingProtocolMapping
     } = useGlobalDataContext();
 
+        
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
     useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 7) {
+        if (selectedTab === 'grid-view' && currentPage === 8) {
             setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 7) {
+        } else if (currentPage === 8) {
             setScreenWidth("max-w-5xl");
         }
     }, [selectedTab, currentPage, setScreenWidth]);
@@ -57,11 +62,15 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
 
     // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
-        if (!selectedTestSetup || !studies || !studyToSensorMeasurementMapping) {
-            return [];
-        }
-        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorMeasurementMapping);
-    }, [studies, selectedTestSetup, studyToSensorMeasurementMapping]);
+        // Extract every field from the sensors in the selected test setup
+       return Object.entries(selectedTestSetup?.sensors || {}).map(([sensorId, sensor]) => {
+           return {
+               id: sensorId,
+               ...sensor
+           };
+       });
+
+    }, [testSetups, selectedTestSetup]);
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
@@ -78,9 +87,25 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
             return;
         }
 
-        const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-        setStudyToSensorMeasurementMapping(flattenedMappings);
+        setTestSetups(prev => {
+            const updatedTestSetups = prev.map(testSetup => {
+                if (testSetup.id === selectedTestSetupId) {
+                    return {
+                        ...testSetup,
+                        sensors: processedData.map(sensor => {
+                            return Object.entries(sensor).reduce((acc, [key, value]) => {
+                                acc[key] = value;
+                                return acc;
+                            }, {});
+                        })
+                    };
+                }
+                return testSetup;
+            });
+            return updatedTestSetups;
+        });
 
+      
     }, [processedData, studies]);
 
 
@@ -99,21 +124,43 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                     }
                 }
             },
-            ...studies.map((study, index) => ({
-                prop: study.id,
-                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
-                size: 150
-            }))
+            { prop: 'filterType', name: 'Filter Type',
+                 children : [
+                    { prop: 'filterTypeSpecification', name: 'Specification', size: 138},
+                    { prop: 'filterTypeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                ]
+            },
+            { prop: 'chunkSize', name: 'Chunk Size',
+                children : [
+                    { prop: 'chunkSizeSpecification', name: 'Specification', size: 138},
+                    { prop: 'chunkSizeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                ]
+            },
+            { prop: 'scalingRange', name: 'Scaling Range', 
+                children : [
+                    { prop: 'scalingRangeSpecification', name: 'Specification', size: 138},
+                    { prop: 'scalingRangeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                ]
+            },
+            { prop: 'scalingResolution', name: 'Scaling Resolution', 
+                children : [
+                    { prop: 'scalingResolutionSpecification', name: 'Specification', size: 138},
+                    { prop: 'scalingResolutionUnit', name: 'Unit', size: 50 }
+                ]
+            },
         ])
-    }, [studies]);
+    }, [selectedTestSetup]);
 
-    const handleInputChange = (variableIndex, mapping, value) => {
+    const handleInputChange = (index, event) => {
         setProcessedData(prevData => {
             const newData = [...prevData];
 
-            const entry = newData.find(sensor => sensor.id === mapping.sensorId)
-            entry[mapping.studyId] = value; // Update the specific study's value
+            const { name, value } = event.target;
 
+            newData[index] = {
+                ...newData[index],
+                [name]: value
+            };
             return newData;
         });
     };
@@ -122,11 +169,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Measurement Output
+                Processing Protocols
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and edit the output of measurements across different studies. You can switch between a simple view and a grid view for better data management.
+                This slide allows you to view and manage the processing protocols for each sensor used in the studies. You can switch between a simple list view and a grid view for better data management.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
@@ -135,18 +182,18 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
                     tabs={[
-                        { id: 'simple-view', label: 'Simple View', tooltip: 'View measurements in a simple list format' },
-                        { id: 'grid-view', label: 'Grid View', tooltip: 'View measurements in a grid format for better data management' }
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'View processing protocols in a simple list format' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'View processing protocols in a grid format for better data management' }
                     ]}
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                     
                     <EntityMappingPanel
-                        name={`Sensor Output Mapping`}
-                        tileNamePrefix="Study S"
-                        items={studies}
-                        itemHook={useMeasurements}
+                        name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                        tileNamePrefix="Sensor S"
+                        items={selectedTestSetup?.sensors || []}
+                        itemHook={useProcessingProtocols}
                         mappings={studyToSensorMeasurementMapping}
                         handleInputChange={handleInputChange}
                         disableAdd
@@ -167,6 +214,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     );
 });
 
-MeasurementOutputSlide.displayName = "Measurement Output"; // Set display name for better debugging
+ProcessingProtocolsSlide.displayName = "Processing Protocols"; // Set display name for better debugging
 
-export default MeasurementOutputSlide;
+export default ProcessingProtocolsSlide;

@@ -2,6 +2,7 @@ import { Edit2, Trash2, UserPen } from "lucide-react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { formatAuthorName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
+import TooltipButton from "../Widgets/TooltipButton";
 
 export const PublicationCard = ({ item, onEdit, onRemove }) => {
 
@@ -53,7 +54,7 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                                 <span>{
                                     publication.publicationStatus ? (
                                         <p >
-                                                {publication.publicationStatus}
+                                            {publication.publicationStatus}
                                         </p>) :
                                         "not provided"}
                                 </span>
@@ -62,20 +63,23 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                     </div>
                 </div>
                 <div className="flex space-x-2">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onEdit(publication) }}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit publication"
-                    >
-                        <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onRemove(publication.id) }}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove publication"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex space-x-2">
+                        <TooltipButton
+                            className="p-2 bg-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            onClick={(e) => { e.stopPropagation(); onEdit(publication) }}
+                            tooltipText="Edit publication"
+                        >
+                            <Edit2 className="w-4 h-4" />
+                        </TooltipButton>
+
+                        <TooltipButton
+                            className="p-2 bg-transparent text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={(e) => { e.stopPropagation(); onRemove(publication.id) }}
+                            tooltipText="Remove publication"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </TooltipButton>
+                    </div>
                 </div>
             </div>
         </div>

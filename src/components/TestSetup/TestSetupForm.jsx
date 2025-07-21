@@ -8,14 +8,9 @@ import Heading3 from '../Typography/Heading3';
 import { Form, set } from 'react-hook-form';
 import { v4 as uuid4 } from 'uuid';
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
+
 import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
-import { TooltipButton} from '../Widgets/TooltipButton';
+import { TooltipButton } from '../Widgets/TooltipButton';
 import { TableTooltip } from '../Widgets/TableTooltip';
 
 // Comment Component
@@ -342,7 +337,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
       sensorLocation: '',
       locationUnit: '',
       sensorOrientation: '',
-      orientationUnit: ''
+      orientationUnit: '',
+      phase: ''
     };
     const newSensors = [...sensors, newSensor];
     onSensorsChange(newSensors);
@@ -549,7 +545,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
                         Data Acquisition
                       </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <FormField
                           name={`sensor-${index}-dataAcquisitionUnit`}
                           value={sensor.dataAcquisitionUnit}
@@ -576,6 +572,16 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           type="text"
                           placeholder="Enter sampling unit"
                         />
+
+                               <FormField
+                          name={`sensor-${index}-phase`}
+                          value={sensor.phase}
+                          onChange={(e) => updateSensor(index, 'phase', e.target.value)}
+                          label="Phase"
+                          type="text"
+                          placeholder="Enter phase"
+                        />
+
                       </div>
                     </div>
 
@@ -713,12 +719,13 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           <h3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Test Setup' : 'Add New Test Setup'}
           </h3>
-          <IconToolTipButton
-            icon={X}
-            tooltipText="Exit (doesn't save)"
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={onCancel}
-            className={"text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"}
-          />
+            tooltipText="Close"
+          >
+            <X className="w-5 h-5" />
+          </TooltipButton>
         </div>
       </div>
 

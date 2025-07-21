@@ -2,6 +2,8 @@ import React from "react";
 import { Edit2, Mail, MapPin, Trash2 } from "lucide-react";
 import Heading3 from "../Typography/Heading3";
 import Paragraph, { CardParagraph } from "../Typography/Paragraph";
+import IconToolTipButton from "../Widgets/IconTooltipButton";
+import TooltipButton from "../Widgets/TooltipButton";
 
 
 export const AuthorCard = ({ item, onEdit, onRemove }) => {
@@ -31,20 +33,21 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
           </div>
         </div>
         <div className="flex space-x-2">
-          <button
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             onClick={(e) => {e.stopPropagation(); onEdit(author)}}
-            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit author"
+            tooltipText="Edit author"
           >
             <Edit2 className="w-4 h-4" />
-          </button>
-          <button
+          </TooltipButton>
+
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             onClick={(e) => {e.stopPropagation(); onRemove(author.id)}}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Remove author"
+            tooltipText="Remove author"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </TooltipButton>
         </div>
       </div>
     </div>

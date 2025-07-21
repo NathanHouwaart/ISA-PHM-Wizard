@@ -3,6 +3,7 @@ import { HelpCircle } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import LicensePicker from './LicensePicker';
 import { cn } from '../../utils/utils';
+import TooltipButton from '../Widgets/TooltipButton';
 
 function FormField({
     name,
@@ -10,18 +11,18 @@ function FormField({
     label,
     placeholder,
     onChange,
-    required, 
-    explanation, 
+    required,
+    explanation,
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
     rows = 3,             // for textarea
     className = '',
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
-    
+
     const handleTooltipToggle = () => {
         setShowTooltip(!showTooltip);
-    };               
+    };
 
     const renderInput = () => {
         const baseClasses = "w-full px-3 text-base bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none";
@@ -77,7 +78,7 @@ function FormField({
                 );
         }
     };
- 
+
     return (
         <div>
             <label className={`text-sm ml-1 font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
@@ -86,15 +87,17 @@ function FormField({
             </label>
             <div className="flex flex-grow w-full pt-0.5 ml-0"> {/* items-start for textarea alignment */}
 
-                    {renderInput()}
-               
-                {explanation && <button 
-                    type="button"
-                    onClick={handleTooltipToggle} 
-                    className={`h-10 w-10 ml-3 mr-1 flex items-center justify-center group hover:bg-gray-200 rounded-full transition-colors duration-200 flex-shrink-0 ${type === 'textarea' ? 'mt-1' : ''}`}
-                >
-                    <HelpCircle className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors duration-200" />
-                </button>}
+                {renderInput()}
+
+                {explanation &&
+                    <TooltipButton
+                        tooltipText={explanation}
+                        onClick={handleTooltipToggle}
+                        className={`bg-transparent h-10 w-10 p-0 ml-3 mr-1 flex items-center justify-center group hover:bg-gray-200 rounded-full transition-colors duration-200 flex-shrink-0 ${type === 'textarea' ? 'mt-1' : ''}`}
+                    >
+                        <HelpCircle className="h-5 w-5 text-gray-500 group-hover:text-blue-500 transition-colors duration-200" />
+                    </TooltipButton>
+                }
             </div>
 
             {explanation && <AnimatedTooltip isVisible={showTooltip}>

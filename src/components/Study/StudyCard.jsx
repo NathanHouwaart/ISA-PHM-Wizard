@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
+import TooltipButton from '../Widgets/TooltipButton';
 
 
 // --- Publication Card Component ---
@@ -79,20 +80,20 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
           </div>
         </div>
         <div className="flex space-x-2">
-          <button
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             onClick={(e) => { e.stopPropagation(); onEdit(item) }}
-            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit publication"
+            tooltipText="Edit Study"
           >
             <Edit2 className="w-4 h-4" />
-          </button>
-          <button
+          </TooltipButton>
+          <TooltipButton
+            className="p-2 bg-transparent text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             onClick={(e) => { e.stopPropagation(); onRemove(item.id) }}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Remove publication"
+            tooltipText="Remove Study"
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </TooltipButton>
         </div>
       </div>
     </div>

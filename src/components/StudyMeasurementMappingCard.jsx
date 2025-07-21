@@ -9,12 +9,14 @@ import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter }) {
 
-    const { selectedTestSetup } = useGlobalDataContext();
+    const { selectedTestSetupId, testSetups } = useGlobalDataContext();
+    
+    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
     return (
         <div className='h-full'>
             {/* Conditional rendering of tab content */}
-            {item && selectedTestSetup ? (
+            {item && selectedTestSetupId ? (
                 <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
                     {/* Variable Header, Edit/Remove Buttons */}
                     <div className='mb-4 border-b pb-4'>

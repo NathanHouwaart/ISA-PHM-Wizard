@@ -1,4 +1,5 @@
 import { X, Mail, User, MapPin, Calendar, Edit2, Smartphone, Printer, Fingerprint } from "lucide-react";
+import TooltipButton from "../Widgets/TooltipButton";
 
 
 export const AuthorView = ({ item, onSave, onCancel }) => {
@@ -18,12 +19,13 @@ export const AuthorView = ({ item, onSave, onCancel }) => {
             <p className="text-sm text-gray-500">{author.department}</p>
           </div>
         </div>
-        <button
+        <TooltipButton
+          className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           onClick={onCancel}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          tooltipText="Close"
         >
           <X className="w-5 h-5" />
-        </button>
+        </TooltipButton>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 mx-6 mb-6">
@@ -89,13 +91,14 @@ export const AuthorView = ({ item, onSave, onCancel }) => {
       </div>
 
       <div className="flex justify-end">
-        <button
+        <TooltipButton
           onClick={() => onSave(author)} // This will call startEditMode and pass the current author
           className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+          tooltipText="Edit Author"
         >
           <Edit2 className="w-4 h-4" />
           <span>Edit Author</span>
-        </button>
+        </TooltipButton>
       </div>
     </div>
   );

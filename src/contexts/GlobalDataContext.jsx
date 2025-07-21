@@ -48,11 +48,12 @@ export const GlobalDataProvider = ({ children }) => {
     const [authors, setAuthors] = useState(() => loadFromLocalStorage('globalAppData_authors', initialAuthors));
     const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', initialTestSetups));
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
-    const [selectedTestSetup, setSelectedTestSetup] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetup', null));
+    const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
     
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
+    const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
 
@@ -65,10 +66,11 @@ export const GlobalDataProvider = ({ children }) => {
             authors,
             testSetups,
             publications,
-            selectedTestSetup,
+            selectedTestSetupId,
             studyVariables,
             studyToStudyVariableMapping,
             studyToSensorMeasurementMapping,
+            sensorToProcessingProtocolMapping
         };
         
         localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
@@ -76,17 +78,19 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_authors', JSON.stringify(authors));
         localStorage.setItem('globalAppData_testSetups', JSON.stringify(testSetups));
         localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
-        localStorage.setItem('globalAppData_selectedTestSetup', JSON.stringify(selectedTestSetup));
+        localStorage.setItem('globalAppData_selectedTestSetupId', JSON.stringify(selectedTestSetupId));
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
+        localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
 
-        console.log("Global data saved to localStorage:", dataToStore);
+        // console.log("Global data saved to localStorage:", dataToStore);
 
     }, [
         studies, investigations, authors, testSetups,
-        publications, selectedTestSetup, studyVariables,
-        studyToStudyVariableMapping, studyToSensorMeasurementMapping
+        publications, selectedTestSetupId, studyVariables,
+        studyToStudyVariableMapping, studyToSensorMeasurementMapping,
+        sensorToProcessingProtocolMapping 
     ]);
 
 
@@ -97,10 +101,11 @@ export const GlobalDataProvider = ({ children }) => {
             investigations,
             authors,
             publications,
-            selectedTestSetup,
+            selectedTestSetupId,
             studyVariables,
             studyToStudyVariableMapping,
-            studyToSensorMeasurementMapping
+            studyToSensorMeasurementMapping,
+            sensorToProcessingProtocolMapping
         });
 
         console.log(
@@ -122,10 +127,11 @@ export const GlobalDataProvider = ({ children }) => {
         testSetups: [testSetups, setTestSetups],
         investigations: [investigations, setInvestigations],
         publications: [publications, setPublications],
-        selectedTestSetup: [selectedTestSetup, setSelectedTestSetup],
+        selectedTestSetupId: [selectedTestSetupId, setSelectedTestSetupId],
         studyVariables: [studyVariables, setStudyVariables],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
+        sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
         screenWidth: [screenWidth, setScreenWidth],
         submitData: [submitData]
     };
@@ -142,14 +148,16 @@ export const GlobalDataProvider = ({ children }) => {
         setAuthors,
         publications,
         setPublications,
-        selectedTestSetup,
-        setSelectedTestSetup,
+        selectedTestSetupId,
+        setSelectedTestSetupId,
         studyVariables,
         setStudyVariables,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping,
         studyToSensorMeasurementMapping,
         setStudyToSensorMeasurementMapping,
+        sensorToProcessingProtocolMapping,
+        setSensorToProcessingProtocolMapping,
         screenWidth,
         setScreenWidth,
         dataMap,

@@ -18,12 +18,9 @@ export function getStructuredVariables(studyVariables, studies, rawMeasurements)
     const {studyId, value} = measurement;
     const dynamicFieldId = measurement[Object.keys(measurement).find(k => k !== 'studyId' && k !== 'value')];
 
-    console.log("Dynamic field ID for measurement:", dynamicFieldId);
     if (!valueMap[dynamicFieldId]) valueMap[dynamicFieldId] = {};
     valueMap[dynamicFieldId][studyId] = value;
   });
-
-  console.log("Value map for grid view:", valueMap);
 
   return studyVariables.map((variable) => {
     const id = variable.id;

@@ -7,6 +7,7 @@ import TestSetupSelectionSlide from './TestSetupSelectionSlide.jsx';
 import StudySlide from './StudySlide.jsx';
 import StudyVariableSlide from './StudyVariableSlide.jsx';
 import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
+import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
 
 export const slides = [
   IntroductionSlide,
@@ -16,5 +17,6 @@ export const slides = [
   TestSetupSelectionSlide,
   StudySlide,
   StudyVariableSlide,
-  MeasurementOutputSlide
+  MeasurementOutputSlide,
+  ProcessingProtocolsSlide
 ];
