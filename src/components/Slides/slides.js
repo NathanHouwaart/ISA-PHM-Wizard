@@ -8,6 +8,7 @@ import StudySlide from './StudySlide.jsx';
 import StudyVariableSlide from './StudyVariableSlide.jsx';
 import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
 import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
+import ProcessingOutputSlide from './ProcessingOutputSlide.jsx';
 
 export const slides = [
   IntroductionSlide,
@@ -18,5 +19,6 @@ export const slides = [
   StudySlide,
   StudyVariableSlide,
   MeasurementOutputSlide,
-  ProcessingProtocolsSlide
+  ProcessingProtocolsSlide,
+  ProcessingOutputSlide
 ];

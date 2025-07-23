@@ -53,7 +53,8 @@ export const GlobalDataProvider = ({ children }) => {
     
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
-    const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
+    const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorProcessingMapping', []));
+    const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToAssayMapping', []));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
 
@@ -70,7 +71,8 @@ export const GlobalDataProvider = ({ children }) => {
             studyVariables,
             studyToStudyVariableMapping,
             studyToSensorMeasurementMapping,
-            sensorToProcessingProtocolMapping
+            studyToSensorProcessingMapping,
+            studyToAssayMapping
         };
         
         localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
@@ -82,7 +84,8 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
-        localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
+        localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
+        localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
 
         // console.log("Global data saved to localStorage:", dataToStore);
 
@@ -90,7 +93,7 @@ export const GlobalDataProvider = ({ children }) => {
         studies, investigations, authors, testSetups,
         publications, selectedTestSetupId, studyVariables,
         studyToStudyVariableMapping, studyToSensorMeasurementMapping,
-        sensorToProcessingProtocolMapping 
+        studyToSensorProcessingMapping, studyToAssayMapping
     ]);
 
 
@@ -105,7 +108,8 @@ export const GlobalDataProvider = ({ children }) => {
             studyVariables,
             studyToStudyVariableMapping,
             studyToSensorMeasurementMapping,
-            sensorToProcessingProtocolMapping
+            studyToSensorProcessingMapping,
+            studyToAssayMapping
         });
 
         console.log(
@@ -131,7 +135,8 @@ export const GlobalDataProvider = ({ children }) => {
         studyVariables: [studyVariables, setStudyVariables],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
-        sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
+        studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
+        studyToAssayMapping: [studyToAssayMapping, setStudyToAssayMapping],
         screenWidth: [screenWidth, setScreenWidth],
         submitData: [submitData]
     };
@@ -156,8 +161,10 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToStudyVariableMapping,
         studyToSensorMeasurementMapping,
         setStudyToSensorMeasurementMapping,
-        sensorToProcessingProtocolMapping,
-        setSensorToProcessingProtocolMapping,
+        studyToSensorProcessingMapping,
+        setStudyToSensorProcessingMapping,
+        studyToAssayMapping,
+        setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
         dataMap,
