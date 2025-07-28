@@ -1,0 +1,205 @@
+### INVESTIGATON DETAILS ###
+
+what is the title of the investigation?:Diagnostics on an E-motor-driven centrifugal pump set-up
+what is the description of the investigation?:The complete set-up contains four centrifugal pumps, each driven by an induction motor. Two measurement methods, four motor speeds, and 11 fault types can be induced at various severity levels.
+what is the submission date of the investigation?:2023-10-26
+what is the public release date of the investigation?:2023-12-17
+The current indentifier is i-eedcd47b-af51-4463-b6e0-2d32bdfcf310 do you want to change it? (y/n): n
+Do you want to add a publication? (y/n): y
+what is the title of the publication?:Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump
+what is the DOI of the publication?:
+what is the status of the publication?:published
+what is the author list of the publication? (every name should be comma seperated):S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga
+Do you want to add a comment to the publication? (y/n): n
+Do you want to add a contact? (y/n): y
+What is the contact's first name?: Sietze
+What is the contact's last name?: Bruinsma
+What are the contact's middle initials (if any)?:
+What is the contact's email address?:                                            
+What is the contact's phone number?:
+What is the contact's address?:
+What is the contact's affiliation?: University of Twente;Royal Netherlands Navy
+Enter a role for the contact (leave blank to finish): Corresponding Author
+Enter a role for the contact (leave blank to finish):
+Do you want to add a comment to the contact? (y/n): n
+Do you want to add another contact? (y/n): y
+What is the contact's first name?: Rinze
+What is the contact's last name?: Geertsma
+What are the contact's middle initials (if any)?:
+What is the contact's email address?: test123@live.nl
+What is the contact's phone number?: 1234560
+What is the contact's address?: Straat 123
+What is the contact's affiliation?: Netherlands Defence Academy
+Enter a role for the contact (leave blank to finish): Author
+Enter a role for the contact (leave blank to finish):
+Do you want to add a comment to the contact? (y/n):
+Please respond with 'y' or 'n'.
+Do you want to add a comment to the contact? (y/n): n
+Do you want to add another contact? (y/n): y        
+What is the contact's first name?: Richard
+What is the contact's last name?: Loendersloot
+What are the contact's middle initials (if any)?:
+What is the contact's email address?:
+What is the contact's phone number?:
+What is the contact's address?:
+What is the contact's affiliation?: University of Twente
+Enter a role for the contact (leave blank to finish): Author
+Enter a role for the contact (leave blank to finish):
+Do you want to add a comment to the contact? (y/n): n
+Do you want to add another contact? (y/n): y
+What is the contact's first name?: Tiedo
+What is the contact's last name?: Tinga
+What are the contact's middle initials (if any)?:
+What is the contact's email address?:
+What is the contact's phone number?:
+What is the contact's address?: Netherlands Defence Academy;University of Twente
+What is the contact's affiliation?: Netherlands Defence Academy;University of Twente
+Enter a role for the contact (leave blank to finish): Author 
+Enter a role for the contact (leave blank to finish):
+Do you want to add a comment to the contact? (y/n): n
+Do you want to add another contact? (y/n): n
+
+### TEST SETUP DETAILS ###
+
+What is the name of the test setup?: Techport
+What is the location of the test setup?: Amsterdam
+Do you want to add a characteristic to the test setup? (y/n): y
+What is the category of the characteristic?: Motor
+What is the value/name of the characteristic?: MG160MA4042-H3
+What is the unit of the characteristic? (leave blank if none):
+Do you want to add a comment to the characteristic? (y/n): n
+Do you want to add another characteristic to the test setup? (y/n): y
+What is the category of the characteristic?: Motor Bearing
+What is the value/name of the characteristic?: 6309.C4
+What is the unit of the characteristic? (leave blank if none):
+Do you want to add a comment to the characteristic? (y/n): n
+Do you want to add another characteristic to the test setup? (y/n): y
+What is the category of the characteristic?: Pump
+What is the value/name of the characteristic?: NK80-250/270 A2F2AE-SBQQE
+What is the unit of the characteristic? (leave blank if none):
+Do you want to add a comment to the characteristic? (y/n): n
+Do you want to add another characteristic to the test setup? (y/n): y
+What is the category of the characteristic?: Moter Speed Accuracy
+What is the value/name of the characteristic?: 5
+What is the unit of the characteristic? (leave blank if none): RPM
+Do you want to add a comment to the characteristic? (y/n): n
+Do you want to add another characteristic to the test setup? (y/n): n
+Do you want to add a sensor? (y/n): y
+What is the measurement type of the sensor?: vibration
+What is the measurement unit of the sensor?: g
+What is the description of the sensor?: a sensor that does this and that and this and that and this 
+What is the technology type of the sensor?: accelerometer
+What is the technology platform of the sensor?: Wilcoxon 786B-10
+What is the data acquisition unit of the sensor?: NI (USB-4432)
+What is the sampling rate of the sensor?: 2
+What is the sampling unit of the sensor?: kHz
+What is the sensor location of the sensor?: Electric Motor non-driven end bearing
+What is the location unit of the sensor?:
+What is the sensor orientation of the sensor?: Vertical
+What is the orientation unit of the sensor?:
+How many columns does the sensor output have?: 2
+What is the label of column 1?: Sample nr. [-]
+What is the label of column 2?: Vibration [g]
+Is the data of the sensor processed? (y/n): y
+what is the description how the data is processed?: Description of data processed, not sure
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): y
+What is the name of the processing step (e.g., 'filter type', 'chunk size')?: Filter Type
+What is the value for 'Filter Type'?: Butterworth 2nd order 1-10.000Hz
+What is the unit for 'Filter Type' (leave blank if none)?:
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): y
+What is the name of the processing step (e.g., 'filter type', 'chunk size')?: Chunk Size
+What is the value for 'Chunk Size'?: 12
+What is the unit for 'Chunk Size' (leave blank if none)?:
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): y
+What is the name of the processing step (e.g., 'filter type', 'chunk size')?: Scaling Range
+What is the value for 'Scaling Range'?: [-1,1]
+What is the unit for 'Scaling Range' (leave blank if none)?:
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): Scaling Resolution
+Please respond with 'y' or 'n'.
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): y
+What is the name of the processing step (e.g., 'filter type', 'chunk size')?: Scaling Resolution
+What is the value for 'Scaling Resolution'?: 24
+What is the unit for 'Scaling Resolution' (leave blank if none)?: bit
+Do you want to add a data processing step (e.g., filter type, chunk size, etc.)? (y/n): n
+Do you want to add another sensor? (y/n): n
+Do you want to add another test setup? (y/n): n
+
+### EXPERIMENT DETAILS ###
+
+What is the title of the experiment?: EXPERIMENT TITLE DETAILS, DOnt know
+What is the description of the experiment?: EXPERIMENT DESCRIPTION. Dont know
+What is the submission date of the experiment?: 2023-10-26
+What is the public release date of the experiment?: 2023-12-17
+What is the detail preparation of the experiment?: Fault_introduction.pdf
+Do you want to add a publication? (y/n): y
+what is the title of the publication?:Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump
+what is the DOI of the publication?:
+what is the status of the publication?:published
+what is the author list of the publication? (every name should be comma seperated):S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga
+Do you want to add a comment to the publication? (y/n): n
+is this the list of the contacts for the experiment?
+        1. Sietze Bruinsma
+        2. Rinze Geertsma
+        3. Richard Loendersloot
+        4. Tiedo Tinga
+ (y/n): y
+Select the experiment type:
+1. Diagnostic
+2. Constant degradation
+3. Time varying degradation
+Enter the number of the experiment type: 1
+What is the fault type?: Fault
+What is the fault position?: center
+What is the fault severity?: 4
+Do you want to add an operating condition to the test setup? (y/n): y
+What is the name of the operating condition (indepent variable)?: Motor Speed
+What is the value of the operating condition?: Operating Condition
+What is the unit of the operating condition (leave blank if none)?: RPM
+Do you want to add another operating condition to the test setup? (y/n): y
+What is the name of the operating condition (indepent variable)?: Discharge Pressure
+What is the value of the operating condition?: 1.4
+What is the unit of the operating condition (leave blank if none)?: bar
+Do you want to add another operating condition to the test setup? (y/n): y
+What is the name of the operating condition (indepent variable)?: Flow
+What is the value of the operating condition?: 140
+What is the unit of the operating condition (leave blank if none)?: m^3/h
+Do you want to add another operating condition to the test setup? (y/n): n
+Do you want to add a run? (y/n): y
+
+Sensor details:
+  Measurement type: vibration
+  Measurement unit: g
+  Description: a sensor that does this and that and this and that and this
+  Technology type: accelerometer
+  Technology platform: Wilcoxon 786B-10
+  Data acquisition unit: NI (USB-4432)
+  Sampling rate: 2
+  Sensor location: Electric Motor non-driven end bearing
+  Sensor orientation: Vertical
+  Sampling unit: kHz
+
+What is the raw file name?: Vibration_Motor-2_100_time-bearing bpfo 3-ch1 Raw
+What is the raw file location?: .
+What is the processed file name?: Vibration_Motor-2_100_time-bearingbpfo 3-ch1
+What is the processed file location?: .
+Do you want to add another run? (y/n): y
+
+Sensor details:
+  Measurement type: vibration
+  Measurement unit: g
+  Description: a sensor that does this and that and this and that and this
+  Technology type: accelerometer
+  Technology platform: Wilcoxon 786B-10
+  Data acquisition unit: NI (USB-4432)
+  Sampling rate: 2
+  Sensor location: Electric Motor non-driven end bearing
+  Sensor orientation: Vertical
+  Sampling unit: kHz
+
+What is the raw file name?: Vibration_Motor-2_100_time-bearing bpfo 3-ch1 Raw
+What is the raw file location?: .
+What is the processed file name?: ibration_Motor-2_100_time-bearingbpfo 3-ch1
+What is the processed file location?: .
+Do you want to add another run? (y/n): n 
+Do you want to add another experiment? (y/n): n
+### DONE ###
