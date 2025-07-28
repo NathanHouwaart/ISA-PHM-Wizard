@@ -1,0 +1,376 @@
+{
+    "identifier": "i-eedcd47b-af51-4463-b6e0-2d32bdfcf310",
+    "title": "Diagnostics on an E-motor-driven centrifugal pump set-up",
+    "description": "The complete set-up contains four centrifugal pumps, each driven by an induction motor. Two measurement methods, four motor speeds, and 11 fault types can be induced at various severity levels.",
+    "submission_date": "2023-10-26",
+    "public_release_date": "2023-12-17",
+    "contacts": [
+        {
+            "first_name": "Sietze",
+            "last_name": "Bruinsma",
+            "mid_initials": "",
+            "email": "",
+            "phone": "",
+            "address": "",
+            "affiliation": "University of Twente;Royal Netherlands Navy",
+            "roles": [
+                "Corresponding Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Rinze",
+            "last_name": "Geertsma",
+            "mid_initials": "",
+            "email": "test123@live.nl",
+            "phone": "1234560",
+            "address": "Straat 123",
+            "affiliation": "Netherlands Defence Academy",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Richard",
+            "last_name": "Loendersloot",
+            "mid_initials": "",
+            "email": "",
+            "phone": "",
+            "address": "",
+            "affiliation": "University of Twente",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        },
+        {
+            "first_name": "Tiedo",
+            "last_name": "Tinga",
+            "mid_initials": "",
+            "email": "",
+            "phone": "",
+            "address": "Netherlands Defence Academy;University of Twente",
+            "affiliation": "Netherlands Defence Academy;University of Twente",
+            "roles": [
+                "Author"
+            ],
+            "comments": []
+        }
+    ],
+    "publication": {
+        "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+        "doi": "",
+        "status": "published",
+        "author_list": "S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga",
+        "comments": []
+    },
+    "study_details": [
+        {
+            "title": "EXPERIMENT TITLE DETAILS, DOnt know",
+            "description": "EXPERIMENT DESCRIPTION. Dont know",
+            "submission_date": "2023-10-26",
+            "public_release_date": "2023-12-17",
+            "detail_preparation": "Fault_introduction.pdf",
+            "contacts": [
+                {
+                    "first_name": "Sietze",
+                    "last_name": "Bruinsma",
+                    "mid_initials": "",
+                    "email": "",
+                    "phone": "",
+                    "address": "",
+                    "affiliation": "University of Twente;Royal Netherlands Navy",
+                    "roles": [
+                        "Corresponding Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Rinze",
+                    "last_name": "Geertsma",
+                    "mid_initials": "",
+                    "email": "test123@live.nl",
+                    "phone": "1234560",
+                    "address": "Straat 123",
+                    "affiliation": "Netherlands Defence Academy",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Richard",
+                    "last_name": "Loendersloot",
+                    "mid_initials": "",
+                    "email": "",
+                    "phone": "",
+                    "address": "",
+                    "affiliation": "University of Twente",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                },
+                {
+                    "first_name": "Tiedo",
+                    "last_name": "Tinga",
+                    "mid_initials": "",
+                    "email": "",
+                    "phone": "",
+                    "address": "Netherlands Defence Academy;University of Twente",
+                    "affiliation": "Netherlands Defence Academy;University of Twente",
+                    "roles": [
+                        "Author"
+                    ],
+                    "comments": []
+                }
+            ],
+            "experiment_type": "Diagnostic",
+            "fault_type": "fault",
+            "fault_position": "center",
+            "fault_severity": "4",
+            "runs": [
+                {
+                    "run_conditions": [
+                        {
+                            "name": "Motor Speed",
+                            "value": "Operating Condition",
+                            "unit": "RPM"
+                        },
+                        {
+                            "name": "Discharge Pressure",
+                            "value": "1.4",
+                            "unit": "bar"
+                        },
+                        {
+                            "name": "Flow",
+                            "value": "140",
+                            "unit": "m^3/h"
+                        }
+                    ],
+                    "assay_details": [
+                        {
+                            "used_sensor": {
+                                "identifier": "Sensor_0_Techport",
+                                "measurement_type": "vibration",
+                                "measurement_unit": "g",
+                                "description": "a sensor that does this and that and this and that and this",
+                                "technology_type": "accelerometer",
+                                "technology_platform": "Wilcoxon 786B-10",
+                                "data_acquisition_unit": "NI (USB-4432)",
+                                "sampling_rate": "2",
+                                "sensor_location": "Electric Motor non-driven end bearing",
+                                "sensor_orientation": "Vertical",
+                                "sampling_unit": "kHz"
+                            },
+                            "file_details": {
+                                "file_parameters": [
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Filter Type",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "Butterworth 2nd order 1-10.000Hz",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Chunk Size",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "12",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Scaling Range",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "[-1,1]",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Scaling Resolution",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "24",
+                                            "unit": "bit",
+                                            "comments": []
+                                        }
+                                    }
+                                ],
+                                "number_of_columns": 2,
+                                "labels": [
+                                    "Sample nr. [-]",
+                                    "Vibration [g]"
+                                ],
+                                "raw_file_name": "Vibration_Motor-2_100_time-bearing bpfo 3-ch1 Raw",
+                                "raw_file_location": ".",
+                                "proccesed_file_name": "Vibration_Motor-2_100_time-bearingbpfo 3-ch1",
+                                "proccesed_file_location": "."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "run_conditions": [
+                        {
+                            "name": "Motor Speed",
+                            "value": "Operating Condition",
+                            "unit": "RPM"
+                        },
+                        {
+                            "name": "Discharge Pressure",
+                            "value": "1.4",
+                            "unit": "bar"
+                        },
+                        {
+                            "name": "Flow",
+                            "value": "140",
+                            "unit": "m^3/h"
+                        }
+                    ],
+                    "assay_details": [
+                        {
+                            "used_sensor": {
+                                "identifier": "Sensor_0_Techport",
+                                "measurement_type": "vibration",
+                                "measurement_unit": "g",
+                                "description": "a sensor that does this and that and this and that and this",
+                                "technology_type": "accelerometer",
+                                "technology_platform": "Wilcoxon 786B-10",
+                                "data_acquisition_unit": "NI (USB-4432)",
+                                "sampling_rate": "2",
+                                "sensor_location": "Electric Motor non-driven end bearing",
+                                "sensor_orientation": "Vertical",
+                                "sampling_unit": "kHz"
+                            },
+                            "file_details": {
+                                "file_parameters": [
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Filter Type",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "Butterworth 2nd order 1-10.000Hz",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Chunk Size",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "12",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Scaling Range",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "[-1,1]",
+                                            "unit": "",
+                                            "comments": []
+                                        }
+                                    },
+                                    {
+                                        "parameter": {
+                                            "parameter_name": "Scaling Resolution",
+                                            "comments": []
+                                        },
+                                        "value": {
+                                            "value": "24",
+                                            "unit": "bit",
+                                            "comments": []
+                                        }
+                                    }
+                                ],
+                                "number_of_columns": 2,
+                                "labels": [
+                                    "Sample nr. [-]",
+                                    "Vibration [g]"
+                                ],
+                                "raw_file_name": "Vibration_Motor-2_100_time-bearing bpfo 3-ch1 Raw",
+                                "raw_file_location": ".",
+                                "proccesed_file_name": "ibration_Motor-2_100_time-bearingbpfo 3-ch1",
+                                "proccesed_file_location": "."
+                            }
+                        }
+                    ]
+                }
+            ],
+            "used_setup": {
+                "name": "Techport",
+                "location": "Amsterdam",
+                "characteristics": [
+                    {
+                        "category": "Motor",
+                        "value": "MG160MA4042-H3",
+                        "unit": "",
+                        "comments": []
+                    },
+                    {
+                        "category": "Motor Bearing",
+                        "value": "6309.C4",
+                        "unit": "",
+                        "comments": []
+                    },
+                    {
+                        "category": "Pump",
+                        "value": "NK80-250/270 A2F2AE-SBQQE",
+                        "unit": "",
+                        "comments": []
+                    },
+                    {
+                        "category": "Moter Speed Accuracy",
+                        "value": "5",
+                        "unit": "RPM",
+                        "comments": []
+                    }
+                ],
+                "number_of_sensors": 1,
+                "sensors": [
+                    {
+                        "identifier": "Sensor_0_Techport",
+                        "measurement_type": "vibration",
+                        "measurement_unit": "g",
+                        "description": "a sensor that does this and that and this and that and this",
+                        "technology_type": "accelerometer",
+                        "technology_platform": "Wilcoxon 786B-10",
+                        "data_acquisition_unit": "NI (USB-4432)",
+                        "sampling_rate": "2",
+                        "sensor_location": "Electric Motor non-driven end bearing",
+                        "sensor_orientation": "Vertical",
+                        "sampling_unit": "kHz"
+                    }
+                ]
+            },
+            "publication": {
+                "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+                "doi": "",
+                "status": "published",
+                "author_list": "S. Bruinsma;R. Geertsma;R. Loendersloot;T.Tinga",
+                "comments": []
+            }
+        }
+    ]
+}
