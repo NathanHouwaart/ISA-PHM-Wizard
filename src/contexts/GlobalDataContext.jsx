@@ -122,12 +122,24 @@ export const GlobalDataProvider = ({ children }) => {
                 "public_release_date": investigations.publicReleaseDate,
                 "publications": publications,
                 "authors": authors,
+                "study_variables": studyVariables,
                 "studies": [
                     studies.map(study => ({
                         ...study,
                         publications,
                         authors,
-                        "used_setup" : testSetups.find(setup => setup.id === selectedTestSetupId),
+                        "used_setup": testSetups.find(setup => setup.id === selectedTestSetupId),
+                        "study_to_study_variable_mapping": studyToStudyVariableMapping
+                            .filter(mapping => mapping.studyId === study.id)
+                            .map(mapping => {
+                                const variable = studyVariables.find(v => v.id === mapping.studyVariableId);
+                                return {
+                                    studyId: mapping.studyId,
+                                    studyVariableId: mapping.studyVariableId,
+                                    value: mapping.value,
+                                    variableName: variable?.name || "Unknown Variable"
+                                };
+                            })
                     }))
                 ]
             }, null, 2)
