@@ -10,6 +10,7 @@ import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfil
 import { Buffer } from 'buffer'; // Import Buffer here
 
 export default defineConfig({
+  base: '/ISA-PHM-Wizard/',
   plugins: [
     react(),
     tailwindcss(),

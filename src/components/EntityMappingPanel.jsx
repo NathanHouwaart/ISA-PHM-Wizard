@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import EditVariableModal from './EditModal';
-import { Edit, Edit2, Plus, PlusCircle, Trash2 } from 'lucide-react';
+import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
 import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
@@ -34,7 +34,7 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                                 : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                                 }`}
                         >
-                            { tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name }
+                            {tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name}
                         </button>
                     ))}
                 </div>
@@ -66,12 +66,10 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                     }
                 </div>
             ) : (
-                <div className='mx-auto'>
-                    <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                        <PlusCircle className="w-16 h-16 mb-4 text-gray-300" />
-                        <p>No item selected or available.</p>
-                        <p>Click 'Add New' to get started!</p>
-                    </div>
+                <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
+                    <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500"></PlusCircleIcon>
+                    <p>No test setup selected</p>
+                    <p>Go to the 'Test-Setup' slide (5) and select a test-setup</p>
                 </div>
             )}
         </div>

@@ -8,7 +8,7 @@ const root = ReactDOM.createRoot(container); // ✅ fix here
 
 root.render(
     <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/ISA-PHM-Wizard">
         <App />
     </BrowserRouter>
     </React.StrictMode>
