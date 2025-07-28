@@ -24,7 +24,7 @@ import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/u
 import isEqual from 'lodash.isequal';
 
 
-export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
     const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
 
@@ -36,16 +36,16 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
         testSetups,
         setScreenWidth,
         selectedTestSetupId,
-        studyToSensorProcessingMapping,
-        setStudyToSensorProcessingMapping,
+        studyToAssayMapping,
+        setStudyToAssayMapping,
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
     useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 9) {
+        if (selectedTab === 'grid-view' && currentPage === 10) {
             setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 9) {
+        } else if (currentPage === 10) {
             setScreenWidth("max-w-5xl");
         }
     }, [selectedTab, currentPage, setScreenWidth]);
@@ -57,11 +57,11 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
 
     // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
-        if (!selectedTestSetup || !studies || !studyToSensorProcessingMapping) {
+        if (!selectedTestSetup || !studies || !studyToAssayMapping) {
             return [];
         }
-        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorProcessingMapping);
-    }, [studies, selectedTestSetup, studyToSensorProcessingMapping]);
+        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToAssayMapping);
+    }, [studies, selectedTestSetup, studyToAssayMapping]);
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
@@ -79,7 +79,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
         }
 
         const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-        setStudyToSensorProcessingMapping(flattenedMappings);
+        setStudyToAssayMapping(flattenedMappings);
 
     }, [processedData, studies]);
 
@@ -122,11 +122,11 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Processing Protocol Output
+                Assay Output
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and edit the output of processing protocols across different studies. You can switch between a simple view and a grid view for better data management.
+                This slide allows you to view and edit the Assay Outputs across different studies. You can switch between a simple view and a grid view for better data management.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
@@ -147,7 +147,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToSensorProcessingMapping}
+                        mappings={studyToAssayMapping}
                         handleInputChange={handleInputChange}
                         disableAdd
                     />
@@ -167,6 +167,6 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
     );
 });
 
-ProcessingOutputSlide.displayName = "Processing Output Slide"; // Set display name for better debugging
+AssaySlide.displayName = "Assay Slide"; // Set display name for better debugging
 
-export default ProcessingOutputSlide;
+export default AssaySlide;

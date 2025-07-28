@@ -41,7 +41,7 @@ export const GlobalDataProvider = ({ children }) => {
         acc[field.id] = ''; // Initialize each field with an empty string
         return acc;
     }, {});
-    
+
     // Lazy initialization for all state variables from localStorage
     const [studies, setStudies] = useState(() => loadFromLocalStorage('globalAppData_studies', initialStudies));
     const [investigations, setInvestigations] = useState(() => loadFromLocalStorage('globalAppData_investigations', initialFormState));
@@ -50,7 +50,7 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
-    
+
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
     const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorProcessingMapping', []));
@@ -74,7 +74,7 @@ export const GlobalDataProvider = ({ children }) => {
             studyToSensorProcessingMapping,
             studyToAssayMapping
         };
-        
+
         localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
         localStorage.setItem('globalAppData_investigations', JSON.stringify(investigations));
         localStorage.setItem('globalAppData_authors', JSON.stringify(authors));
@@ -121,6 +121,15 @@ export const GlobalDataProvider = ({ children }) => {
                 "submission_date": investigations.submissionDate,
                 "public_release_date": investigations.publicReleaseDate,
                 "publications": publications,
+                "authors": authors,
+                "studies": [
+                    studies.map(study => ({
+                        ...study,
+                        publications,
+                        authors,
+                        "used_setup" : testSetups.find(setup => setup.id === selectedTestSetupId),
+                    }))
+                ]
             }, null, 2)
         )
     }
