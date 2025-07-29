@@ -102,6 +102,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                 }
                 return testSetup;
             });
+            console.log("Updated Test Setups", updatedTestSetups);
             return updatedTestSetups;
         });
 
@@ -126,26 +127,26 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
             },
             { prop: 'filterType', name: 'Filter Type',
                  children : [
-                    { prop: 'filterTypeSpecification', name: 'Specification', size: 138},
-                    { prop: 'filterTypeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                    { prop: 'processingProtocolFilterTypeSpecification', name: 'Specification', size: 138},
+                    { prop: 'processingProtocolFilterTypeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
                 ]
             },
             { prop: 'chunkSize', name: 'Chunk Size',
                 children : [
-                    { prop: 'chunkSizeSpecification', name: 'Specification', size: 138},
-                    { prop: 'chunkSizeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                    { prop: 'processingProtocolChunkSizeSpecification', name: 'Specification', size: 138},
+                    { prop: 'processingProtocolChunkSizeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
                 ]
             },
             { prop: 'scalingRange', name: 'Scaling Range', 
                 children : [
-                    { prop: 'scalingRangeSpecification', name: 'Specification', size: 138},
-                    { prop: 'scalingRangeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
+                    { prop: 'processingProtocolScalingRangeSpecification', name: 'Specification', size: 138},
+                    { prop: 'processingProtocolScalingRangeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
                 ]
             },
             { prop: 'scalingResolution', name: 'Scaling Resolution', 
                 children : [
-                    { prop: 'scalingResolutionSpecification', name: 'Specification', size: 138},
-                    { prop: 'scalingResolutionUnit', name: 'Unit', size: 50 }
+                    { prop: 'processingProtocolScalingResolutionSpecification', name: 'Specification', size: 138},
+                    { prop: 'processingProtocolScalingResolutionUnit', name: 'Unit', size: 50 }
                 ]
             },
         ])
@@ -157,10 +158,13 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
             const { name, value } = event.target;
 
+            console.log("Input Change", index, name, value);
+
             newData[index] = {
                 ...newData[index],
                 [name]: value
             };
+            console.log("Updated Data", newData);
             return newData;
         });
     };

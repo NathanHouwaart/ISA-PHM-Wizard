@@ -30,64 +30,64 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                             label="Filter Type Specification"
-                            name={`filterTypeSpecification`}
-                            value={item.filterTypeSpecification || ''}
+                            name={`processingProtocolFilterTypeSpecification`}
+                            value={item.processingProtocolFilterTypeSpecification || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter filter type"
                         />
 
                         <FormField
                             label="Filter Type Unit"
-                            name={`filterTypeUnit`}
-                            value={item.filterTypeUnit || ''}
+                            name={`processingProtocolFilterTypeUnit`}
+                            value={item.processingProtocolFilterTypeUnit || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter filter type unit"
                         />
 
                         <FormField
                             label="Chunk Size Specification"
-                            name={`chunkSizeSpecification`}
-                            value={item.chunkSizeSpecification || ''}
+                            name={`processingProtocolChunkSizeSpecification`}
+                            value={item.processingProtocolChunkSizeSpecification || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter chunk size specification"
                         />
 
                         <FormField
                             label="Chunk Size Unit"
-                            name={`chunkSizeUnit`}
-                            value={item.chunkSizeUnit || ''}
+                            name={`processingProtocolChunkSizeUnit`}
+                            value={item.processingProtocolChunkSizeUnit || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter chunk size unit"
                         />
 
                         <FormField
                             label="Scaling Range Specification"
-                            name={`scalingRangeSpecification`}
-                            value={item.scalingRangeSpecification || ''}
+                            name={`processingProtocolScalingRangeSpecification`}
+                            value={item.processingProtocolScalingRangeSpecification || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter scaling range specification"
                         />
 
                         <FormField
                             label="Scaling Range Unit"
-                            name={`scalingRangeUnit`}
-                            value={item.scalingRangeUnit || ''}
+                            name={`processingProtocolScalingRangeUnit`}
+                            value={item.processingProtocolScalingRangeUnit || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter scaling range unit"
                         />
 
                         <FormField
                             label="Scaling Resolution Specification"
-                            name={`scalingResolutionSpecification`}
-                            value={item.scalingResolutionSpecification || ''}
+                            name={`processingProtocolScalingResolutionSpecification`}
+                            value={item.processingProtocolScalingResolutionSpecification || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter scaling resolution specification"
                         />
 
                         <FormField
                             label="Scaling Resolution Unit"
-                            name={`scalingResolutionUnit`}
-                            value={item.scalingResolutionUnit || ''}
+                            name={`processingProtocolScalingResolutionUnit`}
+                            value={item.processingProtocolScalingResolutionUnit || ''}
                             onChange={(e) => handleInputChange(itemIndex, e)}
                             placeholder="Enter scaling resolution unit"
                         />

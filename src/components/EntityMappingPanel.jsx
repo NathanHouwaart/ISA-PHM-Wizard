@@ -6,8 +6,8 @@ import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
 import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
-
 export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false }) {
+
 
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
 

@@ -53,6 +53,7 @@ export const GlobalDataProvider = ({ children }) => {
 
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
+    const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
     const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorProcessingMapping', []));
     const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToAssayMapping', []));
 
@@ -61,19 +62,19 @@ export const GlobalDataProvider = ({ children }) => {
     // Effect for saving all data to local storage
     // This useEffect will run whenever any of its dependencies change, saving the latest state.
     useEffect(() => {
-        const dataToStore = {
-            studies,
-            investigations,
-            authors,
-            testSetups,
-            publications,
-            selectedTestSetupId,
-            studyVariables,
-            studyToStudyVariableMapping,
-            studyToSensorMeasurementMapping,
-            studyToSensorProcessingMapping,
-            studyToAssayMapping
-        };
+        // const dataToStore = {
+        //     studies,
+        //     investigations,
+        //     authors,
+        //     testSetups,
+        //     publications,
+        //     selectedTestSetupId,
+        //     studyVariables,
+        //     studyToStudyVariableMapping,
+        //     studyToSensorMeasurementMapping,
+        //     studyToSensorProcessingMapping,
+        //     studyToAssayMapping
+        // };
 
         localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
         localStorage.setItem('globalAppData_investigations', JSON.stringify(investigations));
@@ -84,6 +85,7 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
+        localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
         localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
         localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
 
@@ -93,7 +95,8 @@ export const GlobalDataProvider = ({ children }) => {
         studies, investigations, authors, testSetups,
         publications, selectedTestSetupId, studyVariables,
         studyToStudyVariableMapping, studyToSensorMeasurementMapping,
-        studyToSensorProcessingMapping, studyToAssayMapping
+        sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
+        studyToAssayMapping
     ]);
 
 
@@ -139,10 +142,26 @@ export const GlobalDataProvider = ({ children }) => {
                                     value: mapping.value,
                                     variableName: variable?.name || "Unknown Variable"
                                 };
-                            })
+                            }),
+                        "assay_details": [
+                            testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => ({
+                                "used_sensor": Object.fromEntries(
+                                    Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
+                                ),
+                                "file_details": {
+                                    "file_parameters": Object.keys(sensor).filter(item => item.startsWith('processingProtocol')).map(item => ({
+                                        "parameter": item,
+                                        "value": sensor[item]
+                                    }))
+                                },
+                                "raw_file_name": studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                                "processed_file_name": studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                                "assay_file_name": studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                            }))
+                        ]
                     }))
                 ]
-            }, null, 2)
+            }, null, 4)
         )
     }
 
@@ -156,6 +175,7 @@ export const GlobalDataProvider = ({ children }) => {
         studyVariables: [studyVariables, setStudyVariables],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
+        sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
         studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
         studyToAssayMapping: [studyToAssayMapping, setStudyToAssayMapping],
         screenWidth: [screenWidth, setScreenWidth],
@@ -182,6 +202,8 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToStudyVariableMapping,
         studyToSensorMeasurementMapping,
         setStudyToSensorMeasurementMapping,
+        sensorToProcessingProtocolMapping,
+        setSensorToProcessingProtocolMapping,
         studyToSensorProcessingMapping,
         setStudyToSensorProcessingMapping,
         studyToAssayMapping,
