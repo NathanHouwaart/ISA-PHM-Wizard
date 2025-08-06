@@ -100,69 +100,88 @@ export const GlobalDataProvider = ({ children }) => {
     ]);
 
 
-    function submitData() {
+    async function submitData() {
         // Function to handle data submission
-        console.log("Data submitted:", {
-            studies,
-            investigations,
-            authors,
-            publications,
-            selectedTestSetupId,
-            studyVariables,
-            studyToStudyVariableMapping,
-            studyToSensorMeasurementMapping,
-            studyToSensorProcessingMapping,
-            studyToAssayMapping
-        });
 
-        console.log(
-            JSON.stringify({
-                "identifier": investigations.investigationIdentifier,
-                "title": investigations.investigationTitle,
-                "description": investigations.investigationDescription,
-                "license": investigations.license,
-                "submission_date": investigations.submissionDate,
-                "public_release_date": investigations.publicReleaseDate,
-                "publications": publications,
-                "authors": authors,
-                "study_variables": studyVariables,
-                "studies": [
-                    studies.map(study => ({
-                        ...study,
-                        publications,
-                        authors,
-                        "used_setup": testSetups.find(setup => setup.id === selectedTestSetupId),
-                        "study_to_study_variable_mapping": studyToStudyVariableMapping
-                            .filter(mapping => mapping.studyId === study.id)
-                            .map(mapping => {
-                                const variable = studyVariables.find(v => v.id === mapping.studyVariableId);
-                                return {
-                                    studyId: mapping.studyId,
-                                    studyVariableId: mapping.studyVariableId,
-                                    value: mapping.value,
-                                    variableName: variable?.name || "Unknown Variable"
-                                };
-                            }),
-                        "assay_details": [
-                            testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => ({
-                                "used_sensor": Object.fromEntries(
-                                    Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-                                ),
-                                "file_details": {
-                                    "file_parameters": Object.keys(sensor).filter(item => item.startsWith('processingProtocol')).map(item => ({
-                                        "parameter": item,
-                                        "value": sensor[item]
-                                    }))
-                                },
-                                "raw_file_name": studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                                "processed_file_name": studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                                "assay_file_name": studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                            }))
-                        ]
-                    }))
-                ]
-            }, null, 4)
-        )
+        const jsonData = {
+            "identifier": investigations.investigationIdentifier,
+            "title": investigations.investigationTitle,
+            "description": investigations.investigationDescription,
+            "license": investigations.license,
+            "submission_date": investigations.submissionDate,
+            "public_release_date": investigations.publicReleaseDate,
+            "publications": publications,
+            "authors": authors,
+            "study_variables": studyVariables,
+            "studies": studies.map(study => ({
+                ...study,
+                publications,
+                authors,
+                "used_setup": testSetups.find(setup => setup.id === selectedTestSetupId),
+                "study_to_study_variable_mapping": studyToStudyVariableMapping
+                    .filter(mapping => mapping.studyId === study.id)
+                    .map(mapping => {
+                        const variable = studyVariables.find(v => v.id === mapping.studyVariableId);
+                        return {
+                            studyId: mapping.studyId,
+                            studyVariableId: mapping.studyVariableId,
+                            value: mapping.value,
+                            variableName: variable?.name || "Unknown Variable"
+                        };
+                    }),
+                "assay_details": testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => ({
+                    "used_sensor": Object.fromEntries(
+                        Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
+                    ),
+                    "file_details": {
+                        "file_parameters": Object.keys(sensor).filter(item => item.startsWith('processingProtocol')).map(item => ({
+                            "parameter": item,
+                            "value": sensor[item]
+                        }))
+                    },
+                    "raw_file_name": studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                    "processed_file_name": studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                    "assay_file_name": studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                }))
+            }))
+        };
+
+        console.log("Submitting data:", JSON.stringify(jsonData, null, 2));
+
+        try {
+            // 2. Convert to Blob and FormData
+            const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+            const formData = new FormData();
+            formData.append("file", blob, "input.json");
+
+            // 3. Submit to FastAPI endpoint
+            const response = await fetch("http://localhost:8000/convert", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("Conversion failed");
+            }
+
+            const result = await response.json();
+
+            // 4. Handle converted result
+            console.log("Converted Result:", result);
+
+            // Example: Download converted JSON
+            const convertedBlob = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
+            const url = URL.createObjectURL(convertedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'isa-phm-out.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error during conversion:", error);
+            alert("Failed to convert data. See console for details.");
+        }
+
     }
 
     const dataMap = {
