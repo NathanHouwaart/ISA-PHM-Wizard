@@ -1,15 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx'; // ✅ fix here
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 
 const container = document.getElementById("root");
 const root = ReactDOM.createRoot(container); // ✅ fix here
 
+// Use HashRouter for guaranteed compatibility with static hosting
+const Router = HashRouter;
+
 root.render(
     <React.StrictMode>
-    <BrowserRouter basename="/ISA-PHM-Wizard">
+    {/* <Router basename="/ISA-PHM-Wizard"> */}[]
+    <Router>
         <App />
-    </BrowserRouter>
+    </Router>
     </React.StrictMode>
 );
