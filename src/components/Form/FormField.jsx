@@ -4,6 +4,7 @@ import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } f
 import LicensePicker from './LicensePicker';
 import { cn } from '../../utils/utils';
 import TooltipButton from '../Widgets/TooltipButton';
+import { X } from 'lucide-react';
 
 function FormField({
     name,
@@ -15,6 +16,9 @@ function FormField({
     explanation,
     example,
     type = 'text',        // 'text', 'textarea', 'date', 'email', 'password', etc.
+    tags = [],
+    onAddTag,
+    onRemoveTag,
     rows = 3,             // for textarea
     className = '',
 }) {
@@ -27,6 +31,48 @@ function FormField({
     const renderInput = () => {
         const baseClasses = "w-full px-3 text-base bg-white py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none";
         switch (type) {
+            case 'tags':
+                const [inputValue, setInputValue] = useState('');
+
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        const newTag = inputValue.trim();
+                        if (newTag && !tags.includes(newTag)) {
+                            onAddTag(newTag);
+                            setInputValue('');
+                        }
+                    }
+                };
+
+                return (
+                    <div className="w-full flex flex-wrap items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white">
+                        {tags.map((tag, index) => (
+                            <span
+                                key={tag + index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                            >
+                                {tag}
+                                <button
+                                    type="button"
+                                    onClick={() => onRemoveTag(tag)}
+                                    className="ml-2 -mr-0.5 h-4 w-4 inline-flex items-center justify-center rounded-full bg-indigo-200 text-indigo-600 hover:bg-indigo-300 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                >
+                                    <span className="sr-only">Remove {tag}</span>
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </span>
+                        ))}
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="flex-grow min-w-0 bg-transparent py-0 border-0 focus:ring-0 focus:border-0 outline-none"
+                            placeholder={placeholder}
+                        />
+                    </div>
+                );
             case 'textarea':
                 return (
                     <textarea

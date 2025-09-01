@@ -19,7 +19,7 @@ export function TagInput({
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (inputValue.length > 0) {
+    if (inputValue.length > 0 && availableOptions?.length > 0) {
       const filtered = availableOptions
         .filter(author =>
           formatAuthorName(author).toLowerCase().includes(inputValue.toLowerCase()) &&

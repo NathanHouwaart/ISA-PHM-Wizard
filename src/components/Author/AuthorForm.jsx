@@ -3,22 +3,25 @@ import { X, Save } from "lucide-react";
 
 import authorsFormFields from "../../data/AuthorFormFields.json"
 import FormField from "../Form/FormField";
+import { TagInput } from "../Form/TagInput";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
+import { ArbitraryTagInput } from "../Form/ArbitraryTagInput";
 
 export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const [formData, setFormData] = useState({
-       id: item?.id || '',
-            firstName: item?.firstName || '',
-            midInitials: item?.midInitials || '',
-            lastName: item?.lastName || '',
-            email: item?.email || '',
-            phone: item?.phone || '',
-            fax: item?.fax || '',
-            role: item?.role || '',
-            address: item?.address || '',
-            orcid: item?.orcid || ''
+        id: item?.id || '',
+        firstName: item?.firstName || '',
+        midInitials: item?.midInitials || '',
+        lastName: item?.lastName || '',
+        email: item?.email || '',
+        phone: item?.phone || '',
+        fax: item?.fax || '',
+        role: item?.role || '',
+        address: item?.address || '',
+        orcid: item?.orcid || '',
+        affiliations: item?.affiliations || [],
     });
 
     const handleSubmit = (e) => {
@@ -41,6 +44,20 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             ...formData,
             [e.target.name]: e.target.value
         });
+    };
+
+    const handleAddAffiliation = (affiliation) => {
+        setFormData(prevData => ({
+            ...prevData,
+            affiliations: [...(prevData.affiliations || []), affiliation]
+        }));
+    };
+
+    const handleRemoveAffiliation = (affiliationToRemove) => {
+        setFormData(prevData => ({
+            ...prevData,
+            affiliations: prevData.affiliations.filter(affiliation => affiliation !== affiliationToRemove)
+        }));
     };
 
     return (
@@ -151,6 +168,18 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         type='text'
                         placeholder="https://orcid.org/0000-0000-0000-0000"
                     />
+
+                    <div className="py-2">
+                        <FormField
+                            name="affiliations"
+                            label="Affiliations"
+                            placeholder="Add an affiliation and press Enter or comma"
+                            tags={formData.affiliations}
+                            onAddTag={handleAddAffiliation}
+                            onRemoveTag={handleRemoveAffiliation}
+                            type="tags"
+                        />
+                    </div>
 
                 </div>
 

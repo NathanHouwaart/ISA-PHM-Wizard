@@ -1,4 +1,4 @@
-import { X, Mail, User, MapPin, Calendar, Edit2, Smartphone, Printer, Fingerprint } from "lucide-react";
+import { X, Mail, User, MapPin, Calendar, Edit2, Smartphone, Printer, Fingerprint, BriefcaseBusiness } from "lucide-react";
 import TooltipButton from "../Widgets/TooltipButton";
 
 
@@ -85,6 +85,16 @@ export const AuthorView = ({ item, onSave, onCancel }) => {
                 <a href={`https://orcid.org/${author.orcid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
                   {author.orcid}
                 </a>
+              </div>
+            </div>
+          )}
+
+          {author.affiliations && (
+            <div className="flex items-center space-x-3">
+              <BriefcaseBusiness className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Affiliation</p>
+                  {author.affiliations.join(', ')}
               </div>
             </div>
           )}
