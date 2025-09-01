@@ -11,7 +11,7 @@ const Router = HashRouter;
 
 root.render(
     <React.StrictMode>
-    {/* <Router basename="/ISA-PHM-Wizard"> */}[]
+    {/* <Router basename="/ISA-PHM-Wizard"> */}
     <Router>
         <App />
     </Router>

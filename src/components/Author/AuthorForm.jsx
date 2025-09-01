@@ -6,7 +6,6 @@ import FormField from "../Form/FormField";
 import { TagInput } from "../Form/TagInput";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
-import { ArbitraryTagInput } from "../Form/ArbitraryTagInput";
 
 export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
