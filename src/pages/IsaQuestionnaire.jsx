@@ -36,9 +36,9 @@ export const IsaQuestionnaire = () => {
   const {submitData} = useGlobalDataContext();
 
   const handleSubmit = () => {
-    alert('Form submitted! Check console for data.');
     // In a real application, you'd collect data from all forms here
     submitData();
+    alert('Form submitted! Check console for data. Download should start automatically.');
   };
 
   return (
