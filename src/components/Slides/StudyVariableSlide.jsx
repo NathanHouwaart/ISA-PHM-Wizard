@@ -54,7 +54,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
     const [processedData, setProcessedData] = useState([]);
     const [columns, setColumns] = useState([]);
-    const isUpdatingFromGlobal = useRef(false);
+    const lastGlobalData = useRef(null); // Track last global state
+
 
     // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
@@ -64,23 +65,26 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
-        if (!isEqual(processedData, gridDataFromGlobal)) {
-            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
+        // Only sync if global data actually changed (not just processedData)
+        if (!isEqual(lastGlobalData.current, gridDataFromGlobal)) {
+            console.log("Updating grid data from global state:", gridDataFromGlobal);
+            lastGlobalData.current = gridDataFromGlobal; // Store new global state
             setProcessedData(gridDataFromGlobal);
         }
-    }, [gridDataFromGlobal]); // Depend on the memoized global data for updates
+    }, [gridDataFromGlobal]);
 
     // --------- Grid → Global Sync ---------
     useEffect(() => {
-        if (isUpdatingFromGlobal.current) {
-            isUpdatingFromGlobal.current = false;
+        // Skip if no data or if processedData matches last known global state
+        if (processedData.length === 0 || isEqual(processedData, lastGlobalData.current)) {
             return;
         }
 
+        // This update came from grid, sync to global
         const flattened = flattenGridDataToMappings(processedData, studies);
         setStudyToStudyVariableMapping(flattened);
 
-    }, [processedData, studies, studyVariables]); // Depend on processedData and relevant setters/state
+    }, [processedData, studies]);
 
 
     // Standalone Effect to initialize columns for grid view
@@ -153,6 +157,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                     <GridTable
                         items={processedData}
                         setItems={setProcessedData}
+                        itemHook={useVariables}
                         columns={columns}
                     />
                 </TabPanel>

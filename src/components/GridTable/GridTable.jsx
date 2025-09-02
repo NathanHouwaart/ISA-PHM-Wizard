@@ -7,7 +7,9 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { v4 as uuidv4 } from 'uuid';
 import TooltipButton from '../Widgets/TooltipButton';
 
-export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns, disableAdd = false, plugins }, ref) => {
+export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook, columns, disableAdd = false, plugins }, ref) => {
+
+    const {addItem, removeItem } = itemHook ? itemHook() : { addItem: null, removeItem: null };
 
     const gridRef = useRef(null);
     const cursorPosition = useRef(null);
@@ -70,7 +72,6 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
             } else {
                 startCol = cursorPosition.current.colIndex + colOffset;
             }
-
 
             // Save for undo
             pushToHistory(items);
@@ -189,6 +190,8 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
 
     const addRow = () => {
         // Before changing the state, push the current state to history
+        console.log("Adding row");
+        console.log("Current items:", items[0]);
         pushToHistory(items);
 
         const newRow = columns.reduce((acc, col) => {
@@ -196,10 +199,21 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, columns,
             return acc;
         }, {});
 
+        console.log("New Row before ID:", newRow);
+        
         newRow.id = uuidv4(); // Ensure each new row has a unique ID
 
-        setItems((prev) => [...prev, newRow]);
+        console.log("New Row after ID:", newRow);
+
+        setItems((prev) => {
+            console.log("Previous items in setItems:", [...prev, newRow]);
+            return ( [...prev, newRow] )
+        });
     };
+
+    useEffect(() => {
+        console.log("Items updated:", items);
+    }, [items]);
 
     const removeRow = () => {
         if (items.length === 0) return; // Prevent removing from an empty grid
