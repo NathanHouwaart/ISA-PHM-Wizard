@@ -183,7 +183,7 @@ function FormField({
                                     key={(typeof tag === 'string' ? tag : tag.id) + '-' + index}
                                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 flex-shrink-0"
                                 >
-                                    {formatTagDisplay(tag)}
+                                    {index+1}. {formatTagDisplay(tag)}
                                     <button
                                         type="button"
                                         onClick={(e) => {
