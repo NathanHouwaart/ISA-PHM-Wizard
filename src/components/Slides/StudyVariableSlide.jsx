@@ -28,15 +28,13 @@ import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json
 
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
-
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
-
+    const [selectedTab, setSelectedTab] = useState('simple-view');
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     const {
         studies,
-        studyVariables,
+        studyVariables, // This should be in flattened format
         setScreenWidth,
         setStudyVariables,
         studyToStudyVariableMapping,
@@ -51,90 +49,66 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
-
-    const [processedData, setProcessedData] = useState([]);
     const [columns, setColumns] = useState([]);
-    const lastGlobalData = useRef(null); // Track last global state
 
-
-    // --------- Global → Grid Sync ---------
-    const gridDataFromGlobal = useMemo(() => {
+    // --------- Simple One-Way Sync: Global State IS the Grid Data ---------
+    const gridData = useMemo(() => {
         return getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
     }, [studyVariables, studies, studyToStudyVariableMapping]);
 
-
-    // --- Global Data to Local Grid Data Sync ---
-    useEffect(() => {
-        // Only sync if global data actually changed (not just processedData)
-        if (!isEqual(lastGlobalData.current, gridDataFromGlobal)) {
-            console.log("Updating grid data from global state:", gridDataFromGlobal);
-            lastGlobalData.current = gridDataFromGlobal; // Store new global state
-            setProcessedData(gridDataFromGlobal);
-        }
-    }, [gridDataFromGlobal]);
-
-    // --------- Grid → Global Sync ---------
-    useEffect(() => {
-        // Skip if no data or if processedData matches last known global state
-        if (processedData.length === 0 || isEqual(processedData, lastGlobalData.current)) {
-            return;
-        }
-
-        // This update came from grid, sync to global
-        const flattened = flattenGridDataToMappings(processedData, studies);
+    // Direct grid updates go to global state
+    const handleGridChange = (updater) => {
+        const newData = typeof updater === 'function' ? updater(gridData) : updater;
+        
+        // Update the flattened mappings
+        const flattened = flattenGridDataToMappings(newData, studies);
         setStudyToStudyVariableMapping(flattened);
+        
+        // Update the base variables (without study-specific data)
+        const baseVariables = newData.map(row => ({
+            id: row.id,
+            name: row.name || '',
+            type: row.type || '',
+            unit: row.unit || '',
+            description: row.description || ''
+        }));
+        setStudyVariables(baseVariables);
+    };
 
-    }, [processedData, studies]);
-
-
-    // Standalone Effect to initialize columns for grid view
+    // Columns setup
     useEffect(() => {
         setColumns([
-            { prop: 'name', name: 'Variable', pin: 'colPinStart', size: 100, cellTemplate: Template(BoldCell), cellProperties: GrayCell, },
+            { prop: 'name', name: 'Variable', pin: 'colPinStart', size: 100, cellTemplate: Template(BoldCell), cellProperties: GrayCell },
             { prop: 'type', name: 'Variable Type', size: 150 },
             { prop: 'unit', name: 'Unit' },
             {
-                prop: 'description', name: 'Description', size: 350, cellProperties: () => {
-                    return {
-                        style: {
-                            "border-right": "3px solid black"
-                        }
-                    }
-                }
+                prop: 'description', name: 'Description', size: 350, cellProperties: () => ({
+                    style: { "border-right": "3px solid black" }
+                })
             },
             ...studies.map((study, index) => ({
                 prop: study.id,
                 name: `Study S${(index + 1).toString().padStart(2, '0')}`,
                 size: 150
             }))
-        ])
-    }, [studies]); // Depend on studies, so columns update if studies change
+        ]);
+    }, [studies]);
 
     const handleInputChange = (variableIndex, mapping, value) => {
-        setProcessedData(prevData => {
-            const newData = [...prevData];
-            const entry = newData.find(variable => variable.id === mapping.studyVariableId)
-            if (entry) { // Ensure entry exists
-                entry[mapping.studyId] = value; // Update the specific study's value
-            }
-            return newData;
-        });
+        const newData = [...gridData];
+        const entry = newData.find(variable => variable.id === mapping.studyVariableId);
+        if (entry) {
+            entry[mapping.studyId] = value;
+        }
+        handleGridChange(newData);
     };
 
-
     return (
-        <div ref={combinedRef} >
-
-            <SlidePageTitle>
-                {studyVariableSlideContent.pageTitle}
-            </SlidePageTitle>
-
-            <SlidePageSubtitle>
-                {studyVariableSlideContent.pageSubtitle}
-            </SlidePageSubtitle>
+        <div ref={combinedRef}>
+            <SlidePageTitle>{studyVariableSlideContent.pageTitle}</SlidePageTitle>
+            <SlidePageSubtitle>{studyVariableSlideContent.pageSubtitle}</SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
-
                 <TabSwitcher
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
@@ -155,8 +129,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <GridTable
-                        items={processedData}
-                        setItems={setProcessedData}
+                        items={gridData}
+                        setItems={handleGridChange}
                         itemHook={useVariables}
                         columns={columns}
                     />
