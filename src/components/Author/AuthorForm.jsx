@@ -17,7 +17,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
         email: item?.email || '',
         phone: item?.phone || '',
         fax: item?.fax || '',
-        role: item?.role || '',
+        roles: item?.roles || [],
         address: item?.address || '',
         orcid: item?.orcid || '',
         affiliations: item?.affiliations || [],
@@ -25,8 +25,8 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.role.trim()) {
-            alert('Please fill in all required fields (First Name, Last Name, Email, Role)');
+        if (!formData.firstName.trim() || !formData.lastName.trim()) {
+            alert('Please fill in all required fields (First Name, Last Name)');
             return;
         }
 
@@ -57,6 +57,26 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             ...prevData,
             affiliations: prevData.affiliations.filter(affiliation => affiliation !== affiliationToRemove)
         }));
+    };
+
+    const handleAddRole = (role) => {
+        setFormData(prevData => {
+            console.log(prevData);
+            return {
+                ...prevData,
+                roles: [...(prevData.roles || []), role]
+            };
+        });
+    };
+
+    const handleRemoveRole = (roleToRemove) => {
+        setFormData(prevData => {
+            console.log(prevData);
+            return {
+                ...prevData,
+                roles: prevData.roles.filter(role => role !== roleToRemove)
+            };
+        });
     };
 
     return (
@@ -142,15 +162,6 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                     />
 
                     <FormField
-                        name={"role"}
-                        onChange={handleChange}
-                        value={formData.role}
-                        label="Role"
-                        type='text'
-                        placeholder="Role"
-                    />
-
-                    <FormField
                         name={"address"}
                         onChange={handleChange}
                         value={formData.address}
@@ -167,19 +178,46 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         type='text'
                         placeholder="https://orcid.org/0000-0000-0000-0000"
                     />
+                </div>
 
-                    <div className="py-2">
-                        <FormField
-                            name="affiliations"
-                            label="Affiliations"
-                            placeholder="Add an affiliation and press Enter or comma"
-                            tags={formData.affiliations}
-                            onAddTag={handleAddAffiliation}
-                            onRemoveTag={handleRemoveAffiliation}
-                            type="tags"
-                        />
-                    </div>
+                <div className="pt-3 space-y-3">
 
+                    <FormField
+                        name="affiliations"
+                        label="Affiliations"
+                        placeholder="Add an affiliation and press Enter or comma"
+                        tags={formData.affiliations}
+                        onAddTag={handleAddAffiliation}
+                        onRemoveTag={handleRemoveAffiliation}
+                        type="tags"
+                    />
+
+                    <FormField
+                        name="roles"
+                        label="Role(s)"
+                        type="multi-select"
+                        tags={[
+                            "Conceptualization",
+                            "Data curation",
+                            "Formal analysis",
+                            "Funding acquisition",
+                            "Investigation",
+                            "Methodology",
+                            "Project administration",
+                            "Resources",
+                            "Software",
+                            "Supervision",
+                            "Validation",
+                            "Visualization",
+                            "Writing - original draft",
+                            "Writing - review & editing"
+                        ]}
+                        value={formData.roles}
+                        // tags={formData.role}
+                        onAddTag={handleAddRole}
+                        onRemoveTag={handleRemoveRole}
+                        required
+                    />
                 </div>
 
                 {/* Action Buttons */}

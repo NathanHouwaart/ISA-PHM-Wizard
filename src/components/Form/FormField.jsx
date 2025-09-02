@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { Check, HelpCircle } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import LicensePicker from './LicensePicker';
 import { cn } from '../../utils/utils';
@@ -95,8 +95,46 @@ function FormField({
                         className={cn(baseClasses, className)}
                     >
                         <option value="">{placeholder || "Select an option"}</option>
-                        {/* Options would be passed as a prop */}
+                        {tags && tags.map((option, index) => (
+                            <option key={`${option}-${index}`} value={option}>
+                                {option}
+                            </option>
+                        ))}
                     </select>
+                );
+            case 'multi-select':
+                return (
+                    <div className="flex flex-wrap gap-2 py-2">
+                        {tags.map((option) => {
+                            const isSelected = value && value.includes(option);
+                            const handleToggle = () => {
+                                if (isSelected) {
+                                    onRemoveTag(option);
+                                } else {
+                                    onAddTag(option);
+                                }
+                            };
+
+                            return (
+                                <div
+                                    key={option}
+                                    className={`flex items-center px-3 py-1 rounded-full text-sm font-medium cursor-pointer transition-colors duration-200 border-2
+        ${isSelected ? 'bg-indigo-100 text-indigo-800 border-indigo-500' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent'}
+      `}
+                                    onClick={handleToggle}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={handleToggle}
+                                        className="sr-only"
+                                    />
+                                    <span>{option}</span>
+                                    {/* {isSelected && <Check className="ml-2 w-4 h-4 text-indigo-800" />} */}
+                                </div>
+                            );
+                        })}
+                    </div>
                 );
             case 'license':
                 return (

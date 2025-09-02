@@ -12,12 +12,17 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
             {author.firstName?.[0]}{author.lastName?.[0]}
           </div>
           <div>
             <Heading3>{author.firstName} {author.midInitials} {author.lastName}</Heading3>
-            <CardParagraph>{author.role}</CardParagraph>
+            <CardParagraph>
+              {author.roles && author.roles.length > 0 
+                ? author.roles.join(', ') 
+                : 'No roles assigned'
+              }
+            </CardParagraph>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Mail className="w-4 h-4" />

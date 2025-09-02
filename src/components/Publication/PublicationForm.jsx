@@ -13,7 +13,7 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
   const [formData, setFormData] = useState({
     title: item?.title || '',
     doi: item?.doi || '',
-    pubMedId: item?.pubMedId || '',
+    publicationStatus: item?.publicationStatus || '',
     authorList: item?.authorList || [],
   });
 
@@ -104,13 +104,14 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
             />
           </div>
           <div className="flex-grow">
-
             <FormField
-              label="PubMed ID"
-              name="pubMedId"
-              value={formData.pubMedId}
+              label={"Publication Status"}
+              name="publicationStatus"
+              value={formData.publicationStatus}
+              placeholder={"Set publication status"}
+              type="select"
+              tags={["Under Review", "Revisions Requested", "Revised and Resubmitted", "Accepted", "In Press", "Published", "Rejected", "Withdrawn", "Archived"]}
               onChange={handleChange}
-              placeholder="Enter PubMed ID"
             />
           </div>
         </div>
