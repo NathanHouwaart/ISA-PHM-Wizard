@@ -9,8 +9,6 @@ import TooltipButton from '../Widgets/TooltipButton';
 
 export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook, columns, disableAdd = false, plugins }, ref) => {
 
-    const {addItem, removeItem } = itemHook ? itemHook() : { addItem: null, removeItem: null };
-
     const gridRef = useRef(null);
     const cursorPosition = useRef(null);
     const future = useRef([]);
