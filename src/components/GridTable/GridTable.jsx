@@ -188,8 +188,6 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
 
     const addRow = () => {
         // Before changing the state, push the current state to history
-        console.log("Adding row");
-        console.log("Current items:", items[0]);
         pushToHistory(items);
 
         const newRow = columns.reduce((acc, col) => {
@@ -197,21 +195,11 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
             return acc;
         }, {});
 
-        console.log("New Row before ID:", newRow);
-        
         newRow.id = uuidv4(); // Ensure each new row has a unique ID
+        newRow.name = "New Variable"
 
-        console.log("New Row after ID:", newRow);
-
-        setItems((prev) => {
-            console.log("Previous items in setItems:", [...prev, newRow]);
-            return ( [...prev, newRow] )
-        });
+        setItems((prev) =>( [...prev, newRow] ));
     };
-
-    useEffect(() => {
-        console.log("Items updated:", items);
-    }, [items]);
 
     const removeRow = () => {
         if (items.length === 0) return; // Prevent removing from an empty grid
