@@ -45,9 +45,9 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
   }, [authors, selectedAuthors]);
 
   // Remove author
-  const handleRemoveAuthor = useCallback((formattedName) => {
+  const handleRemoveAuthor = useCallback((authorToRemove) => {
     setSelectedAuthors(prev =>
-      prev.filter(author => formatAuthorName(author) !== formattedName)
+      prev.filter(author => author.id !== authorToRemove.id)
     );
   }, []);
 
@@ -117,14 +117,25 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
         </div>
 
         {/* Authors TagInput */}
-        <TagInput
+        
+        {/* <TagInput
           label="Authors"
           tags={selectedAuthors.map(formatAuthorName)}
           onAddTag={handleAddAuthor}
           onRemoveTag={handleRemoveAuthor}
           placeholder="Start typing to find an author"
           availableOptions={authors}
-        />
+        /> */}
+        <FormField
+          type="tags"
+          name="authors"
+          label="Authors"
+          placeholder="Type to find and add authors"
+          value={selectedAuthors}        // Current selected authors
+          tags={authors}             // Available authors for suggestions
+          onAddTag={handleAddAuthor}
+          onRemoveTag={handleRemoveAuthor}
+      />
 
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 pr-0 flex justify-end space-x-3">

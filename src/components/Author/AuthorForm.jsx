@@ -61,7 +61,6 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleAddRole = (role) => {
         setFormData(prevData => {
-            console.log(prevData);
             return {
                 ...prevData,
                 roles: [...(prevData.roles || []), role]
@@ -71,7 +70,6 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleRemoveRole = (roleToRemove) => {
         setFormData(prevData => {
-            console.log(prevData);
             return {
                 ...prevData,
                 roles: prevData.roles.filter(role => role !== roleToRemove)
@@ -186,7 +184,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         name="affiliations"
                         label="Affiliations"
                         placeholder="Add an affiliation and press Enter or comma"
-                        tags={formData.affiliations}
+                        value={formData.affiliations}
                         onAddTag={handleAddAffiliation}
                         onRemoveTag={handleRemoveAffiliation}
                         type="tags"
