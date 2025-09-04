@@ -21,6 +21,8 @@ import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
 
 // Import utility functions
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
+import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
+
 import isEqual from 'lodash.isequal';
 
 
@@ -55,12 +57,8 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
     const [columns, setColumns] = useState([]);
     const isUpdatingFromGlobal = useRef(false);
 
-    // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
-        if (!selectedTestSetup || !studies || !studyToAssayMapping) {
-            return [];
-        }
-        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToAssayMapping);
+        return getTransposedGridData(studies, selectedTestSetup?.sensors, studyToAssayMapping);
     }, [studies, selectedTestSetup, studyToAssayMapping]);
 
     // --- Global Data to Local Grid Data Sync ---
@@ -71,41 +69,27 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
         }
     }, [selectedTestSetup, testSetups]);
 
-    // --------- Grid → Global Sync ---------
+    // --------- Grid → Global Sync (Transposed) ---------
     useEffect(() => {
         if (isUpdatingFromGlobal.current) {
             isUpdatingFromGlobal.current = false;
             return;
         }
 
-        const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-        setStudyToAssayMapping(flattenedMappings);
-
-    }, [processedData, studies]);
+        const mappings = flattenTransposedGridData(processedData, selectedTestSetup?.sensors || []);
+        setStudyToAssayMapping(mappings);
+    }, [processedData, selectedTestSetup]);
 
 
     // Standalone Effect to initialize columns for grid view
     useEffect(() => {
-        setColumns([
-            { prop: 'id', name: 'Identifier', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(PatternCellTemplate, { prefix : "Sensor S"}), cellProperties: GrayCell, },
-            { prop: 'measurementType', name: 'Type', size: 150, readonly: true },
-            { prop: 'measurementUnit', name: 'Unit', readonly: true },
-            {
-                prop: 'description', name: 'Description', size: 350, readonly: true, cellProperties: () => {
-                    return {
-                        style: {
-                            "border-right": "3px solid black"
-                        }
-                    }
-                }
-            },
-            ...studies.map((study, index) => ({
-                prop: study.id,
-                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
-                size: 150
-            }))
-        ])
-    }, [studies]);
+        const columns = getTransposedColumns(
+            studies, 
+            selectedTestSetup?.sensors,
+            "Sensor S"
+        );
+        setColumns(columns);
+    }, [selectedTestSetup, studies]);
 
     const handleInputChange = (variableIndex, mapping, value) => {
         setProcessedData(prevData => {
@@ -141,7 +125,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    
+
                     <EntityMappingPanel
                         name={`Processing Protocol Mapping`}
                         tileNamePrefix="Study S"
@@ -151,14 +135,14 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                         handleInputChange={handleInputChange}
                         disableAdd
                     />
-             
+
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable 
-                        items={processedData} 
-                        setItems={setProcessedData} 
-                        columns={columns} 
+                    <GridTable
+                        items={processedData}
+                        setItems={setProcessedData}
+                        columns={columns}
                         disableAdd
                     />
                 </TabPanel>

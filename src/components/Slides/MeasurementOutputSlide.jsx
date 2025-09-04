@@ -21,6 +21,8 @@ import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
 
 // Import utility functions
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
+import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
+
 import isEqual from 'lodash.isequal';
 
 
@@ -55,13 +57,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
     const [columns, setColumns] = useState([]);
     const isUpdatingFromGlobal = useRef(false);
 
-    // --------- Global → Grid Sync ---------
+        // --------- Global → Grid Sync (Transposed) ---------
     const gridDataFromGlobal = useMemo(() => {
-        if (!selectedTestSetup || !studies || !studyToSensorMeasurementMapping) {
-            return [];
-        }
-        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorMeasurementMapping);
+        return getTransposedGridData(studies, selectedTestSetup?.sensors, studyToSensorMeasurementMapping);
     }, [studies, selectedTestSetup, studyToSensorMeasurementMapping]);
+
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
@@ -71,49 +71,56 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
         }
     }, [selectedTestSetup, testSetups]);
 
-    // --------- Grid → Global Sync ---------
+   // --------- Grid → Global Sync (Transposed) ---------
     useEffect(() => {
         if (isUpdatingFromGlobal.current) {
             isUpdatingFromGlobal.current = false;
             return;
         }
 
-        const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-        setStudyToSensorMeasurementMapping(flattenedMappings);
+        const mappings = flattenTransposedGridData(processedData, selectedTestSetup?.sensors || []);
+        setStudyToSensorMeasurementMapping(mappings);
+    }, [processedData, selectedTestSetup]);
 
-    }, [processedData, studies]);
 
-
-    // Standalone Effect to initialize columns for grid view
+   // Transposed Column Structure
     useEffect(() => {
         setColumns([
-            { prop: 'id', name: 'Identifier', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(PatternCellTemplate, { prefix : "Sensor S"}), cellProperties: GrayCell, },
-            { prop: 'measurementType', name: 'Type', size: 150, readonly: true },
-            { prop: 'measurementUnit', name: 'Unit', readonly: true },
-            {
-                prop: 'description', name: 'Description', size: 350, readonly: true, cellProperties: () => {
-                    return {
-                        style: {
-                            "border-right": "3px solid black"
-                        }
-                    }
-                }
+            { 
+                prop: 'id', 
+                name: 'Study ID', 
+                pin: 'colPinStart', 
+                readonly: true, 
+                size: 100, 
+                cellTemplate: Template(PatternCellTemplate, { prefix: "Study S" }), 
+                cellProperties: GrayCell 
             },
-            ...studies.map((study, index) => ({
-                prop: study.id,
-                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
+            { prop: 'name', name: 'Study Name', size: 200, readonly: true },
+            { 
+                prop: 'description', 
+                name: 'Description', 
+                size: 300, 
+                readonly: true,
+                cellProperties: () => ({
+                    style: { "border-right": "3px solid black" }
+                })
+            },
+            // Add sensors as columns
+            ...(selectedTestSetup?.sensors || []).map((sensor, index) => ({
+                prop: sensor.id,
+                name: `Sensor S${(index + 1).toString().padStart(2, '0')}`,
                 size: 150
             }))
-        ])
-    }, [studies]);
+        ]);
+    }, [selectedTestSetup]);
 
-    const handleInputChange = (variableIndex, mapping, value) => {
+    const handleInputChange = (studyIndex, mapping, value) => {
         setProcessedData(prevData => {
             const newData = [...prevData];
-
-            const entry = newData.find(sensor => sensor.id === mapping.sensorId)
-            entry[mapping.studyId] = value; // Update the specific study's value
-
+            const studyRow = newData.find(row => row.id === mapping.studyId);
+            if (studyRow) {
+                studyRow[mapping.sensorId] = value;
+            }
             return newData;
         });
     };

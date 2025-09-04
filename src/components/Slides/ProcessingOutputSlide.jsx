@@ -23,6 +23,8 @@ import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
 
+import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
+
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
@@ -57,11 +59,9 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
 
     // --------- Global → Grid Sync ---------
     const gridDataFromGlobal = useMemo(() => {
-        if (!selectedTestSetup || !studies || !studyToSensorProcessingMapping) {
-            return [];
-        }
-        return getStructuredVariables(selectedTestSetup.sensors, studies, studyToSensorProcessingMapping);
+        return getTransposedGridData(studies, selectedTestSetup?.sensors, studyToSensorProcessingMapping);
     }, [studies, selectedTestSetup, studyToSensorProcessingMapping]);
+
 
     // --- Global Data to Local Grid Data Sync ---
     useEffect(() => {
@@ -78,34 +78,20 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage }
             return;
         }
 
-        const flattenedMappings = flattenGridDataToMappings(processedData, studies, 'sensorId');
-        setStudyToSensorProcessingMapping(flattenedMappings);
-
-    }, [processedData, studies]);
+        const mappings = flattenTransposedGridData(processedData, selectedTestSetup?.sensors || []);
+        setStudyToSensorProcessingMapping(mappings);
+    }, [processedData, selectedTestSetup]);
 
 
     // Standalone Effect to initialize columns for grid view
     useEffect(() => {
-        setColumns([
-            { prop: 'id', name: 'Identifier', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(PatternCellTemplate, { prefix : "Sensor S"}), cellProperties: GrayCell, },
-            { prop: 'measurementType', name: 'Type', size: 150, readonly: true },
-            { prop: 'measurementUnit', name: 'Unit', readonly: true },
-            {
-                prop: 'description', name: 'Description', size: 350, readonly: true, cellProperties: () => {
-                    return {
-                        style: {
-                            "border-right": "3px solid black"
-                        }
-                    }
-                }
-            },
-            ...studies.map((study, index) => ({
-                prop: study.id,
-                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
-                size: 150
-            }))
-        ])
-    }, [studies]);
+        const columns = getTransposedColumns(
+            studies, 
+            selectedTestSetup?.sensors,
+            "Sensor S"
+        );
+        setColumns(columns);
+    }, [selectedTestSetup, studies]);
 
     const handleInputChange = (variableIndex, mapping, value) => {
         setProcessedData(prevData => {
