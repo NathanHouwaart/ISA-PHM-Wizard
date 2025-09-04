@@ -1,11 +1,9 @@
-
-
 import { Edit2, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
 import EditVariableModal from './EditModal';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-
+import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 
 export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter }) {
 
@@ -20,8 +18,6 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
             value: ''
         }
     );
-
-    const variableTypes = ['Qualitative fault specification', 'Quantitative fault specification', 'Operating condition'];
 
     return (
         <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
@@ -82,7 +78,7 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                     onClose={() => setIsEditModalOpen(false)}
                     onSave={onSave}
                     initialVariableData={item}
-                    variableTypes={variableTypes}
+                    variableTypes={VARIABLE_TYPE_OPTIONS}
                 />
             </div>
         </div >

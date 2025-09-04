@@ -15,17 +15,21 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
-import { Template } from '@revolist/react-datagrid';
+import { RevoGrid, Template } from '@revolist/react-datagrid';
 import { GridTable } from '../GridTable/GridTable';
 import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
 
 // Import utility functions
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import isEqual from 'lodash.isequal';
 
 // Import content data
 import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
 
+import SelectTypePlugin from '@revolist/revogrid-column-select'
+import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
+
+// register column type
+const plugin = { select: new SelectTypePlugin() }
 
 export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
     const [selectedTab, setSelectedTab] = useState('simple-view');
@@ -49,6 +53,16 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
+
+    // Create a dropdown for the 'type' column
+    const dropdown = {
+        labelKey: 'label',
+        valueKey: 'value',
+        source: [
+            ...VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type }))
+        ],
+    }
+
     const [columns, setColumns] = useState([]);
 
     // --------- Simple One-Way Sync: Global State IS the Grid Data ---------
@@ -59,11 +73,11 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     // Direct grid updates go to global state
     const handleGridChange = (updater) => {
         const newData = typeof updater === 'function' ? updater(gridData) : updater;
-        
+
         // Update the flattened mappings
         const flattened = flattenGridDataToMappings(newData, studies);
         setStudyToStudyVariableMapping(flattened);
-        
+
         // Update the base variables (without study-specific data)
         const baseVariables = newData.map(row => ({
             id: row.id,
@@ -79,7 +93,13 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
     useEffect(() => {
         setColumns([
             { prop: 'name', name: 'Variable', pin: 'colPinStart', size: 100, cellTemplate: Template(BoldCell), cellProperties: GrayCell },
-            { prop: 'type', name: 'Variable Type', size: 150 },
+            {
+                prop: 'type',
+                name: 'Variable Type',
+                size: 160,
+                columnType: 'select',
+                ...dropdown
+            },
             { prop: 'unit', name: 'Unit' },
             {
                 prop: 'description', name: 'Description', size: 350, cellProperties: () => ({
@@ -133,6 +153,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                         setItems={handleGridChange}
                         itemHook={useVariables}
                         columns={columns}
+                        plugins={plugin}
                     />
                 </TabPanel>
             </div>

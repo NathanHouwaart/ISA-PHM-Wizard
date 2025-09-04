@@ -2,15 +2,16 @@ import React from 'react';
 
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { StudyVariableMappingCard } from '../components/StudyVariableMappingCard';
+import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 
 export const useVariables = () => {
     
-    const { studyVariables, setStudyVariables, studyToStudyVariableMapping, setStudyToStudyVariableMapping } = useGlobalDataContext(); // Get studies and setStudies from global context
-    
+    const { studyVariables, setStudyVariables, studyToStudyVariableMapping, setStudyToStudyVariableMapping } = useGlobalDataContext();
+
     const addVariable = () => {
         const newVariable = {
                     name: 'New Variable',
-                    type: 'Qualitative fault specification',
+                    type: VARIABLE_TYPE_OPTIONS[0], // Default to first type
                     unit: '',
                     description: '',
                     id: crypto.randomUUID(), // Generate a unique ID
