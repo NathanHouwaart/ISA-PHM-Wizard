@@ -119,15 +119,6 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
         </div>
 
         {/* Authors TagInput */}
-        
-        {/* <TagInput
-          label="Authors"
-          tags={selectedAuthors.map(formatAuthorName)}
-          onAddTag={handleAddAuthor}
-          onRemoveTag={handleRemoveAuthor}
-          placeholder="Start typing to find an author"
-          availableOptions={authors}
-        /> */}
         <FormField
           type="tags"
           name="authors"

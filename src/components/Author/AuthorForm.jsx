@@ -7,6 +7,8 @@ import { TagInput } from "../Form/TagInput";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
 
+import { AUTHOR_ROLE_OPTIONS } from "../../constants/authorRoles";
+
 export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const [formData, setFormData] = useState({
@@ -25,8 +27,8 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.firstName.trim() || !formData.lastName.trim()) {
-            alert('Please fill in all required fields (First Name, Last Name)');
+        if (!formData.firstName.trim() || !formData.lastName.trim() || formData.roles.length === 0) {
+            alert('Please fill in all required fields (First Name, Last Name, Role).');
             return;
         }
 
@@ -194,22 +196,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         name="roles"
                         label="Role(s)"
                         type="multi-select"
-                        tags={[
-                            "Conceptualization",
-                            "Data curation",
-                            "Formal analysis",
-                            "Funding acquisition",
-                            "Investigation",
-                            "Methodology",
-                            "Project administration",
-                            "Resources",
-                            "Software",
-                            "Supervision",
-                            "Validation",
-                            "Visualization",
-                            "Writing - original draft",
-                            "Writing - review & editing"
-                        ]}
+                        tags={AUTHOR_ROLE_OPTIONS}
                         value={formData.roles}
                         // tags={formData.role}
                         onAddTag={handleAddRole}
