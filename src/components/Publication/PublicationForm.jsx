@@ -6,6 +6,8 @@ import { formatAuthorName } from "../../utils/utils";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 
+import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses";
+
 export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const { authors } = useGlobalDataContext();
@@ -110,7 +112,7 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
               value={formData.publicationStatus}
               placeholder={"Set publication status"}
               type="select"
-              tags={["Under Review", "Revisions Requested", "Revised and Resubmitted", "Accepted", "In Press", "Published", "Rejected", "Withdrawn", "Archived"]}
+              tags={PUBLICATION_STATUS_OPTIONS}
               onChange={handleChange}
             />
           </div>
