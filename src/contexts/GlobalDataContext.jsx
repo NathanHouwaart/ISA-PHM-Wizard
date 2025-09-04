@@ -165,13 +165,12 @@ export const GlobalDataProvider = ({ children }) => {
             }
 
             const result = await response.json();
-
-            // 4. Handle converted result
             console.log("Converted Result:", result);
 
-            // Example: Download converted JSON
-            const convertedBlob = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
-            const url = URL.createObjectURL(convertedBlob);
+            // Download the JSON file
+            const jsonString = JSON.stringify(result, null, 2);
+            const downloadBlob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(downloadBlob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'isa-phm-out.json';
