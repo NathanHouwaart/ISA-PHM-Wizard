@@ -326,6 +326,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const addSensor = () => {
     const newSensor = {
       id: uuid4(),
+      alias: '',
       measurementType: '',
       measurementUnit: '',
       description: '',
@@ -382,12 +383,12 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   };
 
   const getSensorSummary = (sensor) => {
+    const platform = sensor.technologyPlatform || 'No platform';
+    const measurementType = sensor.measurementType || 'No measurementType';
+    const samplingRate = sensor.samplingRate || 'No rate';
+    const samplingUnit = sensor.samplingUnit || '';
 
-    const platform = sensor.technologyPlatform;
-    const samplingRate = sensor.samplingRate;
-    const samplingUnit = sensor.samplingUnit;
-
-    return `${platform} - ${samplingRate} ${samplingUnit}`;
+    return `${platform} - ${measurementType} - ${samplingRate} ${samplingUnit}`;
   };
 
   return (
@@ -448,7 +449,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                     </span>
                   </div>
                   <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{sensor.measurementType} ({sensor.measurementUnit}): </span>
+                    <span className='font-bold'>{sensor.alias || 'Unnamed Sensor'} ({sensor.measurementUnit || 'No unit'}): </span>
                     {getSensorSummary(sensor)}
                   </span>
                 </div>
@@ -482,6 +483,14 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                         Basic Information
                       </h6>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <FormField
+                          name={`sensor-${index}-alias`}
+                          value={sensor.alias}
+                          onChange={(e) => updateSensor(index, 'alias', e.target.value)}
+                          label="Sensor alias"
+                          type="text"
+                          placeholder="Enter a sensor name/alias"
+                        />
                         <FormField
                           name={`sensor-${index}-technologyPlatform`}
                           value={sensor.technologyPlatform}
@@ -573,7 +582,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           placeholder="Enter sampling unit"
                         />
 
-                               <FormField
+                        <FormField
                           name={`sensor-${index}-phase`}
                           value={sensor.phase}
                           onChange={(e) => updateSensor(index, 'phase', e.target.value)}

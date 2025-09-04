@@ -55,6 +55,7 @@
         "sensors": [
             {
                 "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+                "alias" : "Press Radial Cylinder",
                 "measurementType": "Pressure",
                 "measurementUnit": "bar",
                 "description": "measures pressure on the radial cylinder",
@@ -70,6 +71,7 @@
             },
             {
                 "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+                "alias" : "Press Axial Cylinder",
                 "measurementType": "Pressure",
                 "measurementUnit": "bar",
                 "description": "measures pressure in the axial cylinder",
@@ -85,6 +87,7 @@
             },
             {
                 "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+                "alias" : "Temp Bearing",
                 "measurementType": "Temperature",
                 "measurementUnit": "celcius",
                 "description": "measures temperature of bearing",
@@ -138,6 +141,7 @@
         "sensors": [
             {
                 "id": "38623db8-0a99-4b6d-b0d2-32eba8ca1528",
+                "alias" : "Motor Bearing Vibration",
                 "measurementType": "Vibration",
                 "measurementUnit": "g",
                 "description": "data_collection.pdf",
