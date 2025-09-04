@@ -27,6 +27,8 @@ import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 import { GridTable } from '../GridTable/GridTable';
 import { Template } from '@revolist/react-datagrid';
 
+import DatePlugin from '@revolist/revogrid-column-date'
+
 const BoldCell = ({ value }) => {
     return (
         <div className="flex items-center justify-center">
@@ -41,10 +43,15 @@ const PatternCellTemplate = ({ prefix, rowIndex }) => {
     return <BoldCell value={value} />;
 }
 
-
 const columns = [
     {
-        prop: 'id', name: 'Identifier', size: 150, pin: "colPinStart", readonly: true, cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }), cellProperties: () => {
+        prop: 'id', 
+        name: 'Identifier', 
+        size: 150, 
+        pin: "colPinStart", 
+        readonly: true, 
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }), 
+        cellProperties: () => {
             return {
                 style: {
                     "border-right": "3px solid black"
@@ -54,10 +61,23 @@ const columns = [
     },
     { prop: 'name', name: 'Title', size: 250 },
     { prop: 'description', name: 'Description', size: 510 },
-    { prop: 'submissionDate', name: 'Submission Date', size: 250 },
-    { prop: 'publicationDate', name: 'Publication Date', size: 250 }
+    { 
+        prop: 'submissionDate', 
+        name: 'Submission Date', 
+        size: 250, 
+        columnType: 'date',
+    },
+    { 
+        prop: 'publicationDate', 
+        name: 'Publication Date', 
+        size: 250, 
+        columnType: 'date',
+    }
 ];
 
+const plugins = { 
+    date: new DatePlugin()
+};
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
@@ -117,6 +137,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                         columns={columns}
                         items={studies}
                         setItems={setStudies}
+                        plugins={plugins}
                     />
                 </TabPanel>
             </div>

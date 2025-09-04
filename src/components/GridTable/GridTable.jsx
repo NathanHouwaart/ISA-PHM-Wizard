@@ -209,6 +209,25 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
         setItems((prev) => prev.slice(0, -1));
     };
 
+    const handleCellEditComplete = (e) => {
+        console.log("Cell edit complete:", e);
+        const { detail } = e;
+        const newValue = detail.val;
+        const oldValue = detail.oldVal || detail.value;
+        const rowIndex = detail.rowIndex;
+        const prop = detail.prop;
+
+        // Only store if changed
+        if (newValue !== oldValue) {
+            const prevData = [...items];
+            pushToHistory(prevData);
+
+            const newData = [...items];
+            newData[rowIndex] = { ...newData[rowIndex], [prop]: newValue };
+            setItems(newData);
+        }
+    };
+
     return (
         <div ref={combinedRef} className='p-6'>
             {/* <div>
