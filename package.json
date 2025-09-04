@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^13.0.5",
+    "@duetds/date-picker": "^1.4.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@jsonforms/core": "^3.6.0",

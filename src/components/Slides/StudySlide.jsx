@@ -43,6 +43,32 @@ const PatternCellTemplate = ({ prefix, rowIndex }) => {
     return <BoldCell value={value} />;
 }
 
+const HTML5DateCellTemplate = ({ model, prop, rowIndex }) => {
+    return (
+        <input
+            type="date"
+            value={model[prop] || ''}
+            onChange={(e) => {
+                const event = new CustomEvent('beforeedit', {
+                    detail: { 
+                        rowIndex, 
+                        prop, 
+                        val: e.target.value,
+                        value: model[prop] // old value
+                    }
+                });
+                
+                // Dispatch on the grid element
+                const gridElement = e.target.closest('revo-grid');
+                if (gridElement) {
+                    gridElement.dispatchEvent(event);
+                }
+            }}
+            
+        />
+    );
+};
+
 const columns = [
     {
         prop: 'id', 
@@ -65,13 +91,16 @@ const columns = [
         prop: 'submissionDate', 
         name: 'Submission Date', 
         size: 250, 
-        columnType: 'date',
+        // columnType: 'date',
+        cellTemplate: Template(HTML5DateCellTemplate),
     },
     { 
         prop: 'publicationDate', 
         name: 'Publication Date', 
         size: 250, 
-        columnType: 'date',
+        // columnType: 'date',
+        cellTemplate: Template(HTML5DateCellTemplate),
+        
     }
 ];
 
