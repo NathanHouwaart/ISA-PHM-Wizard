@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../hooks/useDataGrid';
+import "./GridTable/GridTable.css";
 
 /**
  * Generic DataGrid component that can handle any type of data
@@ -20,10 +21,11 @@ const DataGrid = ({
   
   // Grid configuration
   height = '600px',
-  theme = 'compact',
+//   theme = 'compact',
   title = 'Data Grid',
   showControls = true,
   showDebug = false,
+  rowsize = 50,
   
   // Event handlers
   onDataChange,
@@ -62,6 +64,110 @@ const DataGrid = ({
     onRowDataChange // Pass the callback to the hook
   });
 
+  // State to track column sizes to prevent resetting on re-render
+  const [columnSizes, setColumnSizes] = useState(new Map());
+  const gridRef = useRef();
+
+  // Effect to add event listeners for column resize
+  useEffect(() => {
+    const gridElement = gridRef.current;
+    if (!gridElement) return;
+
+    const handleResize = (event) => {
+      const detail = event.detail;
+      if (detail && detail.column && detail.column.prop) {
+        setColumnSizes(prev => {
+          const newSizes = new Map(prev);
+          newSizes.set(detail.column.prop, detail.column.size);
+          return newSizes;
+        });
+      }
+    };
+
+    // Listen for column resize events
+    const eventNames = ['aftercolumnresize', 'columnresize', 'aftercolumnsresize'];
+    eventNames.forEach(eventName => {
+      gridElement.addEventListener(eventName, handleResize);
+    });
+
+    return () => {
+      eventNames.forEach(eventName => {
+        gridElement.removeEventListener(eventName, handleResize);
+      });
+    };
+  }, []);
+
+  // Create column definitions with preserved sizes
+  const enhancedColumnDefs = React.useMemo(() => {
+    return columnDefs.map(col => {
+      const savedSize = columnSizes.get(col.prop);
+      return {
+        ...col,
+        size: savedSize || col.size || 150
+      };
+    });
+  }, [columnDefs, columnSizes]);
+
+  // Stable column reference to prevent unnecessary re-renders
+  const stableColumnDefs = React.useRef(enhancedColumnDefs);
+  
+  React.useEffect(() => {
+    // Only update if the column structure has changed (not just sizes)
+    const structureChanged = stableColumnDefs.current.length !== enhancedColumnDefs.length ||
+      stableColumnDefs.current.some((col, index) => 
+        col.prop !== enhancedColumnDefs[index]?.prop || 
+        col.name !== enhancedColumnDefs[index]?.name
+      );
+    
+    if (structureChanged) {
+      stableColumnDefs.current = enhancedColumnDefs;
+    } else {
+      // Only update sizes in the existing reference to preserve grid state
+      stableColumnDefs.current.forEach((col, index) => {
+        if (enhancedColumnDefs[index] && col.prop === enhancedColumnDefs[index].prop) {
+          col.size = enhancedColumnDefs[index].size;
+        }
+      });
+    }
+  }, [enhancedColumnDefs]);
+
+  // Alternative approach: use MutationObserver to detect column width changes
+  useEffect(() => {
+    const gridElement = gridRef.current;
+    if (!gridElement) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          const target = mutation.target;
+          if (target && target.tagName === 'TH' && target.style.width) {
+            const columnProp = target.getAttribute('data-prop') || target.getAttribute('data-column-prop');
+            if (columnProp) {
+              const width = parseInt(target.style.width);
+              if (!isNaN(width)) {
+                console.log(`Column ${columnProp} width changed to ${width}px via DOM`);
+                setColumnSizes(prev => {
+                  const newSizes = new Map(prev);
+                  newSizes.set(columnProp, width);
+                  return newSizes;
+                });
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // Observe the grid element for changes
+    observer.observe(gridElement, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['style']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   // Notify parent of data changes
   useEffect(() => {
     if (onDataChange) {
@@ -69,13 +175,28 @@ const DataGrid = ({
     }
   }, [currentMappings, onDataChange]);
 
+  // Handle column resize to preserve sizes
+  const handleColumnResize = useCallback((event) => {
+    console.log('Column resize event:', event.detail);
+    const detail = event.detail;
+    if (detail && detail.column && detail.column.prop) {
+      console.log(`Resizing column ${detail.column.prop} to size ${detail.column.size}`);
+      setColumnSizes(prev => {
+        const newSizes = new Map(prev);
+        newSizes.set(detail.column.prop, detail.column.size);
+        console.log('Updated column sizes:', newSizes);
+        return newSizes;
+      });
+    }
+  }, []);
+
   // Handle cell editing
   const handleBeforeEdit = useCallback((event) => {
     const detail = event.detail;
     let columnProp = detail.prop || detail.model?.prop || detail.column?.prop;
     
     if (!columnProp && detail.rgCol !== undefined) {
-      const column = columnDefs[detail.rgCol];
+      const column = stableColumnDefs.current[detail.rgCol];
       columnProp = column?.prop;
     }
 
@@ -120,7 +241,7 @@ const DataGrid = ({
       
       for (let rowIndex = newRange.y; rowIndex <= (newRange.y1 || newRange.y); rowIndex++) {
         for (let colIndex = newRange.x; colIndex <= (newRange.x1 || newRange.x); colIndex++) {
-          const column = columnDefs[colIndex];
+          const column = stableColumnDefs.current[colIndex];
           if (!column) continue;
           
           const columnProp = column.prop;
@@ -210,7 +331,9 @@ const DataGrid = ({
     }
 
     const row = getRowByIndex(rowIndex);
-    if (!row) return;
+    if (!row) {
+      return;
+    }
 
     const stringValue = (newValue === undefined || newValue === null || newValue === '') ? '' : String(newValue);
     
@@ -237,18 +360,18 @@ const DataGrid = ({
       // Handle mapping edit (existing functionality)
       updateMapping(row[fields.rowId], columnProp, stringValue);
     }
-  }, [columnDefs, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, gridData, fields, onRowDataChange]);
+  }, [stableColumnDefs, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, gridData, fields, onRowDataChange]);
 
   const handleBeforeRangeEdit = useCallback((event) => {
     const detail = event.detail;
     const { newRange } = detail;
     
-    if (newRange && columnDefs) {
+    if (newRange && stableColumnDefs.current) {
       const rangeStartCol = newRange.x;
       const rangeEndCol = newRange.x1 || rangeStartCol;
       
       for (let colIndex = rangeStartCol; colIndex <= rangeEndCol; colIndex++) {
-        const column = columnDefs[colIndex];
+        const column = stableColumnDefs.current[colIndex];
         if (column) {
           const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
           const staticColumn = staticColumns.find(col => col.prop === column.prop);
@@ -266,7 +389,7 @@ const DataGrid = ({
         }
       }
     }
-  }, [columnDefs, isStandaloneGrid, staticColumns, isEditableColumn]);
+  }, [stableColumnDefs, isStandaloneGrid, staticColumns, isEditableColumn]);
 
   const handleAfterRangeEdit = useCallback((event) => {
     // Range edits are handled in handleAfterEdit
@@ -287,7 +410,7 @@ const DataGrid = ({
         const rgRow = parseInt(focusedCell.getAttribute('data-rgrow') || '0', 10);
         const rgCol = parseInt(focusedCell.getAttribute('data-rgcol') || '0', 10);
         
-        const column = columnDefs[rgCol];
+        const column = stableColumnDefs.current[rgCol];
         if (!column) return false;
         
         const row = getRowByIndex(rgRow);
@@ -311,7 +434,7 @@ const DataGrid = ({
     }
     
     return false;
-  }, [columnDefs, isStandaloneGrid, staticColumns, getRowByIndex, updateRowData, isEditableColumn, updateMapping, fields]);
+  }, [stableColumnDefs, isStandaloneGrid, staticColumns, getRowByIndex, updateRowData, isEditableColumn, updateMapping, fields]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -404,18 +527,22 @@ const DataGrid = ({
       
       {/* Grid */}
       <RevoGrid
+        ref={gridRef}
         style={{ height }}
-        theme={theme}
         source={gridData}
-        columns={columnDefs}
+        rowSize={rowsize}
+        columns={stableColumnDefs.current}
         onBeforeedit={handleBeforeEdit}
         onAfteredit={handleAfterEdit}
         onBeforerangeedit={handleBeforeRangeEdit}
         onAfterangeedit={handleAfterRangeEdit}
+        onAftercolumnresize={handleColumnResize}
+        onColumnresize={handleColumnResize}
+        onAftercolumnsresize={handleColumnResize}
         readonly={false}
         resize={true}
         range={true}
-        stretch={true}
+        // stretch={true}
         canFocus={true}
         editors={{
           string: {

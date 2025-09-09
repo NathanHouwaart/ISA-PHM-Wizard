@@ -3,318 +3,328 @@ import PageWrapper from "../layout/PageWrapper";
 import "./About.css";
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import DataGrid from '../components/DataGrid';
+import { HTML5DateCellTemplate, PatternCellTemplate } from '../components/GridTable/CellTemplates';
+import { Template } from '@revolist/react-datagrid';
 
 const variables = [
-    {
-        "id": "fd14bdba-b880-4ead-b592-f59ca706d613",
-        "name": "Fault Type",
-        "type": "Qualitative fault specification",
-        "unit": "",
-        "description": "Describes the kind of fault detected in the system."
-    },
-    {
-        "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
-        "name": "Fault Position",
-        "type": "Qualitative fault specification",
-        "unit": "",
-        "description": "Indicates the physical location of the fault."
-    },
-    {
-        "id": "fac02919-811b-4653-9127-ce76807f2cd2",
-        "name": "Fault Severity",
-        "type": "Quantitative fault specification",
-        "unit": "",
-        "description": "Measures the impact or intensity of the fault."
-    },
-    {
-        "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-        "name": "Motor Speed",
-        "type": "Operating condition",
-        "unit": "RPM",
-        "description": "The rotational speed of the motor."
-    },
-    {
-        "id": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-        "name": "Discharge Pressure",
-        "type": "Operating condition",
-        "unit": "bar",
-        "description": "Pressure at the discharge point of the system."
-    },
-    {
-        "id": "c1dc436d-c95c-4784-921e-481d98716cd4",
-        "name": "Volumetric Flow Rate",
-        "type": "Qualitative fault specification",
-        "unit": "m^3/h",
-        "description": "The volumetric flow rate through the system."
-    }
+  {
+    "id": "fd14bdba-b880-4ead-b592-f59ca706d613",
+    "name": "Fault Type",
+    "type": "Qualitative fault specification",
+    "unit": "",
+    "description": "Describes the kind of fault detected in the system."
+  },
+  {
+    "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
+    "name": "Fault Position",
+    "type": "Qualitative fault specification",
+    "unit": "",
+    "description": "Indicates the physical location of the fault."
+  },
+  {
+    "id": "fac02919-811b-4653-9127-ce76807f2cd2",
+    "name": "Fault Severity",
+    "type": "Quantitative fault specification",
+    "unit": "",
+    "description": "Measures the impact or intensity of the fault."
+  },
+  {
+    "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+    "name": "Motor Speed",
+    "type": "Operating condition",
+    "unit": "RPM",
+    "description": "The rotational speed of the motor."
+  },
+  {
+    "id": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+    "name": "Discharge Pressure",
+    "type": "Operating condition",
+    "unit": "bar",
+    "description": "Pressure at the discharge point of the system."
+  },
+  {
+    "id": "c1dc436d-c95c-4784-921e-481d98716cd4",
+    "name": "Volumetric Flow Rate",
+    "type": "Qualitative fault specification",
+    "unit": "m^3/h",
+    "description": "The volumetric flow rate through the system."
+  }
 ]
 
 const initial_studies = [
-    {
-        "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "name": "Test Study 1",
-        "description": "Description of test study 1",
-        "submissionDate": "2025-09-03",
-        "publicationDate": "2025-10-10"
-    },
-    {
-        "id": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "name": "Test study 2",
-        "description": "Description of test study 2",
-        "submissionDate": "2025-09-02",
-        "publicationDate": "2025-10-02"
-    },
-    {
-        "id": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "name": "Test study 3",
-        "description": "Description of test study 3",
-        "submissionDate": "2025-09-12",
-        "publicationDate": "2025-10-08"
-    },
-    {
-        "id": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "name": "Test study 4",
-        "description": "Description of test study 4",
-        "submissionDate": "2025-09-12",
-        "publicationDate": "2025-09-02"
-    }
+  {
+    "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "name": "Test Study 1",
+    "description": "Description of test study 1",
+    "submissionDate": "2025-09-03",
+    "publicationDate": "2025-10-10"
+  },
+  {
+    "id": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "name": "Test study 2",
+    "description": "Description of test study 2",
+    "submissionDate": "2025-09-02",
+    "publicationDate": "2025-10-02"
+  },
+  {
+    "id": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "name": "Test study 3",
+    "description": "Description of test study 3",
+    "submissionDate": "2025-09-12",
+    "publicationDate": "2025-10-08"
+  },
+  {
+    "id": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "name": "Test study 4",
+    "description": "Description of test study 4",
+    "submissionDate": "2025-09-12",
+    "publicationDate": "2025-09-02"
+  }
 ]
 
 const mappings = [
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-        "value": "BPFO"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-        "value": "BPFO"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-        "value": "BPFO"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-        "value": "BPFO"
-    },
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-        "value": "Bearing"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-        "value": "Bearing"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-        "value": "Bearing"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-        "value": "Bearing"
-    },
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-        "value": "2"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-        "value": "2"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-        "value": "2"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-        "value": "2"
-    },
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-        "value": "1750"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-        "value": "1750"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-        "value": "1750"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-        "value": "1750"
-    },
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-        "value": "20"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-        "value": "20"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-        "value": "20"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-        "value": "20"
-    },
-    {
-        "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-        "value": "900"
-    },
-    {
-        "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-        "value": "900"
-    },
-    {
-        "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-        "value": "900"
-    },
-    {
-        "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-        "value": "900"
-    }
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
+    "value": "BPFO"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
+    "value": "BPFO"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
+    "value": "BPFO"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
+    "value": "BPFO"
+  },
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
+    "value": "Bearing"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
+    "value": "Bearing"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
+    "value": "Bearing"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
+    "value": "Bearing"
+  },
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
+    "value": "2"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
+    "value": "2"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
+    "value": "2"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
+    "value": "2"
+  },
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+    "value": "1750"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+    "value": "1750"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+    "value": "1750"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+    "value": "1750"
+  },
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+    "value": "20"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+    "value": "20"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+    "value": "20"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+    "value": "20"
+  },
+  {
+    "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
+    "value": "900"
+  },
+  {
+    "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
+    "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
+    "value": "900"
+  },
+  {
+    "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
+    "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
+    "value": "900"
+  },
+  {
+    "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
+    "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
+    "value": "900"
+  }
 ]
 
 const initial_sensors = [
-    {
-        "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-        "alias": "Accelerometer 1",
-        "measurementType": "Vibration",
-        "measurementUnit": "m/s^2",
-        "description": "Measures acceleration in the X, Y, Z axes."
-    },
-    {
-        "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-        "alias": "Accelerometer 2",
-        "measurementType": "Vibration",
-        "measurementUnit": "m/s^2",
-        "description": "Secondary accelerometer for redundancy."
-    },
-    {
-        "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-        "alias": "Pressure Sensor",
-        "measurementType": "Pressure",
-        "measurementUnit": "bar",
-        "description": "Monitors system pressure levels."
-    }
+  {
+    "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "alias": "Accelerometer 1",
+    "measurementType": "Vibration",
+    "measurementUnit": "m/s^2",
+    "description": "Measures acceleration in the X, Y, Z axes."
+  },
+  {
+    "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "alias": "Accelerometer 2",
+    "measurementType": "Vibration",
+    "measurementUnit": "m/s^2",
+    "description": "Secondary accelerometer for redundancy."
+  },
+  {
+    "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "alias": "Pressure Sensor",
+    "measurementType": "Pressure",
+    "measurementUnit": "bar",
+    "description": "Monitors system pressure levels."
+  }
 ]
 
 const initial_protocols = [
-    {
-        "id": "fd14bdba-b880-4ead-b592-f59ca706d123",
-        "name": "FFT Analysis",
-        "type": "Frequency Domain",
-        "unit": "Hz",
-        "description": "Fast Fourier Transform analysis for frequency domain analysis."
-    },
-    {
-        "id": "8aac8b6c-1774-4814-9916-b24171044123",
-        "name": "Time Domain Statistics",
-        "type": "Statistical",
-        "unit": "various",
-        "description": "Statistical analysis in time domain (mean, RMS, kurtosis, etc.)."
-    },
-    {
-        "id": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
-        "name": "Envelope Analysis",
-        "type": "Signal Processing",
-        "unit": "amplitude",
-        "description": "Envelope detection for bearing fault analysis."
-    }
+  {
+    "id": "fd14bdba-b880-4ead-b592-f59ca706d123",
+    "name": "Filter Type",
+    "description": "Describes the filter type used for data processing of sensor data.",
+    "type": "Qualitative fault specification",
+    "unit": ""
+  },
+  {
+    "id": "8aac8b6c-1774-4814-9916-b24171044123",
+    "name": "Chunk Size",
+    "description": "Specifies the chunk size used in data processing of sensor data.",
+    "type": "Qualitative fault specification",
+    "unit": ""
+  },
+  {
+    "id": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
+    "name": "Scaling Range",
+    "description": "Defines the scaling range and resolution applied during data processing of sensor data.",
+    "type": "",
+    "unit": ""
+  },
+  {
+    "id": "a3f5c6e1-2d4b-4f8e-9c3a-1e2b3c4d5e6f",
+    "name": "Scaling Resolution",
+    "description": "Defines the scaling resolution applied during data processing of sensor data.",
+    "type": "",
+    "unit": ""
+  }
+
 ]
 
 const s2p_mappings = [
-    {
-        "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-        "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": [
-            "fwe",
-            "f8221ee1-66fe-4e4e-ad6e-a7833e92f317"
-        ]
-    },
-    {
-        "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-        "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": "fwe"
-    },
-    {
-        "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-        "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": "test"
-    },
-    {
-        "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-        "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": [
-            "huts",
-            "f8221ee1-66fe-4e4e-ad6e-a7833e92f387"
-        ]
-    },
-    {
-        "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-        "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": "fwe"
-    },
-    {
-        "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-        "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": "Specifies the chunk size used in data processing of sensor data."
-    },
-    {
-        "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-        "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
-        "sourceType": "sensor",
-        "targetType": "processingProtocol",
-        "value": "fwe"
-    }
+  {
+    "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": [
+      "fwe",
+      "f8221ee1-66fe-4e4e-ad6e-a7833e92f317"
+    ]
+  },
+  {
+    "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": "fwe"
+  },
+  {
+    "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": "test"
+  },
+  {
+    "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": [
+      "huts",
+      "f8221ee1-66fe-4e4e-ad6e-a7833e92f387"
+    ]
+  },
+  {
+    "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": "fwe"
+  },
+  {
+    "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": "Specifies the chunk size used in data processing of sensor data."
+  },
+  {
+    "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
+    "sourceType": "sensor",
+    "targetType": "processingProtocol",
+    "value": "fwe"
+  }
 ]
 
 export const GridTest = () => {
   const { setScreenWidth } = useGlobalDataContext();
-  
+
   // Grid configuration state
   const [gridMode, setGridMode] = useState('study-variables'); // 'study-variables', 'sensor-protocols', 'studies-only', 'variables-only', 'protocols-only'
-  
+
   // Data state - make data editable
   const [studies, setStudies] = useState(initial_studies);
   const [variableData, setVariableData] = useState(variables);
@@ -322,11 +332,11 @@ export const GridTest = () => {
   const [protocolData, setProtocolData] = useState(initial_protocols);
   const [studyVariableMappings, setStudyVariableMappings] = useState(mappings);
   const [sensorProtocolMappings, setSensorProtocolMappings] = useState(s2p_mappings);
-  
+
   // Set page width to max-w-[100rem] when component mounts
   useEffect(() => {
     setScreenWidth("max-w-[100rem]");
-    
+
     return () => {
       setScreenWidth("max-w-5xl");
     };
@@ -410,7 +420,7 @@ export const GridTest = () => {
   // Data change handlers
   const handleDataChange = (newMappings) => {
     console.log('Data changed:', newMappings);
-    
+
     // Update the appropriate mapping state based on current grid mode
     if (gridMode === 'study-variables') {
       setStudyVariableMappings(newMappings);
@@ -421,7 +431,7 @@ export const GridTest = () => {
 
   const handleRowDataChange = (newRowData) => {
     console.log('Row data changed:', newRowData);
-    
+
     // Update the appropriate data state based on current grid mode
     switch (gridMode) {
       case 'studies-only':
@@ -452,7 +462,7 @@ export const GridTest = () => {
           fieldMappings: {
             rowId: 'id',
             rowName: 'name',
-            columnId: 'id', 
+            columnId: 'id',
             columnName: 'name',
             columnUnit: '', // Studies don't have units
             mappingRowId: 'studyVariableId', // Swapped: variables are now rows
@@ -480,21 +490,21 @@ export const GridTest = () => {
             }
           ]
         };
-        
+
       case 'sensor-protocols':
         return {
           title: 'Processing Protocols to Sensors Grid',
-          rowData: protocolData, // Protocols are now rows
-          columnData: sensorData, // Sensors are now columns
+          rowData: protocolData,            // Protocols are now rows
+          columnData: sensorData,           // Sensors are now columns
           mappings: sensorProtocolMappings,
           fieldMappings: {
             rowId: 'id',
             rowName: 'name',
             columnId: 'id',
-            columnName: 'alias', // Sensors use 'alias' as name
-            columnUnit: 'measurementUnit', // Sensors have measurementUnit
-            mappingRowId: 'targetId', // Swapped: protocols are now rows (were targets)
-            mappingColumnId: 'sourceId', // Swapped: sensors are now columns (were sources)
+            columnName: 'alias',            // Sensors use 'alias' as name
+            columnUnit: 'measurementUnit',  // Sensors have measurementUnit
+            mappingRowId: 'targetId',       // Swapped: protocols are now rows (were targets)
+            mappingColumnId: 'sourceId',    // Swapped: sensors are now columns (were sources)
             mappingValue: 'value'
           },
           staticColumns: [
@@ -515,7 +525,7 @@ export const GridTest = () => {
             }
           ]
         };
-        
+
       case 'studies-only':
         return {
           title: 'Studies Data',
@@ -524,8 +534,22 @@ export const GridTest = () => {
           mappings: [],
           staticColumns: [
             {
+              prop: 'id',
+              name: 'Identifier',
+              size: 150,
+              readonly: true,
+              cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+              cellProperties: () => {
+                return {
+                  style: {
+                    "border-right": "3px solid black"
+                  }
+                }
+              }
+            },
+            {
               prop: 'name',
-              name: 'Study Name', 
+              name: 'Study Name',
               size: 200,
               readonly: false
             },
@@ -538,18 +562,20 @@ export const GridTest = () => {
             {
               prop: 'submissionDate',
               name: 'Submission Date',
-              size: 150,
-              readonly: false
+              size: 250,
+              readonly: false,
+              cellTemplate: Template(HTML5DateCellTemplate),
             },
             {
               prop: 'publicationDate',
-              name: 'Publication Date', 
-              size: 150,
-              readonly: false
+              name: 'Publication Date',
+              size: 250,
+              readonly: false,
+              cellTemplate: Template(HTML5DateCellTemplate),
             }
           ]
         };
-        
+
       case 'variables-only':
         return {
           title: 'Variables Data',
@@ -583,7 +609,7 @@ export const GridTest = () => {
             }
           ]
         };
-        
+
       case 'protocols-only':
         return {
           title: 'Processing Protocols Data',
@@ -617,7 +643,7 @@ export const GridTest = () => {
             }
           ]
         };
-        
+
       default:
         return getGridConfig('study-variables');
     }
@@ -634,51 +660,46 @@ export const GridTest = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setGridMode('study-variables')}
-              className={`px-4 py-2 rounded border ${
-                gridMode === 'study-variables'
+              className={`px-4 py-2 rounded border ${gridMode === 'study-variables'
                   ? 'bg-blue-100 text-blue-700 border-blue-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Variables ↔ Studies
             </button>
             <button
               onClick={() => setGridMode('sensor-protocols')}
-              className={`px-4 py-2 rounded border ${
-                gridMode === 'sensor-protocols'
+              className={`px-4 py-2 rounded border ${gridMode === 'sensor-protocols'
                   ? 'bg-blue-100 text-blue-700 border-blue-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Protocols ↔ Sensors
             </button>
             <button
               onClick={() => setGridMode('studies-only')}
-              className={`px-4 py-2 rounded border ${
-                gridMode === 'studies-only'
+              className={`px-4 py-2 rounded border ${gridMode === 'studies-only'
                   ? 'bg-blue-100 text-blue-700 border-blue-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Studies Only
             </button>
             <button
               onClick={() => setGridMode('variables-only')}
-              className={`px-4 py-2 rounded border ${
-                gridMode === 'variables-only'
+              className={`px-4 py-2 rounded border ${gridMode === 'variables-only'
                   ? 'bg-blue-100 text-blue-700 border-blue-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Variables Only
             </button>
             <button
               onClick={() => setGridMode('protocols-only')}
-              className={`px-4 py-2 rounded border ${
-                gridMode === 'protocols-only'
+              className={`px-4 py-2 rounded border ${gridMode === 'protocols-only'
                   ? 'bg-blue-100 text-blue-700 border-blue-300'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Protocols Only
             </button>
@@ -701,11 +722,10 @@ export const GridTest = () => {
                 <button
                   onClick={removeLastStudy}
                   disabled={studies.length === 0}
-                  className={`px-3 py-2 text-sm border rounded ${
-                    studies.length === 0 
+                  className={`px-3 py-2 text-sm border rounded ${studies.length === 0
                       ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
                       : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                  }`}
+                    }`}
                 >
                   - Remove Last Study
                 </button>
@@ -722,11 +742,10 @@ export const GridTest = () => {
                 <button
                   onClick={removeLastVariable}
                   disabled={variableData.length === 0}
-                  className={`px-3 py-2 text-sm border rounded ${
-                    variableData.length === 0 
+                  className={`px-3 py-2 text-sm border rounded ${variableData.length === 0
                       ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
                       : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                  }`}
+                    }`}
                 >
                   - Remove Last Variable
                 </button>
@@ -743,11 +762,10 @@ export const GridTest = () => {
                 <button
                   onClick={removeLastProtocol}
                   disabled={protocolData.length === 0}
-                  className={`px-3 py-2 text-sm border rounded ${
-                    protocolData.length === 0 
+                  className={`px-3 py-2 text-sm border rounded ${protocolData.length === 0
                       ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
                       : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                  }`}
+                    }`}
                 >
                   - Remove Last Protocol
                 </button>
