@@ -3,8 +3,11 @@ import PageWrapper from "../layout/PageWrapper";
 import "./About.css";
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import DataGrid from '../components/DataGrid';
-import { HTML5DateCellTemplate, PatternCellTemplate } from '../components/GridTable/CellTemplates';
+import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../components/GridTable/CellTemplates';
 import { Template } from '@revolist/react-datagrid';
+import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
+import SelectTypePlugin from '@revolist/revogrid-column-select'
+
 
 const variables = [
   {
@@ -319,6 +322,10 @@ const s2p_mappings = [
   }
 ]
 
+
+// register column type
+const plugin = { select: new SelectTypePlugin() }
+
 export const GridTest = () => {
   const { setScreenWidth } = useGlobalDataContext();
 
@@ -450,6 +457,16 @@ export const GridTest = () => {
     }
   };
 
+    // Create a dropdown for the 'type' column
+    const dropdown = {
+        labelKey: 'label',
+        valueKey: 'value',
+        source: [
+            ...VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type }))
+        ],
+    }
+
+
   // Grid configurations for different modes
   const getGridConfig = () => {
     switch (gridMode) {
@@ -542,7 +559,7 @@ export const GridTest = () => {
               cellProperties: () => {
                 return {
                   style: {
-                    "border-right": "3px solid black"
+                    "border-right": "3px solid "
                   }
                 }
               }
@@ -587,13 +604,15 @@ export const GridTest = () => {
               prop: 'name',
               name: 'Variable Name',
               size: 200,
-              readonly: false
+              readonly: false,
+              cellTemplate: Template(BoldCell)
             },
             {
-              prop: 'type',
-              name: 'Type',
-              size: 200,
-              readonly: false
+                prop: 'type',
+                name: 'Variable Type',
+                size: 200,
+                columnType: 'select',
+                ...dropdown
             },
             {
               prop: 'unit',
@@ -779,6 +798,7 @@ export const GridTest = () => {
           key={gridMode} // Force re-render when mode changes
           {...currentConfig}
           showControls={true}
+          plugins={plugin}
           showDebug={true} // Set to true to see raw data
           onDataChange={handleDataChange}
           onRowDataChange={handleRowDataChange}
