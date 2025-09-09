@@ -142,3 +142,92 @@ export function getTransposedColumns(studies, sensors, sensorPrefix = "Sensor S"
     }))
   ];
 }
+
+
+// In utils.jsx - update getGenericTransposedGridData to handle both array and string values
+export function getGenericTransposedGridData(sourceItems, targetItems, mappings, sourceKey = 'sourceId', targetKey = 'targetId') {
+    if (!sourceItems?.length || !targetItems?.length) {
+        return [];
+    }
+
+    return targetItems.map(target => {
+        const row = {
+            id: target.id,
+            name: target.name,
+            type: target.type,
+            unit: target.unit,
+            description: target.description
+        };
+
+        sourceItems.forEach(source => {
+            const mapping = mappings?.find(m => 
+                m[targetKey] === target.id && 
+                m[sourceKey] === source.id
+            );
+            
+            if (mapping && mapping.value) {
+                // Handle both array and string values
+                if (Array.isArray(mapping.value)) {
+                    // Array format: ["spec", "unit"]
+                    const value = mapping.value;
+                    row[`${source.id}_spec`] = value[0] || '';
+                    row[`${source.id}_unit`] = value[1] || '';
+                    row[source.id] = value; // Keep array for backward compatibility
+                } else {
+                    // String format: "data" - put it in the spec column
+                    row[`${source.id}_spec`] = mapping.value;
+                    row[`${source.id}_unit`] = '';
+                    row[source.id] = [mapping.value, '']; // Convert to array format
+                }
+            } else {
+                // No mapping - empty values
+                row[`${source.id}_spec`] = '';
+                row[`${source.id}_unit`] = '';
+                row[source.id] = ['', ''];
+            }
+        });
+
+        return row;
+    });
+}
+
+// In utils.jsx - update flattenGenericTransposedGridData to handle both formats
+export function flattenGenericTransposedGridData(gridData, sourceItems, sourceKey = 'sourceId', targetKey = 'targetId') {
+    const mappings = [];
+    
+    gridData.forEach(targetRow => {
+        sourceItems.forEach(source => {
+            const specValue = targetRow[`${source.id}_spec`] || '';
+            const unitValue = targetRow[`${source.id}_unit`] || '';
+            
+            // Only create mapping if there's actual data
+            if (specValue !== '' || unitValue !== '') {
+                let value;
+                
+                // If there's both spec and unit, use array format
+                if (specValue !== '' && unitValue !== '') {
+                    value = [specValue, unitValue];
+                } 
+                // If only spec, use string format
+                else if (specValue !== '' && unitValue === '') {
+                    value = specValue;
+                }
+                // If only unit (unusual case), use array format
+                else if (specValue === '' && unitValue !== '') {
+                    value = ['', unitValue];
+                }
+                
+                mappings.push({
+                    [sourceKey]: source.id,
+                    [targetKey]: targetRow.id,
+                    sourceType: "sensor",
+                    targetType: "processingProtocol",
+                    value: value
+                });
+            }
+        });
+    });
+
+    console.log("Flattened Mappings:", mappings);
+    return mappings;
+}

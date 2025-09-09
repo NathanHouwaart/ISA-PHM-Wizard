@@ -8,6 +8,7 @@ import { Route } from "react-router-dom";
 
 import { About, IsaQuestionnaire, Home, TestSetups} from "./pages";
 import { GlobalDataProvider } from "./contexts/GlobalDataContext";
+import { GridTest } from "./pages/GridTest";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/gridtest" element={<GridTest />} />
           <Route path="/testsetups" element={<TestSetups />} />
           <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
         </Routes>

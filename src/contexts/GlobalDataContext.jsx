@@ -50,7 +50,9 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
+    const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage('globalAppData_processingProtocols', []))
 
+    // Mappings
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
     const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
@@ -83,6 +85,8 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
         localStorage.setItem('globalAppData_selectedTestSetupId', JSON.stringify(selectedTestSetupId));
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
+        localStorage.setItem('globalAppData_processingProtocols', JSON.stringify(processingProtocols));
+
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
         localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
@@ -192,6 +196,7 @@ export const GlobalDataProvider = ({ children }) => {
         publications: [publications, setPublications],
         selectedTestSetupId: [selectedTestSetupId, setSelectedTestSetupId],
         studyVariables: [studyVariables, setStudyVariables],
+        processingProtocols: [processingProtocols, setProcessingProtocols],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
         sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
@@ -217,6 +222,8 @@ export const GlobalDataProvider = ({ children }) => {
         setSelectedTestSetupId,
         studyVariables,
         setStudyVariables,
+        processingProtocols,
+        setProcessingProtocols,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping,
         studyToSensorMeasurementMapping,

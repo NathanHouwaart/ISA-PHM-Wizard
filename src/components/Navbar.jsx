@@ -9,6 +9,9 @@ function Navbar() {
       <Link to={"/"} className="title">ISA-PHM Wizard</Link>
       <ul>
         <li>
+          <NavLink to={"/gridtest"}>Grid Test</NavLink>
+        </li>
+        <li>
           <NavLink to={"/about"}>About</NavLink>
         </li>
         <li>
