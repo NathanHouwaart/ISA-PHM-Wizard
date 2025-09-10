@@ -37,6 +37,9 @@ const DataGrid = ({
     onDataChange,           // Callback when mapping data changes
     onRowDataChange,        // Callback when row data changes (standalone mode)
 
+    // Custom actions for controls
+    customActions = [],     // Array of custom action buttons to add to controls
+
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
 
@@ -510,14 +513,39 @@ const DataGrid = ({
                             ↷ Redo
                         </button>
 
+                        {/* Custom Actions */}
+                        {customActions.length > 0 && (
+                            <>
+                                <div className="border-l border-gray-300 h-6 mx-2"></div>
+                                {customActions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={action.onClick}
+                                        disabled={action.disabled}
+                                        className={action.className || `px-3 py-1 text-sm rounded border ${
+                                            action.disabled
+                                                ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                                : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+                                        }`}
+                                        title={action.title}
+                                    >
+                                        {action.label}
+                                    </button>
+                                ))}
+                            </>
+                        )}
+
                         {stats.totalMappings > 0 && (
-                            <button
-                                onClick={clearAllMappings}
-                                className="px-3 py-1 text-sm rounded border bg-red-50 text-red-700 border-red-300 hover:bg-red-100 ml-4"
-                                title="Clear all values"
-                            >
-                                🗑️ Clear All
-                            </button>
+                            <>
+                                <div className="border-l border-gray-300 h-6 mx-2"></div>
+                                <button
+                                    onClick={clearAllMappings}
+                                    className="px-3 py-1 text-sm rounded border bg-red-50 text-red-700 border-red-300 hover:bg-red-100"
+                                    title="Clear all values"
+                                >
+                                    🗑️ Clear All
+                                </button>
+                            </>
                         )}
                     </div>
                 )}

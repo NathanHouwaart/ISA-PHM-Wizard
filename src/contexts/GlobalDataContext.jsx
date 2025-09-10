@@ -60,6 +60,7 @@ export const GlobalDataProvider = ({ children }) => {
     const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToAssayMapping', []));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
+    const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage('globalAppData_pageTabStates', {}));
 
     // Effect for saving all data to local storage
     // This useEffect will run whenever any of its dependencies change, saving the latest state.
@@ -92,15 +93,16 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
         localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
         localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
+        localStorage.setItem('globalAppData_pageTabStates', JSON.stringify(pageTabStates));
 
         // console.log("Global data saved to localStorage:", dataToStore);
 
     }, [
         studies, investigations, authors, testSetups,
-        publications, selectedTestSetupId, studyVariables,
+        publications, selectedTestSetupId, studyVariables, processingProtocols,
         studyToStudyVariableMapping, studyToSensorMeasurementMapping,
         sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
-        studyToAssayMapping
+        studyToAssayMapping, pageTabStates
     ]);
 
 
@@ -203,6 +205,7 @@ export const GlobalDataProvider = ({ children }) => {
         studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
         studyToAssayMapping: [studyToAssayMapping, setStudyToAssayMapping],
         screenWidth: [screenWidth, setScreenWidth],
+        pageTabStates: [pageTabStates, setPageTabStates],
         submitData: [submitData]
     };
 
@@ -236,6 +239,8 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
+        pageTabStates,
+        setPageTabStates,
         dataMap,
         submitData
     };

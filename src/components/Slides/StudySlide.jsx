@@ -1,5 +1,5 @@
 // src/pages/StudyPage.js
-import React, { useEffect, useState, forwardRef } from 'react';
+import React, { useEffect, forwardRef, useState } from 'react';
 import { Switch } from '../ui/switch';
 
 // Import the single global provider
@@ -14,116 +14,134 @@ import Collection, {
     CollectionEmptyStateSubtitle,
     CollectionEmptyStateAddButtonText
 } from '../Collection';
-import { StudyTable } from '../Study/StudyTable';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
+import { usePageTab } from '../../hooks/usePageWidth'; // Import the usePageTab hook
 
 import studySlideContent from '../../data/studySlideContent.json'; // Assuming you have a JSON file for the content
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import useCarouselNavigation from '../../hooks/useCarouselNavigation';
-import { GridTable } from '../GridTable/GridTable';
+import DataGrid from '../DataGrid'; // Import the new DataGrid
+import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
-
-import DatePlugin from '@revolist/revogrid-column-date'
-
-const BoldCell = ({ value }) => {
-    return (
-        <div className="flex items-center justify-center">
-            <strong className=''>{value}</strong>
-        </div>
-    );
-};
-
-const PatternCellTemplate = ({ prefix, rowIndex }) => {
-    // Generate the pattern based on the row index
-    const value = `${prefix}${(rowIndex + 1).toString().padStart(2, '0')}`;
-    return <BoldCell value={value} />;
-}
-
-const HTML5DateCellTemplate = ({ model, prop, rowIndex }) => {
-    return (
-        <input
-            type="date"
-            value={model[prop] || ''}
-            onChange={(e) => {
-                const event = new CustomEvent('beforeedit', {
-                    detail: { 
-                        rowIndex, 
-                        prop, 
-                        val: e.target.value,
-                        value: model[prop] // old value
-                    }
-                });
-                
-                // Dispatch on the grid element
-                const gridElement = e.target.closest('revo-grid');
-                if (gridElement) {
-                    gridElement.dispatchEvent(event);
-                }
-            }}
-            
-        />
-    );
-};
-
-const columns = [
-    {
-        prop: 'id', 
-        name: 'Identifier', 
-        size: 150, 
-        pin: "colPinStart", 
-        readonly: true, 
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }), 
-        cellProperties: () => {
-            return {
-                style: {
-                    "border-right": "3px solid black"
-                }
-            }
-        }
-    },
-    { prop: 'name', name: 'Title', size: 250 },
-    { prop: 'description', name: 'Description', size: 510 },
-    { 
-        prop: 'submissionDate', 
-        name: 'Submission Date', 
-        size: 250, 
-        // columnType: 'date',
-        cellTemplate: Template(HTML5DateCellTemplate),
-    },
-    { 
-        prop: 'publicationDate', 
-        name: 'Publication Date', 
-        size: 250, 
-        // columnType: 'date',
-        cellTemplate: Template(HTML5DateCellTemplate),
-        
-    }
-];
-
-const plugins = { 
-    date: new DatePlugin()
-};
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(5, 'simple-view'); // Page 5 for StudySlide
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     const { setScreenWidth, studies, setStudies } = useGlobalDataContext();
 
-     useEffect(() => {
-            if (selectedTab === 'grid-view' && currentPage === 5) {
-                setScreenWidth("max-w-[100rem]");
-            } else if (currentPage === 5) {
-                setScreenWidth("max-w-5xl");
+    useEffect(() => {
+        if (selectedTab === 'grid-view' && currentPage === 5) {
+            setScreenWidth("max-w-[100rem]");
+        } else if (currentPage === 5) {
+            setScreenWidth("max-w-5xl");
+        }
+    }, [selectedTab, currentPage, setScreenWidth]);
+
+    // Helper function to generate unique IDs
+    const generateId = () => {
+        return crypto.randomUUID();
+    };
+
+    // Add new study function
+    const addNewStudy = () => {
+        const newStudy = {
+            id: generateId(),
+            name: `New Study ${studies.length + 1}`,
+            description: 'Enter description...',
+            submissionDate: "",
+            publicationDate: ""
+        };
+        setStudies([...studies, newStudy]);
+    };
+
+    // Remove last study function
+    const removeLastStudy = () => {
+        if (studies.length > 0) {
+            setStudies(studies.slice(0, -1));
+        }
+    };
+
+    // Handle study data changes from the grid
+    const handleStudyDataChange = (newStudyData) => {
+        setStudies(newStudyData);
+    };
+
+    // Grid configuration for studies
+    const studiesGridConfig = {
+        title: 'Studies Data',
+        rowData: studies,
+        columnData: [], // No dynamic columns for standalone grid
+        mappings: [], // No mappings for standalone grid
+        customActions: [
+            {
+                label: '+ Add Study',
+                onClick: addNewStudy,
+                className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
+                title: 'Add a new study'
+            },
+            {
+                label: '- Remove Last',
+                onClick: removeLastStudy,
+                disabled: studies.length === 0,
+                className: `px-3 py-1 text-sm border rounded ${studies.length === 0
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                }`,
+                title: 'Remove the last study'
             }
-        }, [selectedTab, currentPage, setScreenWidth]);
+        ],
+        staticColumns: [
+            {
+                prop: 'id',
+                name: 'Identifier',
+                size: 150,
+                readonly: true,
+                cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+                cellProperties: () => {
+                    return {
+                        style: {
+                            "border-right": "3px solid "
+                        }
+                    }
+                }
+            },
+            {
+                prop: 'name',
+                name: 'Study Name',
+                size: 200,
+                readonly: false
+            },
+            {
+                prop: 'description',
+                name: 'Description',
+                size: 300,
+                readonly: false
+            },
+            {
+                prop: 'submissionDate',
+                name: 'Submission Date',
+                size: 250,
+                readonly: false,
+                cellTemplate: Template(HTML5DateCellTemplate),
+            },
+            {
+                prop: 'publicationDate',
+                name: 'Publication Date',
+                size: 250,
+                readonly: false,
+                cellTemplate: Template(HTML5DateCellTemplate),
+            }
+        ]
+    };
     
     return (
         <div ref={combinedRef}>
@@ -161,12 +179,13 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                     </Collection>
                 </TabPanel>
 
-               <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable
-                        columns={columns}
-                        items={studies}
-                        setItems={setStudies}
-                        plugins={plugins}
+                <TabPanel isActive={selectedTab === 'grid-view'}>
+                    <DataGrid
+                        {...studiesGridConfig}
+                        showControls={true}
+                        showDebug={false}
+                        onRowDataChange={handleStudyDataChange}
+                        height="500px"
                     />
                 </TabPanel>
             </div>
