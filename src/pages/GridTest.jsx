@@ -534,7 +534,7 @@ export const GridTest = () => {
         setProtocolData(newRowData);
         break;
       case 'sensor-protocols':
-        setSensorData(newRowData);
+        setProtocolData(newRowData); // Fixed: protocols are row data in this mode
         break;
     }
   };
@@ -620,14 +620,14 @@ export const GridTest = () => {
               prop: 'name',
               name: 'Protocol Name',
               size: 200,
-              readonly: true,
+              // readonly: true,
               cellTemplate: Template(BoldCell),
             },
             {
-              prop: 'type',
-              name: 'Type',
-              size: 150,
-              readonly: true,
+              prop: 'description',
+              name: 'Description',
+              size: 300,
+              // readonly: true,
               cellProperties: () => {
                 return {
                   style: {
