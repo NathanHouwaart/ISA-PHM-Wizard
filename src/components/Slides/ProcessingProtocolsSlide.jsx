@@ -17,36 +17,43 @@ import EntityMappingPanel from '../EntityMappingPanel';
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
 import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+import { BoldCell, GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
 
 // Import utility functions
 import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 import isEqual from 'lodash.isequal';
 import useProcessingProtocols from '../../hooks/useProcessingProtocols';
+import usePageTab from '../../hooks/usePageWidth';
+import DataGrid from '../DataGrid';
 
 
 export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(8, 'simple-view'); // State to manage selected tab
 
+    // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // Access global context
     const {
         studies,
         testSetups,
         setScreenWidth,
         selectedTestSetupId,
+        processingProtocols,
+        setProcessingProtocols,
+        sensorToProcessingProtocolMapping,
+        setSensorToProcessingProtocolMapping,
         setTestSetups,
         studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping,
-        sensorToProcessingProtocolMapping,
-        setSensorToProcessingProtocolMapping
+        setStudyToSensorMeasurementMapping
     } = useGlobalDataContext();
 
-        
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
+    // Adjust screen width based on tab and page
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 8) {
             setScreenWidth("max-w-[100rem]");
@@ -55,118 +62,99 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         }
     }, [selectedTab, currentPage, setScreenWidth]);
 
+    // Helper function to generate unique IDs
+    const generateId = () => {
+        return crypto.randomUUID();
+    };
 
-    const [processedData, setProcessedData] = useState([]);
-    const [columns, setColumns] = useState([]);
-    const isUpdatingFromGlobal = useRef(false);
+    // Handle input changes in EntityMappingPanel
+    const addNewProtocol = () => {
+        const newProtocol = {
+            id: generateId(),
+            name: `New Protocol ${processingProtocols.length + 1}`,
+            type: 'Enter type...',
+            unit: '',
+            description: 'Enter description...'
+        };
+        // If the Processing Protocols grid is active, use DataGrid's history-aware API
+        // if (gridMode === 'sensor-protocols' && callGridMethod('addRow', newProtocol)) return;
+        setProcessingProtocols([...processingProtocols, newProtocol]);
+    };
 
-    // --------- Global → Grid Sync ---------
-    const gridDataFromGlobal = useMemo(() => {
-        // Extract every field from the sensors in the selected test setup
-       return Object.entries(selectedTestSetup?.sensors || {}).map(([sensorId, sensor]) => {
-           return {
-               id: sensorId,
-               ...sensor
-           };
-       });
-
-    }, [testSetups, selectedTestSetup]);
-
-    // --- Global Data to Local Grid Data Sync ---
-    useEffect(() => {
-        if (!isEqual(processedData, gridDataFromGlobal)) {
-            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
-            setProcessedData(gridDataFromGlobal);
+    const removeLastProtocol = () => {
+        // if (gridMode === 'sensor-protocols' && callGridMethod('removeLastRow')) return;
+        if (processingProtocols.length > 0) {
+            setProcessingProtocols(processingProtocols.slice(0, -1));
         }
-    }, [selectedTestSetup, testSetups]);
+    };
 
-    // --------- Grid → Global Sync ---------
-    useEffect(() => {
-        if (isUpdatingFromGlobal.current) {
-            isUpdatingFromGlobal.current = false;
-            return;
-        }
+    // Handle cell edits in the grid
+    const handleDataGridMappingsChange = useCallback((newMappings) => {
+        setSensorToProcessingProtocolMapping(newMappings);
+    }, [setSensorToProcessingProtocolMapping]);
 
-        setTestSetups(prev => {
-            const updatedTestSetups = prev.map(testSetup => {
-                if (testSetup.id === selectedTestSetupId) {
-                    return {
-                        ...testSetup,
-                        sensors: processedData.map(sensor => {
-                            return Object.entries(sensor).reduce((acc, [key, value]) => {
-                                acc[key] = value;
-                                return acc;
-                            }, {});
-                        })
-                    };
-                }
-                return testSetup;
-            });
-            console.log("Updated Test Setups", updatedTestSetups);
-            return updatedTestSetups;
-        });
+    // Handle row data changes
+    const handleDataGridRowDataChange = useCallback((newRowData) => {
+        setProcessingProtocols(newRowData);
+    }, [setProcessingProtocols]);
 
-      
-    }, [processedData, studies]);
-
-
-    // Standalone Effect to initialize columns for grid view
-    useEffect(() => {
-        setColumns([
-            { prop: 'id', name: 'Identifier', pin: 'colPinStart', readonly: true, size: 100, cellTemplate: Template(PatternCellTemplate, { prefix : "Sensor S"}), cellProperties: GrayCell, },
-            { prop: 'measurementType', name: 'Type', size: 150, readonly: true },
-            { prop: 'measurementUnit', name: 'Unit', readonly: true },
+    // Grid configuration for processing protocols
+    const processingProtocolsGridConfig = {
+        title: 'Processing Protocols to Sensors Grid',
+        rowData: processingProtocols,            // Protocols are now rows
+        columnData: selectedTestSetup?.sensors || [],           // Sensors are now columns
+        mappings: sensorToProcessingProtocolMapping, // Mappings from sensors to protocols
+        fieldMappings: {
+            rowId: 'id',
+            rowName: 'name',
+            columnId: 'id',
+            columnName: 'alias',            // Sensors use 'alias' as name
+            columnUnit: 'measurementUnit',  // Sensors have measurementUnit
+            mappingRowId: 'targetId',       // Swapped: protocols are now rows (were targets)
+            mappingColumnId: 'sourceId',    // Swapped: sensors are now columns (were sources)
+            mappingValue: 'value',
+            hasChildColumns: true           // Enable child columns for specification and unit
+        },
+        staticColumns: [
             {
-                prop: 'description', name: 'Description', size: 350, readonly: true, cellProperties: () => {
+                prop: 'name',
+                name: 'Protocol Name',
+                size: 200,
+                // readonly: true,
+                cellTemplate: Template(BoldCell),
+            },
+            {
+                prop: 'description',
+                name: 'Description',
+                size: 300,
+                // readonly: true,
+                cellProperties: () => {
                     return {
                         style: {
-                            "border-right": "3px solid black"
+                            "border-right": "3px solid "
                         }
                     }
                 }
+            }
+        ],
+        customActions: [
+            {
+                label: '+ Add Protocol',
+                onClick: addNewProtocol,
+                className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
+                title: 'Add a new protocol'
             },
-            { prop: 'filterType', name: 'Filter Type',
-                 children : [
-                    { prop: 'processingProtocolFilterTypeSpecification', name: 'Specification', size: 138},
-                    { prop: 'processingProtocolFilterTypeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
-                ]
-            },
-            { prop: 'chunkSize', name: 'Chunk Size',
-                children : [
-                    { prop: 'processingProtocolChunkSizeSpecification', name: 'Specification', size: 138},
-                    { prop: 'processingProtocolChunkSizeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
-                ]
-            },
-            { prop: 'scalingRange', name: 'Scaling Range', 
-                children : [
-                    { prop: 'processingProtocolScalingRangeSpecification', name: 'Specification', size: 138},
-                    { prop: 'processingProtocolScalingRangeUnit', name: 'Unit', size: 50, cellProperties: () =>{ return { style: { "border-right": "3px solid black" } } } }
-                ]
-            },
-            { prop: 'scalingResolution', name: 'Scaling Resolution', 
-                children : [
-                    { prop: 'processingProtocolScalingResolutionSpecification', name: 'Specification', size: 138},
-                    { prop: 'processingProtocolScalingResolutionUnit', name: 'Unit', size: 50 }
-                ]
-            },
-        ])
-    }, [selectedTestSetup]);
-
-    const handleInputChange = (index, event) => {
-        setProcessedData(prevData => {
-            const newData = [...prevData];
-
-            const { name, value } = event.target;
-
-            console.log("Input Change", index, name, value);
-
-            newData[index] = {
-                ...newData[index],
-                [name]: value
-            };
-            console.log("Updated Data", newData);
-            return newData;
-        });
+            {
+                label: '- Remove Last',
+                onClick: removeLastProtocol,
+                disabled: processingProtocols.length === 0,
+                className: `px-3 py-1 text-sm border rounded ${processingProtocols.length === 0
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    }`,
+                title: 'Remove the last protocol'
+            }
+        ],
     };
 
     return (
@@ -192,8 +180,8 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    
-                    <EntityMappingPanel
+
+                    {/* <EntityMappingPanel
                         name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
                         tileNamePrefix="Sensor S"
                         items={selectedTestSetup?.sensors || []}
@@ -201,16 +189,19 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                         mappings={studyToSensorMeasurementMapping}
                         handleInputChange={handleInputChange}
                         disableAdd
-                    />
-             
+                    /> */}
+
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable 
-                        items={processedData} 
-                        setItems={setProcessedData} 
-                        columns={columns} 
-                        disableAdd
+                    <DataGrid
+                        {...processingProtocolsGridConfig}
+                        showControls={true}
+                        showDebug={false}
+                        onDataChange={handleDataGridMappingsChange}
+                        onRowDataChange={handleDataGridRowDataChange}
+                        height="500px"
+                        isActive={selectedTab === 'grid-view' && currentPage === 8}
                     />
                 </TabPanel>
             </div>

@@ -20,9 +20,9 @@ export const slides = [
   TestSetupSelectionSlide,
   StudySlide,
   StudyVariableSlide,
-  // MeasurementOutputSlide,
-  // ProcessingProtocolsSlide,
+  MeasurementOutputSlide,
+  ProcessingProtocolsSlide,
   // ProcessingProtocolsSlideNew,
-  // ProcessingOutputSlide,
-  // AssaySlide
+  ProcessingOutputSlide,
+  AssaySlide
 ];

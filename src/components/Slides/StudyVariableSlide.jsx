@@ -100,6 +100,72 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         setStudyVariables(newRowData);
     }, [setStudyVariables]);
 
+    // Grid configuration for studies
+    const studyVariableGridConfig = {
+        title: 'Variables to Studies Grid',
+        rowData: studyVariables,
+        columnData: studies,
+        mappings: studyToStudyVariableMapping,
+        fieldMappings: {
+            rowId: 'id',
+            rowName: 'name',
+            columnId: 'id',
+            columnName: 'name',
+            columnUnit: '',
+            mappingRowId: 'studyVariableId',
+            mappingColumnId: 'studyId',
+            mappingValue: 'value'
+        },
+        staticColumns: useMemo(() => ([
+            {
+                prop: 'name',
+                name: 'Variable Name',
+                size: 200,
+                readonly: false,
+                cellTemplate: Template(BoldCell),
+                cellProperties: () => ({ style: { "border-right": "3px solid " } })
+            },
+            {
+                prop: 'type',
+                name: 'Type',
+                size: 150,
+                readonly: false,
+                columnType: 'select',
+                ...dropdown
+            },
+            {
+                prop: 'unit',
+                name: 'Unit',
+                size: 100,
+                readonly: false
+            },
+            {
+                prop: 'description',
+                name: 'Description',
+                size: 300,
+                readonly: false,
+                cellProperties: () => ({ style: { "border-right": "3px solid " } })
+            }
+        ]), [dropdown]),
+        customActions : useMemo(() => ([
+            {
+                label: '+ Add Variable',
+                onClick: addNewVariable,
+                className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
+                title: 'Add a new variable'
+            },
+            {
+                label: '- Remove Last',
+                onClick: removeLastVariable,
+                disabled: studyVariables.length === 0,
+                className: `px-3 py-1 text-sm border rounded ${studyVariables.length === 0
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    }`,
+                title: 'Remove the last variable'
+            }
+        ]), [addNewVariable, removeLastVariable, studyVariables.length])
+    };
 
     return (
         <div ref={combinedRef}>
@@ -127,75 +193,13 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <DataGrid
-                        title={'Variables to Studies Grid'}
-                        rowData={studyVariables}
-                        columnData={studies}
-                        mappings={studyToStudyVariableMapping}
-                        fieldMappings={{
-                            rowId: 'id',
-                            rowName: 'name',
-                            columnId: 'id',
-                            columnName: 'name',
-                            columnUnit: '',
-                            mappingRowId: 'studyVariableId',
-                            mappingColumnId: 'studyId',
-                            mappingValue: 'value'
-                        }}
-                        staticColumns={useMemo(() => ([
-                            {
-                                prop: 'name',
-                                name: 'Variable Name',
-                                size: 200,
-                                readonly: false,
-                                cellTemplate: Template(BoldCell),
-                                cellProperties: () => ({ style: { "border-right": "3px solid " } })
-                            },
-                            {
-                                prop: 'type',
-                                name: 'Type',
-                                size: 150,
-                                readonly: false,
-                                columnType: 'select',
-                                ...dropdown
-                            },
-                            {
-                                prop: 'unit',
-                                name: 'Unit',
-                                size: 100,
-                                readonly: false
-                            },
-                            {
-                                prop: 'description',
-                                name: 'Description',
-                                size: 300,
-                                readonly: false,
-                                cellProperties: () => ({ style: { "border-right": "3px solid " } })
-                            }
-                        ]), [dropdown])}
-                        customActions={useMemo(() => ([
-                            {
-                                label: '+ Add Variable',
-                                onClick: addNewVariable,
-                                className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
-                                title: 'Add a new variable'
-                            },
-                            {
-                                label: '- Remove Last',
-                                onClick: removeLastVariable,
-                                disabled: studyVariables.length === 0,
-                                className: `px-3 py-1 text-sm border rounded ${studyVariables.length === 0
-                                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                                }`,
-                                title: 'Remove the last variable'
-                            }
-                        ]), [addNewVariable, removeLastVariable, studyVariables.length])}
+                        {...studyVariableGridConfig}
                         showControls={true}
                         plugins={plugin}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height="500px"
+                        height="600px"
                         isActive={selectedTab === 'grid-view' && currentPage === 6}
                     />
                 </TabPanel>
