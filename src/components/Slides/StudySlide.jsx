@@ -111,17 +111,6 @@ export const StudySlide = () => {
     // const elementToObserveRef = useResizeObserver(onHeightChange);
     // const combinedRef = useCombinedRefs(ref, elementToObserveRef);
   const [studies, setStudies] = useState(initial_studies);
-    // const { setScreenWidth, studies, setStudies } = useGlobalDataContext();
-
-    console.log('🔴 StudySlide render, studies state:', studies);
-
-    // useEffect(() => {
-    //     if (selectedTab === 'grid-view' && currentPage === 5) {
-    //         setScreenWidth("max-w-[100rem]");
-    //     } else if (currentPage === 5) {
-    //         setScreenWidth("max-w-5xl");
-    //     }
-    // }, [selectedTab, currentPage, setScreenWidth]);
 
     // Helper function to generate unique IDs
     const generateId = () => {
@@ -149,20 +138,8 @@ export const StudySlide = () => {
 
     // Handle study data changes from the grid
     const handleStudyDataChange = (newStudyData) => {
-        console.log('🔴 StudySlide handleStudyDataChange called with:', newStudyData);
         setStudies(newStudyData);
     };
-
-    // Grid configuration for studies
-    const studiesGridConfig = {
-        title: 'Studies Data',
-        rowData: studies,
-        columnData: [], // No dynamic columns for standalone grid
-        mappings: [], // No mappings for standalone grid
-        staticColumns: STATIC_COLUMNS // Use the static reference
-    };
-    
-    console.log('🔴 StudySlide studiesGridConfig created, staticColumns reference:', STATIC_COLUMNS === studiesGridConfig.staticColumns);
     
     return (
         <DataGrid
