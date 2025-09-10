@@ -197,9 +197,24 @@ const DataGrid = ({
             const updates = [];
             const rowDataUpdates = []; // For standalone grids
 
+            // For child columns, we need to handle the flattened structure differently
+            // RevoGrid flattens child columns, so we need to map the column indexes correctly
+            const flatColumnDefs = [];
+            stableColumnDefs.current.forEach(col => {
+                if (col.children) {
+                    // Add child columns to flat structure
+                    col.children.forEach(child => {
+                        flatColumnDefs.push(child);
+                    });
+                } else {
+                    flatColumnDefs.push(col);
+                }
+            });
+
             for (let rowIndex = newRange.y; rowIndex <= (newRange.y1 || newRange.y); rowIndex++) {
                 for (let colIndex = newRange.x; colIndex <= (newRange.x1 || newRange.x); colIndex++) {
-                    const column = stableColumnDefs.current[colIndex];
+                    // Use flatColumnDefs for child column support
+                    const column = flatColumnDefs[colIndex];
                     if (!column) continue;
 
                     const columnProp = column.prop;
@@ -325,11 +340,24 @@ const DataGrid = ({
         const { newRange } = detail;
 
         if (newRange && stableColumnDefs.current) {
+            // Create flattened column structure for child column support
+            const flatColumnDefs = [];
+            stableColumnDefs.current.forEach(col => {
+                if (col.children) {
+                    // Add child columns to flat structure
+                    col.children.forEach(child => {
+                        flatColumnDefs.push(child);
+                    });
+                } else {
+                    flatColumnDefs.push(col);
+                }
+            });
+
             const rangeStartCol = newRange.x;
             const rangeEndCol = newRange.x1 || rangeStartCol;
 
             for (let colIndex = rangeStartCol; colIndex <= rangeEndCol; colIndex++) {
-                const column = stableColumnDefs.current[colIndex];
+                const column = flatColumnDefs[colIndex];
                 if (column) {
                     const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
                     const staticColumn = staticColumns.find(col => col.prop === column.prop);
@@ -368,7 +396,20 @@ const DataGrid = ({
                 const rgRow = parseInt(focusedCell.getAttribute('data-rgrow') || '0', 10);
                 const rgCol = parseInt(focusedCell.getAttribute('data-rgcol') || '0', 10);
 
-                const column = stableColumnDefs.current[rgCol];
+                // Create flattened column structure for child column support
+                const flatColumnDefs = [];
+                stableColumnDefs.current.forEach(col => {
+                    if (col.children) {
+                        // Add child columns to flat structure
+                        col.children.forEach(child => {
+                            flatColumnDefs.push(child);
+                        });
+                    } else {
+                        flatColumnDefs.push(col);
+                    }
+                });
+
+                const column = flatColumnDefs[rgCol];
                 if (!column) return false;
 
                 const row = getRowByIndex(rgRow);

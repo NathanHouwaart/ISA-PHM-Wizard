@@ -73,28 +73,28 @@ export const HTML5DateCellTemplate = ({ model, prop, rowIndex }) => {
                     }, 0);
                 }
             }}
-            onBlur={(e) => {
-                // Ensure the value is committed when losing focus
-                const newValue = e.target.value;
-                if (newValue !== currentValue) {
-                    const afterEditEvent = new CustomEvent('afteredit', {
-                        detail: { 
-                            rowIndex, 
-                            prop, 
-                            val: newValue,
-                            value: currentValue,
-                            model: model,
-                            rgRow: rowIndex
-                        },
-                        bubbles: true
-                    });
+            // onBlur={(e) => {
+            //     // Ensure the value is committed when losing focus
+            //     const newValue = e.target.value;
+            //     if (newValue !== currentValue) {
+            //         const afterEditEvent = new CustomEvent('afteredit', {
+            //             detail: { 
+            //                 rowIndex, 
+            //                 prop, 
+            //                 val: newValue,
+            //                 value: currentValue,
+            //                 model: model,
+            //                 rgRow: rowIndex
+            //             },
+            //             bubbles: true
+            //         });
                     
-                    const gridElement = e.target.closest('revo-grid');
-                    if (gridElement) {
-                        gridElement.dispatchEvent(afterEditEvent);
-                    }
-                }
-            }}
+            //         const gridElement = e.target.closest('revo-grid');
+            //         if (gridElement) {
+            //             gridElement.dispatchEvent(afterEditEvent);
+            //         }
+            //     }
+            // }}
         />
     );
 };

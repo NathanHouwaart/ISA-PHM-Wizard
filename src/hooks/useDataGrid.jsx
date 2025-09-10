@@ -198,13 +198,49 @@ export const useDataGrid = ({
 
     // Add dynamic columns based on columnData
     if (columnData.length > 0) {
-      const dynamicColumns = columnData.map(column => ({
-        prop: column[fields.columnId],
-        name: `${column[fields.columnName]}${column[fields.columnUnit] ? ` (${column[fields.columnUnit]})` : ''}`,
-        size: 150,
-        readonly: false
-      }));
-      columns.push(...dynamicColumns);
+      columnData.forEach(column => {
+        // Check if this should have child columns (for sensor-protocol mapping)
+        const hasChildColumns = fields.hasChildColumns;
+        
+        if (hasChildColumns) {
+          // Create parent column with children for specification and unit
+          const parentColumn = {
+            prop: column[fields.columnId],
+            name: column[fields.columnName],
+            size: 200, // Total width for the group
+            children: [
+              {
+                prop: `${column[fields.columnId]}_spec`,
+                name: "Specification",
+                size: 120,
+                readonly: false,
+                editor: 'input'
+              },
+              {
+                prop: `${column[fields.columnId]}_unit`,
+                name: "Unit",
+                size: 80,
+                readonly: false,
+                editor: 'input',
+                cellProperties: () => ({
+                  style: { "border-right": "3px solid black" }
+                })
+              }
+            ]
+          };
+          
+          columns.push(parentColumn);
+        } else {
+          // Regular single column
+          const dynamicColumn = {
+            prop: column[fields.columnId],
+            name: `${column[fields.columnName]}${column[fields.columnUnit] ? ` (${column[fields.columnUnit]})` : ''}`,
+            size: 150,
+            readonly: false
+          };
+          columns.push(dynamicColumn);
+        }
+      });
     }
 
     return columns;
@@ -220,7 +256,36 @@ export const useDataGrid = ({
         columnData.forEach(column => {
           const mappingKey = `${row[fields.rowId]}-${column[fields.columnId]}`;
           const mapping = mappingLookup.get(mappingKey);
-          gridRow[column[fields.columnId]] = mapping ? mapping[fields.mappingValue] : '';
+          
+          if (fields.hasChildColumns) {
+            // Handle child columns for specification and unit
+            let specValue = '';
+            let unitValue = '';
+            
+            if (mapping && mapping[fields.mappingValue]) {
+              const value = mapping[fields.mappingValue];
+              if (Array.isArray(value)) {
+                // Handle array format: ["24", "bit"]
+                specValue = value[0] || '';
+                unitValue = value[1] || '';
+              } else if (typeof value === 'string') {
+                // Handle string format: "24;bit"
+                const parts = value.split(';');
+                specValue = parts[0] || '';
+                unitValue = parts[1] || '';
+              } else if (typeof value === 'object' && value !== null) {
+                // Handle object format: {specification: "24", unit: "bit"}
+                specValue = value.specification || '';
+                unitValue = value.unit || '';
+              }
+            }
+            
+            gridRow[`${column[fields.columnId]}_spec`] = specValue;
+            gridRow[`${column[fields.columnId]}_unit`] = unitValue;
+          } else {
+            // Regular single column
+            gridRow[column[fields.columnId]] = mapping ? mapping[fields.mappingValue] : '';
+          }
         });
       }
 
@@ -230,23 +295,86 @@ export const useDataGrid = ({
 
   // Update a single cell mapping
   const updateMapping = useCallback((rowId, columnId, value) => {
-    const mappingKey = `${rowId}-${columnId}`;
+    // Handle child columns
+    const isChildColumn = columnId.includes('_spec') || columnId.includes('_unit');
+    let actualColumnId = columnId;
+    let childType = null;
+    
+    if (isChildColumn) {
+      if (columnId.endsWith('_spec')) {
+        actualColumnId = columnId.replace('_spec', '');
+        childType = 'specification';
+      } else if (columnId.endsWith('_unit')) {
+        actualColumnId = columnId.replace('_unit', '');
+        childType = 'unit';
+      }
+    }
+    
+    const mappingKey = `${rowId}-${actualColumnId}`;
     const existingMapping = mappingLookup.get(mappingKey);
     
     let newMappings;
     if (existingMapping) {
       // Update existing mapping
-      newMappings = currentMappings.map(mapping => 
-        mapping[fields.mappingRowId] === rowId && mapping[fields.mappingColumnId] === columnId
-          ? { ...mapping, [fields.mappingValue]: value }
-          : mapping
-      );
+      newMappings = currentMappings.map(mapping => {
+        if (mapping[fields.mappingRowId] === rowId && mapping[fields.mappingColumnId] === actualColumnId) {
+          if (isChildColumn && fields.hasChildColumns) {
+            // Handle child column updates
+            let currentValue = mapping[fields.mappingValue];
+            let specValue = '';
+            let unitValue = '';
+            
+            // Parse current value
+            if (Array.isArray(currentValue)) {
+              specValue = currentValue[0] || '';
+              unitValue = currentValue[1] || '';
+            } else if (typeof currentValue === 'string') {
+              const parts = currentValue.split(';');
+              specValue = parts[0] || '';
+              unitValue = parts[1] || '';
+            } else if (typeof currentValue === 'object' && currentValue !== null) {
+              specValue = currentValue.specification || '';
+              unitValue = currentValue.unit || '';
+            }
+            
+            // Update the appropriate part
+            if (childType === 'specification') {
+              specValue = value;
+            } else if (childType === 'unit') {
+              unitValue = value;
+            }
+            
+            // Store as array format for simplicity
+            return {
+              ...mapping,
+              [fields.mappingValue]: [specValue, unitValue]
+            };
+          } else {
+            // Regular mapping update
+            return {
+              ...mapping,
+              [fields.mappingValue]: value
+            };
+          }
+        }
+        return mapping;
+      });
     } else {
       // Create new mapping
+      let mappingValue = value;
+      if (isChildColumn && fields.hasChildColumns) {
+        // Create new mapping with appropriate structure
+        if (childType === 'specification') {
+          mappingValue = [value, ''];
+        } else if (childType === 'unit') {
+          mappingValue = ['', value];
+        }
+      }
+      
       const newMapping = {
         [fields.mappingRowId]: rowId,
-        [fields.mappingColumnId]: columnId,
-        [fields.mappingValue]: value
+        [fields.mappingColumnId]: actualColumnId,
+        [fields.mappingValue]: mappingValue
       };
       newMappings = [...currentMappings, newMapping];
     }
@@ -259,20 +387,78 @@ export const useDataGrid = ({
     let newMappings = [...currentMappings];
     
     updates.forEach(({ rowId, columnId, value }) => {
+      // Handle child columns
+      const isChildColumn = columnId.includes('_spec') || columnId.includes('_unit');
+      let actualColumnId = columnId;
+      let childType = null;
+      
+      if (isChildColumn) {
+        if (columnId.endsWith('_spec')) {
+          actualColumnId = columnId.replace('_spec', '');
+          childType = 'specification';
+        } else if (columnId.endsWith('_unit')) {
+          actualColumnId = columnId.replace('_unit', '');
+          childType = 'unit';
+        }
+      }
+
       const existingIndex = newMappings.findIndex(
-        m => m[fields.mappingRowId] === rowId && m[fields.mappingColumnId] === columnId
+        m => m[fields.mappingRowId] === rowId && m[fields.mappingColumnId] === actualColumnId
       );
 
       if (existingIndex >= 0) {
-        newMappings[existingIndex] = {
-          ...newMappings[existingIndex],
-          [fields.mappingValue]: value
-        };
+        if (isChildColumn && fields.hasChildColumns) {
+          // Handle child column batch updates
+          let currentValue = newMappings[existingIndex][fields.mappingValue];
+          let specValue = '';
+          let unitValue = '';
+          
+          // Parse current value
+          if (Array.isArray(currentValue)) {
+            specValue = currentValue[0] || '';
+            unitValue = currentValue[1] || '';
+          } else if (typeof currentValue === 'string') {
+            const parts = currentValue.split(';');
+            specValue = parts[0] || '';
+            unitValue = parts[1] || '';
+          } else if (typeof currentValue === 'object' && currentValue !== null) {
+            specValue = currentValue.specification || '';
+            unitValue = currentValue.unit || '';
+          }
+          
+          // Update the appropriate part
+          if (childType === 'specification') {
+            specValue = value;
+          } else if (childType === 'unit') {
+            unitValue = value;
+          }
+          
+          newMappings[existingIndex] = {
+            ...newMappings[existingIndex],
+            [fields.mappingValue]: [specValue, unitValue]
+          };
+        } else {
+          // Regular batch update
+          newMappings[existingIndex] = {
+            ...newMappings[existingIndex],
+            [fields.mappingValue]: value
+          };
+        }
       } else {
+        // Create new mapping
+        let mappingValue = value;
+        if (isChildColumn && fields.hasChildColumns) {
+          if (childType === 'specification') {
+            mappingValue = [value, ''];
+          } else if (childType === 'unit') {
+            mappingValue = ['', value];
+          }
+        }
+        
         newMappings.push({
           [fields.mappingRowId]: rowId,
-          [fields.mappingColumnId]: columnId,
-          [fields.mappingValue]: value
+          [fields.mappingColumnId]: actualColumnId,
+          [fields.mappingValue]: mappingValue
         });
       }
     });
@@ -335,6 +521,13 @@ export const useDataGrid = ({
 
   // Check if a column is editable (has columnData)
   const isEditableColumn = useCallback((columnProp) => {
+    // Handle child columns
+    if (columnProp.includes('_spec') || columnProp.includes('_unit')) {
+      const parentColumnId = columnProp.replace(/_spec$|_unit$/, '');
+      return columnData.some(col => col[fields.columnId] === parentColumnId);
+    }
+    
+    // Regular column check
     return columnData.some(col => col[fields.columnId] === columnProp);
   }, [columnData, fields]);
 

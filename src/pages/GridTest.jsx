@@ -208,29 +208,56 @@ const mappings = [
   }
 ]
 
-const initial_sensors = [
-  {
-    "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-    "alias": "Accelerometer 1",
-    "measurementType": "Vibration",
-    "measurementUnit": "m/s^2",
-    "description": "Measures acceleration in the X, Y, Z axes."
-  },
-  {
-    "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-    "alias": "Accelerometer 2",
-    "measurementType": "Vibration",
-    "measurementUnit": "m/s^2",
-    "description": "Secondary accelerometer for redundancy."
-  },
-  {
-    "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-    "alias": "Pressure Sensor",
-    "measurementType": "Pressure",
-    "measurementUnit": "bar",
-    "description": "Monitors system pressure levels."
-  }
-]
+const initial_sensors =  [
+        {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "alias": "Press Radial Cylinder",
+            "measurementType": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": ""
+        },
+        {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "alias": "Press Axial Cylinder",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": ""
+        },
+        {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "alias": "Temp Bearing",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": ""
+        }
+    ]
 
 const initial_protocols = [
   {
@@ -271,8 +298,8 @@ const s2p_mappings = [
     "sourceType": "sensor",
     "targetType": "processingProtocol",
     "value": [
-      "fwe",
-      "f8221ee1-66fe-4e4e-ad6e-a7833e92f317"
+      "Butterworth 2nd gen",
+      ""
     ]
   },
   {
@@ -280,14 +307,20 @@ const s2p_mappings = [
     "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
     "sourceType": "sensor",
     "targetType": "processingProtocol",
-    "value": "fwe"
+    "value": [
+      "",
+      ""
+    ]
   },
   {
     "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
     "targetId": "fd14bdba-b880-4ead-b592-f59ca706d123",
     "sourceType": "sensor",
     "targetType": "processingProtocol",
-    "value": "test"
+    "value": [
+      "",
+      ""
+    ]
   },
   {
     "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
@@ -295,8 +328,8 @@ const s2p_mappings = [
     "sourceType": "sensor",
     "targetType": "processingProtocol",
     "value": [
-      "huts",
-      "f8221ee1-66fe-4e4e-ad6e-a7833e92f387"
+      "12",
+      ""
     ]
   },
   {
@@ -304,21 +337,70 @@ const s2p_mappings = [
     "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
     "sourceType": "sensor",
     "targetType": "processingProtocol",
-    "value": "fwe"
+    "value": [
+      "12",
+      ""
+    ]
   },
   {
     "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
     "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
     "sourceType": "sensor",
     "targetType": "processingProtocol",
-    "value": "Specifies the chunk size used in data processing of sensor data."
+    "value": [
+      "[-1,1]",
+      ""
+    ]
   },
   {
     "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
     "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
     "sourceType": "sensor",
     "targetType": "processingProtocol",
-    "value": "fwe"
+    "value": [
+      "[-1,1]",
+      ""
+    ]
+  },
+  {
+    "targetId": "a3f5c6e1-2d4b-4f8e-9c3a-1e2b3c4d5e6f",
+    "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "value": [
+      "24",
+      "bit"
+    ]
+  },
+  {
+    "targetId": "a3f5c6e1-2d4b-4f8e-9c3a-1e2b3c4d5e6f",
+    "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "value": [
+      "24",
+      "bit"
+    ]
+  },
+  {
+    "targetId": "a3f5c6e1-2d4b-4f8e-9c3a-1e2b3c4d5e6f",
+    "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "value": [
+      "24",
+      "bit"
+    ]
+  },
+  {
+    "targetId": "d57e87cc-9b71-45b6-a359-be07152a1ed2",
+    "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "value": [
+      "[-1,1]",
+      ""
+    ]
+  },
+  {
+    "targetId": "8aac8b6c-1774-4814-9916-b24171044123",
+    "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "value": [
+      "12",
+      ""
+    ]
   }
 ]
 
@@ -491,7 +573,8 @@ export const GridTest = () => {
               prop: 'name',
               name: 'Variable Name',
               size: 200,
-              readonly: true
+              readonly: true,
+              cellTemplate: Template(BoldCell),
             },
             {
               prop: 'type',
@@ -503,7 +586,14 @@ export const GridTest = () => {
               prop: 'unit',
               name: 'Unit',
               size: 100,
-              readonly: true
+              readonly: true,
+              cellProperties: () => {
+                return {
+                  style: {
+                    "border-right": "3px solid "
+                  }
+                }
+              }
             }
           ]
         };
@@ -522,23 +612,29 @@ export const GridTest = () => {
             columnUnit: 'measurementUnit',  // Sensors have measurementUnit
             mappingRowId: 'targetId',       // Swapped: protocols are now rows (were targets)
             mappingColumnId: 'sourceId',    // Swapped: sensors are now columns (were sources)
-            mappingValue: 'value'
+            mappingValue: 'value',
+            hasChildColumns: true           // Enable child columns for specification and unit
           },
           staticColumns: [
             {
               prop: 'name',
               name: 'Protocol Name',
               size: 200,
-              readonly: true
+              readonly: true,
+              cellTemplate: Template(BoldCell),
             },
             {
               prop: 'type',
               name: 'Type',
               size: 150,
-              readonly: true
-            },
-            {
-              prop: 'unit',
+              readonly: true,
+              cellProperties: () => {
+                return {
+                  style: {
+                    "border-right": "3px solid "
+                  }
+                }
+              }
             }
           ]
         };
@@ -605,7 +701,14 @@ export const GridTest = () => {
               name: 'Variable Name',
               size: 200,
               readonly: false,
-              cellTemplate: Template(BoldCell)
+              cellTemplate: Template(BoldCell),
+              cellProperties: () => {
+                return {
+                  style: {
+                    "border-right": "3px solid "
+                  }
+                }
+              }
             },
             {
                 prop: 'type',
@@ -640,26 +743,35 @@ export const GridTest = () => {
               prop: 'name',
               name: 'Protocol Name',
               size: 200,
-              readonly: false
-            },
-            {
-              prop: 'type',
-              name: 'Type',
-              size: 200,
-              readonly: false
-            },
-            {
-              prop: 'unit',
-              name: 'Unit',
-              size: 100,
-              readonly: false
+              readonly: false,
+              cellTemplate: Template(BoldCell),
+              cellProperties: () => {
+                return {
+                  style: {
+                    "border-right": "3px solid "
+                  }
+                }
+              }
             },
             {
               prop: 'description',
               name: 'Description',
               size: 400,
               readonly: false
-            }
+            },
+            // {
+            //   prop: 'type',
+            //   name: 'Type',
+            //   size: 200,
+            //   readonly: false
+            // },
+            {
+              prop: 'unit',
+              name: 'Unit',
+              size: 100,
+              readonly: false
+            },
+           
           ]
         };
 
