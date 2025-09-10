@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../hooks/useDataGrid';
 import "./GridTable/GridTable.css";
@@ -14,7 +14,7 @@ import "./GridTable/GridTable.css";
  * - Range editing: Multi-cell selection and editing capabilities
  * - Keyboard shortcuts: Delete/Backspace to clear cells, Ctrl+Z/Y for undo/redo
  */
-const DataGrid = ({
+const DataGrid = forwardRef(({
     // Data configuration
     rowData = [],           // Array of row objects (e.g., studies, sensors)
     columnData = [],        // Array of column objects (e.g., variables, protocols) - optional for standalone mode
@@ -32,6 +32,7 @@ const DataGrid = ({
     showControls = true,    // Show undo/redo controls
     showDebug = false,      // Show debug information
     rowsize = 50,           // Row height in pixels
+    isActive = true,        // Whether this grid is active (should respond to global undo/redo)
 
     // Event handlers
     onDataChange,           // Callback when mapping data changes
@@ -46,7 +47,7 @@ const DataGrid = ({
     // Other props
     className = '',
     ...gridProps            // Additional RevoGrid props
-}) => {
+}, ref) => {
 
     const {
         gridData,
@@ -63,10 +64,11 @@ const DataGrid = ({
         isEditableColumn,
         getRowByIndex,
         getColumnByProp,
-        stats,
-        mappings: currentMappings,
-        isStandaloneGrid,
-        fields
+    stats,
+    mappings: currentMappings,
+    isStandaloneGrid,
+    fields,
+    rowData: hookRowData
     } = useDataGrid({
         rowData,
         columnData,
@@ -75,6 +77,25 @@ const DataGrid = ({
         staticColumns,
         onRowDataChange // Pass the callback to the hook
     });
+
+    // Expose functions to parent components through ref
+    useImperativeHandle(ref, () => ({
+        addRow: (newRow) => {
+            updateRowDataBatch([...hookRowData, newRow]);
+        },
+        removeRow: (index) => {
+            const newData = hookRowData.filter((_, i) => i !== index);
+            updateRowDataBatch(newData);
+        },
+        removeLastRow: () => {
+            if (hookRowData.length > 0) {
+                const newData = hookRowData.slice(0, -1);
+                updateRowDataBatch(newData);
+            }
+        },
+        updateRowDataBatch,
+        getCurrentData: () => hookRowData
+    }), [hookRowData, updateRowDataBatch]);
 
     // State to track column sizes to preserve across re-renders
     // This prevents columns from resetting to their original size after edits
@@ -235,7 +256,7 @@ const DataGrid = ({
                     const staticColumn = staticColumns.find(col => col.prop === columnProp);
 
                     // Skip if column is not editable
-                    if (!isEditableColumn(columnProp) && (!isStaticColumn || staticColumn?.readonly)) {
+                            if (!isEditableColumn(columnProp) && (!isStaticColumn || staticColumn?.readonly)) {
                         continue;
                     }
 
@@ -256,15 +277,16 @@ const DataGrid = ({
 
                     const stringValue = String(newValue);
 
-                    if (isStandaloneGrid && isStaticColumn) {
-                        // Handle row data updates for standalone grids
+                    if (isStaticColumn) {
+                        // Static columns represent row-data properties (e.g., type, unit, description)
+                        // Treat them as row updates in both standalone and mapping grids.
                         rowDataUpdates.push({
                             rowId: row[fields.rowId],
                             columnProp,
                             value: stringValue
                         });
                     } else if (!isStandaloneGrid && isEditableColumn(columnProp)) {
-                        // Handle mapping updates for mapping grids
+                        // Handle mapping updates for dynamic columns in mapping grids
                         updates.push({
                             rowId: row[fields.rowId],
                             columnId: columnProp,
@@ -274,8 +296,8 @@ const DataGrid = ({
                 }
             }
 
-            // Process standalone grid row data updates
-            if (rowDataUpdates.length > 0 && isStandaloneGrid) {
+            // Process row data updates (for both standalone and mapping grids)
+            if (rowDataUpdates.length > 0) {
                 // Group updates by row for efficiency
                 const rowUpdatesMap = new Map();
                 rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
@@ -285,8 +307,8 @@ const DataGrid = ({
                     rowUpdatesMap.get(rowId)[columnProp] = value;
                 });
 
-                // Apply all updates to create new row data
-                const currentData = [...gridData.map(row => ({ ...row }))];
+                // Apply all updates to create new row data using the authoritative `rowData` prop
+                const currentData = [...rowData.map(row => ({ ...row }))];
 
                 rowUpdatesMap.forEach((columnUpdates, rowId) => {
                     const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
@@ -327,21 +349,9 @@ const DataGrid = ({
         const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
 
         if (isStaticColumn) {
-            // Handle row data edit for standalone grids
-            if (isStandaloneGrid) {
-                // Use the hook's updateRowData function which includes history tracking
-                updateRowData(row[fields.rowId], columnProp, stringValue);
-            } else {
-                // For non-standalone grids, use the old method with onRowDataChange callback
-                if (onRowDataChange) {
-                    const updatedRowData = [...rowData];
-                    const rowToUpdate = updatedRowData.find(r => r[fields.rowId] === row[fields.rowId]);
-                    if (rowToUpdate) {
-                        rowToUpdate[columnProp] = stringValue;
-                        onRowDataChange(updatedRowData);
-                    }
-                }
-            }
+            // Use the hook's updateRowData for both standalone and mapping grids so
+            // the row-data change is recorded in the unified undo/redo history.
+            updateRowData(row[fields.rowId], columnProp, stringValue);
         } else if (isEditableColumn(columnProp)) {
             // Handle mapping edit (existing functionality)
             updateMapping(row[fields.rowId], columnProp, stringValue);
@@ -431,8 +441,8 @@ const DataGrid = ({
                 // Handle clearing cells in standalone grids vs mapping grids
                 const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
 
-                if (isStandaloneGrid && isStaticColumn) {
-                    // Clear row data cell in standalone grid
+                if (isStaticColumn) {
+                    // Static columns are row-data fields; clear via updateRowData in both modes
                     updateRowData(row[fields.rowId], column.prop, '');
                     return true;
                 } else if (!isStandaloneGrid && isEditableColumn(column.prop)) {
@@ -449,6 +459,7 @@ const DataGrid = ({
     }, [stableColumnDefs, isStandaloneGrid, staticColumns, getRowByIndex, updateRowData, isEditableColumn, updateMapping, fields]);
 
     useEffect(() => {
+        if (!isActive) return; // Only handle global keys when this grid is active
         const handleKeyDown = (event) => {
             const activeElement = document.activeElement;
             const isEditingCell = activeElement && (
@@ -482,8 +493,8 @@ const DataGrid = ({
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown, true);
-        return () => document.removeEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [undo, redo, handleClearCell]);
 
     // Render the complete data grid with controls and debug view
@@ -616,6 +627,6 @@ const DataGrid = ({
             )}
         </div>
     );
-};
+});
 
 export default DataGrid;

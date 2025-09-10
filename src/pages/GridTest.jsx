@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import PageWrapper from "../layout/PageWrapper";
 import "./About.css";
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
@@ -208,56 +208,56 @@ const mappings = [
   }
 ]
 
-const initial_sensors =  [
-        {
-            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-            "alias": "Press Radial Cylinder",
-            "measurementType": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "measurementUnit": "bar",
-            "description": "measures pressure on the radial cylinder",
-            "technologyType": "pressure transmitter",
-            "technologyPlatform": "PT5401",
-            "dataAcquisitionUnit": "PLC S7-1200",
-            "samplingRate": "50",
-            "samplingUnit": "Hz",
-            "sensorLocation": "In radial cylinder tubes",
-            "locationUnit": "",
-            "sensorOrientation": "Slightly rotated forward",
-            "orientationUnit": ""
-        },
-        {
-            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-            "alias": "Press Axial Cylinder",
-            "measurementType": "Pressure",
-            "measurementUnit": "bar",
-            "description": "measures pressure in the axial cylinder",
-            "technologyType": "pressure transmitter",
-            "technologyPlatform": "PT5401",
-            "dataAcquisitionUnit": "PLC S7-1200",
-            "samplingRate": "50",
-            "samplingUnit": "Hz",
-            "sensorLocation": "In Axial cylinder tubes",
-            "locationUnit": "",
-            "sensorOrientation": "Slightly rotated forward",
-            "orientationUnit": ""
-        },
-        {
-            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-            "alias": "Temp Bearing",
-            "measurementType": "Temperature",
-            "measurementUnit": "celcius",
-            "description": "measures temperature of bearing",
-            "technologyType": "PT",
-            "technologyPlatform": "PT100",
-            "dataAcquisitionUnit": "PLC S7-1200",
-            "samplingRate": "10",
-            "samplingUnit": "Hz",
-            "sensorLocation": "Bearing House",
-            "locationUnit": "",
-            "sensorOrientation": "",
-            "orientationUnit": ""
-        }
-    ]
+const initial_sensors = [
+  {
+    "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+    "alias": "Press Radial Cylinder",
+    "measurementType": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+    "measurementUnit": "bar",
+    "description": "measures pressure on the radial cylinder",
+    "technologyType": "pressure transmitter",
+    "technologyPlatform": "PT5401",
+    "dataAcquisitionUnit": "PLC S7-1200",
+    "samplingRate": "50",
+    "samplingUnit": "Hz",
+    "sensorLocation": "In radial cylinder tubes",
+    "locationUnit": "",
+    "sensorOrientation": "Slightly rotated forward",
+    "orientationUnit": ""
+  },
+  {
+    "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+    "alias": "Press Axial Cylinder",
+    "measurementType": "Pressure",
+    "measurementUnit": "bar",
+    "description": "measures pressure in the axial cylinder",
+    "technologyType": "pressure transmitter",
+    "technologyPlatform": "PT5401",
+    "dataAcquisitionUnit": "PLC S7-1200",
+    "samplingRate": "50",
+    "samplingUnit": "Hz",
+    "sensorLocation": "In Axial cylinder tubes",
+    "locationUnit": "",
+    "sensorOrientation": "Slightly rotated forward",
+    "orientationUnit": ""
+  },
+  {
+    "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+    "alias": "Temp Bearing",
+    "measurementType": "Temperature",
+    "measurementUnit": "celcius",
+    "description": "measures temperature of bearing",
+    "technologyType": "PT",
+    "technologyPlatform": "PT100",
+    "dataAcquisitionUnit": "PLC S7-1200",
+    "samplingRate": "10",
+    "samplingUnit": "Hz",
+    "sensorLocation": "Bearing House",
+    "locationUnit": "",
+    "sensorOrientation": "",
+    "orientationUnit": ""
+  }
+]
 
 const initial_protocols = [
   {
@@ -410,6 +410,22 @@ const plugin = { select: new SelectTypePlugin() }
 
 export const GridTest = () => {
   const { setScreenWidth } = useGlobalDataContext();
+  const dataGridRef = useRef();
+
+  // Helper to safely call a method on the DataGrid ref if it exists
+  const callGridMethod = (methodName, ...args) => {
+    const g = dataGridRef.current;
+    if (!g) return false;
+    const fn = g[methodName];
+    if (typeof fn !== 'function') return false;
+    try {
+      fn(...args);
+      return true;
+    } catch (err) {
+      console.error(`Error calling DataGrid.${methodName}:`, err);
+      return false;
+    }
+  };
 
   // Grid configuration state
   const [gridMode, setGridMode] = useState('study-variables'); // 'study-variables', 'sensor-protocols', 'studies-only', 'variables-only', 'protocols-only'
@@ -467,6 +483,8 @@ export const GridTest = () => {
       unit: '',
       description: 'Enter description...'
     };
+    // If the Processing Protocols grid is active, use DataGrid's history-aware API
+    if (gridMode === 'sensor-protocols' && callGridMethod('addRow', newProtocol)) return;
     setProtocolData([...protocolData, newProtocol]);
   };
 
@@ -495,6 +513,7 @@ export const GridTest = () => {
   };
 
   const removeLastProtocol = () => {
+    if (gridMode === 'sensor-protocols' && callGridMethod('removeLastRow')) return;
     if (protocolData.length > 0) {
       setProtocolData(protocolData.slice(0, -1));
     }
@@ -524,8 +543,10 @@ export const GridTest = () => {
     // Update the appropriate data state based on current grid mode
     switch (gridMode) {
       case 'studies-only':
-      case 'study-variables':
         setStudies(newRowData);
+        break;
+      case 'study-variables':
+        setVariableData(newRowData); // Variables are rows in this mode
         break;
       case 'variables-only':
         setVariableData(newRowData);
@@ -534,19 +555,22 @@ export const GridTest = () => {
         setProtocolData(newRowData);
         break;
       case 'sensor-protocols':
-        setProtocolData(newRowData); // Fixed: protocols are row data in this mode
+        // Accept row data updates from DataGrid and update local state.
+        // Do NOT call back into DataGrid here (would create a loop).
+        setProtocolData(newRowData);
+        break;
         break;
     }
   };
 
-    // Create a dropdown for the 'type' column
-    const dropdown = {
-        labelKey: 'label',
-        valueKey: 'value',
-        source: [
-            ...VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type }))
-        ],
-    }
+  // Create a dropdown for the 'type' column
+  const dropdown = {
+    labelKey: 'label',
+    valueKey: 'value',
+    source: [
+      ...VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type }))
+    ],
+  }
 
 
   // Grid configurations for different modes
@@ -568,25 +592,45 @@ export const GridTest = () => {
             mappingColumnId: 'studyId', // Swapped: studies are now columns
             mappingValue: 'value'
           },
+          customActions: [
+            {
+              label: '+ Add Variable',
+              onClick: addNewVariable,
+              className: 'px-3 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100',
+              title: 'Add a new variable'
+            },
+            {
+              label: '- Remove Last',
+              onClick: removeLastVariable,
+              disabled: variableData.length === 0,
+              className: `px-3 py-1 text-sm border rounded ${variableData.length === 0
+                ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                }`,
+              title: 'Remove the last variable'
+            }
+          ],
           staticColumns: [
             {
               prop: 'name',
               name: 'Variable Name',
               size: 200,
-              readonly: true,
+              readonly: false,
               cellTemplate: Template(BoldCell),
             },
             {
               prop: 'type',
               name: 'Type',
               size: 150,
-              readonly: true
+              readonly: false,
+              columnType: 'select',
+              ...dropdown
             },
             {
               prop: 'unit',
               name: 'Unit',
               size: 100,
-              readonly: true,
+              readonly: false,
               cellProperties: () => {
                 return {
                   style: {
@@ -594,6 +638,12 @@ export const GridTest = () => {
                   }
                 }
               }
+            },
+            {
+              prop: 'description',
+              name: 'Description',
+              size: 300,
+              readonly: false
             }
           ]
         };
@@ -604,6 +654,24 @@ export const GridTest = () => {
           rowData: protocolData,            // Protocols are now rows
           columnData: sensorData,           // Sensors are now columns
           mappings: sensorProtocolMappings,
+          customActions: [
+            {
+              label: '+ Add Protocol',
+              onClick: addNewProtocol,
+              className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
+              title: 'Add a new protocol'
+            },
+            {
+              label: '- Remove Last',
+              onClick: removeLastProtocol,
+              disabled: protocolData.length === 0,
+              className: `px-3 py-1 text-sm border rounded ${protocolData.length === 0
+                ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                }`,
+              title: 'Remove the last protocol'
+            }
+          ],
           fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -711,11 +779,11 @@ export const GridTest = () => {
               }
             },
             {
-                prop: 'type',
-                name: 'Variable Type',
-                size: 200,
-                columnType: 'select',
-                ...dropdown
+              prop: 'type',
+              name: 'Variable Type',
+              size: 200,
+              columnType: 'select',
+              ...dropdown
             },
             {
               prop: 'unit',
@@ -771,7 +839,7 @@ export const GridTest = () => {
               size: 100,
               readonly: false
             },
-           
+
           ]
         };
 
@@ -792,8 +860,8 @@ export const GridTest = () => {
             <button
               onClick={() => setGridMode('study-variables')}
               className={`px-4 py-2 rounded border ${gridMode === 'study-variables'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               Variables ↔ Studies
@@ -801,8 +869,8 @@ export const GridTest = () => {
             <button
               onClick={() => setGridMode('sensor-protocols')}
               className={`px-4 py-2 rounded border ${gridMode === 'sensor-protocols'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               Protocols ↔ Sensors
@@ -810,8 +878,8 @@ export const GridTest = () => {
             <button
               onClick={() => setGridMode('studies-only')}
               className={`px-4 py-2 rounded border ${gridMode === 'studies-only'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               Studies Only
@@ -819,8 +887,8 @@ export const GridTest = () => {
             <button
               onClick={() => setGridMode('variables-only')}
               className={`px-4 py-2 rounded border ${gridMode === 'variables-only'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               Variables Only
@@ -828,8 +896,8 @@ export const GridTest = () => {
             <button
               onClick={() => setGridMode('protocols-only')}
               className={`px-4 py-2 rounded border ${gridMode === 'protocols-only'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
             >
               Protocols Only
@@ -842,6 +910,26 @@ export const GridTest = () => {
           <h3 className="text-lg font-semibold mb-2">Manage Rows</h3>
           <div className="flex flex-wrap gap-2">
             {/* Add Row Buttons */}
+            {gridMode === 'study-variables' && (
+              <>
+                <button
+                  onClick={addNewVariable}
+                  className="px-3 py-2 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100"
+                >
+                  + Add Variable
+                </button>
+                <button
+                  onClick={removeLastVariable}
+                  disabled={variableData.length === 0}
+                  className={`px-3 py-2 text-sm border rounded ${variableData.length === 0
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    }`}
+                >
+                  - Remove Last Variable
+                </button>
+              </>
+            )}
             {gridMode === 'studies-only' && (
               <>
                 <button
@@ -854,8 +942,8 @@ export const GridTest = () => {
                   onClick={removeLastStudy}
                   disabled={studies.length === 0}
                   className={`px-3 py-2 text-sm border rounded ${studies.length === 0
-                      ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                      : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
                     }`}
                 >
                   - Remove Last Study
@@ -874,8 +962,8 @@ export const GridTest = () => {
                   onClick={removeLastVariable}
                   disabled={variableData.length === 0}
                   className={`px-3 py-2 text-sm border rounded ${variableData.length === 0
-                      ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                      : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
                     }`}
                 >
                   - Remove Last Variable
@@ -894,8 +982,8 @@ export const GridTest = () => {
                   onClick={removeLastProtocol}
                   disabled={protocolData.length === 0}
                   className={`px-3 py-2 text-sm border rounded ${protocolData.length === 0
-                      ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                      : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
                     }`}
                 >
                   - Remove Last Protocol
@@ -907,6 +995,7 @@ export const GridTest = () => {
 
         {/* Generic Data Grid */}
         <DataGrid
+          ref={dataGridRef}
           key={gridMode} // Force re-render when mode changes
           {...currentConfig}
           showControls={true}

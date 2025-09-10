@@ -24,15 +24,19 @@ import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/u
 import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
 
 import isEqual from 'lodash.isequal';
+import usePageTab from '../../hooks/usePageWidth';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
 
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(7, 'simple-view');
 
+    // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // Access global context
     const {
         studies,
         testSetups,
@@ -44,6 +48,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
+    // Adjust screen width based on tab and page
     useEffect(() => {
         if (selectedTab === 'grid-view' && currentPage === 7) {
             setScreenWidth("max-w-[100rem]");

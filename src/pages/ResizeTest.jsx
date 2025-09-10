@@ -13,6 +13,7 @@ import StudySlide from '../components/Slides/StudySlide';
 export const ResizeTest = () => {
 
   return (
-    <StudySlide onHeightChange={() => {}} currentPage={5} />
+    <div></div>
+    // <StudySlide onHeightChange={() => {}} currentPage={5} />
   );
 };
