@@ -78,32 +78,68 @@ const DataGrid = ({
 
     // State to track column sizes to preserve across re-renders
     // This prevents columns from resetting to their original size after edits
-    const [columnSizes, setColumnSizes] = useState(new Map());
+    const [columnSizes, setColumnSizes] = useState(() => {
+        console.log('🔍 DataGrid initializing columnSizes state - component mount/remount');
+        return new Map();
+    });
     const gridRef = useRef();
+
+    // Track component mount/unmount for debugging
+    useEffect(() => {
+        console.log('🔍 DataGrid component mounted');
+        return () => {
+            console.log('🔍 DataGrid component will unmount');
+        };
+    }, []);
 
     // Listen for column resize events to preserve user adjustments
     useEffect(() => {
+        console.log('🔍 Setting up column resize listeners, gridRef.current:', gridRef.current);
         const gridElement = gridRef.current;
-        if (!gridElement) return;
+        if (!gridElement) {
+            console.log('🔍 No grid element found, skipping event setup');
+            return;
+        }
+
+        console.log('🔍 Grid element found:', gridElement);
 
         const handleResize = (event) => {
+            console.log('🔍 Raw resize event received:', event);
             const detail = event.detail;
-            if (detail && detail.column && detail.column.prop) {
-                setColumnSizes(prev => {
-                    const newSizes = new Map(prev);
-                    newSizes.set(detail.column.prop, detail.column.size);
-                    return newSizes;
-                });
+            console.log('🔍 Event detail:', detail);
+            
+            // RevoGrid sends column info as detail[columnIndex]
+            const columnKeys = Object.keys(detail);
+            if (columnKeys.length > 0) {
+                const columnIndex = columnKeys[0];
+                const column = detail[columnIndex];
+                console.log('🔍 Column data:', column);
+                
+                if (column && column.prop && column.size) {
+                    console.log('🔍 Column resize detected:', column.prop, 'new size:', column.size);
+                    setColumnSizes(prev => {
+                        const newSizes = new Map(prev);
+                        newSizes.set(column.prop, column.size);
+                        console.log('🔍 Updated columnSizes:', Object.fromEntries(newSizes));
+                        return newSizes;
+                    });
+                } else {
+                    console.log('🔍 Column missing prop or size:', column);
+                }
+            } else {
+                console.log('🔍 No column keys in detail');
             }
         };
 
         // Listen for column resize events
         const eventNames = ['aftercolumnresize', 'columnresize', 'aftercolumnsresize'];
         eventNames.forEach(eventName => {
+            console.log('🔍 Adding event listener for:', eventName);
             gridElement.addEventListener(eventName, handleResize);
         });
 
         return () => {
+            console.log('🔍 Removing resize event listeners');
             eventNames.forEach(eventName => {
                 gridElement.removeEventListener(eventName, handleResize);
             });
@@ -112,19 +148,35 @@ const DataGrid = ({
 
     // Enhanced column definitions that preserve user-resized widths
     const enhancedColumnDefs = React.useMemo(() => {
-        return columnDefs.map(col => {
+        console.log('🔍 Creating enhanced column definitions');
+        console.log('🔍 columnDefs:', columnDefs);
+        console.log('🔍 columnSizes Map:', Object.fromEntries(columnSizes));
+        
+        const enhanced = columnDefs.map(col => {
             const savedSize = columnSizes.get(col.prop);
+            const finalSize = savedSize || col.size || 150;
+            console.log(`🔍 Column ${col.prop}: original=${col.size}, saved=${savedSize}, final=${finalSize}`);
             return {
                 ...col,
-                size: savedSize || col.size || 150
+                size: finalSize
             };
         });
+        
+        console.log('🔍 Enhanced columns:', enhanced);
+        return enhanced;
     }, [columnDefs, columnSizes]);
+
+    // Force re-render when columns change by using state instead of just ref
+    const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
 
     // Stable column reference to prevent unnecessary re-renders
     const stableColumnDefs = React.useRef(enhancedColumnDefs);
 
     React.useEffect(() => {
+        console.log('🔍 stableColumnDefs effect triggered');
+        console.log('🔍 enhancedColumnDefs:', enhancedColumnDefs);
+        console.log('🔍 stableColumnDefs.current before:', stableColumnDefs.current);
+        
         // Only update if the column structure has changed (not just sizes)
         const structureChanged = stableColumnDefs.current.length !== enhancedColumnDefs.length ||
             stableColumnDefs.current.some((col, index) =>
@@ -132,16 +184,35 @@ const DataGrid = ({
                 col.name !== enhancedColumnDefs[index]?.name
             );
 
+        console.log('🔍 Structure changed:', structureChanged);
+
         if (structureChanged) {
+            console.log('🔍 Updating entire structure');
             stableColumnDefs.current = enhancedColumnDefs;
+            setAppliedColumns([...enhancedColumnDefs]); // Force re-render
         } else {
+            console.log('🔍 Only updating sizes');
             // Only update sizes in the existing reference to preserve grid state
+            let hasChanges = false;
             stableColumnDefs.current.forEach((col, index) => {
                 if (enhancedColumnDefs[index] && col.prop === enhancedColumnDefs[index].prop) {
-                    col.size = enhancedColumnDefs[index].size;
+                    const oldSize = col.size;
+                    const newSize = enhancedColumnDefs[index].size;
+                    if (oldSize !== newSize) {
+                        console.log(`🔍 Updating ${col.prop} size: ${oldSize} -> ${newSize}`);
+                        col.size = newSize;
+                        hasChanges = true;
+                    }
                 }
             });
+            
+            if (hasChanges) {
+                console.log('🔍 Forcing re-render with updated sizes');
+                setAppliedColumns([...stableColumnDefs.current]); // Force re-render with new sizes
+            }
         }
+        
+        console.log('🔍 stableColumnDefs.current after:', stableColumnDefs.current);
     }, [enhancedColumnDefs]);
 
     // Notify parent of data changes
@@ -557,7 +628,7 @@ const DataGrid = ({
                 style={{ height }}
                 source={gridData}
                 rowSize={rowsize}
-                columns={stableColumnDefs.current}
+                columns={appliedColumns}
                 onBeforeedit={handleBeforeEdit}
                 onAfteredit={handleAfterEdit}
                 onBeforerangeedit={handleBeforeRangeEdit}

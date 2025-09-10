@@ -18,7 +18,7 @@ export const slides = [
   AuthorSlide,
   PublicationSlide,
   TestSetupSelectionSlide,
-  StudySlide,
+  // StudySlide,
   // StudyVariableSlide,
   // MeasurementOutputSlide,
   // ProcessingProtocolsSlide,
