@@ -13,6 +13,7 @@ function FormField({
     label,
     placeholder,
     onChange,
+    commitOnBlur = false,
     required,
     explanation,
     example,
@@ -25,6 +26,7 @@ function FormField({
 }) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -120,11 +122,24 @@ function FormField({
         if (tags.length > 0 && inputValue.length > 0) {
             setShowDropdown(true);
         }
+    // mark editing state for default inputs
+    if (!commitOnBlur) return;
+    setIsEditing(true);
     };
 
     const handleInputBlur = (e) => {
         if (!dropdownRef.current?.contains(e.relatedTarget)) {
             setTimeout(() => setShowDropdown(false), 150);
+        }
+        // If commit-on-blur behavior requested, commit value on blur
+        if (commitOnBlur && inputRef.current && inputRef.current === e.target) {
+            // Stop editing and call onChange only if value changed
+            setIsEditing(false);
+            if (String(inputValue) !== String(value) && typeof onChange === 'function') {
+                // synthesize an event-like object for compatibility
+                const syntheticEvent = { target: { value: inputValue } };
+                onChange(syntheticEvent);
+            }
         }
     };
 
@@ -304,10 +319,35 @@ function FormField({
             default:
                 return (
                     <input
+                        ref={inputRef}
                         name={name}
                         type={type}
-                        value={value}
-                        onChange={onChange}
+                        value={commitOnBlur ? (isEditing ? inputValue : (value ?? '')) : (value ?? '')}
+                        onChange={(e) => {
+                            if (commitOnBlur) {
+                                setInputValue(e.target.value);
+                            } else {
+                                if (typeof onChange === 'function') onChange(e);
+                            }
+                        }}
+                        onFocus={() => {
+                            // initialize buffer when focusing
+                            if (commitOnBlur) {
+                                setInputValue(value ?? '');
+                                setIsEditing(true);
+                            }
+                            if (typeof inputRef.current?.focus === 'function') {
+                                /* noop, keep ref */
+                            }
+                        }}
+                        onBlur={handleInputBlur}
+                        onKeyDown={(e) => {
+                            if (commitOnBlur && e.key === 'Enter') {
+                                e.preventDefault();
+                                // commit on Enter by blurring which triggers handleInputBlur
+                                e.target.blur();
+                            }
+                        }}
                         placeholder={placeholder || example}
                         required={required}
                         className={cn(baseClasses, className)}

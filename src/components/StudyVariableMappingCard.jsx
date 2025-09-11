@@ -63,6 +63,7 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                                 label={`Study S${(index + 1).toString().padStart(2, '0')}`}
                                 name={`Study S${(index + 1).toString().padStart(2, '0')}`}
                                 value={item ? item.value : ''} // Ensure value is not undefined
+                                commitOnBlur={true}
                                 onChange={(e) => handleInputChange(itemIndex, { studyVariableId: item.studyVariableId, studyId: item.studyId }, e.target.value)}
                                 placeholder={"Enter value"}
                             />

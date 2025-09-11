@@ -74,14 +74,22 @@ export const IsaQuestionnaire = () => {
           >
             {slides.map((slide, index) => {
               const SlideComponent = slide;
+              // Only fully render the current slide and its immediate neighbors
+              const shouldRender = Math.abs(index - currentPage) <= 1;
+
               return (
                 <div key={index} className='w-full overflow-hidden flex-shrink-0'>
                   <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
-                    <SlideComponent
-                      ref={el => childRefs.current[index] = el}
-                      onHeightChange={handleChildHeightChange}
-                      currentPage={currentPage}
-                    />
+                    {shouldRender ? (
+                      <SlideComponent
+                        ref={el => (childRefs.current[index] = el)}
+                        onHeightChange={handleChildHeightChange}
+                        currentPage={currentPage}
+                      />
+                    ) : (
+                      // Lightweight placeholder keeps layout but avoids mounting heavy components
+                      <div ref={el => (childRefs.current[index] = el)} style={{ width: '100%', height: '100%' }} />
+                    )}
                   </div>
                 </div>
               );

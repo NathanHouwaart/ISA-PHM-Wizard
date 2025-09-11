@@ -51,6 +51,7 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
                                         label={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
                                         name={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
                                         value={mapping.value}
+                                        commitOnBlur={true}
                                         onChange={(e) => handleInputChange(0, mapping, e.target.value)}
                                         placeholder={"Enter filename"}
                                     />
