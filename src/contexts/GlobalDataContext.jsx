@@ -119,6 +119,7 @@ export const GlobalDataProvider = ({ children }) => {
             "publications": publications,
             "authors": authors,
             "study_variables": studyVariables,
+            "processing_protocols": processingProtocols,
             "studies": studies.map(study => ({
                 ...study,
                 publications,
@@ -135,20 +136,30 @@ export const GlobalDataProvider = ({ children }) => {
                             variableName: variable?.name || "Unknown Variable"
                         };
                     }),
-                "assay_details": testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => ({
-                    "used_sensor": Object.fromEntries(
+                "assay_details": testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => {
+                    const used_sensor = Object.fromEntries(
                         Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-                    ),
-                    "file_details": {
-                        "file_parameters": Object.keys(sensor).filter(item => item.startsWith('processingProtocol')).map(item => ({
-                            "parameter": item,
-                            "value": sensor[item]
-                        }))
-                    },
-                    "raw_file_name": studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                    "processed_file_name": studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                    "assay_file_name": studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                }))
+                    );
+
+                    // Find mappings that link this sensor to processing protocols and normalize shape
+                    const normalizedMappings = (sensorToProcessingProtocolMapping || [])
+                        .filter(m => String(m.sourceId) === String(sensor.id) || String(m.sensorId) === String(sensor.id))
+                        .map(m => ({
+                            sourceId: m.sourceId ?? m.sensorId ?? null,
+                            targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
+                            value: m.value ?? []
+                        }));
+
+                    const processing_protocols = normalizedMappings;
+
+                    return {
+                        used_sensor,
+                        processing_protocols,
+                        raw_file_name: studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                        processed_file_name: studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
+                        assay_file_name: studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || ''
+                    };
+                })
             }))
         };
 
