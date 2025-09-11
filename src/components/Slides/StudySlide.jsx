@@ -27,10 +27,10 @@ import DataGrid from '../DataGrid'; // Import the new DataGrid
 import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
 
-export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(5, 'simple-view'); // Page 5 for StudySlide
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view'); // Page 5 for StudySlide
 
     // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -43,14 +43,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
         setStudies 
     } = useGlobalDataContext();
 
-    // Adjust screen width based on tab and page
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 5) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 5) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
 
     // Helper function to generate unique IDs
     const generateId = () => {
@@ -192,7 +185,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                         showDebug={false}
                         onRowDataChange={handleStudyDataChange}
                         height="500px"
-                        isActive={selectedTab === 'grid-view' && currentPage === 5}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>

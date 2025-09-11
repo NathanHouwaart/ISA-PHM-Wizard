@@ -24,7 +24,7 @@ import {getGenericTransposedGridData, flattenGenericTransposedGridData } from '.
 
 import isEqual from 'lodash.isequal';
 
-export const ProcessingProtocolsSlideNew = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const ProcessingProtocolsSlideNew = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     const [selectedTab, setSelectedTab] = useState('grid-view'); // State to manage selected tab
 
@@ -43,13 +43,7 @@ export const ProcessingProtocolsSlideNew = forwardRef(({ onHeightChange, current
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 9) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 9) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
 
     const [processedData, setProcessedData] = useState([]);

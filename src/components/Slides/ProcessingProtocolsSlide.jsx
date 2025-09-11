@@ -27,10 +27,10 @@ import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 
 
-export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(8, 'simple-view'); // State to manage selected tab
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view'); // State to manage selected tab
 
     // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -53,14 +53,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    // Adjust screen width based on tab and page
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 8) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 8) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
     // Helper function to generate unique IDs
     const generateId = () => {
@@ -201,7 +194,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
                         height="500px"
-                        isActive={selectedTab === 'grid-view' && currentPage === 8}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>

@@ -28,10 +28,10 @@ import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 
 
-export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(7, 'simple-view');
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
 
     // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -49,14 +49,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    // Adjust screen width based on tab and page
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 7) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 7) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
 
     // Handle data grid changes
     const handleDataGridMappingsChange = useCallback((newMappings) => {
@@ -147,7 +140,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                         onDataChange={handleDataGridMappingsChange}
                         // onRowDataChange={handleDataGridRowDataChange}
                         height="500px"
-                        isActive={selectedTab === 'grid-view' && currentPage === 7}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>

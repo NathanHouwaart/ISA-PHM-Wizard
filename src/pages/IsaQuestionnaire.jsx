@@ -33,7 +33,20 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const {submitData} = useGlobalDataContext();
+  const { submitData, setScreenWidth, pageTabStates } = useGlobalDataContext();
+
+  // Set screen width based on persisted tab state for the active page. If the
+  // persisted tab for the current page is 'grid-view' we'll open a wider layout
+  // immediately (fixes the reload-then-navigate case). Otherwise fall back to
+  // the standard max-w-5xl.
+  useEffect(() => {
+    const activeTab = pageTabStates?.[currentPage];
+    if (activeTab === 'grid-view') {
+      setScreenWidth('max-w-[100rem]');
+    } else {
+      setScreenWidth('max-w-5xl');
+    }
+  }, [currentPage, pageTabStates, setScreenWidth]);
 
   const handleSubmit = () => {
     // In a real application, you'd collect data from all forms here
@@ -72,7 +85,7 @@ export const IsaQuestionnaire = () => {
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(${translateXValue}%)` }}
           >
-            {slides.map((slide, index) => {
+          {slides.map((slide, index) => {
               const SlideComponent = slide;
               // Only fully render the current slide and its immediate neighbors
               const shouldRender = Math.abs(index - currentPage) <= 1;
@@ -82,9 +95,10 @@ export const IsaQuestionnaire = () => {
                   <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
                     {shouldRender ? (
                       <SlideComponent
-                        ref={el => (childRefs.current[index] = el)}
-                        onHeightChange={handleChildHeightChange}
-                        currentPage={currentPage}
+            ref={el => (childRefs.current[index] = el)}
+            onHeightChange={handleChildHeightChange}
+            currentPage={currentPage}
+            pageIndex={index}
                       />
                     ) : (
                       // Lightweight placeholder keeps layout but avoids mounting heavy components

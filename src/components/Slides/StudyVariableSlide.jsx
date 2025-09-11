@@ -34,10 +34,10 @@ import usePageTab from '../../hooks/usePageWidth';
 const plugin = { select: new SelectTypePlugin() }
 
 // TODO: ADD PAGE NUMBER IN PARAMETERS
-export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(6, 'simple-view');
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
 
     // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -53,14 +53,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         setStudyToStudyVariableMapping
     } = useGlobalDataContext();
 
-    // Adjust screen width based on tab and page
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 6) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 6) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
     // Create a dropdown for the 'type' column (memoized)
     const dropdown = useMemo(() => ({
@@ -202,7 +195,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                         onDataChange={mappingsController.setMappings}
                         onRowDataChange={handleDataGridRowDataChange}
                         height="600px"
-                        isActive={selectedTab === 'grid-view' && currentPage === 6}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>
