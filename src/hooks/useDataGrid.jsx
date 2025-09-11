@@ -56,6 +56,14 @@ export const useDataGrid = ({
   const prevMappingsRef = useRef(mappings);
   const prevColumnDataRef = useRef(columnData);
 
+  // Mirror internal state in refs to allow effects to read latest values without
+  // adding the state objects to dependency arrays (which caused update loops).
+  const mappingHistoryRef = useRef(mappingHistory);
+  const rowDataHistoryRef = useRef(rowDataHistory);
+  const historyIndexRef = useRef(historyIndex);
+  const currentRowDataRef = useRef(currentRowData);
+  const currentMappingsRef = useRef(currentMappings);
+
   // Flag to prevent sync loops when updating via onRowDataChange
   const isUpdatingExternally = useRef(false);
 
@@ -123,26 +131,57 @@ export const useDataGrid = ({
     }
 
     prevRowDataRef.current = rowData;
-  }, [rowData, currentMappings, rowDataHistory, mappingHistory, historyIndex, maxHistorySize, isStandaloneGrid, fields]);
+  // Only watch external inputs here to avoid re-running when internal histories change
+  }, [rowData, maxHistorySize, isStandaloneGrid, fields]);
 
   // Sync mappings with prop changes for mapping grids (only on mount and significant changes)
   useEffect(() => {
-    if (!isStandaloneGrid) {
-      // Only update if this is the initial mount or if mappings length changed significantly
-      const isInitialMount = prevMappingsRef.current === mappings;
-      const lengthChanged = Math.abs(prevMappingsRef.current.length - mappings.length) > 10; // Only reset on significant changes
-      
-      if (isInitialMount || lengthChanged) {
-        prevMappingsRef.current = mappings;
-        setCurrentMappings(mappings);
-        // Only reset history if length changed significantly, not on every edit
-        if (lengthChanged) {
-          setMappingHistory([mappings]);
-          setHistoryIndex(0);
-        }
+    if (isStandaloneGrid) return;
+
+    try {
+      const incoming = mappings || [];
+      const current = currentMappingsRef.current || [];
+
+      // If incoming mappings are deeply equal to current internal mappings, it's likely
+      // the change originated from this hook and was echoed back by the parent — ignore.
+      if (JSON.stringify(incoming) === JSON.stringify(current)) {
+        prevMappingsRef.current = incoming;
+        return;
       }
+
+      // Adopt external mappings into internal state
+      prevMappingsRef.current = incoming;
+      setCurrentMappings(incoming);
+
+      // Record the external change into history (paired snapshot)
+      setMappingHistory(prev => {
+        const copy = prev.slice(0);
+        copy.push(JSON.parse(JSON.stringify(incoming)));
+        // Trim if needed
+        if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
+        mappingHistoryRef.current = copy;
+        return copy;
+      });
+
+      setRowDataHistory(prev => {
+        const copy = prev.slice(0);
+        copy.push(JSON.parse(JSON.stringify(currentRowDataRef.current || rowData)));
+        if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
+        rowDataHistoryRef.current = copy;
+        return copy;
+      });
+
+      // Update history index to newest
+      setHistoryIndex(() => {
+        const idx = mappingHistoryRef.current.length - 1;
+        historyIndexRef.current = idx;
+        return idx;
+      });
+    } catch (err) {
+      console.error('[useDataGrid] error syncing external mappings prop', err);
     }
-  }, [mappings, isStandaloneGrid]);
+  // Only depend on external mapping prop and a few stable inputs
+  }, [mappings, isStandaloneGrid, maxHistorySize, rowData, fields]);
 
   // Track structural changes to columns (e.g. variables added/removed) and record them in history
   useEffect(() => {
@@ -156,36 +195,50 @@ export const useDataGrid = ({
       // When columns are removed, strip mappings that reference missing columns
       try {
         const allowedColumnIds = new Set((columnData || []).map(c => c[fields.columnId]));
-        const filteredMappings = currentMappings.filter(m => allowedColumnIds.has(m[fields.mappingColumnId]));
-        if (filteredMappings.length !== currentMappings.length) {
+        const filteredMappings = (currentMappingsRef.current || []).filter(m => allowedColumnIds.has(m[fields.mappingColumnId]));
+        if (filteredMappings.length !== (currentMappingsRef.current || []).length) {
           setCurrentMappings(filteredMappings);
+          currentMappingsRef.current = filteredMappings;
         }
 
-        // Record a paired snapshot (mappings + rowData) so undo/redo can revert structural changes
-        const newMappingHistory = mappingHistory.slice(0, historyIndex + 1);
-        newMappingHistory.push(JSON.parse(JSON.stringify(filteredMappings)));
+        // Record a paired snapshot (mappings + rowData)
+        setMappingHistory(prev => {
+          const copy = prev.slice(0);
+          copy.push(JSON.parse(JSON.stringify(filteredMappings)));
+          if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
+          mappingHistoryRef.current = copy;
+          return copy;
+        });
 
-        const newRowHistory = rowDataHistory.slice(0, historyIndex + 1);
-        newRowHistory.push(JSON.parse(JSON.stringify(currentRowData || rowData)));
+        setRowDataHistory(prev => {
+          const copy = prev.slice(0);
+          copy.push(JSON.parse(JSON.stringify(currentRowDataRef.current || rowData)));
+          if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
+          rowDataHistoryRef.current = copy;
+          return copy;
+        });
 
-        // Trim histories if needed
-        if (newMappingHistory.length > maxHistorySize) {
-          const remove = newMappingHistory.length - maxHistorySize;
-          newMappingHistory.splice(0, remove);
-          newRowHistory.splice(0, remove);
-        }
-
-        const newIndex = newMappingHistory.length - 1;
-        setHistoryIndex(newIndex);
-        setMappingHistory(newMappingHistory);
-        setRowDataHistory(newRowHistory);
+        setHistoryIndex(() => {
+          const idx = mappingHistoryRef.current.length - 1;
+          historyIndexRef.current = idx;
+          return idx;
+        });
       } catch (err) {
         console.error('[useDataGrid] error handling columnData structural change', err);
       }
     }
 
     prevColumnDataRef.current = columnData;
-  }, [columnData, isStandaloneGrid, currentMappings, mappingHistory, rowDataHistory, historyIndex, maxHistorySize, currentRowData, rowData, fields]);
+  // Only depend on external columnData and a few stable inputs to avoid loops
+  }, [columnData, isStandaloneGrid, maxHistorySize, rowData, fields]);
+
+  // Keep refs in sync with internal state so effects can read latest values without adding
+  // the full state objects to dependency arrays.
+  useEffect(() => { mappingHistoryRef.current = mappingHistory; }, [mappingHistory]);
+  useEffect(() => { rowDataHistoryRef.current = rowDataHistory; }, [rowDataHistory]);
+  useEffect(() => { historyIndexRef.current = historyIndex; }, [historyIndex]);
+  useEffect(() => { currentRowDataRef.current = currentRowData; }, [currentRowData]);
+  useEffect(() => { currentMappingsRef.current = currentMappings; }, [currentMappings]);
 
   // Undo/Redo functionality
   const canUndo = historyIndex > 0;

@@ -5,6 +5,7 @@ import EditVariableModal from './EditModal';
 import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
 import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import useMappingsController from '../hooks/useMappingsController';
 
 export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false }) {
 
@@ -12,6 +13,11 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
 
     const MappingCardComponent = cardComponent();
+
+    // Provide a stable controller to mapping cards. If the parent passed an explicit
+    // handleInputChange or mappings array we prefer that, otherwise use the global controller.
+    const controller = useMappingsController();
+    const effectiveHandleInputChange = handleInputChange ? handleInputChange : controller.updateMappingValue;
 
     const [selectedEntityIndex, setSelectedEntityIndex] = useState(0);
     const selectedEntity = useMemo(() => items[selectedEntityIndex], [items, selectedEntityIndex]);
@@ -58,9 +64,9 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                         <MappingCardComponent
                             item={selectedEntity}
                             itemIndex={selectedEntityIndex}
-                            mappings={mappings}
+                            mappings={mappings ?? controller.mappings}
                             onSave={updateItem}
-                            handleInputChange={handleInputChange}
+                            handleInputChange={effectiveHandleInputChange}
                             removeParameter={removeItem}
                         />
                     }

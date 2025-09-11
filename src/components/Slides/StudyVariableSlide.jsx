@@ -13,6 +13,7 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
+import useMappingsController from '../../hooks/useMappingsController';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
@@ -90,22 +91,23 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
         setStudyVariables(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
     }, [setStudyVariables]);
 
-    // Handle cell edits in the grid
-    const handleDataGridMappingsChange = useCallback((newMappings) => {
-        setStudyToStudyVariableMapping(newMappings);
-    }, [setStudyToStudyVariableMapping]);
+    // We'll use a single mappings controller so both the simple view and the grid
+    // operate on the exact same canonical mappings object.
+    const mappingsController = useMappingsController();
 
     // Handle row data changes
     const handleDataGridRowDataChange = useCallback((newRowData) => {
         setStudyVariables(newRowData);
     }, [setStudyVariables]);
 
+    // Note: simple view input updates will use mappingsController.updateMappingValue
+
     // Grid configuration for studies
     const studyVariableGridConfig = {
         title: 'Variables to Studies Grid',
         rowData: studyVariables,
         columnData: studies,
-        mappings: studyToStudyVariableMapping,
+    mappings: mappingsController.mappings,
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -183,12 +185,12 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    {/* <EntityMappingPanel
-                        name={"Variables"}
-                        itemHook={useVariables}
-                        mappings={studyToStudyVariableMapping}
-                        handleInputChange={handleInputChange}
-                    /> */}
+                        <EntityMappingPanel
+                            name={"Variables"}
+                            itemHook={useVariables}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                        />
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
@@ -197,7 +199,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                         showControls={true}
                         plugins={plugin}
                         showDebug={false}
-                        onDataChange={handleDataGridMappingsChange}
+                        onDataChange={mappingsController.setMappings}
                         onRowDataChange={handleDataGridRowDataChange}
                         height="600px"
                         isActive={selectedTab === 'grid-view' && currentPage === 6}
