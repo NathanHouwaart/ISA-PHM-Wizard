@@ -100,6 +100,9 @@ const DataGrid = forwardRef(({
     // State to track column sizes to preserve across re-renders
     // This prevents columns from resetting to their original size after edits
     const [columnSizes, setColumnSizes] = useState(() => new Map());
+    // Also keep a ref for synchronous updates to avoid races between event handler
+    // updates and later effects that read the state (which is async).
+    const columnSizesRef = useRef(columnSizes);
     const gridRef = useRef();
 
     // Listen for column resize events to preserve user adjustments
@@ -119,10 +122,41 @@ const DataGrid = forwardRef(({
                 const column = detail[columnIndex];
                 
                 if (column && column.prop && column.size) {
+                    // Persist size in the map
                     setColumnSizes(prev => {
                         const newSizes = new Map(prev);
                         newSizes.set(column.prop, column.size);
+                        // sync ref so subsequent immediate computations see the new size
+                        columnSizesRef.current = newSizes;
                         return newSizes;
+                    });
+
+                    // Also apply the new size immediately to the active column defs
+                    // so RevoGrid receives the update synchronously and doesn't snap back.
+                    setAppliedColumns(prevCols => {
+                        const updated = prevCols.map(c => {
+                            // Update top-level column match
+                            if (c.prop === column.prop) {
+                                return { ...c, size: column.size };
+                            }
+
+                            // If parent has children, update the matching child
+                            if (c.children && Array.isArray(c.children)) {
+                                const children = c.children.map(child => {
+                                    if (child.prop === column.prop) {
+                                        return { ...child, size: column.size };
+                                    }
+                                    return child;
+                                });
+                                return { ...c, children };
+                            }
+
+                            return c;
+                        });
+                        // Keep internal refs in sync
+                        stableColumnDefs.current = updated;
+                        lastEnhancedColumnsRef.current = updated;
+                        return updated;
                     });
                 }
             }
@@ -143,13 +177,24 @@ const DataGrid = forwardRef(({
 
     // Enhanced column definitions that preserve user-resized widths
     const enhancedColumnDefs = React.useMemo(() => {
+        // Use the synchronous ref if available to avoid races when a resize event
+        // just updated the ref but the state update hasn't propagated yet.
+        const sizesMap = columnSizesRef.current || columnSizes;
         return columnDefs.map(col => {
-            const savedSize = columnSizes.get(col.prop);
+            const savedSize = sizesMap.get(col.prop);
             const finalSize = savedSize || col.size || 150;
-            return {
-                ...col,
-                size: finalSize
-            };
+
+            // If column has child columns, apply saved sizes to children as well
+            if (col.children && Array.isArray(col.children)) {
+                const children = col.children.map(child => {
+                    const childSaved = sizesMap.get(child.prop);
+                    const childSize = childSaved || child.size || 100;
+                    return { ...child, size: childSize };
+                });
+                return { ...col, size: finalSize, children };
+            }
+
+            return { ...col, size: finalSize };
         });
     }, [columnDefs, columnSizes]);
 
@@ -169,9 +214,20 @@ const DataGrid = forwardRef(({
             });
 
         if (columnsChanged) {
-            setAppliedColumns([...enhancedColumnDefs]);
-            stableColumnDefs.current = enhancedColumnDefs;
-            lastEnhancedColumnsRef.current = enhancedColumnDefs;
+            // Merge in any user-saved sizes from the synchronous ref so we don't
+            // overwrite a user's recent resize when columns are recalculated.
+            const sizesMap = columnSizesRef.current || columnSizes;
+            const merged = enhancedColumnDefs.map(col => {
+                const saved = sizesMap.get(col.prop);
+                if (saved && saved !== col.size) {
+                    return { ...col, size: saved };
+                }
+                return col;
+            });
+
+            setAppliedColumns(merged);
+            stableColumnDefs.current = merged;
+            lastEnhancedColumnsRef.current = merged;
         }
     }, [enhancedColumnDefs]);
 
