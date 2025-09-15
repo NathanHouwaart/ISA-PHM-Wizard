@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 
-import authorsFormFields from "../../data/AuthorFormFields.json"
 import FormField from "../Form/FormField";
-import { TagInput } from "../Form/TagInput";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
 

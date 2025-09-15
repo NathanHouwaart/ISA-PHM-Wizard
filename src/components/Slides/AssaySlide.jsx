@@ -1,7 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // Import hooks
-import useMeasurements from '../../hooks/useMeasurements';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
@@ -12,18 +11,12 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
 
-import isEqual from 'lodash.isequal';
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 
@@ -41,7 +34,6 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const {
         studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
         studyToAssayMapping,
         setStudyToAssayMapping,
@@ -49,8 +41,6 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
-    
     // Handle data grid changes
     const handleDataGridMappingsChange = useCallback((newMappings) => {
         setStudyToAssayMapping(newMappings);

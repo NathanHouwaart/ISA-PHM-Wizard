@@ -16,16 +16,11 @@ import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
-
-import isEqual from 'lodash.isequal';
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -41,27 +36,28 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     const {
         studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
-        studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
+    // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
+    const mappingsController = useMappingsController(
+        'studyToSensorMeasurementMapping',
+        { sourceKey: 'sensorId', targetKey: 'studyId' }
+    );
 
-    // Handle data grid changes
+    // Handle data grid changes (use controller to keep canonical mapping)
     const handleDataGridMappingsChange = useCallback((newMappings) => {
-        setStudyToSensorMeasurementMapping(newMappings);
-    }, [setStudyToSensorMeasurementMapping]);
+        mappingsController.setMappings(newMappings);
+    }, [mappingsController]);
 
     // Grid configuration for mapping studies to sensor measurements
     const measurementOutputGridConfig = {
         title: 'Mappings for measurement output',
         rowData: studies,
         columnData: selectedTestSetup?.sensors || [],
-        mappings: studyToSensorMeasurementMapping,
+        mappings: mappingsController.mappings,
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -96,6 +92,8 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         ]), [])
     };
 
+    // mappingsController already created above
+
     return (
         <div ref={combinedRef} >
 
@@ -120,15 +118,15 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
 
-                    {/* <EntityMappingPanel
+                    <EntityMappingPanel
                         name={`Sensor Output Mapping`}
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToSensorMeasurementMapping}
-                        // handleInputChange={handleInputChange}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
                         disableAdd
-                    /> */}
+                    />
 
                 </TabPanel>
 

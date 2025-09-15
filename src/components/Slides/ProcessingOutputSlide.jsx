@@ -12,18 +12,11 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import isEqual from 'lodash.isequal';
-
-import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 
@@ -41,7 +34,6 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     const {
         studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
         studyToSensorProcessingMapping,
         setStudyToSensorProcessingMapping,

@@ -155,6 +155,13 @@
       "type": "Enter type...",
       "unit": "",
       "description": "Specifies the scaling resolution used in data processing of sensor data."
+    },
+    {
+      "id": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+      "name": "Other Resolution",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Another resolution for processing sensor data"
     }
   ],
   "studies": [
@@ -434,6 +441,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST01_SE01_MO.csv",
@@ -489,6 +504,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST01_SE02_MO.csv",
@@ -543,6 +566,14 @@
               "value": [
                 "24",
                 "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
               ]
             }
           ],
@@ -828,6 +859,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST02_SE01_MO.csv",
@@ -883,6 +922,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST02_SE02_MO.csv",
@@ -937,6 +984,14 @@
               "value": [
                 "24",
                 "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
               ]
             }
           ],
@@ -1222,6 +1277,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST03_SE01_MO.csv",
@@ -1277,6 +1340,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST03_SE02_MO.csv",
@@ -1331,6 +1402,14 @@
               "value": [
                 "24",
                 "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
               ]
             }
           ],
@@ -1616,6 +1695,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST04_SE01_MO.csv",
@@ -1671,6 +1758,14 @@
                 "24",
                 "Bit"
               ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
           "raw_file_name": "ST04_SE02_MO.csv",
@@ -1725,6 +1820,14 @@
               "value": [
                 "24",
                 "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
               ]
             }
           ],

@@ -20,9 +20,6 @@ import { Template } from '@revolist/react-datagrid';
 import DataGrid from '../DataGrid';
 import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
 
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-
 // Import content data
 import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
 
