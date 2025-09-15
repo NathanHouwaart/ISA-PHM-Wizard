@@ -1,13 +1,19 @@
 import { Edit2, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
-import EditVariableModal from './EditModal';
+import EditEntityModal from './EditEntityModal';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 
-export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter }) {
+export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled }) {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    // Open modal when parent signals an add-created item
+    if (openEdit && !isEditModalOpen) {
+        setIsEditModalOpen(true);
+        onOpenHandled && onOpenHandled();
+    }
 
     const { studies } = useGlobalDataContext();
 
@@ -74,12 +80,18 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
 
             {/* Edit Variable Details Modal */}
             <div className={`transition-all duration-200 ${(isEditModalOpen) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <EditVariableModal
+                <EditEntityModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
                     onSave={onSave}
-                    initialVariableData={item}
-                    variableTypes={VARIABLE_TYPE_OPTIONS}
+                    initialData={item}
+                    title={`Edit Variable: ${item.name}`}
+                    fields={[
+                        { name: 'name', label: 'Variable Name' },
+                        { name: 'type', label: 'Variable Type', type: 'select', options: VARIABLE_TYPE_OPTIONS },
+                        { name: 'unit', label: 'Unit' },
+                        { name: 'description', label: 'Description', type: 'textarea' }
+                    ]}
                 />
             </div>
         </div >

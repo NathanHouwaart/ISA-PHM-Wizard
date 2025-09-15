@@ -559,10 +559,10 @@ const DataGrid = forwardRef(({
             {/* Header */}
             <div className="mb-4">
                 <h2 className="text-xl font-bold">{title}</h2>
-                <p className="text-gray-600">
+                {/* <p className="text-gray-600">
                     Rows: {stats.totalRows} | Columns: {stats.totalColumns} | Mappings: {stats.totalMappings}
                     {stats.totalRows > 0 && stats.totalColumns > 0 && ` | Coverage: ${stats.coverage}%`}
-                </p>
+                </p> */}
 
                 {/* Controls */}
                 {showControls && (

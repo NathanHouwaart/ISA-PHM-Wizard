@@ -19,6 +19,8 @@ import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
+import EntityMappingPanel from '../EntityMappingPanel';
 
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -41,11 +43,16 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
+    const mappingsController = useMappingsController(
+        'studyToSensorProcessingMapping',
+        { sourceKey: 'sensorId', targetKey: 'studyId' }
+    );
+
     // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
     // Handle data grid changes
     const handleDataGridMappingsChange = useCallback((newMappings) => {
-        setStudyToSensorProcessingMapping(newMappings);
+        mappingsController.setMappings(newMappings);
     }, [setStudyToSensorProcessingMapping]);
 
     // Grid configuration for mapping studies to processing protocols output
@@ -53,7 +60,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
         title: 'Mappings for processing protocol output',
         rowData: studies,
         columnData: selectedTestSetup?.sensors || [],
-        mappings: studyToSensorProcessingMapping,
+        mappings: mappingsController.mappings,
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -112,15 +119,15 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
 
-                    {/* <EntityMappingPanel
+                    <EntityMappingPanel
                         name={`Processing Protocol Mapping`}
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToSensorProcessingMapping}
-                        handleInputChange={handleInputChange}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
                         disableAdd
-                    /> */}
+                    />
 
                 </TabPanel>
 

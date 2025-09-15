@@ -19,6 +19,9 @@ import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
+import EntityMappingPanel from '../EntityMappingPanel';
+import useMeasurements from '../../hooks/useMeasurements';
 
 
 export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -36,15 +39,19 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         testSetups,
         selectedTestSetupId,
         studyToAssayMapping,
-        setStudyToAssayMapping,
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    // Handle data grid changes
+    const mappingsController = useMappingsController(
+        'studyToAssayMapping',
+        { sourceKey: 'sensorId', targetKey: 'studyId' }
+    );
+
+    // Handle data grid changes (use controller to keep canonical mapping)
     const handleDataGridMappingsChange = useCallback((newMappings) => {
-        setStudyToAssayMapping(newMappings);
-    }, [setStudyToAssayMapping]);
+        mappingsController.setMappings(newMappings);
+    }, [mappingsController]);
 
     // Grid configuration for mapping studies to processing protocols output
     const assayOutputGridConfig = {
@@ -109,16 +116,16 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    {/* 
+                    
                     <EntityMappingPanel
                         name={`Processing Protocol Mapping`}
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToAssayMapping}
-                        handleInputChange={handleInputChange}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
                         disableAdd
-                    /> */}
+                    />
 
                 </TabPanel>
 

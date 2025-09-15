@@ -3,6 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 // Import hooks
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
+import useProcessingProtocols from '../../hooks/useProcessingProtocols';
 
 // Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
@@ -19,6 +20,8 @@ import { BoldCell } from '../GridTable/CellTemplates';
 // Import utility functions
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
+import EntityMappingPanel from '../EntityMappingPanel';
 
 
 export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -46,6 +49,20 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+
+    
+    // Manage the sensor <-> processing protocol mappings
+    // Use canonical mapping field names (sourceId/targetId) so the grid and
+    // global mappings stay consistent.
+    const mappingsController = useMappingsController(
+        'sensorToProcessingProtocolMapping',
+        { sourceKey: 'sourceId', targetKey: 'targetId' }
+    );
+
+    // Handle data grid changes (use controller to keep canonical mapping)
+    const handleDataGridMappingsChange = useCallback((newMappings) => {
+        mappingsController.setMappings(newMappings);
+    }, [mappingsController]);
 
     // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
@@ -75,10 +92,10 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         }
     };
 
-    // Handle cell edits in the grid
-    const handleDataGridMappingsChange = useCallback((newMappings) => {
-        setSensorToProcessingProtocolMapping(newMappings);
-    }, [setSensorToProcessingProtocolMapping]);
+    // // Handle cell edits in the grid
+    // const handleDataGridMappingsChange = useCallback((newMappings) => {
+    //     setSensorToProcessingProtocolMapping(newMappings);
+    // }, [setSensorToProcessingProtocolMapping]);
 
     // Handle row data changes
     const handleDataGridRowDataChange = useCallback((newRowData) => {
@@ -90,7 +107,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         title: 'Processing Protocols to Sensors Grid',
         rowData: processingProtocols,            // Protocols are now rows
         columnData: selectedTestSetup?.sensors || [],           // Sensors are now columns
-        mappings: sensorToProcessingProtocolMapping, // Mappings from sensors to protocols
+        mappings: mappingsController.mappings, // Mappings from sensors to protocols
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -168,15 +185,12 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
 
-                    {/* <EntityMappingPanel
+                    <EntityMappingPanel
                         name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        tileNamePrefix="Sensor S"
-                        items={selectedTestSetup?.sensors || []}
                         itemHook={useProcessingProtocols}
-                        mappings={studyToSensorMeasurementMapping}
-                        handleInputChange={handleInputChange}
-                        disableAdd
-                    /> */}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
+                    />
 
                 </TabPanel>
 
@@ -190,12 +204,13 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                         height="500px"
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
+
                 </TabPanel>
             </div>
         </div>
     );
 });
 
-ProcessingProtocolsSlide.displayName = "Processing Protocols"; // Set display name for better debugging
+ProcessingProtocolsSlide.displayName = "Processing Protocols";
 
 export default ProcessingProtocolsSlide;
