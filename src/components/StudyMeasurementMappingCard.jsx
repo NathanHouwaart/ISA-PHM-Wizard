@@ -3,7 +3,6 @@
 import { Edit2, PlusCircleIcon, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
-import EditEntityModal from './EditEntityModal';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 

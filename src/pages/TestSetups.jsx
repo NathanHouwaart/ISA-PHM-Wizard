@@ -13,11 +13,8 @@ import Collection, {
 } from '../components/Collection'; // Adjust the import path as needed
 import useTestSetups from '../hooks/useTestSetups';
 import PageWrapper from '../layout/PageWrapper';
-import Heading1 from '../components/Typography/Heading1';
-import Paragraph from '../components/Typography/Paragraph';
 
 import initialTestSetups from '../data/InitialTestSetups.json'
-import { useEffect } from "react";
 
 export const TestSetups = () => {
 

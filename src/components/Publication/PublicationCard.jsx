@@ -32,7 +32,7 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                                 <p className="text-gray-600 text-sm">
                                     <UserPen className="inline-block w-4 h-4 mr-1 text-gray-500" />
                                         {authorNames.map((author, index) => {
-                                            return <span key={index} style={{ whiteSpace: "pre" }}>{index + 1}. {author.name}   </span>
+                                            return <span key={index} style={{ whiteSpace: "pre" }}>{index + 1}. {author}   </span>
                                         })}
                                     {/* {authorNames.join(', ')} */}
                                 </p>
