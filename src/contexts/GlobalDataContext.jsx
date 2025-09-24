@@ -7,6 +7,7 @@ import initialPublications from "../data/existingPublications.json";
 import initialStudyVariables from "../data/existingStudyVariables.json";
 import existingStudyToStudyVariableMapping from "../data/existingStudyToStudyVariableMapping.json";
 import existingStudyToSensorMeasurementMapping from "../data/existingStudyToSensorMeasurementMapping.json";
+import initialProcessingProtocols from "../data/InitialProcessingProtocols.json";
 
 import investigationFormFields from '../data/InvestigationFormFields2.json'
 
@@ -50,7 +51,7 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
-    const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage('globalAppData_processingProtocols', []))
+    const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage('globalAppData_processingProtocols', initialProcessingProtocols))
 
     // Mappings
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
@@ -104,6 +105,41 @@ export const GlobalDataProvider = ({ children }) => {
         sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
         studyToAssayMapping, pageTabStates
     ]);
+
+    // Auto-generate default studyToAssayMapping entries when none exist.
+    // This is non-destructive: if the mapping already contains entries we leave it alone.
+    useEffect(() => {
+        try {
+            if (Array.isArray(studyToAssayMapping) && studyToAssayMapping.length > 0) return; // already populated
+
+            // Build defaults using studies and sensors from testSetups
+            const pad = (n) => String(n + 1).padStart(2, '0');
+            const defaults = [];
+
+            // If testSetups is empty, nothing to generate
+            if (!Array.isArray(testSetups) || testSetups.length === 0) {
+                return;
+            }
+
+            studies.forEach((study, si) => {
+                // choose the first testSetup or iterate all testSetups -- we iterate all to be exhaustive
+                testSetups.forEach((setup) => {
+                    if (!Array.isArray(setup.sensors)) return;
+                    setup.sensors.forEach((sensor, sidx) => {
+                        // Default assay filename pattern: ST{studyIdx}_SE{sensorIdx}_ASSO.csv
+                        const value = `ST${pad(si)}_SE${pad(sidx)}_ASSO.csv`;
+                        defaults.push({ studyId: study.id, sensorId: sensor.id, value });
+                    });
+                });
+            });
+
+            if (defaults.length > 0) {
+                setStudyToAssayMapping(defaults);
+            }
+        } catch (err) {
+            console.error('[GlobalDataContext] error generating default studyToAssayMapping', err);
+        }
+    }, [studies, testSetups, studyToAssayMapping, setStudyToAssayMapping]);
 
 
     async function submitData() {

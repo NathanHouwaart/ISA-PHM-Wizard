@@ -21,6 +21,7 @@ import { PatternCellTemplate } from '../GridTable/CellTemplates';
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -125,6 +126,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         itemHook={useMeasurements}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
+                        minHeight={WINDOW_HEIGHT}
                         disableAdd
                     />
 
@@ -136,8 +138,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
-                        // onRowDataChange={handleDataGridRowDataChange}
-                        height="500px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>

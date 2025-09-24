@@ -21,6 +21,7 @@ import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -127,6 +128,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
                         disableAdd
+                        minHeight={WINDOW_HEIGHT}
                     />
 
                 </TabPanel>
@@ -137,7 +139,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
-                        height="500px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>

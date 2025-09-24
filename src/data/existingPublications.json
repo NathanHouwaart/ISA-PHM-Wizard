@@ -1,20 +1,20 @@
 [
   {
-    "id": "p01",
-    "title": "Revolutionizing Cancer Treatment with Novel Immunotherapies",
+    "id": "378bc133-a037-4e55-a366-4160f69675f1",
+    "title": "Example Publication Title 1",
     "doi": "10.1016/j.cell.2023.01.001",
     "publicationStatus": "published",
     "authorList": [
-        "a1", "a2"
+        "0b48d9d8-8b07-4bf6-b779-473d1cae34bc", "65dad5ba-4039-435a-bb45-e0123cd68778", "be683385-ef5e-43bf-a7c9-d9b34774bf24"
     ]
   },
   {
-    "id": "p02",
-    "title": "Advances in AI for Medical Image Analysis",
+    "id": "82c980bd-0545-49f3-aa05-a7ccb8277dae",
+    "title": "Example Publication Title 2",
     "doi": "10.1109/TMI.2022.3210987",
     "publicationStatus": "under review",
     "authorList": [
-        "a3", "a1"
+        "65dad5ba-4039-435a-bb45-e0123cd68778", "0b48d9d8-8b07-4bf6-b779-473d1cae34bc"
     ]
   }
 ]

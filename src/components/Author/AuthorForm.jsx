@@ -5,7 +5,7 @@ import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
 
-import { AUTHOR_ROLE_OPTIONS } from "../../constants/authorRoles";
+import { AUTHOR_ROLE_OPTIONS, AUTHOR_SUBROLE_OPTIONS } from "../../constants/authorRoles";
 
 export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
@@ -18,6 +18,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
         phone: item?.phone || '',
         fax: item?.fax || '',
         roles: item?.roles || [],
+        subroles: item?.subroles || [],
         address: item?.address || '',
         orcid: item?.orcid || '',
         affiliations: item?.affiliations || [],
@@ -25,7 +26,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.firstName.trim() || !formData.lastName.trim() || formData.roles.length === 0) {
+        if (!formData.firstName.trim() || !formData.lastName.trim() || formData.roles.length === 0 ) {
             alert('Please fill in all required fields (First Name, Last Name, Role).');
             return;
         }
@@ -73,6 +74,24 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             return {
                 ...prevData,
                 roles: prevData.roles.filter(role => role !== roleToRemove)
+            };
+        });
+    };
+
+    const handleAddSubrole = (subrole) => {
+        setFormData(prevData => {
+            return {
+                ...prevData,
+                subroles: [...(prevData.subroles || []), subrole]
+            };
+        });
+    };
+
+    const handleRemoveSubrole = (subroleToRemove) => {
+        setFormData(prevData => {
+            return {
+                ...prevData,
+                subroles: prevData.subroles.filter(subrole => subrole !== subroleToRemove)
             };
         });
     };
@@ -196,10 +215,19 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         type="multi-select"
                         tags={AUTHOR_ROLE_OPTIONS}
                         value={formData.roles}
-                        // tags={formData.role}
                         onAddTag={handleAddRole}
                         onRemoveTag={handleRemoveRole}
                         required
+                    />
+
+                    <FormField
+                        name="subroles"
+                        label="Subrole(s)"
+                        type="multi-select"
+                        tags={AUTHOR_SUBROLE_OPTIONS}
+                        value={formData.subroles}
+                        onAddTag={handleAddSubrole}
+                        onRemoveTag={handleRemoveSubrole}
                     />
                 </div>
 

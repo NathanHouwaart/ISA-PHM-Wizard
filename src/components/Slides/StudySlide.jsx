@@ -26,6 +26,7 @@ import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 import DataGrid from '../DataGrid'; // Import the new DataGrid
 import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -184,7 +185,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         showControls={true}
                         showDebug={false}
                         onRowDataChange={handleStudyDataChange}
-                        height="500px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>

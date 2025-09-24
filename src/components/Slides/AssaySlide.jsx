@@ -22,6 +22,7 @@ import DataGrid from '../DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useMeasurements from '../../hooks/useMeasurements';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
 export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -124,6 +125,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         itemHook={useMeasurements}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
+                        minHeight={WINDOW_HEIGHT}
                         disableAdd
                     />
 
@@ -135,8 +137,9 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
-                        height="500px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
+                        
                     />
                 </TabPanel>
             </div>

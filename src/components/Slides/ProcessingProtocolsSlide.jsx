@@ -22,6 +22,7 @@ import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
 export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -190,6 +191,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                         itemHook={useProcessingProtocols}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
+                        minHeight={WINDOW_HEIGHT}
                     />
 
                 </TabPanel>
@@ -201,7 +203,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height="500px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
 

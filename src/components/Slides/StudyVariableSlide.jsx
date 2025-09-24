@@ -26,6 +26,7 @@ import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
 import usePageTab from '../../hooks/usePageWidth';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 // register column type
 const plugin = { select: new SelectTypePlugin() }
@@ -176,6 +177,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                         <EntityMappingPanel
+                            minHeight={WINDOW_HEIGHT}
                             name={"Variables"}
                             itemHook={useVariables}
                             mappings={mappingsController.mappings}
@@ -191,7 +193,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                         showDebug={false}
                         onDataChange={mappingsController.setMappings}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height="600px"
+                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>

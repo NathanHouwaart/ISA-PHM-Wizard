@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react'
 import { Plus, PlusCircleIcon } from 'lucide-react';
 import useMappingsController from '../hooks/useMappingsController';
 
-export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false }) {
+export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight }) {
 
 
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
@@ -21,7 +21,7 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
     const selectedEntity = useMemo(() => items[selectedEntityIndex], [items, selectedEntityIndex]);
 
     return (
-        <div className='flex'>
+        <div className='flex' style={minHeight ? { minHeight } : undefined}>
 
             {/* Sidebar for Variable Navigation */}
             <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">

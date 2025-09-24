@@ -1,83 +1,69 @@
 [
   {
-    "id": "a1",
-    "firstName": "Sietse",
+    "id": "be683385-ef5e-43bf-a7c9-d9b34774bf24",
+    "firstName": "Author",
     "midInitials": "",
-    "lastName": "Bruinsma",
-    "email": "sj.bruinsma.01@mindef.nl",
-    "phone": "+1 (111) 222-3333",
-    "fax": "+1 (111) 222-3334",
-    "roles": [
-      "Writing - review & editing",
-      "Writing - original draft"
-    ],
-    "address": "288 driving St, Springfield, USA",
-    "orcid": "0000-0001-2345-6789",
-    "affiliations": [
-      "University of Twente",
-      "Royal Netherlands Navy"
-    ]
-  },
-  {
-    "id": "a2",
-    "firstName": "Rinze",
-    "midInitials": "D.",
-    "lastName": "Geertsma",
-    "email": "",
+    "lastName": "1",
+    "email": "author.1@example.com",
     "phone": "",
     "fax": "",
     "roles": [
-      "Software",
-      "Resources",
-      "Writing - original draft",
+      "Author",
+      "Corresponding Author"
+    ],
+    "subroles": [
+      "Supervision",
       "Writing - review & editing"
     ],
     "address": "",
     "orcid": "",
     "affiliations": [
-      "Netherlands Defence Acedemy"
+      "Affiliation 1",
+      "Affiliation 2"
     ]
   },
-  {
-    "id": "a3",
-    "firstName": "Richard",
+   {
+    "id": "0b48d9d8-8b07-4bf6-b779-473d1cae34bc",
+    "firstName": "Author",
     "midInitials": "",
-    "lastName": "Loendersloot",
-    "email": "",
+    "lastName": "2",
+    "email": "author.2@example.com",
     "phone": "",
     "fax": "",
     "roles": [
-      "Software",
-      "Writing - original draft",
-      "Visualization",
+      "Author"
+    ],
+    "subroles": [
+      "Supervision",
       "Writing - review & editing"
     ],
     "address": "",
     "orcid": "",
     "affiliations": [
-      "University of Twente"
+      "Affiliation 1",
+      "Affiliation 2"
     ]
   },
   {
-    "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
-    "firstName": "Tiedo",
+    "id": "65dad5ba-4039-435a-bb45-e0123cd68778",
+    "firstName": "Author",
     "midInitials": "",
-    "lastName": "Tinga",
-    "email": "",
+    "lastName": "3",
+    "email": "author.3@example.com",
     "phone": "",
     "fax": "",
     "roles": [
-      "Software",
-      "Resources",
-      "Writing - original draft",
-      "Visualization",
+      "Author"
+    ],
+    "subroles": [
+      "Supervision",
       "Writing - review & editing"
     ],
     "address": "",
     "orcid": "",
     "affiliations": [
-      "Netherlands Defence Academy",
-      "Royal Netherlands Navy"
+      "Affiliation 1",
+      "Affiliation 2"
     ]
   }
 ]
