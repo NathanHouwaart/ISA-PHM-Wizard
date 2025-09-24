@@ -207,8 +207,18 @@ export const GlobalDataProvider = ({ children }) => {
             const formData = new FormData();
             formData.append("file", blob, "input.json");
 
-            // 3. Submit to FastAPI endpoint
-            const response = await fetch("http://localhost:8000/convert", {
+            // 3. Submit to backend /convert endpoint. The base URL is selected using Vite env vars
+            //    - During development (npm run dev) import.meta.env.MODE === 'development'
+            //    - Use VITE_API_BASE to override for dev or production
+            const DEFAULT_PROD_API = 'https://dwvmqgeaan.eu-west-1.awsapprunner.com';
+            const apiBase = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
+                ? import.meta.env.VITE_API_BASE
+                : (import.meta.env.MODE === 'development' ? 'http://localhost:8000' : DEFAULT_PROD_API);
+
+            const endpoint = `${apiBase.replace(/\/$/, '')}/convert`;
+            console.log('[GlobalDataContext] submitting to', endpoint);
+
+            const response = await fetch(endpoint, {
                 method: "POST",
                 body: formData
             });
