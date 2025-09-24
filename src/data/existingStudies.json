@@ -3,7 +3,7 @@
         "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
         "name" : "Test study 1",
         "description" : "",
-        "submissionDate" : "2025-10-10",
+        "submissionDate" : "",
         "publicationDate" : ""
     },
     {
@@ -23,7 +23,7 @@
     {
         "id": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
         "name" : "Test study 4",
-        "description" : "Description of test study 4",
+        "description" : "",
         "submissionDate" : "",
         "publicationDate" : ""
     }

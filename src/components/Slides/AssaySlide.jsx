@@ -1,7 +1,6 @@
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // Import hooks
-import useMeasurements from '../../hooks/useMeasurements';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
@@ -12,94 +11,87 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
-
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
-
-import isEqual from 'lodash.isequal';
+import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
 
-export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+import usePageTab from '../../hooks/usePageWidth';
+import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
+import EntityMappingPanel from '../EntityMappingPanel';
+import useMeasurements from '../../hooks/useMeasurements';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
 
+export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view'); // State to manage selected tab
+
+    // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // Access global context
     const {
         studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
         studyToAssayMapping,
-        setStudyToAssayMapping,
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 10) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 10) {
-            setScreenWidth("max-w-5xl");
+    const mappingsController = useMappingsController(
+        'studyToAssayMapping',
+        { sourceKey: 'sensorId', targetKey: 'studyId' }
+    );
+
+    // Handle data grid changes (use controller to keep canonical mapping)
+    const handleDataGridMappingsChange = useCallback((newMappings) => {
+        mappingsController.setMappings(newMappings);
+    }, [mappingsController]);
+
+    // Grid configuration for mapping studies to processing protocols output
+    const assayOutputGridConfig = {
+        title: 'Mappings for assay output',
+        rowData: studies,
+        columnData: selectedTestSetup?.sensors || [],
+        mappings: studyToAssayMapping,
+        fieldMappings: {
+            rowId: 'id',
+            rowName: 'name',
+            columnId: 'id',
+            columnName: 'alias',
+            columnUnit: '',
+            mappingRowId: 'studyId',
+            mappingColumnId: 'sensorId',
+            mappingValue: 'value'
+        },
+        customActions: [],
+        staticColumns: useMemo(() => ([{
+            prop: 'id',
+            name: 'Identifier',
+            size: 150,
+            readonly: true,
+            cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+        },
+        {
+            prop: 'name',
+            name: 'Study Name',
+            size: 200,
+            readonly: true,
+            cellProperties: () => {
+                return {
+                    style: {
+                        "border-right": "3px solid "
+                    }
+                }
+            }
         }
-    }, [selectedTab, currentPage, setScreenWidth]);
-
-
-    const [processedData, setProcessedData] = useState([]);
-    const [columns, setColumns] = useState([]);
-    const isUpdatingFromGlobal = useRef(false);
-
-    const gridDataFromGlobal = useMemo(() => {
-        return getTransposedGridData(studies, selectedTestSetup?.sensors, studyToAssayMapping);
-    }, [studies, selectedTestSetup, studyToAssayMapping]);
-
-    // --- Global Data to Local Grid Data Sync ---
-    useEffect(() => {
-        if (!isEqual(processedData, gridDataFromGlobal)) {
-            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
-            setProcessedData(gridDataFromGlobal);
-        }
-    }, [selectedTestSetup, testSetups]);
-
-    // --------- Grid → Global Sync (Transposed) ---------
-    useEffect(() => {
-        if (isUpdatingFromGlobal.current) {
-            isUpdatingFromGlobal.current = false;
-            return;
-        }
-
-        const mappings = flattenTransposedGridData(processedData, selectedTestSetup?.sensors || []);
-        setStudyToAssayMapping(mappings);
-    }, [processedData, selectedTestSetup]);
-
-
-    // Standalone Effect to initialize columns for grid view
-    useEffect(() => {
-        const columns = getTransposedColumns(
-            studies, 
-            selectedTestSetup?.sensors,
-            "Sensor S"
-        );
-        setColumns(columns);
-    }, [selectedTestSetup, studies]);
-
-    const handleInputChange = (variableIndex, mapping, value) => {
-        setProcessedData(prevData => {
-            const newData = [...prevData];
-
-            const entry = newData.find(sensor => sensor.id === mapping.sensorId)
-            entry[mapping.studyId] = value; // Update the specific study's value
-
-            return newData;
-        });
+        ]), [])
     };
 
     return (
@@ -125,25 +117,29 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-
+                    
                     <EntityMappingPanel
                         name={`Processing Protocol Mapping`}
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToAssayMapping}
-                        handleInputChange={handleInputChange}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
+                        minHeight={WINDOW_HEIGHT}
                         disableAdd
                     />
 
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable
-                        items={processedData}
-                        setItems={setProcessedData}
-                        columns={columns}
-                        disableAdd
+                    <DataGrid
+                        {...assayOutputGridConfig}
+                        showControls={true}
+                        showDebug={false}
+                        onDataChange={handleDataGridMappingsChange}
+                        height={WINDOW_HEIGHT}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
+                        
                     />
                 </TabPanel>
             </div>

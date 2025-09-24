@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { Save, X } from "lucide-react";
-import { TagInput } from "../Form/TagInput";
 import { formatAuthorName } from "../../utils/utils";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";

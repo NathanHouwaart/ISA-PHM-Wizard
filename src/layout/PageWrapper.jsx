@@ -2,14 +2,17 @@
 import React from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
-const PageWrapper = ({ children }) => {
+const PageWrapper = ({ children, widthClass }) => {
 
   const { screenWidth } = useGlobalDataContext();
+
+  // Allow caller to override the default screen width from context by passing widthClass
+  const effectiveWidth = widthClass || screenWidth;
 
   return (
     <div className=" bg-gradient-to-br from-slate-50 to-blue-50 ">
       <div className='min-h-[calc(100vh-68px)] p-10'>
-      <div className={`mx-auto transition-all duration-300 ease-in-out ${screenWidth}`}>
+      <div className={`mx-auto transition-all duration-300 ease-in-out ${effectiveWidth}`}>
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-300">
           {children}
         </div>

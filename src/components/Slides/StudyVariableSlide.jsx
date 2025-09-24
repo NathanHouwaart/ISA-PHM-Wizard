@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useMemo, useState, useCallback } from 'react'
 
 // Import hooks
 import useVariables from '../../hooks/useVariables';
@@ -13,114 +13,151 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
+import useMappingsController from '../../hooks/useMappingsController';
 
 // Data Grid Imports
-import { RevoGrid, Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
+import { Template } from '@revolist/react-datagrid';
+import DataGrid from '../DataGrid';
 import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
-
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
 
 // Import content data
 import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
 
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
+import usePageTab from '../../hooks/usePageWidth';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 // register column type
 const plugin = { select: new SelectTypePlugin() }
 
-export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
-    const [selectedTab, setSelectedTab] = useState('simple-view');
+// TODO: ADD PAGE NUMBER IN PARAMETERS
+export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+
+    // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // Access global context
     const {
         studies,
-        studyVariables, // This should be in flattened format
+        studyVariables,
         setScreenWidth,
         setStudyVariables,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping
     } = useGlobalDataContext();
 
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 6) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 6) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
-
-    // Create a dropdown for the 'type' column
-    const dropdown = {
+    // Create a dropdown for the 'type' column (memoized)
+    const dropdown = useMemo(() => ({
         labelKey: 'label',
         valueKey: 'value',
-        source: [
-            ...VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type }))
-        ],
-    }
+        source: VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type })),
+    }), []);
 
-    const [columns, setColumns] = useState([]);
-
-    // --------- Simple One-Way Sync: Global State IS the Grid Data ---------
-    const gridData = useMemo(() => {
-        return getStructuredVariables(studyVariables, studies, studyToStudyVariableMapping);
-    }, [studyVariables, studies, studyToStudyVariableMapping]);
-
-    // Direct grid updates go to global state
-    const handleGridChange = (updater) => {
-        const newData = typeof updater === 'function' ? updater(gridData) : updater;
-
-        // Update the flattened mappings
-        const flattened = flattenGridDataToMappings(newData, studies);
-        setStudyToStudyVariableMapping(flattened);
-
-        // Update the base variables (without study-specific data)
-        const baseVariables = newData.map(row => ({
-            id: row.id,
-            name: row.name || '',
-            type: row.type || '',
-            unit: row.unit || '',
-            description: row.description || ''
-        }));
-        setStudyVariables(baseVariables);
+    // Helper function to generate unique IDs
+    const generateId = () => {
+        return crypto.randomUUID();
     };
 
-    // Columns setup
-    useEffect(() => {
-        setColumns([
-            { prop: 'name', name: 'Variable', pin: 'colPinStart', size: 100, cellTemplate: Template(BoldCell), cellProperties: GrayCell },
+    const addNewVariable = useCallback(() => {
+        setStudyVariables(prev => {
+            const newVariable = {
+                id: generateId(),
+                name: `New Variable ${prev.length + 1}`,
+                type: '',
+                unit: '',
+                description: ''
+            };
+            return [...prev, newVariable];
+        });
+    }, [setStudyVariables]);
+
+    const removeLastVariable = useCallback(() => {
+        setStudyVariables(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
+    }, [setStudyVariables]);
+
+    // We'll use a single mappings controller so both the simple view and the grid
+    // operate on the exact same canonical mappings object.
+    const mappingsController = useMappingsController();
+
+    // Handle row data changes
+    const handleDataGridRowDataChange = useCallback((newRowData) => {
+        setStudyVariables(newRowData);
+    }, [setStudyVariables]);
+
+    // Note: simple view input updates will use mappingsController.updateMappingValue
+
+    // Grid configuration for studies
+    const studyVariableGridConfig = {
+        title: 'Variables to Studies Grid',
+        rowData: studyVariables,
+        columnData: studies,
+    mappings: mappingsController.mappings,
+        fieldMappings: {
+            rowId: 'id',
+            rowName: 'name',
+            columnId: 'id',
+            columnName: 'name',
+            columnUnit: '',
+            mappingRowId: 'studyVariableId',
+            mappingColumnId: 'studyId',
+            mappingValue: 'value'
+        },
+        staticColumns: useMemo(() => ([
+            {
+                prop: 'name',
+                name: 'Variable Name',
+                size: 200,
+                readonly: false,
+                cellTemplate: Template(BoldCell),
+                cellProperties: () => ({ style: { "border-right": "3px solid " } })
+            },
             {
                 prop: 'type',
-                name: 'Variable Type',
-                size: 160,
+                name: 'Type',
+                size: 150,
+                readonly: false,
                 columnType: 'select',
                 ...dropdown
             },
-            { prop: 'unit', name: 'Unit' },
             {
-                prop: 'description', name: 'Description', size: 350, cellProperties: () => ({
-                    style: { "border-right": "3px solid black" }
-                })
+                prop: 'unit',
+                name: 'Unit',
+                size: 100,
+                readonly: false
             },
-            ...studies.map((study, index) => ({
-                prop: study.id,
-                name: `Study S${(index + 1).toString().padStart(2, '0')}`,
-                size: 150
-            }))
-        ]);
-    }, [studies]);
-
-    const handleInputChange = (variableIndex, mapping, value) => {
-        const newData = [...gridData];
-        const entry = newData.find(variable => variable.id === mapping.studyVariableId);
-        if (entry) {
-            entry[mapping.studyId] = value;
-        }
-        handleGridChange(newData);
+            {
+                prop: 'description',
+                name: 'Description',
+                size: 300,
+                readonly: false,
+                cellProperties: () => ({ style: { "border-right": "3px solid " } })
+            }
+        ]), [dropdown]),
+        customActions : useMemo(() => ([
+            {
+                label: '+ Add Variable',
+                onClick: addNewVariable,
+                className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
+                title: 'Add a new variable'
+            },
+            {
+                label: '- Remove Last',
+                onClick: removeLastVariable,
+                disabled: studyVariables.length === 0,
+                className: `px-3 py-1 text-sm border rounded ${studyVariables.length === 0
+                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                    }`,
+                title: 'Remove the last variable'
+            }
+        ]), [addNewVariable, removeLastVariable, studyVariables.length])
     };
 
     return (
@@ -139,21 +176,25 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage }, r
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <EntityMappingPanel
-                        name={"Variables"}
-                        itemHook={useVariables}
-                        mappings={studyToStudyVariableMapping}
-                        handleInputChange={handleInputChange}
-                    />
+                        <EntityMappingPanel
+                            minHeight={WINDOW_HEIGHT}
+                            name={"Variables"}
+                            itemHook={useVariables}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                        />
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable
-                        items={gridData}
-                        setItems={handleGridChange}
-                        itemHook={useVariables}
-                        columns={columns}
+                    <DataGrid
+                        {...studyVariableGridConfig}
+                        showControls={true}
                         plugins={plugin}
+                        showDebug={false}
+                        onDataChange={mappingsController.setMappings}
+                        onRowDataChange={handleDataGridRowDataChange}
+                        height={WINDOW_HEIGHT}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>

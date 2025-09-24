@@ -53,7 +53,7 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
                 {testSetupSelectionSlideContent.pageTitle}
             </SlidePageTitle>
 
-            <SlidePageSubtitle>
+            <SlidePageSubtitle style={{ whiteSpace: 'pre-line' }}>
                 {testSetupSelectionSlideContent.pageSubtitle}
             </SlidePageSubtitle>
 
@@ -81,7 +81,7 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
                                     </div>
                                 </div>
                             )}
-                            <TestSetupCard item={setup} index={index} />
+                            <TestSetupCard item={setup} index={index} isEditable={false} />
                         </div>
                     ))}
                 </div>

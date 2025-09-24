@@ -5,20 +5,33 @@ import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMap
 
 export const useProcessingProtocols = () => {
 
-    const { selectedTestSetupId, testSetups, setSelectedTestSetupId } = useGlobalDataContext(); // Get studies and setStudies from global context
+    const { processingProtocols, setProcessingProtocols } = useGlobalDataContext();
 
-    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    const addProcessingProtocol = () => {
+        const newProtocol = {
+            id: crypto.randomUUID(),
+            name: `New Protocol ${processingProtocols.length + 1}`,
+            type: '',
+            unit: '',
+            description: ''
+        };
 
-    const addVariable = () => {
-        return null;
+        setProcessingProtocols(prev => [...(prev || []), newProtocol]);
     }
 
-    const updateVariable = (updatedVariable) => {
-        return null;
+    const updateProcessingProtocol = (updatedVariable) => {
+        setProcessingProtocols(prev => {
+            if (!Array.isArray(prev)) return [updatedVariable];
+            const idx = prev.findIndex(v => v.id === updatedVariable.id);
+            if (idx === -1) return prev;
+            const copy = prev.slice();
+            copy[idx] = updatedVariable;
+            return copy;
+        });
     }
 
-    const removeVariable = (variableId) => {
-        return null;
+    const removeProcessingProtocol = (variableId) => {
+        setProcessingProtocols(prev => Array.isArray(prev) ? prev.filter(v => v.id !== variableId) : []);
     }
 
     const cardComponent = () => {
@@ -26,11 +39,11 @@ export const useProcessingProtocols = () => {
     }
 
     return {
-        items: selectedTestSetup?.sensors || [],
-        setItems : setSelectedTestSetupId,
-        addItem : addVariable,
-        updateItem : updateVariable,
-        removeItem : removeVariable,
+        items: processingProtocols || [],
+        setItems: setProcessingProtocols,
+        addItem: addProcessingProtocol,
+        updateItem: updateProcessingProtocol,
+        removeItem: removeProcessingProtocol,
         cardComponent: cardComponent,
     }
 }

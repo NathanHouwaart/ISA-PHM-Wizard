@@ -24,6 +24,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
     };
 
     const handleRangeEdit = (e) => {
+        console.log("Handling edit (beforeedit):", e);
         e.preventDefault();
         const { detail } = e;
 
@@ -112,7 +113,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
 
 
     const handleEdit = (e) => {
-
+        console.log("Handling edit (beforeedit):", e);
         e.preventDefault();
 
         // console.log("Handling edit:", e);
@@ -132,6 +133,7 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
             setItems(newData);
         }
     };
+
 
     const undo = () => {
         if (history.current.length === 0) return;
@@ -191,13 +193,15 @@ export const GridTable = forwardRef(({ onHeightChange, items, setItems, itemHook
         pushToHistory(items);
 
         const newRow = columns.reduce((acc, col) => {
-            acc[col.prop] = '';
+            acc[col.prop] = [];
             return acc;
         }, {});
 
         newRow.id = uuidv4(); // Ensure each new row has a unique ID
         newRow.name = "New Variable"
+        newRow.description = ""
 
+        console.log("Adding new row:", newRow);
         setItems((prev) =>( [...prev, newRow] ));
     };
 

@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Trash, Trash2, HelpCircle, ChevronDown, ChevronRight, Bold } from 'lucide-react';
-import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
-import { cn } from '../../utils/utils';
+import React, { useState } from 'react';
+import { X, Save } from 'lucide-react';
 import FormField from '../Form/FormField';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { v4 as uuidv4 } from 'uuid';

@@ -1,20 +1,20 @@
 {
-  "identifier": "i-eedcd47b-af51-4463-b6e0-2d32bdfcf310",
-  "title": "Diagnostics on an E-motor-driven centrifugal pump set-up",
-  "description": "The complete set-up contains four centrifugal pumps, each driven by an induction motor. Two measurement methods, four motor speeds, and 11 fault types can be induced at various severity levels.",
+  "identifier": "i1",
+  "title": "Diagnostics on an E-motor-driven centrifugal pump set-up ",
+  "description": "The complete set-up contains four centrifugal pumps, each driven by an induction motor. Two measurement methods, four motor speeds and 11 fault types can be induced at various severity levels.\n",
   "license": "MIT",
   "submission_date": "2023-10-26",
   "public_release_date": "2023-12-17",
   "publications": [
     {
       "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
-      "doi": "10.1016/j.cell.2023.01.001",
-      "pubMedId": "",
+      "doi": "10.1016/j.dib.2023.109987",
+      "publicationStatus": "Published",
       "authorList": [
         "a1",
         "a2",
         "a3",
-        "766ccee4-91c0-4621-8c20-cc56af2be7ae"
+        "68a9efae-380b-4863-a4f6-69796fc48b69"
       ],
       "id": "p01"
     }
@@ -25,1020 +25,2409 @@
       "firstName": "Sietse",
       "midInitials": "",
       "lastName": "Bruinsma",
-      "email": "sietse.bruinsma@example.com",
+      "email": "sj.bruinsma.01@mindef.nl",
       "phone": "+1 (111) 222-3333",
       "fax": "+1 (111) 222-3334",
-      "role": "Corresponding Author",
+      "roles": [
+        "Corresponding Author",
+        "Author"
+      ],
+      "subroles": [
+        "Conceptualization",
+        "Data curation"
+      ],
       "address": "288 driving St, Springfield, USA",
-      "orcid": "0000-0001-2345-6789"
+      "orcid": "0000-0001-2345-6789",
+      "affiliations": [
+        "University of Twente",
+        "Royal Netherlands Navy"
+      ]
     },
     {
       "id": "a2",
       "firstName": "Rinze",
-      "midInitials": "",
+      "midInitials": "D.",
       "lastName": "Geertsma",
-      "email": "rinzegeertsma@example.com",
-      "phone": "+1 (111) 222-3333",
-      "fax": "+1 (111) 222-3334",
-      "role": "Author",
-      "address": "123 Main St, Springfield, USA",
-      "orcid": "0000-0003-4567-8901"
+      "email": "",
+      "phone": "",
+      "fax": "",
+      "roles": [
+        "Author",
+        "Co-Author"
+      ],
+      "subroles": [
+        "Data curation",
+        "Resources"
+      ],
+      "address": "",
+      "orcid": "",
+      "affiliations": [
+        "Netherlands Defence Acedemy"
+      ]
     },
     {
       "id": "a3",
       "firstName": "Richard",
       "midInitials": "",
       "lastName": "Loendersloot",
-      "email": "richardloendersloot@example.com",
-      "phone": "+1 (111) 222-3333",
-      "fax": "+1 (111) 222-3334",
-      "role": "Author",
-      "address": "456 Elm St, Springfield, USA",
-      "orcid": "0000-0005-6789-0123"
+      "email": "",
+      "phone": "",
+      "fax": "",
+      "roles": [
+        "Author",
+        "Co-Author",
+        "Principal Investigator"
+      ],
+      "subroles": [
+        "Supervision",
+        "Writing - review & editing"
+      ],
+      "address": "",
+      "orcid": "",
+      "affiliations": [
+        "University of Twente"
+      ]
     },
     {
-      "id": "766ccee4-91c0-4621-8c20-cc56af2be7ae",
+      "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
       "firstName": "Tiedo",
       "midInitials": "",
       "lastName": "Tinga",
-      "email": "tiedotinga@example.com",
-      "phone": "+1 (111) 222-3333",
-      "fax": "+1 (111) 222-3334",
-      "role": "Author",
-      "address": "288 driving St, Springfield, USA",
-      "orcid": "0000-0001-2345-6789"
+      "email": "",
+      "phone": "",
+      "fax": "",
+      "roles": [
+        "Researcher",
+        "Principal Investigator",
+        "Co-Author",
+        "Author"
+      ],
+      "subroles": [
+        "Supervision",
+        "Funding acquisition",
+        "Validation",
+        "Writing - review & editing"
+      ],
+      "address": "",
+      "orcid": "",
+      "affiliations": [
+        "Netherlands Defence Academy",
+        "Royal Netherlands Navy"
+      ]
     }
   ],
   "study_variables": [
     {
-      "id": "fd14bdba-b880-4ead-b592-f59ca706d613",
-      "name": "Fault Type",
+      "id": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+      "name": "Fault type",
       "type": "Qualitative fault specification",
       "unit": "",
-      "description": "Describes the kind of fault detected in the system.",
-      "min": 0
+      "description": "Describes the kind of fault detected in the system."
     },
     {
-      "id": "8aac8b6c-1774-4814-9916-b24171044ce6",
+      "id": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
       "name": "Fault Position",
       "type": "Qualitative fault specification",
       "unit": "",
-      "description": "Indicates the physical location of the fault.",
-      "min": 0
+      "description": "Indicates the physical location of the fault."
     },
     {
-      "id": "fac02919-811b-4653-9127-ce76807f2cd2",
-      "name": "Fault Severity",
+      "id": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+      "name": "Failt severety",
       "type": "Quantitative fault specification",
       "unit": "",
-      "description": "Measures the impact or intensity of the fault.",
-      "min": 0,
-      "max": 10
+      "description": "Measures the impact or intensity of the fault."
     },
     {
-      "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
+      "id": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
       "name": "Motor Speed",
       "type": "Operating condition",
       "unit": "RPM",
-      "description": "The rotational speed of the motor.",
-      "min": 0
+      "description": "The rotational speed of the motor."
     },
     {
-      "id": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
+      "id": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
       "name": "Discharge Pressure",
       "type": "Operating condition",
       "unit": "bar",
-      "description": "Pressure at the discharge point of the system.",
-      "min": 0,
-      "step": 0.1
+      "description": "Pressure at the discharge point of the system."
     },
     {
-      "id": "c1dc436d-c95c-4784-921e-481d98716cd4",
+      "id": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
       "name": "Volumetric Flow Rate",
       "type": "Operating condition",
       "unit": "m^3/h",
-      "description": "The volumetric flow rate through the system.",
-      "min": 0
+      "description": "The volumetric flow rate through the system."
+    }
+  ],
+  "processing_protocols": [
+    {
+      "id": "b00add4d-b895-47f7-b614-b740f91a2315",
+      "name": "Filter Type",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Filter Type Used"
+    },
+    {
+      "id": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+      "name": "Chunk Size",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Chunk Size Used"
+    },
+    {
+      "id": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+      "name": "Scaling Range",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Scaling Range Used"
+    },
+    {
+      "id": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+      "name": "Schaling Resolution",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Specifies the scaling resolution used in data processing of sensor data."
+    },
+    {
+      "id": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+      "name": "Other Resolution",
+      "type": "Enter type...",
+      "unit": "",
+      "description": "Another resolution for processing sensor data"
     }
   ],
   "studies": [
-    [
-      {
-        "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-        "name": "Fault Severity 3 100%",
-        "description": "Fault Severity 3 at full speed",
-        "submissionDate": "2023-10-26",
-        "publicationDate": "2023-12-17",
-        "publications": [
-          {
-            "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
-            "doi": "10.1016/j.cell.2023.01.001",
-            "pubMedId": "",
-            "authorList": [
-              "a1",
-              "a2",
-              "a3",
-              "766ccee4-91c0-4621-8c20-cc56af2be7ae"
-            ],
-            "id": "p01"
-          }
-        ],
-        "authors": [
-          {
-            "id": "a1",
-            "firstName": "Sietse",
-            "midInitials": "",
-            "lastName": "Bruinsma",
-            "email": "sietse.bruinsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Corresponding Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
-          },
-          {
-            "id": "a2",
-            "firstName": "Rinze",
-            "midInitials": "",
-            "lastName": "Geertsma",
-            "email": "rinzegeertsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "123 Main St, Springfield, USA",
-            "orcid": "0000-0003-4567-8901"
-          },
-          {
-            "id": "a3",
-            "firstName": "Richard",
-            "midInitials": "",
-            "lastName": "Loendersloot",
-            "email": "richardloendersloot@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "456 Elm St, Springfield, USA",
-            "orcid": "0000-0005-6789-0123"
-          },
-          {
-            "id": "766ccee4-91c0-4621-8c20-cc56af2be7ae",
-            "firstName": "Tiedo",
-            "midInitials": "",
-            "lastName": "Tinga",
-            "email": "tiedotinga@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
-          }
-        ],
-        "used_setup": {
-          "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa",
-          "name": "Wentelteef",
-          "location": "Hogeschool van Amsterdam (HvA)",
-          "description": "Hydraulic testing equipment with dual pressure monitoring system",
-          "characteristics": [
-            {
-              "id": "3527339b-14c1-451d-886c-69a50962c656",
-              "category": "Motor",
-              "value": "WEG W21",
-              "unit": "",
-              "comments": []
-            },
-            {
-              "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
-              "category": "MotorPower",
-              "value": "2.2",
-              "unit": "kW",
-              "comments": []
-            },
-            {
-              "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
-              "category": "Hydraulic Pump",
-              "value": "Hydropack",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
-              ]
-            },
-            {
-              "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
-              "category": "Hydraulic Motor",
-              "value": "Miksan Type 71 4C M",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
-              ]
-            },
-            {
-              "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
-              "category": "Hydraulic Motor Power",
-              "value": "0.38",
-              "unit": "kW",
-              "comments": []
-            }
+    {
+      "id": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+      "name": "BPFO Fault Severity  1 100%",
+      "description": "BPFO Fault Severity  2 100%",
+      "submissionDate": "2023-10-14",
+      "publicationDate": "2023-12-17",
+      "publications": [
+        {
+          "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+          "doi": "10.1016/j.dib.2023.109987",
+          "publicationStatus": "Published",
+          "authorList": [
+            "a1",
+            "a2",
+            "a3",
+            "68a9efae-380b-4863-a4f6-69796fc48b69"
           ],
-          "number_of_sensors": 3,
-          "sensors": [
-            {
-              "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure on the radial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In radial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "filterTypeUnit": "",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
-            },
-            {
-              "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure in the axial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In Axial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
-            },
-            {
-              "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-              "measurementType": "Temperature",
-              "measurementUnit": "celcius",
-              "description": "measures temperature of bearing",
-              "technologyType": "PT",
-              "technologyPlatform": "PT100",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "10",
-              "samplingUnit": "Hz",
-              "sensorLocation": "Bearing House",
-              "locationUnit": "",
-              "sensorOrientation": "",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "12",
-              "scalingResolutionUnit": "Bit"
-            }
+          "id": "p01"
+        }
+      ],
+      "authors": [
+        {
+          "id": "a1",
+          "firstName": "Sietse",
+          "midInitials": "",
+          "lastName": "Bruinsma",
+          "email": "sj.bruinsma.01@mindef.nl",
+          "phone": "+1 (111) 222-3333",
+          "fax": "+1 (111) 222-3334",
+          "roles": [
+            "Corresponding Author",
+            "Author"
+          ],
+          "subroles": [
+            "Conceptualization",
+            "Data curation"
+          ],
+          "address": "288 driving St, Springfield, USA",
+          "orcid": "0000-0001-2345-6789",
+          "affiliations": [
+            "University of Twente",
+            "Royal Netherlands Navy"
           ]
         },
-        "study_to_study_variable_mapping": [
+        {
+          "id": "a2",
+          "firstName": "Rinze",
+          "midInitials": "D.",
+          "lastName": "Geertsma",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author"
+          ],
+          "subroles": [
+            "Data curation",
+            "Resources"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Acedemy"
+          ]
+        },
+        {
+          "id": "a3",
+          "firstName": "Richard",
+          "midInitials": "",
+          "lastName": "Loendersloot",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author",
+            "Principal Investigator"
+          ],
+          "subroles": [
+            "Supervision",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "University of Twente"
+          ]
+        },
+        {
+          "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+          "firstName": "Tiedo",
+          "midInitials": "",
+          "lastName": "Tinga",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Researcher",
+            "Principal Investigator",
+            "Co-Author",
+            "Author"
+          ],
+          "subroles": [
+            "Supervision",
+            "Funding acquisition",
+            "Validation",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Academy",
+            "Royal Netherlands Navy"
+          ]
+        }
+      ],
+      "used_setup": {
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
           {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-            "value": "BPFO",
-            "variableName": "Fault Type"
+            "id": "3527339b-14c1-451d-886c-69a50962c656",
+            "category": "Motor",
+            "value": "WEG W21",
+            "unit": "",
+            "comments": []
           },
           {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-            "value": "Center",
-            "variableName": "Fault Position"
+            "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
+            "category": "MotorPower",
+            "value": "2.2",
+            "unit": "kW",
+            "comments": []
           },
           {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-            "value": 1,
-            "variableName": "Fault Severity"
+            "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
+            "category": "Hydraulic Pump",
+            "value": "Hydropack",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-            "value": 1000,
-            "variableName": "Motor Speed"
+            "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
+            "category": "Hydraulic Motor",
+            "value": "Miksan Type 71 4C M",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-            "value": 1,
-            "variableName": "Discharge Pressure"
-          },
-          {
-            "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
-            "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-            "value": 140,
-            "variableName": "Volumetric Flow Rate"
+            "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
+            "category": "Hydraulic Motor Power",
+            "value": "0.38",
+            "unit": "kW",
+            "comments": []
           }
-        ]
+        ],
+        "sensors": [
+          {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          }
+        ],
+        "number_of_sensors": 3,
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa"
       },
-      {
-        "id": "131179fe-1943-49ce-ad74-e719199fdd2d",
-        "name": "Fault Severity 3 50%",
-        "description": "Fault Severity 3 at half speed",
-        "submissionDate": "2023-10-26",
-        "publicationDate": "2023-12-17",
-        "publications": [
-          {
-            "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
-            "doi": "10.1016/j.cell.2023.01.001",
-            "pubMedId": "",
-            "authorList": [
-              "a1",
-              "a2",
-              "a3",
-              "766ccee4-91c0-4621-8c20-cc56af2be7ae"
-            ],
-            "id": "p01"
-          }
-        ],
-        "authors": [
-          {
-            "id": "a1",
-            "firstName": "Sietse",
-            "midInitials": "",
-            "lastName": "Bruinsma",
-            "email": "sietse.bruinsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Corresponding Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
+      "study_to_study_variable_mapping": [
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
+          "value": "140",
+          "variableName": "Discharge Pressure"
+        },
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+          "value": "BPFO",
+          "variableName": "Fault type"
+        },
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
+          "value": "Center",
+          "variableName": "Fault Position"
+        },
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+          "value": "1",
+          "variableName": "Failt severety"
+        },
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
+          "value": "1000",
+          "variableName": "Motor Speed"
+        },
+        {
+          "studyId": "f8221ee1-66fe-4e4e-ad6e-a7833e92f317",
+          "studyVariableId": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
+          "value": "999",
+          "variableName": "Volumetric Flow Rate"
+        }
+      ],
+      "assay_details": [
+        {
+          "used_sensor": {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
           },
-          {
-            "id": "a2",
-            "firstName": "Rinze",
-            "midInitials": "",
-            "lastName": "Geertsma",
-            "email": "rinzegeertsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "123 Main St, Springfield, USA",
-            "orcid": "0000-0003-4567-8901"
-          },
-          {
-            "id": "a3",
-            "firstName": "Richard",
-            "midInitials": "",
-            "lastName": "Loendersloot",
-            "email": "richardloendersloot@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "456 Elm St, Springfield, USA",
-            "orcid": "0000-0005-6789-0123"
-          },
-          {
-            "id": "766ccee4-91c0-4621-8c20-cc56af2be7ae",
-            "firstName": "Tiedo",
-            "midInitials": "",
-            "lastName": "Tinga",
-            "email": "tiedotinga@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
-          }
-        ],
-        "used_setup": {
-          "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa",
-          "name": "Wentelteef",
-          "location": "Hogeschool van Amsterdam (HvA)",
-          "description": "Hydraulic testing equipment with dual pressure monitoring system",
-          "characteristics": [
+          "processing_protocols": [
             {
-              "id": "3527339b-14c1-451d-886c-69a50962c656",
-              "category": "Motor",
-              "value": "WEG W21",
-              "unit": "",
-              "comments": []
-            },
-            {
-              "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
-              "category": "MotorPower",
-              "value": "2.2",
-              "unit": "kW",
-              "comments": []
-            },
-            {
-              "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
-              "category": "Hydraulic Pump",
-              "value": "Hydropack",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
               ]
             },
             {
-              "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
-              "category": "Hydraulic Motor",
-              "value": "Miksan Type 71 4C M",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
               ]
             },
             {
-              "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
-              "category": "Hydraulic Motor Power",
-              "value": "0.38",
-              "unit": "kW",
-              "comments": []
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
-          "number_of_sensors": 3,
-          "sensors": [
+          "raw_file_name": "ST01_SE01_MO.csv",
+          "processed_file_name": "ST01_SE01_PPO.csv",
+          "assay_file_name": "ST01_SE01_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          "processing_protocols": [
             {
-              "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure on the radial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In radial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "filterTypeUnit": "",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
             },
             {
-              "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure in the axial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In Axial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
             },
             {
-              "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-              "measurementType": "Temperature",
-              "measurementUnit": "celcius",
-              "description": "measures temperature of bearing",
-              "technologyType": "PT",
-              "technologyPlatform": "PT100",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "10",
-              "samplingUnit": "Hz",
-              "sensorLocation": "Bearing House",
-              "locationUnit": "",
-              "sensorOrientation": "",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "12",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
+          ],
+          "raw_file_name": "ST01_SE02_MO.csv",
+          "processed_file_name": "ST01_SE02_PPO.csv",
+          "assay_file_name": "ST01_SE02_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST01_SE03_MO.csv",
+          "processed_file_name": "ST01_SE03_PPO.csv",
+          "assay_file_name": "ST01_SE03_ASSO.csv"
+        }
+      ]
+    },
+    {
+      "id": "03dba69a-4ab3-4978-8b08-f385643834ca",
+      "name": "BPFO Fault Severity  2 100%",
+      "description": "BPFO Fault Severity  2 100%",
+      "submissionDate": "2025-09-10",
+      "publicationDate": "2025-09-10",
+      "publications": [
+        {
+          "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+          "doi": "10.1016/j.dib.2023.109987",
+          "publicationStatus": "Published",
+          "authorList": [
+            "a1",
+            "a2",
+            "a3",
+            "68a9efae-380b-4863-a4f6-69796fc48b69"
+          ],
+          "id": "p01"
+        }
+      ],
+      "authors": [
+        {
+          "id": "a1",
+          "firstName": "Sietse",
+          "midInitials": "",
+          "lastName": "Bruinsma",
+          "email": "sj.bruinsma.01@mindef.nl",
+          "phone": "+1 (111) 222-3333",
+          "fax": "+1 (111) 222-3334",
+          "roles": [
+            "Corresponding Author",
+            "Author"
+          ],
+          "subroles": [
+            "Conceptualization",
+            "Data curation"
+          ],
+          "address": "288 driving St, Springfield, USA",
+          "orcid": "0000-0001-2345-6789",
+          "affiliations": [
+            "University of Twente",
+            "Royal Netherlands Navy"
           ]
         },
-        "study_to_study_variable_mapping": [
+        {
+          "id": "a2",
+          "firstName": "Rinze",
+          "midInitials": "D.",
+          "lastName": "Geertsma",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author"
+          ],
+          "subroles": [
+            "Data curation",
+            "Resources"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Acedemy"
+          ]
+        },
+        {
+          "id": "a3",
+          "firstName": "Richard",
+          "midInitials": "",
+          "lastName": "Loendersloot",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author",
+            "Principal Investigator"
+          ],
+          "subroles": [
+            "Supervision",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "University of Twente"
+          ]
+        },
+        {
+          "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+          "firstName": "Tiedo",
+          "midInitials": "",
+          "lastName": "Tinga",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Researcher",
+            "Principal Investigator",
+            "Co-Author",
+            "Author"
+          ],
+          "subroles": [
+            "Supervision",
+            "Funding acquisition",
+            "Validation",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Academy",
+            "Royal Netherlands Navy"
+          ]
+        }
+      ],
+      "used_setup": {
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
           {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-            "value": "BPFO",
-            "variableName": "Fault Type"
+            "id": "3527339b-14c1-451d-886c-69a50962c656",
+            "category": "Motor",
+            "value": "WEG W21",
+            "unit": "",
+            "comments": []
           },
           {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-            "value": "Top",
-            "variableName": "Fault Position"
+            "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
+            "category": "MotorPower",
+            "value": "2.2",
+            "unit": "kW",
+            "comments": []
           },
           {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-            "value": 2,
-            "variableName": "Fault Severity"
+            "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
+            "category": "Hydraulic Pump",
+            "value": "Hydropack",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-            "value": 1000,
-            "variableName": "Motor Speed"
+            "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
+            "category": "Hydraulic Motor",
+            "value": "Miksan Type 71 4C M",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-            "value": 1.2,
-            "variableName": "Discharge Pressure"
-          },
-          {
-            "studyId": "131179fe-1943-49ce-ad74-e719199fdd2d",
-            "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-            "value": 140,
-            "variableName": "Volumetric Flow Rate"
+            "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
+            "category": "Hydraulic Motor Power",
+            "value": "0.38",
+            "unit": "kW",
+            "comments": []
           }
-        ]
+        ],
+        "sensors": [
+          {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          }
+        ],
+        "number_of_sensors": 3,
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa"
       },
-      {
-        "id": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-        "name": "Fault Severity 2 100%",
-        "description": "Fault Severity 2 at full speed",
-        "submissionDate": "2023-10-26",
-        "publicationDate": "2023-12-17",
-        "publications": [
-          {
-            "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
-            "doi": "10.1016/j.cell.2023.01.001",
-            "pubMedId": "",
-            "authorList": [
-              "a1",
-              "a2",
-              "a3",
-              "766ccee4-91c0-4621-8c20-cc56af2be7ae"
-            ],
-            "id": "p01"
-          }
-        ],
-        "authors": [
-          {
-            "id": "a1",
-            "firstName": "Sietse",
-            "midInitials": "",
-            "lastName": "Bruinsma",
-            "email": "sietse.bruinsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Corresponding Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
+      "study_to_study_variable_mapping": [
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
+          "value": "999",
+          "variableName": "Volumetric Flow Rate"
+        },
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+          "value": "BPFO",
+          "variableName": "Fault type"
+        },
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
+          "value": "Top",
+          "variableName": "Fault Position"
+        },
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+          "value": "2",
+          "variableName": "Failt severety"
+        },
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
+          "value": "1000",
+          "variableName": "Motor Speed"
+        },
+        {
+          "studyId": "03dba69a-4ab3-4978-8b08-f385643834ca",
+          "studyVariableId": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
+          "value": "140",
+          "variableName": "Discharge Pressure"
+        }
+      ],
+      "assay_details": [
+        {
+          "used_sensor": {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
           },
-          {
-            "id": "a2",
-            "firstName": "Rinze",
-            "midInitials": "",
-            "lastName": "Geertsma",
-            "email": "rinzegeertsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "123 Main St, Springfield, USA",
-            "orcid": "0000-0003-4567-8901"
-          },
-          {
-            "id": "a3",
-            "firstName": "Richard",
-            "midInitials": "",
-            "lastName": "Loendersloot",
-            "email": "richardloendersloot@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "456 Elm St, Springfield, USA",
-            "orcid": "0000-0005-6789-0123"
-          },
-          {
-            "id": "766ccee4-91c0-4621-8c20-cc56af2be7ae",
-            "firstName": "Tiedo",
-            "midInitials": "",
-            "lastName": "Tinga",
-            "email": "tiedotinga@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
-          }
-        ],
-        "used_setup": {
-          "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa",
-          "name": "Wentelteef",
-          "location": "Hogeschool van Amsterdam (HvA)",
-          "description": "Hydraulic testing equipment with dual pressure monitoring system",
-          "characteristics": [
+          "processing_protocols": [
             {
-              "id": "3527339b-14c1-451d-886c-69a50962c656",
-              "category": "Motor",
-              "value": "WEG W21",
-              "unit": "",
-              "comments": []
-            },
-            {
-              "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
-              "category": "MotorPower",
-              "value": "2.2",
-              "unit": "kW",
-              "comments": []
-            },
-            {
-              "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
-              "category": "Hydraulic Pump",
-              "value": "Hydropack",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
               ]
             },
             {
-              "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
-              "category": "Hydraulic Motor",
-              "value": "Miksan Type 71 4C M",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
               ]
             },
             {
-              "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
-              "category": "Hydraulic Motor Power",
-              "value": "0.38",
-              "unit": "kW",
-              "comments": []
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
-          "number_of_sensors": 3,
-          "sensors": [
+          "raw_file_name": "ST02_SE01_MO.csv",
+          "processed_file_name": "ST02_SE01_PPO.csv",
+          "assay_file_name": "ST02_SE01_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          "processing_protocols": [
             {
-              "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure on the radial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In radial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "filterTypeUnit": "",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
             },
             {
-              "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure in the axial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In Axial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
             },
             {
-              "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-              "measurementType": "Temperature",
-              "measurementUnit": "celcius",
-              "description": "measures temperature of bearing",
-              "technologyType": "PT",
-              "technologyPlatform": "PT100",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "10",
-              "samplingUnit": "Hz",
-              "sensorLocation": "Bearing House",
-              "locationUnit": "",
-              "sensorOrientation": "",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "12",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
+          ],
+          "raw_file_name": "ST02_SE02_MO.csv",
+          "processed_file_name": "ST02_SE02_PPO.csv",
+          "assay_file_name": "ST02_SE02_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST02_SE03_MO.csv",
+          "processed_file_name": "ST02_SE03_PPO.csv",
+          "assay_file_name": "ST02_SE03_ASSO.csv"
+        }
+      ]
+    },
+    {
+      "id": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+      "name": "BPFO Fault Severity  3 100%",
+      "description": "BPFO Fault Severity  3 100%",
+      "submissionDate": "2025-09-07",
+      "publicationDate": "2025-09-10",
+      "publications": [
+        {
+          "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+          "doi": "10.1016/j.dib.2023.109987",
+          "publicationStatus": "Published",
+          "authorList": [
+            "a1",
+            "a2",
+            "a3",
+            "68a9efae-380b-4863-a4f6-69796fc48b69"
+          ],
+          "id": "p01"
+        }
+      ],
+      "authors": [
+        {
+          "id": "a1",
+          "firstName": "Sietse",
+          "midInitials": "",
+          "lastName": "Bruinsma",
+          "email": "sj.bruinsma.01@mindef.nl",
+          "phone": "+1 (111) 222-3333",
+          "fax": "+1 (111) 222-3334",
+          "roles": [
+            "Corresponding Author",
+            "Author"
+          ],
+          "subroles": [
+            "Conceptualization",
+            "Data curation"
+          ],
+          "address": "288 driving St, Springfield, USA",
+          "orcid": "0000-0001-2345-6789",
+          "affiliations": [
+            "University of Twente",
+            "Royal Netherlands Navy"
           ]
         },
-        "study_to_study_variable_mapping": [
+        {
+          "id": "a2",
+          "firstName": "Rinze",
+          "midInitials": "D.",
+          "lastName": "Geertsma",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author"
+          ],
+          "subroles": [
+            "Data curation",
+            "Resources"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Acedemy"
+          ]
+        },
+        {
+          "id": "a3",
+          "firstName": "Richard",
+          "midInitials": "",
+          "lastName": "Loendersloot",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author",
+            "Principal Investigator"
+          ],
+          "subroles": [
+            "Supervision",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "University of Twente"
+          ]
+        },
+        {
+          "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+          "firstName": "Tiedo",
+          "midInitials": "",
+          "lastName": "Tinga",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Researcher",
+            "Principal Investigator",
+            "Co-Author",
+            "Author"
+          ],
+          "subroles": [
+            "Supervision",
+            "Funding acquisition",
+            "Validation",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Academy",
+            "Royal Netherlands Navy"
+          ]
+        }
+      ],
+      "used_setup": {
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
           {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-            "value": "BPFO",
-            "variableName": "Fault Type"
+            "id": "3527339b-14c1-451d-886c-69a50962c656",
+            "category": "Motor",
+            "value": "WEG W21",
+            "unit": "",
+            "comments": []
           },
           {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-            "value": "Left",
-            "variableName": "Fault Position"
+            "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
+            "category": "MotorPower",
+            "value": "2.2",
+            "unit": "kW",
+            "comments": []
           },
           {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-            "value": 3,
-            "variableName": "Fault Severity"
+            "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
+            "category": "Hydraulic Pump",
+            "value": "Hydropack",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-            "value": 1000,
-            "variableName": "Motor Speed"
+            "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
+            "category": "Hydraulic Motor",
+            "value": "Miksan Type 71 4C M",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-            "value": 1.3,
-            "variableName": "Discharge Pressure"
-          },
-          {
-            "studyId": "83b49697-6f2d-49fd-a43e-3795341e21e4",
-            "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-            "value": 140,
-            "variableName": "Volumetric Flow Rate"
+            "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
+            "category": "Hydraulic Motor Power",
+            "value": "0.38",
+            "unit": "kW",
+            "comments": []
           }
-        ]
+        ],
+        "sensors": [
+          {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          }
+        ],
+        "number_of_sensors": 3,
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa"
       },
-      {
-        "id": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-        "name": "Fault Severity 2 50%",
-        "description": "Fault Severity 2 at half speed",
-        "submissionDate": "2023-10-26",
-        "publicationDate": "2023-12-17",
-        "publications": [
-          {
-            "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
-            "doi": "10.1016/j.cell.2023.01.001",
-            "pubMedId": "",
-            "authorList": [
-              "a1",
-              "a2",
-              "a3",
-              "766ccee4-91c0-4621-8c20-cc56af2be7ae"
-            ],
-            "id": "p01"
-          }
-        ],
-        "authors": [
-          {
-            "id": "a1",
-            "firstName": "Sietse",
-            "midInitials": "",
-            "lastName": "Bruinsma",
-            "email": "sietse.bruinsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Corresponding Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
+      "study_to_study_variable_mapping": [
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+          "value": "BPFO",
+          "variableName": "Fault type"
+        },
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
+          "value": "Left",
+          "variableName": "Fault Position"
+        },
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+          "value": "3",
+          "variableName": "Failt severety"
+        },
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
+          "value": "1000",
+          "variableName": "Motor Speed"
+        },
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
+          "value": "140",
+          "variableName": "Discharge Pressure"
+        },
+        {
+          "studyId": "d51f8dce-b0d8-4f2c-8159-f4cbe1f5bb10",
+          "studyVariableId": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
+          "value": "999",
+          "variableName": "Volumetric Flow Rate"
+        }
+      ],
+      "assay_details": [
+        {
+          "used_sensor": {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
           },
-          {
-            "id": "a2",
-            "firstName": "Rinze",
-            "midInitials": "",
-            "lastName": "Geertsma",
-            "email": "rinzegeertsma@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "123 Main St, Springfield, USA",
-            "orcid": "0000-0003-4567-8901"
-          },
-          {
-            "id": "a3",
-            "firstName": "Richard",
-            "midInitials": "",
-            "lastName": "Loendersloot",
-            "email": "richardloendersloot@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "456 Elm St, Springfield, USA",
-            "orcid": "0000-0005-6789-0123"
-          },
-          {
-            "id": "766ccee4-91c0-4621-8c20-cc56af2be7ae",
-            "firstName": "Tiedo",
-            "midInitials": "",
-            "lastName": "Tinga",
-            "email": "tiedotinga@example.com",
-            "phone": "+1 (111) 222-3333",
-            "fax": "+1 (111) 222-3334",
-            "role": "Author",
-            "address": "288 driving St, Springfield, USA",
-            "orcid": "0000-0001-2345-6789"
-          }
-        ],
-        "used_setup": {
-          "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa",
-          "name": "Wentelteef",
-          "location": "Hogeschool van Amsterdam (HvA)",
-          "description": "Hydraulic testing equipment with dual pressure monitoring system",
-          "characteristics": [
+          "processing_protocols": [
             {
-              "id": "3527339b-14c1-451d-886c-69a50962c656",
-              "category": "Motor",
-              "value": "WEG W21",
-              "unit": "",
-              "comments": []
-            },
-            {
-              "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
-              "category": "MotorPower",
-              "value": "2.2",
-              "unit": "kW",
-              "comments": []
-            },
-            {
-              "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
-              "category": "Hydraulic Pump",
-              "value": "Hydropack",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
               ]
             },
             {
-              "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
-              "category": "Hydraulic Motor",
-              "value": "Miksan Type 71 4C M",
-              "unit": "",
-              "comments": [
-                {
-                  "name": "Type number",
-                  "value": "0205820"
-                }
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
               ]
             },
             {
-              "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
-              "category": "Hydraulic Motor Power",
-              "value": "0.38",
-              "unit": "kW",
-              "comments": []
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
           ],
-          "number_of_sensors": 3,
-          "sensors": [
+          "raw_file_name": "ST03_SE01_MO.csv",
+          "processed_file_name": "ST03_SE01_PPO.csv",
+          "assay_file_name": "ST03_SE01_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          "processing_protocols": [
             {
-              "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure on the radial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In radial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "filterTypeUnit": "",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
             },
             {
-              "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-              "measurementType": "Pressure",
-              "measurementUnit": "bar",
-              "description": "measures pressure in the axial cylinder",
-              "technologyType": "pressure transmitter",
-              "technologyPlatform": "PT5401",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "50",
-              "samplingUnit": "Hz",
-              "sensorLocation": "In Axial cylinder tubes",
-              "locationUnit": "",
-              "sensorOrientation": "Slightly rotated forward",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "24",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
             },
             {
-              "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-              "measurementType": "Temperature",
-              "measurementUnit": "celcius",
-              "description": "measures temperature of bearing",
-              "technologyType": "PT",
-              "technologyPlatform": "PT100",
-              "dataAcquisitionUnit": "PLC S7-1200",
-              "samplingRate": "10",
-              "samplingUnit": "Hz",
-              "sensorLocation": "Bearing House",
-              "locationUnit": "",
-              "sensorOrientation": "",
-              "orientationUnit": "",
-              "filterTypeSpecification": "Butterworth 2nd order 1-10.000Hz",
-              "chunkSizeSpecification": "12",
-              "chunkSizeUnit": "s",
-              "scalingRangeSpecification": "[1,1]",
-              "scalingResolutionSpecification": "12",
-              "scalingResolutionUnit": "Bit"
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
             }
+          ],
+          "raw_file_name": "ST03_SE02_MO.csv",
+          "processed_file_name": "ST03_SE02_PPO.csv",
+          "assay_file_name": "ST03_SE02_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST03_SE03_MO.csv",
+          "processed_file_name": "ST03_SE03_PPO.csv",
+          "assay_file_name": "ST03_SE03_ASSO.csv"
+        }
+      ]
+    },
+    {
+      "id": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+      "name": "BPFO Fault Severity  4 100%",
+      "description": "BPFO Fault Severity  4 100%",
+      "submissionDate": "2025-11-14",
+      "publicationDate": "2025-09-10",
+      "publications": [
+        {
+          "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+          "doi": "10.1016/j.dib.2023.109987",
+          "publicationStatus": "Published",
+          "authorList": [
+            "a1",
+            "a2",
+            "a3",
+            "68a9efae-380b-4863-a4f6-69796fc48b69"
+          ],
+          "id": "p01"
+        }
+      ],
+      "authors": [
+        {
+          "id": "a1",
+          "firstName": "Sietse",
+          "midInitials": "",
+          "lastName": "Bruinsma",
+          "email": "sj.bruinsma.01@mindef.nl",
+          "phone": "+1 (111) 222-3333",
+          "fax": "+1 (111) 222-3334",
+          "roles": [
+            "Corresponding Author",
+            "Author"
+          ],
+          "subroles": [
+            "Conceptualization",
+            "Data curation"
+          ],
+          "address": "288 driving St, Springfield, USA",
+          "orcid": "0000-0001-2345-6789",
+          "affiliations": [
+            "University of Twente",
+            "Royal Netherlands Navy"
           ]
         },
-        "study_to_study_variable_mapping": [
+        {
+          "id": "a2",
+          "firstName": "Rinze",
+          "midInitials": "D.",
+          "lastName": "Geertsma",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author"
+          ],
+          "subroles": [
+            "Data curation",
+            "Resources"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Acedemy"
+          ]
+        },
+        {
+          "id": "a3",
+          "firstName": "Richard",
+          "midInitials": "",
+          "lastName": "Loendersloot",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author",
+            "Principal Investigator"
+          ],
+          "subroles": [
+            "Supervision",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "University of Twente"
+          ]
+        },
+        {
+          "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+          "firstName": "Tiedo",
+          "midInitials": "",
+          "lastName": "Tinga",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Researcher",
+            "Principal Investigator",
+            "Co-Author",
+            "Author"
+          ],
+          "subroles": [
+            "Supervision",
+            "Funding acquisition",
+            "Validation",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Academy",
+            "Royal Netherlands Navy"
+          ]
+        }
+      ],
+      "used_setup": {
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
           {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "fd14bdba-b880-4ead-b592-f59ca706d613",
-            "value": "BPFO",
-            "variableName": "Fault Type"
+            "id": "3527339b-14c1-451d-886c-69a50962c656",
+            "category": "Motor",
+            "value": "WEG W21",
+            "unit": "",
+            "comments": []
           },
           {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "8aac8b6c-1774-4814-9916-b24171044ce6",
-            "value": "Right",
-            "variableName": "Fault Position"
+            "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
+            "category": "MotorPower",
+            "value": "2.2",
+            "unit": "kW",
+            "comments": []
           },
           {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "fac02919-811b-4653-9127-ce76807f2cd2",
-            "value": 4,
-            "variableName": "Fault Severity"
+            "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
+            "category": "Hydraulic Pump",
+            "value": "Hydropack",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
-            "value": 1250,
-            "variableName": "Motor Speed"
+            "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
+            "category": "Hydraulic Motor",
+            "value": "Miksan Type 71 4C M",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
           },
           {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "9c451f87-2eb8-4ee1-8610-1bb6790ef025",
-            "value": 1.1,
-            "variableName": "Discharge Pressure"
-          },
-          {
-            "studyId": "6e56c52d-d0bc-403f-a14c-a5af663c3852",
-            "studyVariableId": "c1dc436d-c95c-4784-921e-481d98716cd4",
-            "value": 140,
-            "variableName": "Volumetric Flow Rate"
+            "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
+            "category": "Hydraulic Motor Power",
+            "value": "0.38",
+            "unit": "kW",
+            "comments": []
           }
-        ]
-      }
-    ]
+        ],
+        "sensors": [
+          {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          }
+        ],
+        "number_of_sensors": 3,
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa"
+      },
+      "study_to_study_variable_mapping": [
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+          "value": "Test",
+          "variableName": "Fault type"
+        },
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
+          "value": "Right",
+          "variableName": "Fault Position"
+        },
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+          "value": "4",
+          "variableName": "Failt severety"
+        },
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
+          "value": "1000",
+          "variableName": "Motor Speed"
+        },
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
+          "value": "140",
+          "variableName": "Discharge Pressure"
+        },
+        {
+          "studyId": "0cb8f09a-df3b-4790-b046-2327dd04bf13",
+          "studyVariableId": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
+          "value": "999",
+          "variableName": "Volumetric Flow Rate"
+        }
+      ],
+      "assay_details": [
+        {
+          "used_sensor": {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST04_SE01_MO.csv",
+          "processed_file_name": "ST04_SE01_PPO.csv",
+          "assay_file_name": "ST04_SE01_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST04_SE02_MO.csv",
+          "processed_file_name": "ST04_SE02_PPO.csv",
+          "assay_file_name": "ST04_SE02_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "Bit"
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "42e14a6e-d47c-4ecf-8900-51ac3f32f904",
+              "value": [
+                "10",
+                "m/s"
+              ]
+            }
+          ],
+          "raw_file_name": "ST04_SE03_MO.csv",
+          "processed_file_name": "ST04_SE03_PPO.csv",
+          "assay_file_name": "ST04_SE03_ASSO.csv"
+        }
+      ]
+    },
+    {
+      "id": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+      "name": "BPFO Fault Severity  6 100%",
+      "description": "BPFO Fault Severity  6 100%",
+      "submissionDate": "2025-09-12",
+      "publicationDate": "2025-09-01",
+      "publications": [
+        {
+          "title": "Motor Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump",
+          "doi": "10.1016/j.dib.2023.109987",
+          "publicationStatus": "Published",
+          "authorList": [
+            "a1",
+            "a2",
+            "a3",
+            "68a9efae-380b-4863-a4f6-69796fc48b69"
+          ],
+          "id": "p01"
+        }
+      ],
+      "authors": [
+        {
+          "id": "a1",
+          "firstName": "Sietse",
+          "midInitials": "",
+          "lastName": "Bruinsma",
+          "email": "sj.bruinsma.01@mindef.nl",
+          "phone": "+1 (111) 222-3333",
+          "fax": "+1 (111) 222-3334",
+          "roles": [
+            "Corresponding Author",
+            "Author"
+          ],
+          "subroles": [
+            "Conceptualization",
+            "Data curation"
+          ],
+          "address": "288 driving St, Springfield, USA",
+          "orcid": "0000-0001-2345-6789",
+          "affiliations": [
+            "University of Twente",
+            "Royal Netherlands Navy"
+          ]
+        },
+        {
+          "id": "a2",
+          "firstName": "Rinze",
+          "midInitials": "D.",
+          "lastName": "Geertsma",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author"
+          ],
+          "subroles": [
+            "Data curation",
+            "Resources"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Acedemy"
+          ]
+        },
+        {
+          "id": "a3",
+          "firstName": "Richard",
+          "midInitials": "",
+          "lastName": "Loendersloot",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Author",
+            "Co-Author",
+            "Principal Investigator"
+          ],
+          "subroles": [
+            "Supervision",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "University of Twente"
+          ]
+        },
+        {
+          "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+          "firstName": "Tiedo",
+          "midInitials": "",
+          "lastName": "Tinga",
+          "email": "",
+          "phone": "",
+          "fax": "",
+          "roles": [
+            "Researcher",
+            "Principal Investigator",
+            "Co-Author",
+            "Author"
+          ],
+          "subroles": [
+            "Supervision",
+            "Funding acquisition",
+            "Validation",
+            "Writing - review & editing"
+          ],
+          "address": "",
+          "orcid": "",
+          "affiliations": [
+            "Netherlands Defence Academy",
+            "Royal Netherlands Navy"
+          ]
+        }
+      ],
+      "used_setup": {
+        "name": "Wentelteef",
+        "location": "Hogeschool van Amsterdam (HvA)",
+        "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "characteristics": [
+          {
+            "id": "3527339b-14c1-451d-886c-69a50962c656",
+            "category": "Motor",
+            "value": "WEG W21",
+            "unit": "",
+            "comments": []
+          },
+          {
+            "id": "d39adbd3-1578-4495-9b3a-efbad3ff020c",
+            "category": "MotorPower",
+            "value": "2.2",
+            "unit": "kW",
+            "comments": []
+          },
+          {
+            "id": "b1c3f5d2-4c8e-4a0b-9f6e-7d3f8b1c2d3e",
+            "category": "Hydraulic Pump",
+            "value": "Hydropack",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
+          },
+          {
+            "id": "a2b3c4d5-6e7f-8a9b-0c1d-2e3f4g5h6i7j",
+            "category": "Hydraulic Motor",
+            "value": "Miksan Type 71 4C M",
+            "unit": "",
+            "comments": [
+              {
+                "name": "Type number",
+                "value": "0205820"
+              }
+            ]
+          },
+          {
+            "id": "e1f2g3h4-5i6j-7k8l-9m0n-1o2p3q4r5s6t",
+            "category": "Hydraulic Motor Power",
+            "value": "0.38",
+            "unit": "kW",
+            "comments": []
+          }
+        ],
+        "sensors": [
+          {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          }
+        ],
+        "number_of_sensors": 3,
+        "id": "c3d302ec-5c93-420f-9f4e-4ae39d0710aa"
+      },
+      "study_to_study_variable_mapping": [
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "dbe27677-12c4-491d-85b3-7783a6edc62e",
+          "value": "yrdyawefaw",
+          "variableName": "Fault type"
+        },
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "b4f8e8c2-ecd2-466a-a1f8-df5949307a85",
+          "value": "Bot",
+          "variableName": "Fault Position"
+        },
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "d7ebc1d0-bc2f-47f5-9019-0f2bd15d44f1",
+          "value": "5",
+          "variableName": "Failt severety"
+        },
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "51cf9de1-aa58-4fb5-b131-1d1c64266726",
+          "value": "1000",
+          "variableName": "Motor Speed"
+        },
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "26babd7a-6a2c-4aab-8274-7e27af9cce46",
+          "value": "140",
+          "variableName": "Discharge Pressure"
+        },
+        {
+          "studyId": "7b2e4c15-2d5c-4bda-b3c4-7f00fb0be8af",
+          "studyVariableId": "9fd790d7-e9b2-4eea-a3e2-347aba120e64",
+          "value": "999",
+          "variableName": "Volumetric Flow Rate"
+        }
+      ],
+      "assay_details": [
+        {
+          "used_sensor": {
+            "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure on the radial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In radial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_1"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "bit"
+              ]
+            }
+          ],
+          "raw_file_name": "ST05_SE01_MO.csv",
+          "processed_file_name": "ST05_SE01_PPO.csv",
+          "assay_file_name": "ST05_SE01_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+            "measurementType": "Pressure",
+            "measurementUnit": "bar",
+            "description": "measures pressure in the axial cylinder",
+            "technologyType": "pressure transmitter",
+            "technologyPlatform": "PT5401",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "50",
+            "samplingUnit": "Hz",
+            "sensorLocation": "In Axial cylinder tubes",
+            "locationUnit": "",
+            "sensorOrientation": "Slightly rotated forward",
+            "orientationUnit": "",
+            "alias": "vib_ch_2"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "bit"
+              ]
+            }
+          ],
+          "raw_file_name": "ST05_SE02_MO.csv",
+          "processed_file_name": "ST05_SE02_PPO.csv",
+          "assay_file_name": "ST05_SE02_ASSO.csv"
+        },
+        {
+          "used_sensor": {
+            "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+            "measurementType": "Temperature",
+            "measurementUnit": "celcius",
+            "description": "measures temperature of bearing",
+            "technologyType": "PT",
+            "technologyPlatform": "PT100",
+            "dataAcquisitionUnit": "PLC S7-1200",
+            "samplingRate": "10",
+            "samplingUnit": "Hz",
+            "sensorLocation": "Bearing House",
+            "locationUnit": "",
+            "sensorOrientation": "",
+            "orientationUnit": "",
+            "alias": "vib_ch_3"
+          },
+          "processing_protocols": [
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "b00add4d-b895-47f7-b614-b740f91a2315",
+              "value": [
+                "Butterworth 2nd gen",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "095d0af1-1bbd-480c-8410-8d9594a08cc3",
+              "value": [
+                "12",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "40a19e48-438e-4b07-acad-ea67b5f40ecd",
+              "value": [
+                "[-1,1]",
+                ""
+              ]
+            },
+            {
+              "sourceId": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
+              "targetId": "3ed99ef0-19ca-42b6-9fb6-43be38f860f3",
+              "value": [
+                "24",
+                "bit"
+              ]
+            }
+          ],
+          "raw_file_name": "ST05_SE03_MO.csv",
+          "processed_file_name": "ST05_SE03_PPO.csv",
+          "assay_file_name": "ST05_SE03_ASSO.csv"
+        }
+      ]
+    }
   ]
 }

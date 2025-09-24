@@ -1,23 +1,27 @@
 
 
 import React, { useMemo, useState } from 'react'
-import EditVariableModal from './EditModal';
-import { Edit, Edit2, Plus, PlusCircleIcon, Trash2 } from 'lucide-react';
-import FormField from './Form/FormField';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { Plus, PlusCircleIcon } from 'lucide-react';
+import useMappingsController from '../hooks/useMappingsController';
 
-export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false }) {
+export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight }) {
 
 
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
 
     const MappingCardComponent = cardComponent();
 
+    // Provide a stable controller to mapping cards. If the parent passed an explicit
+    // handleInputChange or mappings array we prefer that, otherwise use the global controller.
+    const controller = useMappingsController();
+    const effectiveHandleInputChange = handleInputChange ? handleInputChange : controller.updateMappingValue;
+
     const [selectedEntityIndex, setSelectedEntityIndex] = useState(0);
+    const [openEditOnAdd, setOpenEditOnAdd] = useState(false);
     const selectedEntity = useMemo(() => items[selectedEntityIndex], [items, selectedEntityIndex]);
 
     return (
-        <div className='flex'>
+        <div className='flex' style={minHeight ? { minHeight } : undefined}>
 
             {/* Sidebar for Variable Navigation */}
             <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">
@@ -40,7 +44,12 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                 </div>
                 {!disableAdd &&
                     <button
-                        onClick={addItem}
+                        onClick={() => {
+                            addItem();
+                            // select the newly added item (it will be appended)
+                            setSelectedEntityIndex(items.length);
+                            setOpenEditOnAdd(true);
+                        }}
                         className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                     >
                         <span className='px-2 flex'>
@@ -58,10 +67,12 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                         <MappingCardComponent
                             item={selectedEntity}
                             itemIndex={selectedEntityIndex}
-                            mappings={mappings}
+                            mappings={mappings ?? controller.mappings}
                             onSave={updateItem}
-                            handleInputChange={handleInputChange}
+                            handleInputChange={effectiveHandleInputChange}
                             removeParameter={removeItem}
+                            openEdit={openEditOnAdd}
+                            onOpenHandled={() => setOpenEditOnAdd(false)}
                         />
                     }
                 </div>

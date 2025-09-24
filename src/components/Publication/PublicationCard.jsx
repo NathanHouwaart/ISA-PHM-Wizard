@@ -31,9 +31,9 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                             {authorNames.length > 0 ? (
                                 <p className="text-gray-600 text-sm">
                                     <UserPen className="inline-block w-4 h-4 mr-1 text-gray-500" />
-                                    {authorNames.map((authorName, index) => {
-                                        return <span style={{whiteSpace: "pre"}}>{index+1}. {authorName}   </span>
-                                    })}
+                                        {authorNames.map((author, index) => {
+                                            return <span key={index} style={{ whiteSpace: "pre" }}>{index + 1}. {author}   </span>
+                                        })}
                                     {/* {authorNames.join(', ')} */}
                                 </p>
                             ) : <p className="text-gray-500 text-sm">No authors listed</p>

@@ -1,4 +1,12 @@
 export const AUTHOR_ROLE_OPTIONS = [
+    "Author",
+    "Co-Author",
+    "Editor",
+    "Reviewer",
+    "Corresponding Author"
+];
+
+export const AUTHOR_SUBROLE_OPTIONS = [
     "Conceptualization",
     "Data curation",
     "Formal analysis",

@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // Import hooks
 import useMeasurements from '../../hooks/useMeasurements';
@@ -16,114 +16,84 @@ import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { GridTable } from '../GridTable/GridTable';
-import { GrayCell, PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../GridTable/CellTemplates';
 
-// Import utility functions
-import { flattenGridDataToMappings, getStructuredVariables } from '../../utils/utils';
-import { getTransposedGridData, flattenTransposedGridData, getTransposedColumns } from '../../utils/utils';
-
-import isEqual from 'lodash.isequal';
+import usePageTab from '../../hooks/usePageWidth';
+import DataGrid from '../DataGrid';
+import useMappingsController from '../../hooks/useMappingsController';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
-export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage }, ref) => {
+export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
-    const [selectedTab, setSelectedTab] = useState('simple-view'); // State to manage selected tab
+    // Use persistent tab state that remembers across page navigation
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
 
+    // Observe height changes
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
+    // Access global context
     const {
         studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
-        studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
-    useEffect(() => {
-        if (selectedTab === 'grid-view' && currentPage === 7) {
-            setScreenWidth("max-w-[100rem]");
-        } else if (currentPage === 7) {
-            setScreenWidth("max-w-5xl");
-        }
-    }, [selectedTab, currentPage, setScreenWidth]);
+    // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
+    const mappingsController = useMappingsController(
+        'studyToSensorMeasurementMapping',
+        { sourceKey: 'sensorId', targetKey: 'studyId' }
+    );
 
+    // Handle data grid changes (use controller to keep canonical mapping)
+    const handleDataGridMappingsChange = useCallback((newMappings) => {
+        mappingsController.setMappings(newMappings);
+    }, [mappingsController]);
 
-    const [processedData, setProcessedData] = useState([]);
-    const [columns, setColumns] = useState([]);
-    const isUpdatingFromGlobal = useRef(false);
-
-        // --------- Global → Grid Sync (Transposed) ---------
-    const gridDataFromGlobal = useMemo(() => {
-        return getTransposedGridData(studies, selectedTestSetup?.sensors, studyToSensorMeasurementMapping);
-    }, [studies, selectedTestSetup, studyToSensorMeasurementMapping]);
-
-
-    // --- Global Data to Local Grid Data Sync ---
-    useEffect(() => {
-        if (!isEqual(processedData, gridDataFromGlobal)) {
-            isUpdatingFromGlobal.current = true; // Set flag to indicate update from global
-            setProcessedData(gridDataFromGlobal);
-        }
-    }, [selectedTestSetup, testSetups]);
-
-   // --------- Grid → Global Sync (Transposed) ---------
-    useEffect(() => {
-        if (isUpdatingFromGlobal.current) {
-            isUpdatingFromGlobal.current = false;
-            return;
-        }
-
-        const mappings = flattenTransposedGridData(processedData, selectedTestSetup?.sensors || []);
-        setStudyToSensorMeasurementMapping(mappings);
-    }, [processedData, selectedTestSetup]);
-
-
-   // Transposed Column Structure
-    useEffect(() => {
-        setColumns([
-            { 
-                prop: 'id', 
-                name: 'Study ID', 
-                pin: 'colPinStart', 
-                readonly: true, 
-                size: 100, 
-                cellTemplate: Template(PatternCellTemplate, { prefix: "Study S" }), 
-                cellProperties: GrayCell 
-            },
-            { prop: 'name', name: 'Study Name', size: 200, readonly: true },
-            { 
-                prop: 'description', 
-                name: 'Description', 
-                size: 300, 
-                readonly: true,
-                cellProperties: () => ({
-                    style: { "border-right": "3px solid black" }
-                })
-            },
-            // Add sensors as columns
-            ...(selectedTestSetup?.sensors || []).map((sensor, index) => ({
-                prop: sensor.id,
-                name: `Sensor S${(index + 1).toString().padStart(2, '0')}`,
-                size: 150
-            }))
-        ]);
-    }, [selectedTestSetup]);
-
-    const handleInputChange = (studyIndex, mapping, value) => {
-        setProcessedData(prevData => {
-            const newData = [...prevData];
-            const studyRow = newData.find(row => row.id === mapping.studyId);
-            if (studyRow) {
-                studyRow[mapping.sensorId] = value;
+    // Grid configuration for mapping studies to sensor measurements
+    const measurementOutputGridConfig = {
+        title: 'Mappings for measurement output',
+        rowData: studies,
+        columnData: selectedTestSetup?.sensors || [],
+        mappings: mappingsController.mappings,
+        fieldMappings: {
+            rowId: 'id',
+            rowName: 'name',
+            columnId: 'id',
+            columnName: 'alias',
+            columnUnit: '',
+            mappingRowId: 'studyId',
+            mappingColumnId: 'sensorId',
+            mappingValue: 'value'
+        },
+        customActions: [],
+        staticColumns: useMemo(() => ([{
+            prop: 'id',
+            name: 'Identifier',
+            size: 150,
+            readonly: true,
+            cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+        },
+        {
+            prop: 'name',
+            name: 'Study Name',
+            size: 200,
+            readonly: true,
+            cellProperties: () => {
+                return {
+                    style: {
+                        "border-right": "3px solid "
+                    }
+                }
             }
-            return newData;
-        });
+        }
+        ]), [])
     };
+
+    // mappingsController already created above
 
     return (
         <div ref={combinedRef} >
@@ -148,25 +118,28 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage 
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    
+
                     <EntityMappingPanel
                         name={`Sensor Output Mapping`}
                         tileNamePrefix="Study S"
                         items={studies}
                         itemHook={useMeasurements}
-                        mappings={studyToSensorMeasurementMapping}
-                        handleInputChange={handleInputChange}
+                        mappings={mappingsController.mappings}
+                        handleInputChange={mappingsController.updateMappingValue}
+                        minHeight={WINDOW_HEIGHT}
                         disableAdd
                     />
-             
+
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <GridTable 
-                        items={processedData} 
-                        setItems={setProcessedData} 
-                        columns={columns} 
-                        disableAdd
+                    <DataGrid
+                        {...measurementOutputGridConfig}
+                        showControls={true}
+                        showDebug={false}
+                        onDataChange={handleDataGridMappingsChange}
+                        height={WINDOW_HEIGHT}
+                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>
             </div>

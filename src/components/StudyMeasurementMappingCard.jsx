@@ -3,7 +3,6 @@
 import { Edit2, PlusCircleIcon, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
-import EditVariableModal from './EditModal';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 
@@ -51,6 +50,7 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
                                         label={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
                                         name={`Sensor S${(index + 1).toString().padStart(2, '0')}`}
                                         value={mapping.value}
+                                        commitOnBlur={true}
                                         onChange={(e) => handleInputChange(0, mapping, e.target.value)}
                                         placeholder={"Enter filename"}
                                     />

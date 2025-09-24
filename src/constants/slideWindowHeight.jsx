@@ -1,0 +1,1 @@
+export const WINDOW_HEIGHT = "500px";
