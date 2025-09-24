@@ -12,7 +12,7 @@
     "name": "Study Variable 2",
     "type": "Quantitative fault specification",
     "unit": "",
-    "description": "Measures the impact or intensity of the fault.",
+    "description": "",
     "min": 0,
     "max": 10
   },
@@ -20,8 +20,8 @@
     "id": "36897f6c-8144-4e8b-a375-65ad88bb6d94",
     "name": "Study Variable 3",
     "type": "Operating condition",
-    "unit": "RPM",
-    "description": "The rotational speed of the motor.",
+    "unit": "",
+    "description": "",
     "min": 0
   }
 ]
