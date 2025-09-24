@@ -1,38 +1,83 @@
 [
   {
     "id": "a1",
-    "firstName": "John",
-    "midInitials": "B.",
-    "lastName": "Boe",
-    "email": "john.doe@example.com",
+    "firstName": "Sietse",
+    "midInitials": "",
+    "lastName": "Bruinsma",
+    "email": "sj.bruinsma.01@mindef.nl",
     "phone": "+1 (111) 222-3333",
     "fax": "+1 (111) 222-3334",
-    "role": "Author",
+    "roles": [
+      "Writing - review & editing",
+      "Writing - original draft"
+    ],
     "address": "288 driving St, Springfield, USA",
-    "orcid": "0000-0001-2345-6789"
+    "orcid": "0000-0001-2345-6789",
+    "affiliations": [
+      "University of Twente",
+      "Royal Netherlands Navy"
+    ]
   },
   {
     "id": "a2",
-    "firstName": "Jane",
-    "midInitials": "",
-    "lastName": "Smith",
-    "email": "jane.smith@example.com",
-    "phone": "+1 (111) 222-3333",
-    "fax": "+1 (111) 222-3334",
-    "role": "Co-Author",
-    "address": "123 Main St, Springfield, USA",
-    "orcid": "0000-0003-4567-8901"
+    "firstName": "Rinze",
+    "midInitials": "D.",
+    "lastName": "Geertsma",
+    "email": "",
+    "phone": "",
+    "fax": "",
+    "roles": [
+      "Software",
+      "Resources",
+      "Writing - original draft",
+      "Writing - review & editing"
+    ],
+    "address": "",
+    "orcid": "",
+    "affiliations": [
+      "Netherlands Defence Acedemy"
+    ]
   },
   {
     "id": "a3",
-    "firstName": "Alice",
-    "midInitials": "B.",
-    "lastName": "Johnson",
-    "email": "alice.j@example.com",
-    "phone": "+1 (111) 222-3333",
-    "fax": "+1 (111) 222-3334",
-    "role": "Co-Author",
-    "address": "456 Elm St, Springfield, USA",
-    "orcid": "0000-0005-6789-0123"
+    "firstName": "Richard",
+    "midInitials": "",
+    "lastName": "Loendersloot",
+    "email": "",
+    "phone": "",
+    "fax": "",
+    "roles": [
+      "Software",
+      "Writing - original draft",
+      "Visualization",
+      "Writing - review & editing"
+    ],
+    "address": "",
+    "orcid": "",
+    "affiliations": [
+      "University of Twente"
+    ]
+  },
+  {
+    "id": "68a9efae-380b-4863-a4f6-69796fc48b69",
+    "firstName": "Tiedo",
+    "midInitials": "",
+    "lastName": "Tinga",
+    "email": "",
+    "phone": "",
+    "fax": "",
+    "roles": [
+      "Software",
+      "Resources",
+      "Writing - original draft",
+      "Visualization",
+      "Writing - review & editing"
+    ],
+    "address": "",
+    "orcid": "",
+    "affiliations": [
+      "Netherlands Defence Academy",
+      "Royal Netherlands Navy"
+    ]
   }
 ]
