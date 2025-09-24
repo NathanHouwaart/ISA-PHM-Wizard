@@ -9,16 +9,13 @@ function Navbar() {
       <Link to={"/"} className="title">ISA-PHM Wizard</Link>
       <ul>
         <li>
-          <NavLink to={"/gridtest"}>Grid Test</NavLink>
-        </li>
-        <li>
           <NavLink to={"/about"}>About</NavLink>
         </li>
         <li>
           <NavLink to={"/testsetups"}>Test Setups</NavLink>
         </li>
         <li>
-          <NavLink to={"isaquestionnaire"}>ISA Questionnaire Form</NavLink>
+          <NavLink to={"/isaquestionnaire"}>ISA Questionnaire Form</NavLink>
         </li>
       </ul>
     </nav>

@@ -20,7 +20,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/gridtest" element={<GridTest />} />
           <Route path="/simplegridtest" element={<SimpleRevoGridTest />} />
           <Route path="/testsetups" element={<TestSetups />} />
           <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
