@@ -13,6 +13,8 @@ import { slides } from "../components/Slides/slides";
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import useSubmitData from '../hooks/useSubmitData';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
 
 export const IsaQuestionnaire = () => {
@@ -33,7 +35,8 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { submitData, setScreenWidth, pageTabStates } = useGlobalDataContext();
+  const { setScreenWidth, pageTabStates } = useGlobalDataContext();
+  const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // Set screen width based on persisted tab state for the active page. If the
   // persisted tab for the current page is 'grid-view' we'll open a wider layout
@@ -50,12 +53,16 @@ export const IsaQuestionnaire = () => {
 
   const handleSubmit = () => {
     // In a real application, you'd collect data from all forms here
-    submitData();
-    alert('Form submitted! Check console for data. Download should start automatically.');
+    submitData().catch(() => {
+      // errors are displayed in overlay message; no additional alert needed
+    });
   };
 
   return (
     <PageWrapper>
+
+  {isSubmitting && <LoadingOverlay message={message} onCancel={cancel} />}
+  {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
 
       <Heading1> ISA Questionnaire Form </Heading1>
 
@@ -131,7 +138,7 @@ export const IsaQuestionnaire = () => {
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
               }
             )}
-            disabled={!isLastPage(currentPage)}
+            disabled={!isLastPage(currentPage) || isSubmitting}
           >
             <span className='w-md'>Submit Form</span>
           </TooltipButton>

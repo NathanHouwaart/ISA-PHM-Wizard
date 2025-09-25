@@ -142,109 +142,7 @@ export const GlobalDataProvider = ({ children }) => {
     }, [studies, testSetups, studyToAssayMapping, setStudyToAssayMapping]);
 
 
-    async function submitData() {
-        // Function to handle data submission
-
-        const jsonData = {
-            "identifier": investigations.investigationIdentifier,
-            "title": investigations.investigationTitle,
-            "description": investigations.investigationDescription,
-            "license": investigations.license,
-            "submission_date": investigations.submissionDate,
-            "public_release_date": investigations.publicReleaseDate,
-            "publications": publications,
-            "authors": authors,
-            "study_variables": studyVariables,
-            "processing_protocols": processingProtocols,
-            "studies": studies.map(study => ({
-                ...study,
-                publications,
-                authors,
-                "used_setup": testSetups.find(setup => setup.id === selectedTestSetupId),
-                "study_to_study_variable_mapping": studyToStudyVariableMapping
-                    .filter(mapping => mapping.studyId === study.id)
-                    .map(mapping => {
-                        const variable = studyVariables.find(v => v.id === mapping.studyVariableId);
-                        return {
-                            studyId: mapping.studyId,
-                            studyVariableId: mapping.studyVariableId,
-                            value: mapping.value,
-                            variableName: variable?.name || "Unknown Variable"
-                        };
-                    }),
-                "assay_details": testSetups.find(setup => setup.id === selectedTestSetupId).sensors.map(sensor => {
-                    const used_sensor = Object.fromEntries(
-                        Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-                    );
-
-                    // Find mappings that link this sensor to processing protocols and normalize shape
-                    const normalizedMappings = (sensorToProcessingProtocolMapping || [])
-                        .filter(m => String(m.sourceId) === String(sensor.id) || String(m.sensorId) === String(sensor.id))
-                        .map(m => ({
-                            sourceId: m.sourceId ?? m.sensorId ?? null,
-                            targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
-                            value: m.value ?? []
-                        }));
-
-                    const processing_protocols = normalizedMappings;
-
-                    return {
-                        used_sensor,
-                        processing_protocols,
-                        raw_file_name: studyToSensorMeasurementMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                        processed_file_name: studyToSensorProcessingMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-                        assay_file_name: studyToAssayMapping.find(mapping => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || ''
-                    };
-                })
-            }))
-        };
-
-        console.log("Submitting data:", JSON.stringify(jsonData, null, 2));
-
-        try {
-            // 2. Convert to Blob and FormData
-            const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
-            const formData = new FormData();
-            formData.append("file", blob, "input.json");
-
-            // 3. Submit to backend /convert endpoint. The base URL is selected using Vite env vars
-            //    - During development (npm run dev) import.meta.env.MODE === 'development'
-            //    - Use VITE_API_BASE to override for dev or production
-            const DEFAULT_PROD_API = 'https://dwvmqgeaan.eu-west-1.awsapprunner.com';
-            const apiBase = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
-                ? import.meta.env.VITE_API_BASE
-                : (import.meta.env.MODE === 'development' ? 'http://localhost:8000' : DEFAULT_PROD_API);
-
-            const endpoint = `${apiBase.replace(/\/$/, '')}/convert`;
-            console.log('[GlobalDataContext] submitting to', endpoint);
-
-            const response = await fetch(endpoint, {
-                method: "POST",
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error("Conversion failed");
-            }
-
-            const result = await response.json();
-            console.log("Converted Result:", result);
-
-            // Download the JSON file
-            const jsonString = JSON.stringify(result, null, 2);
-            const downloadBlob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(downloadBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'isa-phm-out.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Error during conversion:", error);
-            alert("Failed to convert data. See console for details.");
-        }
-
-    }
+    // submission logic intentionally removed from context; use `useSubmitData` hook instead
 
     const dataMap = {
         studies: [studies, setStudies],
@@ -261,8 +159,7 @@ export const GlobalDataProvider = ({ children }) => {
         studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
         studyToAssayMapping: [studyToAssayMapping, setStudyToAssayMapping],
         screenWidth: [screenWidth, setScreenWidth],
-        pageTabStates: [pageTabStates, setPageTabStates],
-        submitData: [submitData]
+        pageTabStates: [pageTabStates, setPageTabStates]
     };
 
 
@@ -295,12 +192,10 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
-        pageTabStates,
-        setPageTabStates,
-        dataMap,
-        submitData
+    pageTabStates,
+    setPageTabStates,
+    dataMap
     };
-
     return (
         <GlobalDataContext.Provider value={value}>
             {children}
