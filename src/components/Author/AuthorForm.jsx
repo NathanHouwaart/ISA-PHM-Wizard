@@ -26,7 +26,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.firstName.trim() || !formData.lastName.trim() || formData.roles.length === 0 ) {
+        if (!formData.firstName.trim() || !formData.lastName.trim()) {
             alert('Please fill in all required fields (First Name, Last Name, Role).');
             return;
         }
@@ -217,7 +217,6 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         value={formData.roles}
                         onAddTag={handleAddRole}
                         onRemoveTag={handleRemoveRole}
-                        required
                     />
 
                     <FormField
