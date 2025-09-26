@@ -278,6 +278,9 @@ export const useDataGrid = ({
   }, [canRedo, historyIndex, rowDataHistory, mappingHistory, onRowDataChange]);
 
   const addToHistory = useCallback((newMappings) => {
+    // Debug: show mappings being added to history
+    // eslint-disable-next-line no-console
+    console.debug('[useDataGrid] addToHistory called, mappingsCount=', (newMappings || []).length);
     // Push mapping snapshot and current rowData snapshot together to keep histories aligned
     console.log('[useDataGrid] addToHistory', { newMappings, historyIndex });
     const newMappingHistory = mappingHistory.slice(0, historyIndex + 1);
@@ -543,6 +546,9 @@ export const useDataGrid = ({
 
   // Update multiple mappings in batch
   const updateMappingsBatch = useCallback((updates) => {
+    // Debug: show incoming batch updates
+    // eslint-disable-next-line no-console
+    console.log('[useDataGrid] updateMappingsBatch called with updates=', updates && updates.slice ? updates.slice(0,50) : updates);
     let newMappings = [...currentMappings];
     
     updates.forEach(({ rowId, columnId, value }) => {

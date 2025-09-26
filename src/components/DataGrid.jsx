@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import applyFilesToRange from './dataGridUtils';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../hooks/useDataGrid';
 import "./GridTable/GridTable.css";
@@ -78,6 +79,9 @@ const DataGrid = forwardRef(({
         onRowDataChange // Pass the callback to the hook
     });
 
+    // Expose currentMappings count for debug UI
+    const currentMappingsCount = (currentMappings || []).length;
+
     // Expose functions to parent components through ref
     useImperativeHandle(ref, () => ({
         addRow: (newRow) => {
@@ -104,6 +108,46 @@ const DataGrid = forwardRef(({
     // updates and later effects that read the state (which is async).
     const columnSizesRef = useRef(columnSizes);
     const gridRef = useRef();
+    // callback ref to ensure we store the underlying DOM element (revo-grid)
+    const [gridElement, setGridElement] = useState(null);
+
+    const setGridRef = (node) => {
+        if (!node) {
+            gridRef.current = null;
+            setGridElement(null);
+            return;
+        }
+        // If the React wrapper forwards the webcomponent under .element or .el, prefer that
+        if (node instanceof HTMLElement && node.tagName?.toLowerCase() === 'revo-grid') {
+            gridRef.current = node;
+            setGridElement(node);
+        } else if (node.element instanceof HTMLElement) {
+            gridRef.current = node.element;
+            setGridElement(node.element);
+        } else if (node.el instanceof HTMLElement) {
+            gridRef.current = node.el;
+            setGridElement(node.el);
+        } else {
+            // fallback to whatever was provided
+            gridRef.current = node;
+            setGridElement(node);
+        }
+    };
+    // Refs for file inputs and selection snapshot
+    const fileInputRef = useRef();
+    const dirInputRef = useRef();
+    const selectionSnapshotRef = useRef(null);
+    // Ref to store FileList or array temporarily without putting in state
+    const filesRef = useRef(null);
+    // Key to force RevoGrid remount when necessary
+    const [gridKey, setGridKey] = useState(0);
+    // Debug UI state
+    const [lastSnapshot, setLastSnapshot] = useState(null);
+    const [lastFileCount, setLastFileCount] = useState(0);
+    const [lastMappings, setLastMappings] = useState([]);
+    const [lastUpdates, setLastUpdates] = useState([]);
+    const [lastDebugInfo, setLastDebugInfo] = useState(null);
+    const [terminalLogs, setTerminalLogs] = useState([]);
 
     // Listen for column resize events to preserve user adjustments
     useEffect(() => {
@@ -553,6 +597,538 @@ const DataGrid = forwardRef(({
     return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [undo, redo, handleClearCell]);
 
+    // Selection snapshotting: capture selection when RevoGrid fires selection events
+    useEffect(() => {
+        // Attach listeners after the gridElement is set so we reliably listen on the
+        // real webcomponent (which may be forwarded by the React wrapper)
+        const el = gridElement || document.querySelector('revo-grid');
+        if (!el) return;
+
+        const logToTerminal = (msg, obj) => {
+            try {
+                const s = obj ? `${msg} ${JSON.stringify(obj, (k, v) => (typeof v === 'function' ? String(v) : v), 2)}` : msg;
+                setTerminalLogs(prev => [...prev.slice(-200), s]);
+            } catch (err) {
+                setTerminalLogs(prev => [...prev.slice(-200), msg]);
+            }
+        };
+
+        const awaitMaybe = async (v) => (v && typeof v.then === 'function') ? await v : v;
+
+        const normalizeRange = (r) => {
+            if (!r || typeof r !== 'object') return null;
+            // Common shape: { x, y, x1, y1 }
+            if (typeof r.x === 'number' && typeof r.y === 'number') return { x: r.x, y: r.y, x1: (typeof r.x1 === 'number' ? r.x1 : r.x), y1: (typeof r.y1 === 'number' ? r.y1 : r.y) };
+            // Alternate shapes we may encounter (try to map)
+            if (typeof r.left === 'number' && typeof r.top === 'number') return { x: r.left, y: r.top, x1: r.right || r.left, y1: r.bottom || r.top };
+            if (typeof r.startX === 'number' && typeof r.startY === 'number') return { x: r.startX, y: r.startY, x1: r.endX || r.startX, y1: r.endY || r.startY };
+            // Fallback: find numeric properties
+            const nums = Object.keys(r).filter(k => typeof r[k] === 'number');
+            if (nums.length >= 4) {
+                const values = nums.slice(0,4).map(k => r[k]);
+                return { x: values[0], y: values[1], x1: values[2], y1: values[3] };
+            }
+            return null;
+        };
+        const handleSelection = async (ev) => {
+            try {
+                const d = ev?.detail || {};
+                logToTerminal(`[DataGrid] selection event: ${ev.type}`, d);
+
+                // prefer explicit range props in event.detail
+                const raw = d?.newRange || d?.range || d?.selection || d;
+                let norm = normalizeRange(raw);
+
+                // if event didn't include it, try component API synchronously
+                if (!norm && el && typeof el.getSelectedRange === 'function') {
+                    try {
+                        const maybe = await awaitMaybe(el.getSelectedRange());
+                        if (maybe && typeof maybe === 'object' && typeof maybe.x === 'number') {
+                            norm = normalizeRange(maybe) || maybe;
+                            logToTerminal('[DataGrid] getSelectedRange result', norm);
+                        }
+                    } catch (err) {
+                        // ignore
+                    }
+                }
+
+                if (norm) {
+                    selectionSnapshotRef.current = { range: norm };
+                    setLastSnapshot({ range: norm });
+                }
+            } catch (err) {
+                // ignore
+            }
+        };
+
+        const eventNames = ['selectionchange', 'rangeselect', 'rangechange', 'beforerange', 'afterfocus', 'aftergridrender', 'aftergridrender'];
+        eventNames.forEach(n => el.addEventListener(n, handleSelection));
+
+        // Also listen for pointerup on document to capture mouse selection end if grid events are not fired
+        const onPointerUp = async (ev) => {
+            try {
+                // quick attempt to capture
+                if (el && typeof el.getSelectedRange === 'function') {
+                    const maybe = await awaitMaybe(el.getSelectedRange());
+                    if (maybe && typeof maybe === 'object' && typeof maybe.x === 'number') {
+                        const nr = normalizeRange(maybe) || maybe;
+                        selectionSnapshotRef.current = { range: nr };
+                        setLastSnapshot({ range: nr });
+                        logToTerminal('[DataGrid] pointerup captured range', nr);
+                    }
+                }
+            } catch (err) {
+                // ignore
+            }
+        };
+        document.addEventListener('pointerup', onPointerUp);
+
+        return () => {
+            eventNames.forEach(n => el.removeEventListener(n, handleSelection));
+            document.removeEventListener('pointerup', onPointerUp);
+        };
+    }, [gridElement]);
+
+    // DOM capture fallback: if selectionSnapshotRef is empty, capture focused/selected cells
+    const captureSelectionFromDOM = useCallback(async () => {
+        const el = gridElement || gridRef.current || document.querySelector('revo-grid');
+        if (!el) return null;
+
+        const normalizeRange = (r) => {
+            if (!r || typeof r !== 'object') return null;
+            if (typeof r.x === 'number' && typeof r.y === 'number') return { x: r.x, y: r.y, x1: (typeof r.x1 === 'number' ? r.x1 : r.x), y1: (typeof r.y1 === 'number' ? r.y1 : r.y) };
+            if (typeof r.left === 'number' && typeof r.top === 'number') return { x: r.left, y: r.top, x1: r.right || r.left, y1: r.bottom || r.top };
+            return null;
+        };
+
+        // Try component API (may return object or promise)
+        try {
+            if (typeof el.getSelectedRange === 'function') {
+                const maybe = await awaitMaybe(el.getSelectedRange());
+                if (maybe && typeof maybe === 'object' && typeof maybe.x === 'number') {
+                    const r = normalizeRange(maybe) || maybe;
+                    const snapshot = { range: r, source: 'api' };
+                    selectionSnapshotRef.current = snapshot;
+                    setLastSnapshot(snapshot);
+                    setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] captureSelectionFromDOM api -> ${JSON.stringify(r)}`]);
+                    return r;
+                }
+            }
+        } catch (err) {
+            // ignore synchronous or async API failures — we'll continue to DOM introspection
+        }
+
+        // Inspect shadowRoot if present
+        const root = (el.shadowRoot && el.shadowRoot.querySelector) ? el.shadowRoot : el;
+
+        // Try to inspect overlay/temp-range elements which may store selection bounds
+        try {
+            const overlays = Array.from(root.querySelectorAll('revogr-overlay-selection, revogr-temp-range'));
+            for (const ov of overlays) {
+                // some overlay elements may have properties or attributes describing range
+                const attrs = {};
+                try {
+                    for (const a of ov.getAttributeNames ? ov.getAttributeNames() : []) {
+                        attrs[a] = ov.getAttribute(a);
+                    }
+                } catch (e) {
+                    // ignore
+                }
+                // try to parse common attributes
+                if (attrs['data-range'] || attrs['range']) {
+                    try {
+                        const parsed = JSON.parse(attrs['data-range'] || attrs['range']);
+                        const nr = normalizeRange(parsed) || parsed;
+                        const snapshot = { range: nr, source: 'overlay-attr' };
+                        selectionSnapshotRef.current = snapshot;
+                        setLastSnapshot(snapshot);
+                        setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] captureSelectionFromDOM overlay attr -> ${JSON.stringify(nr)}`]);
+                        return nr;
+                    } catch (e) {
+                        // not JSON — ignore
+                    }
+                }
+                // try to read properties if available
+                    try {
+                        if (ov.selection && (ov.selection.x !== undefined)) {
+                            const nr = normalizeRange(ov.selection) || ov.selection;
+                            const snapshot = { range: nr, source: 'overlay-prop' };
+                            selectionSnapshotRef.current = snapshot;
+                            setLastSnapshot(snapshot);
+                            setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] captureSelectionFromDOM overlay prop -> ${JSON.stringify(nr)}`]);
+                            return nr;
+                        }
+                        // support properties that might be promises or getters
+                        if (typeof ov.getSelectedRange === 'function') {
+                            const maybe2 = await awaitMaybe(ov.getSelectedRange());
+                            if (maybe2 && typeof maybe2.x === 'number') {
+                                const nr2 = normalizeRange(maybe2) || maybe2;
+                                const snapshot = { range: nr2, source: 'overlay-api' };
+                                selectionSnapshotRef.current = snapshot;
+                                setLastSnapshot(snapshot);
+                                setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] captureSelectionFromDOM overlay api -> ${JSON.stringify(nr2)}`]);
+                                return nr2;
+                            }
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+            }
+        } catch (err) {
+            // ignore overlay parsing errors
+        }
+
+        // As a last resort, try to find cells marked selected/focused and compute bounds
+        try {
+            const allCells = Array.from(root.querySelectorAll('[data-rgrow][data-rgcol]'));
+            const selectedByClass = allCells.filter(n => (n.className || '').includes('selected') || (n.getAttribute && n.getAttribute('aria-selected') === 'true'));
+            const focusedByClass = allCells.filter(n => (n.className || '').includes('focused') || n.getAttribute('tabindex') === '0');
+            const sample = selectedByClass.length ? selectedByClass : (focusedByClass.length ? focusedByClass : allCells.slice(0,1));
+            if (!sample || sample.length === 0) return null;
+            const first = sample[0];
+            const rgRow = parseInt(first.getAttribute('data-rgrow') || '0', 10);
+            const rgCol = parseInt(first.getAttribute('data-rgcol') || '0', 10);
+            let minRow = rgRow, maxRow = rgRow, minCol = rgCol, maxCol = rgCol;
+            sample.forEach(node => {
+                const r = parseInt(node.getAttribute('data-rgrow') || '0', 10);
+                const c = parseInt(node.getAttribute('data-rgcol') || '0', 10);
+                if (r < minRow) minRow = r;
+                if (r > maxRow) maxRow = r;
+                if (c < minCol) minCol = c;
+                if (c > maxCol) maxCol = c;
+            });
+            const range = { x: minCol, y: minRow, x1: maxCol, y1: maxRow };
+            const snapshot = { range, source: 'dom-capture', foundCells: sample.length };
+            setLastSnapshot(snapshot);
+            try {
+                const rect = first.getBoundingClientRect();
+                setLastDebugInfo({ rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height }, nodeName: first.nodeName, className: first.className });
+            } catch (err) {
+                setLastDebugInfo({ error: String(err) });
+            }
+            setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] captureSelectionFromDOM -> ${JSON.stringify(snapshot)}`]);
+            return range;
+        } catch (err) {
+            return null;
+        }
+    }, [gridElement]);
+
+    const dumpGridDom = useCallback(() => {
+        const el = gridElement || gridRef.current || document.querySelector('revo-grid');
+        if (!el) {
+            setLastDebugInfo({ error: 'no grid element found' });
+            return;
+        }
+
+        try {
+            const root = (el.shadowRoot && el.shadowRoot.querySelector) ? el.shadowRoot : el;
+            const allCells = Array.from(root.querySelectorAll('[data-rgrow][data-rgcol]'));
+            const selected = allCells.filter(n => (n.className || '').includes('selected') || n.getAttribute('aria-selected') === 'true');
+            const focused = allCells.filter(n => (n.className || '').includes('focused'));
+            const sample = allCells.slice(0, 5).map(n => ({ r: n.getAttribute('data-rgrow'), c: n.getAttribute('data-rgcol'), cls: n.className }));
+            const info = {
+                hasShadowRoot: !!el.shadowRoot,
+                totalCells: allCells.length,
+                selectedCount: selected.length,
+                focusedCount: focused.length,
+                sampleCells: sample
+            };
+            setLastDebugInfo(info);
+            setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] dumpGridDom -> ${JSON.stringify(info)}`]);
+        } catch (err) {
+            setLastDebugInfo({ error: String(err) });
+        }
+    }, [gridElement]);
+
+    // Deep inspection helper for debugging selection issues
+    const deepInspectGrid = useCallback(async () => {
+        const el = gridElement || gridRef.current || document.querySelector('revo-grid');
+        if (!el) {
+            const msg = '[DataGrid] deepInspectGrid -> no grid element found';
+            setTerminalLogs(prev => [...prev.slice(-200), msg]);
+            setLastDebugInfo({ error: 'no grid element found' });
+            return;
+        }
+
+        const push = (s) => setTerminalLogs(prev => [...prev.slice(-200), s]);
+
+        push('[DataGrid] deepInspectGrid -> starting');
+
+        // Helper to await either value or promise
+        const awaitMaybe = async (v) => (v && typeof v.then === 'function') ? await v : v;
+
+        try {
+            // 1) API: getSelectedRange
+            try {
+                const maybeRange = awaitMaybe(el.getSelectedRange && el.getSelectedRange());
+                push(`[DataGrid] API getSelectedRange -> ${JSON.stringify(maybeRange)}`);
+            } catch (e) {
+                push(`[DataGrid] API getSelectedRange threw: ${String(e)}`);
+            }
+
+            // 2) API: getFocused
+            try {
+                const focused = awaitMaybe(el.getFocused && el.getFocused());
+                push(`[DataGrid] API getFocused -> ${JSON.stringify(focused && (typeof focused === 'object' ? { cell: focused.cell, colType: focused.colType, rowType: focused.rowType } : focused))}`);
+            } catch (e) {
+                push(`[DataGrid] API getFocused threw: ${String(e)}`);
+            }
+
+            // 3) Search inside shadowRoot or element for revogr-* elements and log small snapshots
+            const root = (el.shadowRoot && el.shadowRoot.querySelector) ? el.shadowRoot : el;
+            push(`[DataGrid] deepInspectGrid -> hasShadowRoot=${!!el.shadowRoot}`);
+
+            const interesting = Array.from(root.querySelectorAll('revogr-overlay-selection, revogr-temp-range, revogr-focus, revogr-data, revogr-viewport-scroll, revogr-header'));
+            push(`[DataGrid] deepInspectGrid -> found ${interesting.length} revogr-* nodes`);
+
+            const nodeSummaries = interesting.slice(0,50).map(n => {
+                const attrs = {};
+                try { (n.getAttributeNames ? n.getAttributeNames() : []).forEach(a => { attrs[a] = n.getAttribute(a); }); } catch (e) {}
+                const props = {};
+                // Check for some known property names
+                ['selection','range','tempArea','selectionStore','rowSelectionStore','selectionStoreConnector'].forEach(p => {
+                    try { if (p in n) props[p] = (typeof n[p] === 'object' ? JSON.stringify(n[p], (k,v)=> typeof v === 'function' ? String(v) : v, 2) : String(n[p])); } catch(e) {}
+                });
+                return { tag: n.tagName, attrs, props };
+            });
+            push(`[DataGrid] deepInspectGrid nodes: ${JSON.stringify(nodeSummaries.slice(0,10), null, 2)}`);
+
+            // 4) Count cells in shadow root and sample attributes
+            try {
+                const allCells = Array.from(root.querySelectorAll('[data-rgrow],[data-rgcol]')).slice(0,500);
+                const sample = allCells.slice(0,20).map(n => ({ tag: n.tagName, r: n.getAttribute && n.getAttribute('data-rgrow'), c: n.getAttribute && n.getAttribute('data-rgcol'), cls: n.className }));
+                push(`[DataGrid] deepInspectGrid cells sample (${sample.length}): ${JSON.stringify(sample, null, 2)}`);
+            } catch (e) {
+                push(`[DataGrid] deepInspectGrid cells scan error: ${String(e)}`);
+            }
+
+            // 5) Log selectionSnapshotRef and lastSnapshot
+            push(`[DataGrid] deepInspectGrid selectionSnapshotRef -> ${JSON.stringify(selectionSnapshotRef.current)}`);
+            push(`[DataGrid] deepInspectGrid lastSnapshot -> ${JSON.stringify(lastSnapshot)}`);
+
+            setLastDebugInfo({ deepInspect: true, timestamp: Date.now() });
+            push('[DataGrid] deepInspectGrid -> finished');
+        } catch (err) {
+            push(`[DataGrid] deepInspectGrid error: ${String(err)}`);
+        }
+    }, [gridElement, lastSnapshot]);
+
+    // Public: open file picker for assigning files to current selection
+    const openFilePickerForSelection = useCallback(async (directory = false) => {
+        // Snapshot current selection first (some browsers blur on file input open)
+        let range = selectionSnapshotRef.current?.range;
+        if (!range) {
+            // Try component API first (may be sync or Promise)
+            try {
+                const gridEl = gridRef.current || document.querySelector('revo-grid');
+                if (gridEl && gridEl.getSelectedRange) {
+                    const maybe = gridEl.getSelectedRange();
+                    if (maybe && typeof maybe.then === 'function') {
+                        // await promise
+                        const awaited = await maybe;
+                        if (awaited && typeof awaited.x === 'number') {
+                            range = awaited;
+                        }
+                    } else if (maybe && typeof maybe.x === 'number') {
+                        range = maybe;
+                    }
+                }
+            } catch (err) {
+                // ignore
+            }
+
+            if (!range) {
+                range = captureSelectionFromDOM();
+            }
+
+            if (range) selectionSnapshotRef.current = { range };
+        }
+
+        if (!selectionSnapshotRef.current?.range) {
+            // nothing to assign
+            return;
+        }
+
+        filesRef.current = null;
+
+        if (directory && dirInputRef.current) {
+            dirInputRef.current.value = null;
+            dirInputRef.current.click();
+            return;
+        }
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = null;
+            fileInputRef.current.click();
+        }
+    }, [captureSelectionFromDOM]);
+
+    const handleFilesPicked = useCallback((fileList) => {
+        filesRef.current = fileList;
+        const snapshot = selectionSnapshotRef.current;
+        if (!snapshot || !snapshot.range) {
+            // No selection snapshot — try a best-effort fallback using focused cell or API
+            const msg = '[DataGrid] No selection snapshot at file pick; attempting focused-cell fallback';
+            // eslint-disable-next-line no-console
+            console.log(msg);
+            setTerminalLogs(prev => [...prev.slice(-200), msg]);
+
+            // Try component API first
+            try {
+                const el = gridElement || gridRef.current || document.querySelector('revo-grid');
+                let focused = null;
+                if (el && typeof el.getFocused === 'function') {
+                    try {
+                        const maybe = el.getFocused();
+                        focused = maybe && typeof maybe === 'object' ? maybe : null;
+                    } catch (e) {
+                        // ignore sync errors
+                    }
+                }
+
+                // If API didn't yield a focused cell, find a focused/selected cell in DOM
+                if (!focused) {
+                    const root = (el && el.shadowRoot && el.shadowRoot.querySelector) ? el.shadowRoot : (el || document);
+                    const focusedNode = root.querySelector && (root.querySelector('[data-rgrow][data-rgcol].focused') || root.querySelector('[data-rgrow][data-rgcol][tabindex="0"]') || root.querySelector('[data-rgrow][data-rgcol]'));
+                    if (focusedNode) {
+                        focused = { cell: { x: parseInt(focusedNode.getAttribute('data-rgcol') || '0', 10), y: parseInt(focusedNode.getAttribute('data-rgrow') || '0', 10) } };
+                    }
+                }
+
+                // If we found a focused cell, compute a fallback range big enough for files
+                if (focused && focused.cell) {
+                    const startCol = focused.cell.x || 0;
+                    const startRow = focused.cell.y || 0;
+                    const totalFiles = fileList ? (fileList.length || Object.keys(fileList).length || 0) : 0;
+                    const totalCols = appliedColumns ? appliedColumns.length : 0;
+                    const totalRows = hookRowData ? hookRowData.length : 0;
+
+                    const computeFallbackRangeFromFocus = (sRow, sCol, count, rowsCount, colsCount) => {
+                        if (count <= 0) return null;
+                        if (!colsCount || colsCount <= 0) colsCount = 1;
+                        if (!rowsCount || rowsCount <= 0) rowsCount = 1;
+                        let remaining = count;
+                        let curRow = sRow;
+                        let curCol = sCol;
+                        let minRow = sRow, maxRow = sRow, minCol = sCol, maxCol = sCol;
+                        while (remaining > 1) {
+                            // move to next cell in row-major order
+                            curCol++;
+                            if (curCol >= colsCount) {
+                                curCol = 0;
+                                curRow++;
+                                if (curRow >= rowsCount) break; // no more space
+                            }
+                            if (curRow < minRow) minRow = curRow;
+                            if (curRow > maxRow) maxRow = curRow;
+                            if (curCol < minCol) minCol = curCol;
+                            if (curCol > maxCol) maxCol = curCol;
+                            remaining--;
+                        }
+                        return { x: minCol, y: minRow, x1: maxCol, y1: maxRow };
+                    };
+
+                    const fallbackRange = computeFallbackRangeFromFocus(startRow, startCol, totalFiles, totalRows, totalCols);
+                    if (fallbackRange) {
+                        selectionSnapshotRef.current = { range: fallbackRange, source: 'fallback-focused' };
+                        setLastSnapshot({ range: fallbackRange, source: 'fallback-focused' });
+                        setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] fallback range computed ${JSON.stringify(fallbackRange)}`]);
+                    } else {
+                        setTerminalLogs(prev => [...prev.slice(-200), '[DataGrid] fallback range could not be computed (grid too small)']);
+                    }
+                } else {
+                    setTerminalLogs(prev => [...prev.slice(-200), '[DataGrid] no focused cell found for fallback']);
+                }
+            } catch (e) {
+                setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] fallback error: ${String(e)}`]);
+            }
+
+            // Refresh snapshot variable for rest of function
+            // eslint-disable-next-line no-param-reassign
+            // snapshot = selectionSnapshotRef.current; // cannot reassign const — read below via selectionSnapshotRef
+        }
+
+        const snapshotNow = selectionSnapshotRef.current;
+        if (!snapshotNow || !snapshotNow.range) {
+            const msg2 = '[DataGrid] Files picked but still no selection snapshot available after fallback';
+            // eslint-disable-next-line no-console
+            console.log(msg2);
+            setTerminalLogs(prev => [...prev.slice(-200), msg2]);
+            return;
+        }
+
+        // Log snapshot and basic file info to console and in-page terminal logs
+        try {
+            const filesArr = Array.prototype.slice.call(fileList || []);
+            const names = filesArr.map(f => ({ name: f.name, webkitRelativePath: f.webkitRelativePath || '' }));
+            const infoMsg = `[DataGrid] handleFilesPicked snapshot=${JSON.stringify(snapshot.range)} files=${JSON.stringify(names.slice(0,20))}`;
+            // eslint-disable-next-line no-console
+            console.log(infoMsg);
+            setTerminalLogs(prev => [...prev.slice(-200), infoMsg]);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[DataGrid] error serializing file list', err);
+        }
+
+        // Build flatCols for child column support: create flattened list from appliedColumns
+        const flatColumnDefs = [];
+        appliedColumns.forEach(col => {
+            if (col.children) col.children.forEach(ch => flatColumnDefs.push(ch));
+            else flatColumnDefs.push(col);
+        });
+
+        // Ensure rows passed to the pure util have an `id` field corresponding to the
+        // hook's configured row id (fields.rowId). This avoids mismatch when the
+        // project's row id property is not literally `id`.
+        const rowsForUtil = hookRowData.map((r, idx) => ({ ...r, id: r[fields.rowId] ?? idx }));
+
+    const effectiveRange = selectionSnapshotRef.current.range;
+    const mappings = applyFilesToRange(effectiveRange, rowsForUtil, flatColumnDefs, fileList);
+
+        if (mappings.length > 0) {
+            // Debug: show the mappings computed before applying
+            // eslint-disable-next-line no-console
+            console.log('[DataGrid] applying mappings', mappings.slice(0, 200));
+            setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] applying mappings (${mappings.length})`]);
+            setLastMappings(mappings.slice(0, 200));
+
+            // map to updateMappingsBatch expected shape: { rowId, columnId, value }
+            const updates = mappings.map(m => ({ rowId: m.mappingRowId, columnId: m.mappingColumnId, value: m.mappingValue }));
+            // Debug: show the updates passed into updateMappingsBatch
+            // eslint-disable-next-line no-console
+            console.log('[DataGrid] updateMappingsBatch updates=', updates.slice(0, 200));
+            setTerminalLogs(prev => [...prev.slice(-200), `[DataGrid] updateMappingsBatch updates (${updates.length})`]);
+            setLastUpdates(updates.slice(0,200));
+            updateMappingsBatch(updates);
+
+            // Delay remount slightly so React can commit mapping state (setState in hook)
+            // before we force the grid to remount. This prevents the webcomponent from
+            // reinitializing with stale props.
+            setTimeout(() => {
+                setGridKey(k => k + 1);
+                // Also refresh appliedColumns identity to be safe
+                setAppliedColumns(prev => prev.map(c => ({ ...c })));
+            }, 0);
+        }
+
+        setLastFileCount(fileList ? (fileList.length || fileList.length === 0 ? fileList.length : Object.keys(fileList).length) : 0);
+        // Clear snapshot after applying
+        selectionSnapshotRef.current = null;
+        filesRef.current = null;
+    }, [appliedColumns, hookRowData, updateMappingsBatch]);
+
+    // Handlers for native file inputs
+    const onFilesChange = useCallback((ev) => {
+        const files = ev.target.files;
+        handleFilesPicked(files);
+    }, [handleFilesPicked]);
+
+    const onDirChange = useCallback((ev) => {
+        const files = ev.target.files;
+        // Note: for directory selection we might get many files; use same handler but do not store FileList in state
+        handleFilesPicked(files);
+    }, [handleFilesPicked]);
+
     // Render the complete data grid with controls and debug view
     return (
         <div className={`data-grid ${className}`}>
@@ -624,13 +1200,72 @@ const DataGrid = forwardRef(({
                                 </button>
                             </>
                         )}
+
+                        {/* File assign controls */}
+                        <div className="border-l border-gray-300 h-6 mx-2"></div>
+                        <button
+                            type="button"
+                            onMouseDown={async (e) => {
+                                // Prevent the button from taking focus so the grid selection doesn't blur
+                                e.preventDefault();
+                                try {
+                                    const snap = await captureSelectionFromDOM();
+                                    if (snap) selectionSnapshotRef.current = { range: snap };
+                                } catch (err) {
+                                    // ignore
+                                }
+                                // open file picker immediately while grid still has focus
+                                if (fileInputRef.current) {
+                                    fileInputRef.current.value = null;
+                                    fileInputRef.current.click();
+                                }
+                            }}
+                            className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
+                            title="Assign files to current selection"
+                        >
+                            📁 Assign files
+                        </button>
+                        <button
+                            type="button"
+                            onMouseDown={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    const snap = await captureSelectionFromDOM();
+                                    if (snap) selectionSnapshotRef.current = { range: snap };
+                                } catch (err) {
+                                    // ignore
+                                }
+                                if (dirInputRef.current) {
+                                    dirInputRef.current.value = null;
+                                    dirInputRef.current.click();
+                                }
+                            }}
+                            className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
+                            title="Assign directory to current selection"
+                        >
+                            📂 Assign directory
+                        </button>
+                        <button
+                            type="button"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                // Keep focus, but clear any pending snapshot
+                                selectionSnapshotRef.current = null;
+                                filesRef.current = null;
+                            }}
+                            className={`px-3 py-1 text-sm rounded border bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100`}
+                            title="Cancel assignment"
+                        >
+                            ✖ Cancel
+                        </button>
                     </div>
                 )}
             </div>
 
             {/* Grid */}
             <RevoGrid
-                ref={gridRef}
+                key={gridKey}
+                ref={setGridRef}
                 style={{ height }}
                 source={gridData}
                 rowSize={rowsize}
@@ -653,30 +1288,105 @@ const DataGrid = forwardRef(({
                 {...gridProps}
             />
 
+            {/* Hidden file inputs used to open native file pickers without storing FileList in state */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={onFilesChange}
+                style={{ display: 'none' }}
+                aria-hidden
+            />
+
+            {/* Directory picker: webkitdirectory is non-standard but widely supported; degrade gracefully */}
+            <input
+                ref={dirInputRef}
+                type="file"
+                webkitdirectory="true"
+                directory="true"
+                multiple
+                onChange={onDirChange}
+                style={{ display: 'none' }}
+                aria-hidden
+            />
+
             {/* Debug View */}
             {showDebug && (
                 <div className="mt-8 p-4 bg-gray-100 rounded-lg">
                     <h3 className="text-lg font-semibold mb-4">Debug: Current Data</h3>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Raw Mappings */}
                         <div>
-                            <h4 className="font-medium mb-2">Raw Mappings ({currentMappings.length})</h4>
-                            <div className="max-h-64 overflow-y-auto bg-white p-3 rounded border">
-                                {currentMappings.length === 0 ? (
-                                    <p className="text-gray-500 italic">No mappings found</p>
-                                ) : (
-                                    <pre className="text-xs">{JSON.stringify(currentMappings, null, 2)}</pre>
-                                )}
+                            <h4 className="font-medium mb-2">Last Selection Snapshot</h4>
+                            <div className="max-h-36 overflow-y-auto bg-white p-3 rounded border">
+                                <pre className="text-xs">{JSON.stringify(lastSnapshot, null, 2)}</pre>
                             </div>
+                            <div className="mt-2 text-sm">Current mappings (hook): {String(currentMappingsCount)}</div>
+                            <div className="mt-2">
+                                <button className="px-2 py-1 text-xs rounded border bg-blue-50" onMouseDown={async (e) => {
+                                    e.preventDefault();
+                                    // Apply a single synthetic mapping to the first visible cell so we can see if updates propagate.
+                                    try {
+                                        const flatColumnDefs = [];
+                                        stableColumnDefs.current.forEach(col => {
+                                            if (col.children) col.children.forEach(ch => flatColumnDefs.push(ch));
+                                            else flatColumnDefs.push(col);
+                                        });
+                                        const firstRow = hookRowData && hookRowData[0];
+                                        const firstCol = flatColumnDefs && flatColumnDefs[0];
+                                        if (!firstRow || !firstCol) return;
+                                        const updates = [{ rowId: firstRow[fields.rowId], columnId: firstCol.prop, value: 'TEST-MAPPING' }];
+                                        // show it in the debug UI
+                                        setLastUpdates(updates);
+                                        // eslint-disable-next-line no-console
+                                        console.log('[DataGrid] debug apply updates', updates);
+                                        updateMappingsBatch(updates);
+                                        // force remount
+                                        setTimeout(() => setGridKey(k => k + 1), 0);
+                                    } catch (err) {
+                                        // eslint-disable-next-line no-console
+                                        console.error('debug mapping apply failed', err);
+                                    }
+                                }}>Apply test mapping</button>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                                <button
+                                    className="px-2 py-1 text-xs rounded border bg-blue-50"
+                                    onMouseDown={(e) => {
+                                        // Prevent the button from taking focus so the grid selection doesn't blur
+                                        e.preventDefault();
+                                        const snap = captureSelectionFromDOM();
+                                        if (snap) selectionSnapshotRef.current = { range: snap };
+                                    }}
+                                >Capture now</button>
+                                <button
+                                    className="px-2 py-1 text-xs rounded border bg-blue-50"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        dumpGridDom();
+                                    }}
+                                >Dump grid DOM</button>
+                            </div>
+                            <h4 className="font-medium mt-3 mb-2">Last File Count</h4>
+                            <div className="bg-white p-2 rounded border text-sm">{String(lastFileCount)}</div>
+                            <div className="mt-2 bg-white p-2 rounded border text-sm">Debug Info: <pre className="text-xs">{JSON.stringify(lastDebugInfo, null, 2)}</pre></div>
                         </div>
 
-                        {/* Grid Data */}
                         <div>
-                            <h4 className="font-medium mb-2">Grid Data ({gridData.length} rows)</h4>
-                            <div className="max-h-64 overflow-y-auto bg-white p-3 rounded border">
-                                <pre className="text-xs">{JSON.stringify(gridData, null, 2)}</pre>
+                            <h4 className="font-medium mb-2">Last Mappings (preview)</h4>
+                            <div className="max-h-48 overflow-y-auto bg-white p-3 rounded border">
+                                <pre className="text-xs">{JSON.stringify(lastMappings.slice(0,50), null, 2)}</pre>
                             </div>
+                            <h4 className="font-medium mt-3 mb-2">Last Updates (preview)</h4>
+                            <div className="max-h-48 overflow-y-auto bg-white p-3 rounded border">
+                                <pre className="text-xs">{JSON.stringify(lastUpdates.slice(0,50), null, 2)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4">
+                        <h4 className="font-medium mb-2">Terminal logs (latest)</h4>
+                        <div className="max-h-40 overflow-y-auto bg-black text-white p-3 rounded">
+                            <pre className="text-xs">{terminalLogs.slice(-200).join('\n')}</pre>
                         </div>
                     </div>
                 </div>
