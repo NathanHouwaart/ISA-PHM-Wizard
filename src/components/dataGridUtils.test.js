@@ -16,9 +16,9 @@ describe('applyFilesToRange', () => {
     const result = applyFilesToRange(range, rows, cols, files);
 
     expect(result).toHaveLength(3);
-    expect(result[0]).toEqual({ mappingRowId: 'r1', mappingColumnId: 'c1', mappingValue: 'a.txt' });
-    expect(result[1]).toEqual({ mappingRowId: 'r1', mappingColumnId: 'c2', mappingValue: 'b.txt' });
-    expect(result[2]).toEqual({ mappingRowId: 'r2', mappingColumnId: 'c1', mappingValue: 'c.txt' });
+    expect(result[0]).toEqual({ rowId: 'r1', columnId: 'c1', value: 'a.txt' });
+    expect(result[1]).toEqual({ rowId: 'r1', columnId: 'c2', value: 'b.txt' });
+    expect(result[2]).toEqual({ rowId: 'r2', columnId: 'c1', value: 'c.txt' });
   });
 
   it('uses webkitRelativePath when available', () => {
@@ -28,7 +28,7 @@ describe('applyFilesToRange', () => {
     const files = [makeFile('a.txt', 'dir/sub/a.txt')];
 
     const result = applyFilesToRange(range, rows, cols, files);
-    expect(result[0].mappingValue).toBe('dir/sub/a.txt');
+    expect(result[0].value).toBe('dir/sub/a.txt');
   });
 
   it('returns empty for invalid inputs', () => {

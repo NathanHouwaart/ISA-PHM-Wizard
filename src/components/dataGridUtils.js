@@ -3,7 +3,7 @@
  *
  * This is a pure function. It does NOT inspect DOM or perform side effects.
  * It returns an array of objects in the shape:
- *   { mappingRowId, mappingColumnId, mappingValue }
+ *   { rowId, columnId, value }
  *
  * Assignment strategy (reasonable defaults):
  * - Iterate cells row-major from top-left to bottom-right.
@@ -53,9 +53,9 @@ export function applyFilesToRange(range, rows, flatCols, files) {
       const path = f.webkitRelativePath && f.webkitRelativePath.trim() !== '' ? f.webkitRelativePath : f.name;
 
       results.push({
-        mappingRowId: row.id ?? row.rowId ?? r,
-        mappingColumnId: col.prop,
-        mappingValue: path
+        rowId: row.id ?? row.rowId ?? r,
+        columnId: col.prop,
+        value: path
       });
     }
   }
