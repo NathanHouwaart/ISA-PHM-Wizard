@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import PageWrapper from "../layout/PageWrapper";
 import "./About.css";
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import DataGrid from '../components/DataGrid';
-import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../components/GridTable/CellTemplates';
+import DataGrid from '../components/DataGrid/DataGrid';
+import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../components/DataGrid/CellTemplates';
 import { Template } from '@revolist/react-datagrid';
 import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 import SelectTypePlugin from '@revolist/revogrid-column-select'

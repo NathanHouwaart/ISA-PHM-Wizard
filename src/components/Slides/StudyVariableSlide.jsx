@@ -17,8 +17,8 @@ import useMappingsController from '../../hooks/useMappingsController';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import DataGrid from '../DataGrid';
-import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
+import DataGrid from '../DataGrid/DataGrid';
+import { GrayCell, BoldCell } from '../DataGrid/CellTemplates';
 
 // Import content data
 import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content

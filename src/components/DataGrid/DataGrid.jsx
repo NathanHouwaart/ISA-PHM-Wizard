@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import applyFilesToRange from './dataGridUtils';
-import { captureGridSelection } from './dataGridHelpers';
 import { RevoGrid } from '@revolist/react-datagrid';
-import { useDataGrid } from '../hooks/useDataGrid';
-import "./GridTable/GridTable.css";
+import { useDataGrid } from '../../hooks/useDataGrid';
+import "./DataGrid.css";
 
 /**
  * Generic DataGrid component that handles any type of data with optional mapping functionality.
@@ -45,6 +43,8 @@ const DataGrid = forwardRef(({
 
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
+    // Action plugins rendered in the controls area (components or elements)
+    actionPlugins = [],         // optional array of plugin components/elements
 
     // Other props
     className = '',
@@ -127,11 +127,7 @@ const DataGrid = forwardRef(({
             gridRef.current = node;
         }
     };
-    // Refs for file inputs and selection snapshot
-    const fileInputRef = useRef();
-    const selectionSnapshotRef = useRef(null);
-    // Ref to store FileList or array temporarily without putting in state
-    const filesRef = useRef(null);
+    // Refs for file plugin (managed inside plugin)
     // Key to force RevoGrid remount when necessary
     const [gridKey, setGridKey] = useState(0);
 
@@ -594,46 +590,7 @@ const DataGrid = forwardRef(({
     }, [undo, redo, handleClearCell]);
 
 
-    // Try to capture selection immediately, with a tiny retry delay for async webcomponent APIs
-    const snapshotSelectionBeforePicker = useCallback(async () => {
-        const r = await captureGridSelection(gridRef.current);
-        return r;
-    }, []);
-
-    const handleFilesPicked = useCallback((fileList) => {
-        // keep FileList in a ref (avoid storing in state)
-        filesRef.current = fileList;
-
-        // require a previously-captured selection snapshot
-        const snap = selectionSnapshotRef.current?.range;
-        if (!snap) {
-            if (showDebug) console.debug('[DataGrid] no selection snapshot — aborting file assignment');
-            return;
-        }
-
-        const flatCols = getFlatColumns();
-        const rowsForUtil = (hookRowData || []).map((r, i) => ({ ...r, id: r[fields.rowId] ?? i }));
-
-        const updates = applyFilesToRange(snap, rowsForUtil, flatCols, fileList);
-        if (!updates || updates.length === 0) {
-            selectionSnapshotRef.current = null;
-            filesRef.current = null;
-            return;
-        }
-
-        if (showDebug) console.debug('[DataGrid] updateMappingsBatch updates=', updates.slice(0, 200));
-        updateMappingsBatch(updates);
-
-        // cleanup
-        selectionSnapshotRef.current = null;
-        filesRef.current = null;
-    }, [hookRowData, updateMappingsBatch, fields]);
-
-    // Handlers for native file inputs
-    const onFilesChange = useCallback((ev) => {
-        const files = ev.target.files;
-        handleFilesPicked(files);
-    }, [handleFilesPicked]);
+    // Action plugins (e.g. file-assign) are supported via the `actionPlugins` prop
 
     // directory assignment removed; no onDirChange handler
 
@@ -709,31 +666,23 @@ const DataGrid = forwardRef(({
                             </>
                         )}
 
-                        {/* File assign controls */}
+                        {/* File assign plugin (extracted) */}
                         <div className="border-l border-gray-300 h-6 mx-2"></div>
-                        <button
-                            type="button"
-                            onMouseDown={async (e) => {
-                                // Prevent the button from taking focus so the grid selection doesn't blur
-                                e.preventDefault();
-                                try {
-                                    const snap = await snapshotSelectionBeforePicker();
-                                    if (snap) selectionSnapshotRef.current = { range: snap };
-                                } catch (err) {
-                                    // ignore
-                                }
-                                // open file picker immediately while grid still has focus
-                                if (fileInputRef.current) {
-                                    fileInputRef.current.value = null;
-                                    fileInputRef.current.click();
-                                }
-                            }}
-                            className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
-                            title="Assign files to current selection"
-                        >
-                            📁 Assign files
-                        </button>
-                        {/* Cancel button removed: assignment cancellation handled elsewhere or not needed */}
+                                            {/* Render action plugin*/}
+                                            {(actionPlugins && actionPlugins.length > 0) && actionPlugins.map((P, idx) => {
+                                                const pluginApi = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug };
+                                                // If item is a valid React element, clone it with props
+                                                if (React.isValidElement(P)) {
+                                                    return React.cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
+                                                }
+                                                // If it's a component (function/class), instantiate it
+                                                if (typeof P === 'function') {
+                                                    const PluginComp = P;
+                                                    return <PluginComp key={`plugin-${idx}`} api={pluginApi} />;
+                                                }
+                                                // If it's something else (e.g., null), skip
+                                                return null;
+                                            })}
                     </div>
                 )}
             </div>
@@ -764,15 +713,7 @@ const DataGrid = forwardRef(({
                 {...gridProps}
             />
 
-            {/* Hidden file inputs used to open native file pickers without storing FileList in state */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                onChange={onFilesChange}
-                style={{ display: 'none' }}
-                aria-hidden
-            />
+            {/* Action plugins are responsible for any hidden inputs / DOM they need */}
 
             {/* Directory picker removed temporarily */}
             {/* debug UI removed to keep component lean — use console.debug for logs */}

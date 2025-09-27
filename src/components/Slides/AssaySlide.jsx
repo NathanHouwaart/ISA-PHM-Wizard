@@ -14,11 +14,11 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../DataGrid/CellTemplates';
 
 
 import usePageTab from '../../hooks/usePageWidth';
-import DataGrid from '../DataGrid';
+import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useMeasurements from '../../hooks/useMeasurements';
