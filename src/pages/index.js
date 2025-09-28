@@ -3,3 +3,4 @@ export * from './IsaQuestionnaire';
 export * from './Home';
 export * from './TestSetups';
 export * from './GridTest';
+export * from './FilePickerTest';

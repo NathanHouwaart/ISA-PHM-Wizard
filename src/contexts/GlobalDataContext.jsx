@@ -1,5 +1,5 @@
 // src/context/GlobalDataContext.js
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import initialStudies from "../data/existingStudies.json"
 import initialAuthors from "../data/existingAuthors.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
@@ -10,6 +10,7 @@ import existingStudyToSensorMeasurementMapping from "../data/existingStudyToSens
 import initialProcessingProtocols from "../data/InitialProcessingProtocols.json";
 
 import investigationFormFields from '../data/InvestigationFormFields2.json'
+import useDatasetStore from '../hooks/useDatasetStore';
 
 const GlobalDataContext = createContext();
 
@@ -62,6 +63,29 @@ export const GlobalDataProvider = ({ children }) => {
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
     const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage('globalAppData_pageTabStates', {}));
+    // Selected dataset (root folder + indexed file tree) — managed by useDatasetStore
+    const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore();
+    // In-app explorer control: allow other components to open the app explorer and await a selection
+    const [explorerOpen, setExplorerOpen] = useState(false);
+    const explorerResolveRef = useRef(null);
+    // Ref that indicates the initial IndexedDB hydration has completed (success or not).
+    const initLoadedRef = useRef(false);
+
+    const openExplorer = () => {
+        return new Promise((resolve) => {
+            explorerResolveRef.current = resolve;
+            setExplorerOpen(true);
+        });
+    };
+
+    const resolveExplorer = (value) => {
+        try {
+            if (explorerResolveRef.current) explorerResolveRef.current(value);
+        } finally {
+            explorerResolveRef.current = null;
+            setExplorerOpen(false);
+        }
+    };
 
     // Effect for saving all data to local storage
     // This useEffect will run whenever any of its dependencies change, saving the latest state.
@@ -95,6 +119,7 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
         localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
         localStorage.setItem('globalAppData_pageTabStates', JSON.stringify(pageTabStates));
+    // selectedDataset is persisted to IndexedDB; do not store large trees in localStorage.
 
         // console.log("Global data saved to localStorage:", dataToStore);
 
@@ -105,6 +130,8 @@ export const GlobalDataProvider = ({ children }) => {
         sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
         studyToAssayMapping, pageTabStates
     ]);
+
+    // The dataset store handles persistence and lazy-loading; expose its helpers via context below.
 
     // Auto-generate default studyToAssayMapping entries when none exist.
     // This is non-destructive: if the mapping already contains entries we leave it alone.
@@ -194,6 +221,14 @@ export const GlobalDataProvider = ({ children }) => {
         setScreenWidth,
     pageTabStates,
     setPageTabStates,
+    selectedDataset,
+    setSelectedDataset,
+    loadDatasetSubtree,
+    explorerOpen,
+    setExplorerOpen,
+    openExplorer,
+    resolveExplorer,
+    initDatasetHydrated: initHydrated,
     dataMap
     };
     return (

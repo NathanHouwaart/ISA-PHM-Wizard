@@ -1,6 +1,7 @@
 import React, { useRef, useCallback } from 'react';
 import applyFilesToRange from './dataGridUtils';
 import { captureGridSelection } from './dataGridHelpers';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
 /**
  * FilePickerPlugin
@@ -20,6 +21,7 @@ export default function FilePickerPlugin({ api = {} }) {
   const fileInputRef = useRef(null);
   const selectionSnapshotRef = useRef(null);
   const filesRef = useRef(null);
+  const { openExplorer } = useGlobalDataContext();
 
   const snapshotSelectionBeforePicker = useCallback(async () => {
     try {
@@ -58,10 +60,8 @@ export default function FilePickerPlugin({ api = {} }) {
     filesRef.current = null;
   }, [getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug]);
 
-  const onFilesChange = useCallback((ev) => {
-    const files = ev.target.files;
-    handleFilesPicked(files);
-  }, [handleFilesPicked]);
+  // When using the in-app explorer we receive an array-like of file-like objects
+  // so we don't need the native input change handler anymore.
 
   return (
     <div className="file-assign-plugin inline-flex items-center">
@@ -75,9 +75,27 @@ export default function FilePickerPlugin({ api = {} }) {
           } catch (err) {
             // ignore
           }
-          if (fileInputRef.current) {
-            fileInputRef.current.value = null;
-            fileInputRef.current.click();
+
+          // Open the in-app explorer and wait for selection
+          try {
+            if (!openExplorer) {
+              if (showDebug) console.debug('[FilePickerPlugin] openExplorer not available');
+              return;
+            }
+            const selection = await openExplorer();
+            // selection is expected to be an array-like of objects having at least
+            // { name, webkitRelativePath }
+            if (!selection || (Array.isArray(selection) && selection.length === 0)) {
+              // user cancelled or no files selected
+              selectionSnapshotRef.current = null;
+              return;
+            }
+
+            // Pass the selection to the existing handler which expects an array-like
+            handleFilesPicked(selection);
+          } catch (err) {
+            if (showDebug) console.debug('[FilePickerPlugin] error opening in-app explorer', err);
+            selectionSnapshotRef.current = null;
           }
         }}
         className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
@@ -85,15 +103,6 @@ export default function FilePickerPlugin({ api = {} }) {
       >
         📁 Assign files
       </button>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        onChange={onFilesChange}
-        style={{ display: 'none' }}
-        aria-hidden
-      />
     </div>
   );
 }
