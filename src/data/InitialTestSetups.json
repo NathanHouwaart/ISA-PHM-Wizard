@@ -106,7 +106,9 @@
     {
         "name": "Techport",
         "location": "Amsterdam",
-        "description": "",
+        "experimentPreparationProtocolName": "Experiment Preparation Protocol",
+        "testSpecimenName": "Techpoort test-setup",
+        "description": "A brief description",
         "characteristics": [
             {
                 "id": "b375a4bf-7614-4f39-a54f-46c22e827865",
@@ -184,261 +186,418 @@
                 "value": "5",
                 "unit": "m^3/h",
                 "comments": []
-            },
-            {
-                "id": "fe797f2b-359a-485b-970a-465b8f9cf283",
-                "category": "Name of experiment Prerapraion Protocol",
-                "value": "Experiment preparation",
-                "unit": "",
-                "comments": []
             }
         ],
         "sensors": [
             {
                 "id": "38623db8-0a99-4b6d-b0d2-32eba8ca1528",
+                "alias": "vib_ch_1",
                 "measurementType": "Vibration",
-                "measurementUnit": "g",
                 "description": "",
                 "technologyType": "Accelerometer",
                 "technologyPlatform": "Wilcoxon 786B-10",
-                "dataAcquisitionUnit": "NI (USB-4432)",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "Electric Motor non-driven end bearing",
-                "locationUnit": "",
-                "sensorOrientation": "horizontal",
-                "orientationUnit": "",
-                "alias": "vib_ch_1",
-                "processingProtocolFilterTypeSpecification": "Butterworth 2n order 1-10.000 Hz",
-                "processingProtocolChunkSizeSpecification": "12",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "[-1,1]",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "4aa55e98-a84d-47b3-9f20-7f8557ad0c56",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "dbbf5b43-2bf6-47b7-9cb8-97cc7975e4ff",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "c384f2df-62cd-474c-b335-5e668e186405",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "27fa35dc-2a6e-4d98-aecf-f7fefc7df863",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "136c7f12-1ce6-48b4-a773-3ed0552400db",
+                        "name": "Sensor Orientation",
+                        "value": "horizontal"
+                    },
+                    {
+                        "id": "fd9dfd01-0241-4bdc-bdc5-efa81bb67cfc",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
                 "id": "8254761b-77db-45c1-98a2-fe4da3153594",
                 "alias": "vib_ch_2",
                 "measurementType": "Vibration",
-                "measurementUnit": "g",
                 "description": "",
                 "technologyType": "Accelerometer",
                 "technologyPlatform": "Wilcoxon 786B-10",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "Electric Motor non-driven end bearing",
-                "locationUnit": "",
-                "sensorOrientation": "vertical",
-                "orientationUnit": "",
-                "phase": "",
-                "processingProtocolFilterTypeSpecification": "Butterworth 2n order 1-10.000 Hz",
-                "processingProtocolChunkSizeSpecification": "12",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "[-1,1]",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "78786266-84a9-4916-a5ee-2e24221190f1",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "5838b01a-3878-4224-8bc6-e90cae30d3c7",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "116c99fb-ddc8-41d5-ada9-874e36ba3fc9",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "0e8eb392-d1b4-42b5-863f-b835fef20f7a",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "3eae6955-b4f7-4087-902b-c6c273bd5a04",
+                        "name": "Sensor Orientation",
+                        "value": "vertical"
+                    },
+                    {
+                        "id": "2c427f06-0185-4857-a826-e8bb3c340d56",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
                 "id": "72040313-7c7b-4c16-b3d5-78b53736ea98",
                 "alias": "vib_ch_3",
                 "measurementType": "Vibration",
-                "measurementUnit": "g",
                 "description": "",
                 "technologyType": "Accelerometer",
                 "technologyPlatform": "Wilcoxon 786B-10",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "Electric Motor non-driven end bearing",
-                "locationUnit": "",
-                "sensorOrientation": "axial",
-                "orientationUnit": "",
-                "phase": "",
-                "processingProtocolFilterTypeSpecification": "Butterworth 2n order 1-10.000 Hz",
-                "processingProtocolChunkSizeSpecification": "12",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "[-1,1]",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "7f3e56ce-1585-4e5b-ad9d-799c4eb66645",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "7da01a69-af9a-45ee-b70a-064874323a42",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "27e09b69-f9bf-4696-b1ea-77d729d698e0",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "e5276361-166e-47b0-ad2b-f6409352f20b",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "cba82e48-65e8-46e0-b579-1fe8e438022c",
+                        "name": "Sensor Orientation",
+                        "value": "axial"
+                    },
+                    {
+                        "id": "e4cc633b-9539-4fc0-912e-fd8981e1992c",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
                 "id": "75d2abde-33d0-40ca-b031-94657e713f34",
                 "alias": "vib_ch_4",
                 "measurementType": "Vibration",
-                "measurementUnit": "g",
                 "description": "",
                 "technologyType": "Accelerometer",
                 "technologyPlatform": "Wilcoxon 786B-10",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "Pump driven end bearing",
-                "locationUnit": "",
-                "sensorOrientation": "horizontal",
-                "orientationUnit": "",
-                "phase": "",
-                "processingProtocolFilterTypeSpecification": "Butterworth 2n order 1-10.000 Hz",
-                "processingProtocolChunkSizeSpecification": "12",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "[-1,1]",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "96d731a0-64a1-4691-a5ec-364b2750a290",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "9657beb5-bfa0-4383-971b-d6e618cfc1a2",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "50832c62-8cc6-4b6c-ae68-b9eb041f37f4",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "dd35ca48-dbc8-49d3-ab82-fa4564ed8692",
+                        "name": "Sensor Location",
+                        "value": "Pump driven end bearing"
+                    },
+                    {
+                        "id": "d44c8180-ef51-4550-9613-d1c99110d596",
+                        "name": "Sensor Orientation",
+                        "value": "horizontal"
+                    },
+                    {
+                        "id": "baf199bc-f524-4893-99ca-ad27fd19748e",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
                 "id": "45272f09-3a67-47ea-98a6-131042544e63",
                 "alias": "vib_ch_5",
                 "measurementType": "Vibration",
-                "measurementUnit": "g",
                 "description": "",
                 "technologyType": "Accelerometer",
                 "technologyPlatform": "Wilcoxon 786B-10",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "Pump driven end bearing",
-                "locationUnit": "",
-                "sensorOrientation": "vertical",
-                "orientationUnit": "",
-                "phase": "",
-                "processingProtocolFilterTypeSpecification": "Butterworth 2n order 1-10.000 Hz",
-                "processingProtocolChunkSizeSpecification": "12",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "[-1,1]",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "480fc306-4897-4b46-8aeb-1685854d45a1",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "f4c9d366-8049-45d3-9c48-04613a43a4be",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "0fb4785c-8a9a-43cd-9bbf-d33bd065f34f",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "0c5250ab-83b3-46d6-8fd4-db2b903d2d80",
+                        "name": "Sensor Location",
+                        "value": "Pump driven end bearing"
+                    },
+                    {
+                        "id": "906349fb-a752-41ef-a3f2-3001e198ccb9",
+                        "name": "Sensor Orientation",
+                        "value": "vertical"
+                    },
+                    {
+                        "id": "71168981-0d5b-47ae-9b6f-bc1bf3806090",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
                 "id": "5a809928-f153-47fd-96e0-9a9a57094ff2",
                 "alias": "curr_ph_1",
                 "measurementType": "Current",
-                "measurementUnit": "A",
                 "description": "",
                 "technologyType": "Current Clamp",
                 "technologyPlatform": "CR Magnetics CR3110",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "1",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote current",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "2ad91e96-6bb8-4e1a-a504-78b255315861",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "958a5bc5-bfc2-403e-a154-de73ba86f2eb",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "e1c51419-1794-436b-897c-5a2165c2e8c9",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "628499b8-8090-477e-8508-49f908b1213e",
+                        "name": "Phase",
+                        "value": "1"
+                    },
+                    {
+                        "id": "955d161d-923d-4930-acd7-60d0df7e9fe6",
+                        "name": "Measurement Unit",
+                        "value": "A"
+                    }
+                ]
             },
             {
                 "id": "dedc5842-822a-4dd0-a828-27bf5ad6d6cf",
                 "alias": "curr_ph_2",
                 "measurementType": "Current",
-                "measurementUnit": "A",
                 "description": "",
                 "technologyType": "Current Clamp",
                 "technologyPlatform": "CR Magnetics CR3110",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "2",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote current",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "11371e14-9727-41f8-85d1-b8bd8f9a3f8e",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "037b49a2-eecc-43a4-ab8d-d9dc62f46e5d",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "ded1435e-14fe-4d11-84e8-20ae97823e53",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "e908cf5d-ab01-4476-bb05-aeb8946cc51b",
+                        "name": "Phase",
+                        "value": "2"
+                    },
+                    {
+                        "id": "880a040e-b475-4668-9d21-8864acb3e79e",
+                        "name": "Measurement Unit",
+                        "value": "A"
+                    }
+                ]
             },
             {
                 "id": "ebf1c49a-bcad-497e-b122-a07ea536ff5b",
                 "alias": "curr_ph_3",
                 "measurementType": "Current",
-                "measurementUnit": "A",
                 "description": "",
                 "technologyType": "Current Clamp",
                 "technologyPlatform": "CR Magnetics CR3110",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "3",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote current",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "642e5208-c70d-4532-a134-d52200558399",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "3ea06b52-0f6e-4941-8dea-180cbedd000b",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "389b6f0e-6f34-4de6-96a2-998695693524",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "958b967d-3763-4c7d-b2bf-8b2854f47286",
+                        "name": "Phase",
+                        "value": "3"
+                    },
+                    {
+                        "id": "aa13ab8c-0bfc-4186-9b7c-bab5ca156b53",
+                        "name": "Measurement Unit",
+                        "value": "A"
+                    }
+                ]
             },
             {
                 "id": "818d694a-e9d3-44fd-9fd0-91710ec3581b",
                 "alias": "volt_ph_1",
                 "measurementType": "Voltage",
-                "measurementUnit": "V",
                 "description": "",
                 "technologyType": "Voltage Tap",
                 "technologyPlatform": "Wago 855",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "1",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote voltage",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "a1ec00f1-8958-476e-bb41-4463052cd960",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "532ba1c7-1cbb-4dd5-85e0-d9f5198bb44a",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "a29d29ea-054f-40df-b780-214234b39c8f",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "1a335267-b83a-4ad4-864d-0847ec808443",
+                        "name": "Phase",
+                        "value": "1"
+                    },
+                    {
+                        "id": "52a3f604-3072-4666-a0aa-127ff149ced9",
+                        "name": "Measurement Unit",
+                        "value": "V"
+                    }
+                ]
             },
             {
                 "id": "c74c581e-ccb9-49cf-91ab-6c1d7a3ef549",
                 "alias": "volt_ph_2",
                 "measurementType": "Voltage",
-                "measurementUnit": "V",
                 "description": "",
                 "technologyType": "Voltage Tap",
                 "technologyPlatform": "Wago 855",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "2",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote voltage",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "4a48d6e1-74f1-465a-861f-890c7a9d5b54",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "1c15b987-a8ba-4d35-a9ff-780c99b4f574",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "7b01b990-1bcf-4548-a32d-eb2c10d82dd6",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "0fb8c3c1-6a54-4301-b789-0391385772a5",
+                        "name": "Phase",
+                        "value": "2"
+                    },
+                    {
+                        "id": "d704c5f6-7636-482f-af2f-1d18df131f08",
+                        "name": "Measurement Unit",
+                        "value": "V"
+                    }
+                ]
             },
             {
                 "id": "f6b7aa6c-8ced-4b0d-aae8-efd3f2232890",
                 "alias": "volt_ph_3",
                 "measurementType": "Voltage",
-                "measurementUnit": "V",
                 "description": "",
                 "technologyType": "Voltage Tap",
                 "technologyPlatform": "Wago 855",
-                "dataAcquisitionUnit": "",
-                "samplingRate": "20",
-                "samplingUnit": "kHz",
-                "sensorLocation": "After motor Variable Frequency Drive (VFD)",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "phase": "3",
-                "processingProtocolChunkSizeSpecification": "15",
-                "processingProtocolChunkSizeUnit": "s",
-                "processingProtocolScalingRangeSpecification": "to denote voltage",
-                "processingProtocolScalingResolutionSpecification": "24",
-                "processingProtocolScalingResolutionUnit": "bit"
+                "additionalInfo": [
+                    {
+                        "id": "bc792253-c5ac-4e88-975e-4e800cb09d4e",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "7be2d0e1-2a86-43c1-b06c-e20a825cbfa3",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "71ed1ffa-cdba-4415-adba-c198f594892b",
+                        "name": "Sensor Location",
+                        "value": "After motor Variable Frequency Drive (VFD)"
+                    },
+                    {
+                        "id": "4c8542de-d981-4646-9e33-f25cffea886f",
+                        "name": "Phase",
+                        "value": "3"
+                    },
+                    {
+                        "id": "a27b275a-7e15-40d3-ab28-b772aeacd713",
+                        "name": "Measurement Unit",
+                        "value": "V"
+                    }
+                ]
             }
         ],
         "number_of_sensors": 11,

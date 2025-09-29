@@ -37,7 +37,7 @@ export const TestSetups = () => {
               initialItems={initialTestSetups}
             >
               <CollectionTitle>Test Setups</CollectionTitle>
-              <CollectionSubtitle>View, add and edit test-setups to be used in ISA-PHM</CollectionSubtitle>
+              <CollectionSubtitle>View, add and edit test-setups used in the investigations, by specifying relevant components and sensors.</CollectionSubtitle>
               <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
               <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
               <CollectionEmptyStateSubtitle>Click below to add your first test setup</CollectionEmptyStateSubtitle>

@@ -12,6 +12,7 @@ import { v4 as uuid4 } from 'uuid';
 import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
 import { TooltipButton } from '../Widgets/TooltipButton';
 import { TableTooltip } from '../Widgets/TableTooltip';
+import Paragraph, { SlidePageSubtitle } from '../Typography/Paragraph';
 
 // Comment Component
 const CommentEditor = ({ comments = [], onCommentsChange }) => {
@@ -201,7 +202,12 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
             tooltipText={"Help"}
           />
         </div>
+
       </div>
+
+      <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
+        Specify details about the test set-up. Please also specify sensors and sensor details if they are only used to monitor operational conditions, if not used for fault detection (i.e. measure independent variables rather than dependent variables).
+      </Paragraph>
 
       <div>
         <TableTooltip isVisible={activeTooltip}
@@ -328,9 +334,9 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
       id: uuid4(),
       // Auto-generate alias like 'Sensor SE01', 'Sensor SE02', zero-padded 2 digits
       alias: `Sensor SE${String(sensors.length + 1).padStart(2, '0')}`,
-  measurementType: '',
-  measurementUnit: '',
-  samplingRate: '',
+      measurementType: '',
+      measurementUnit: '',
+      samplingRate: '',
       description: '',
       technologyType: '',
       technologyPlatform: '',
@@ -445,10 +451,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const getSensorSummary = (sensor) => {
     const platform = sensor.technologyPlatform || 'No platform';
     const measurementType = sensor.measurementType || 'No measurementType';
-    const samplingRate = sensor.samplingRate || 'No rate';
-    const samplingUnit = sensor.samplingUnit || '';
 
-    return `${platform} - ${measurementType} - ${samplingRate} ${samplingUnit}`;
+    return `${platform} - ${measurementType}`;
   };
 
   return (
@@ -476,6 +480,11 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
           />
         </div>
       </div>
+
+       <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
+        Specify the sensors on the test set-up from which fault responses will be extracted.
+      </Paragraph>
+
 
       <div>
         <TableTooltip isVisible={activeTooltip}
@@ -509,7 +518,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                     </span>
                   </div>
                   <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{sensor.alias || 'Unnamed Sensor'} ({sensor.measurementUnit || 'No unit'}): </span>
+                    <span className='font-bold'>{sensor.alias || 'Unnamed Sensor'}: </span>
                     {getSensorSummary(sensor)}
                   </span>
                 </div>
@@ -542,7 +551,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
                         Basic Information
                       </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                         <FormField
                           name={`sensor-${index}-alias`}
                           value={sensor.alias}
@@ -550,7 +560,10 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           label="Sensor alias"
                           type="text"
                           placeholder="Enter a sensor name/alias"
+                          explanation="Provide a name for the sensor. This name will appear in the ISA Questionnaire fields when adding sensor information."
+                          example="vib_ch_1"
                         />
+
                         <FormField
                           name={`sensor-${index}-technologyPlatform`}
                           value={sensor.technologyPlatform}
@@ -558,6 +571,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           label="Sensor Model"
                           type="text"
                           placeholder="Enter Sensor model"
+                          explanation="Specify the specific sensor model that is used."
+                          example="Wilcoxon 786B-10"
                         />
 
                         <FormField
@@ -567,8 +582,22 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           label="Sensor Type"
                           type="text"
                           placeholder="Enter Sensor type"
+                          explanation="Specify the type of sensor used"
+                          example="Accelerometer"
+                        />
+
+                        <FormField
+                          name={`sensor-${index}-measurementType`}
+                          value={sensor.measurementType}
+                          onChange={(e) => updateSensor(index, 'measurementType', e.target.value)}
+                          label="Measurement Type"
+                          type="text"
+                          placeholder="Enter measurement type"
+                          explanation="Specify the type of measurement"
+                          example={"Vibration"}
                         />
                       </div>
+
                       <div>
                         <FormField
                           name={`sensor-${index}-description`}
@@ -582,71 +611,43 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                       </div>
                     </div>
 
-                    {/* Measurement Information */}
-                    <div>
-                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Measurement
-                      </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                        <FormField
-                          name={`sensor-${index}-measurementType`}
-                          value={sensor.measurementType}
-                          onChange={(e) => updateSensor(index, 'measurementType', e.target.value)}
-                          label="Measurement Type"
-                          type="text"
-                          placeholder="Enter measurement type"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-measurementUnit`}
-                          value={sensor.measurementUnit}
-                          onChange={(e) => updateSensor(index, 'measurementUnit', e.target.value)}
-                          label="Measurement Unit"
-                          type="text"
-                          placeholder="Enter measurement unit"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-samplingRate`}
-                          value={sensor.samplingRate}
-                          onChange={(e) => updateSensor(index, 'samplingRate', e.target.value)}
-                          label="Sampling Rate"
-                          type="text"
-                          placeholder="Enter sampling rate"
-                        />
-                      </div>
-                    </div>
-
                     {/* Additional Information (dynamic key/value entries) */}
                     <div>
                       <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
                         Additional Information
                         <span className="text-xs text-gray-500 ml-2">(add or remove custom fields)</span>
                       </h6>
+                   
+                      <Paragraph className={"px-2 border-b border-gray-300 pb-3 mb-3 text-sm text-gray-600"}>
+                        Specify measurement details for each sensor. As many measurement details can be added/removed as required to describe the measurement. If a detail is only relevant for part of the sensors, please leave cells empty for the sensors where they are not applicable.
+                      </Paragraph>
 
                       <div className="space-y-3">
                         {(sensor.additionalInfo && sensor.additionalInfo.length > 0 ? sensor.additionalInfo : convertOldFieldsToAdditional(sensor)).map((entry, eIdx) => (
-                          <div key={entry.id || eIdx} className="grid grid-cols-3 gap-3 items-center">
-                            <input
-                              type="text"
-                              value={entry.name}
-                              onChange={(e) => updateAdditionalInfo(index, eIdx, 'name', e.target.value)}
-                              placeholder="Field name (e.g. Sampling Rate)"
-                              className="col-span-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            />
-                            <input
-                              type="text"
-                              value={entry.value}
-                              onChange={(e) => updateAdditionalInfo(index, eIdx, 'value', e.target.value)}
-                              placeholder="Value"
-                              className="col-span-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            />
-                            <div className="col-span-1 flex justify-end">
+                          <div key={entry.id || eIdx} className="grid gap-3 items-center grid-cols-[1fr_1fr_auto]">
+                            <div>
+                              <FormField
+                                name={`sensor-${index}-additional-${eIdx}-name`}
+                                label={"Name"}
+                                value={entry.name}
+                                onChange={(e) => updateAdditionalInfo(index, eIdx, 'name', e.target.value)}
+                                placeholder="Field name (e.g. Sampling Rate)"
+                              />
+                            </div>
+                            <div>
+                              <FormField
+                                name={`sensor-${index}-additional-${eIdx}-value`}
+                                label={"Value"}
+                                value={entry.value}
+                                onChange={(e) => updateAdditionalInfo(index, eIdx, 'value', e.target.value)}
+                                placeholder="Value"
+                              />
+                            </div>
+                            <div className="flex justify-end">
                               <IconTooltipButton
                                 icon={Trash}
                                 onClick={() => removeAdditionalInfo(index, eIdx)}
-                                className="h-8 w-8 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                                className="h-8 w-8 mt-5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
                                 tooltipText={"Remove field"}
                               />
                             </div>
@@ -654,13 +655,14 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                         ))}
 
                         <div>
-                          <button
+                          <TooltipButton
                             type="button"
                             onClick={() => addAdditionalInfo(index)}
-                            className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
+                            tooltipText={"Add a custom field"}
+                            className="px-6 py-3 mt-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                           >
-                            Add Field
-                          </button>
+                            <span className='mr-2'><Plus /></span> Add Field
+                          </TooltipButton>
                         </div>
                       </div>
                     </div>
@@ -707,6 +709,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       setFormData({
         name: item.name || '',
         location: item.location || '',
+        experimentPreparationProtocolName: item.experimentPreparationProtocolName || '',
+        testSpecimenName: item.testSpecimenName || '',
         description: item.description || '',
         characteristics: item.characteristics || [],
         sensors: item.sensors || []
@@ -718,8 +722,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.location.trim()) {
-      alert('Please fill in all required fields (Name, Location)');
+    if (!formData.name.trim() || !formData.location.trim() || !formData.experimentPreparationProtocolName.trim() || !formData.testSpecimenName.trim()) {
+      alert('Please fill in all required fields (Name, Location, Experiment Preparation Protocol Name, Set-up or test specimen-name).');
       return;
     }
 
@@ -786,10 +790,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                   Basic Information
                 </Heading3>
 
-                <IconTooltipButton icon={HelpCircle} onClick={toggleTooltip} tooltipText={"Help"} />
+                {/* <IconTooltipButton icon={HelpCircle} onClick={toggleTooltip} tooltipText={"Help"} /> */}
               </div>
 
-              <TableTooltip
+              {/* <TableTooltip
                 isVisible={activeTooltips}
                 explanations={["This section contains the basic information about the test setup including its name, location, and description",
                   <><b>- Name:</b> Name of the test setup</>,
@@ -799,7 +803,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 examples={[
                   { name: "Test Setup xxx", location: "Utrecht, Hogeschool Utrecht", description: "This is a test setup for testing the performance of the new motor." },
                   { name: "Test Setup yyy", location: "Amsterdam, Hogeschool van Amsterrdam (HvA)", description: "This is a test setup for testing the performance of the new hydraulic pump." },
-                ]} />
+                ]} /> */}
 
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -822,7 +826,32 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 onChange={handleChange}
                 required
               />
+
             </div>
+
+              <FormField
+                name={'experimentPreparationProtocolName'}
+                type='text'
+                value={formData.experimentPreparationProtocolName}
+                label={'Experiment Preparation Protocol Name'}
+                placeholder={'Enter experiment preparation protocol name'}
+                onChange={handleChange}
+                explanation={"Please specify a name for the preparation of the experiments."}
+                example= {"experiment preparation, simulation preparation or other"}
+                required
+              />
+
+              <FormField
+                name={'testSpecimenName'}
+                type='text'
+                value={formData.testSpecimenName}
+                label={'Set-up or test specimen-name'}
+                placeholder={'Enter Set-up or test specimen-name'}
+                onChange={handleChange}
+                explanation={"If multiple components are tested, please specify the name of the test set-up. If a particular component/part is tested, please name the part."}
+                example= {"Hydraulic pump test set-up (if >1 component in the set-up are being tested in the investigation) or “Bearing” / “Test specimen” (if only a specific component is being tested in the investigation)"}
+                required
+              />
 
             <FormField
               name="description"
