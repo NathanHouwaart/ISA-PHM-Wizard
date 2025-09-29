@@ -166,11 +166,11 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Processing Protocols
+                Data Processing Protocols
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and manage the processing protocols for each sensor used in the studies. You can switch between a simple list view and a grid view for better data management.
+                Data processing protocols describe the processes undertaken to obtain processed data files from raw measurements. This slide allows you to view and manage the data processing protocols for the data derived from each sensor used in the studies. You can switch between a simple list view and a grid view.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

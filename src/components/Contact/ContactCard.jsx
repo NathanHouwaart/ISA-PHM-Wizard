@@ -6,32 +6,32 @@ import IconToolTipButton from "../Widgets/IconTooltipButton";
 import TooltipButton from "../Widgets/TooltipButton";
 
 
-export const AuthorCard = ({ item, onEdit, onRemove }) => {
-    const author = item;
+export const ContactCard = ({ item, onEdit, onRemove }) => {
+    const contact = item;
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-            {author.firstName?.[0]}{author.lastName?.[0]}
+            {contact.firstName?.[0]}{contact.lastName?.[0]}
           </div>
           <div>
-            <Heading3>{author.firstName} {author.midInitials} {author.lastName}</Heading3>
+            <Heading3>{contact.firstName} {contact.midInitials} {contact.lastName}</Heading3>
             <CardParagraph>
-              {author.roles && author.roles.length > 0 
-                ? author.roles.join(', ') 
+              {contact.roles && contact.roles.length > 0 
+                ? contact.roles.join(', ') 
                 : 'No roles assigned'
               }
             </CardParagraph>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Mail className="w-4 h-4" />
-                <span>{author.email}</span>
+                <span>{contact.email}</span>
               </div>
-              {author.address && (
+              {contact.address && (
                 <div className="flex items-center space-x-1">
                   <MapPin className="w-4 h-4" />
-                  <span>{author.address}</span>
+                  <span>{contact.address}</span>
                 </div>
               )}
             </div>
@@ -40,16 +40,16 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
         <div className="flex space-x-2">
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            onClick={(e) => {e.stopPropagation(); onEdit(author)}}
-            tooltipText="Edit author"
+            onClick={(e) => {e.stopPropagation(); onEdit(contact)}}
+            tooltipText="Edit contact"
           >
             <Edit2 className="w-4 h-4" />
           </TooltipButton>
 
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            onClick={(e) => {e.stopPropagation(); onRemove(author.id)}}
-            tooltipText="Remove author"
+            onClick={(e) => {e.stopPropagation(); onRemove(contact.id)}}
+            tooltipText="Remove contact"
           >
             <Trash2 className="w-4 h-4" />
           </TooltipButton>
@@ -59,4 +59,4 @@ export const AuthorCard = ({ item, onEdit, onRemove }) => {
   );
 };
 
-export default AuthorCard;
+export default ContactCard;

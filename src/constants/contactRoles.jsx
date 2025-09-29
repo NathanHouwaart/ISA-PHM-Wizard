@@ -1,4 +1,4 @@
-export const AUTHOR_ROLE_OPTIONS = [
+export const CONTACT_ROLE_OPTIONS = [
     "Author",
     "Co-Author",
     "Editor",
@@ -6,7 +6,7 @@ export const AUTHOR_ROLE_OPTIONS = [
     "Corresponding Author"
 ];
 
-export const AUTHOR_SUBROLE_OPTIONS = [
+export const CONTACT_SUBROLE_OPTIONS = [
     "Conceptualization",
     "Data curation",
     "Formal analysis",

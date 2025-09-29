@@ -4,7 +4,7 @@
     "title": "Example Publication Title 1",
     "doi": "10.1016/j.cell.2023.01.001",
     "publicationStatus": "published",
-    "authorList": [
+    "contactList": [
         "0b48d9d8-8b07-4bf6-b779-473d1cae34bc", "65dad5ba-4039-435a-bb45-e0123cd68778", "be683385-ef5e-43bf-a7c9-d9b34774bf24"
     ]
   },
@@ -13,7 +13,7 @@
     "title": "Example Publication Title 2",
     "doi": "10.1109/TMI.2022.3210987",
     "publicationStatus": "under review",
-    "authorList": [
+    "contactList": [
         "65dad5ba-4039-435a-bb45-e0123cd68778", "0b48d9d8-8b07-4bf6-b779-473d1cae34bc"
     ]
   }

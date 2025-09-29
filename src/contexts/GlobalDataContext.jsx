@@ -1,7 +1,7 @@
 // src/context/GlobalDataContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import initialStudies from "../data/existingStudies.json"
-import initialAuthors from "../data/existingAuthors.json";
+import initialContacts from "../data/existingContacts.json";
 import initialTestSetups from "../data/InitialTestSetups.json";
 import initialPublications from "../data/existingPublications.json";
 import initialStudyVariables from "../data/existingStudyVariables.json";
@@ -46,7 +46,7 @@ export const GlobalDataProvider = ({ children }) => {
     // Lazy initialization for all state variables from localStorage
     const [studies, setStudies] = useState(() => loadFromLocalStorage('globalAppData_studies', initialStudies));
     const [investigations, setInvestigations] = useState(() => loadFromLocalStorage('globalAppData_investigations', initialFormState));
-    const [authors, setAuthors] = useState(() => loadFromLocalStorage('globalAppData_authors', initialAuthors));
+    const [contacts, setContacts] = useState(() => loadFromLocalStorage('globalAppData_contacts', initialContacts));
     const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', initialTestSetups));
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
@@ -69,7 +69,7 @@ export const GlobalDataProvider = ({ children }) => {
         // const dataToStore = {
         //     studies,
         //     investigations,
-        //     authors,
+        //     contacts,
         //     testSetups,
         //     publications,
         //     selectedTestSetupId,
@@ -82,7 +82,7 @@ export const GlobalDataProvider = ({ children }) => {
 
         localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
         localStorage.setItem('globalAppData_investigations', JSON.stringify(investigations));
-        localStorage.setItem('globalAppData_authors', JSON.stringify(authors));
+        localStorage.setItem('globalAppData_contacts', JSON.stringify(contacts));
         localStorage.setItem('globalAppData_testSetups', JSON.stringify(testSetups));
         localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
         localStorage.setItem('globalAppData_selectedTestSetupId', JSON.stringify(selectedTestSetupId));
@@ -99,7 +99,7 @@ export const GlobalDataProvider = ({ children }) => {
         // console.log("Global data saved to localStorage:", dataToStore);
 
     }, [
-        studies, investigations, authors, testSetups,
+        studies, investigations, contacts, testSetups,
         publications, selectedTestSetupId, studyVariables, processingProtocols,
         studyToStudyVariableMapping, studyToSensorMeasurementMapping,
         sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
@@ -146,7 +146,7 @@ export const GlobalDataProvider = ({ children }) => {
 
     const dataMap = {
         studies: [studies, setStudies],
-        authors: [authors, setAuthors],
+        contacts: [contacts, setContacts],
         testSetups: [testSetups, setTestSetups],
         investigations: [investigations, setInvestigations],
         publications: [publications, setPublications],
@@ -170,8 +170,8 @@ export const GlobalDataProvider = ({ children }) => {
         setTestSetups,
         investigations,
         setInvestigations,
-        authors,
-        setAuthors,
+        contacts,
+        setContacts,
         publications,
         setPublications,
         selectedTestSetupId,
@@ -192,9 +192,9 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
-    pageTabStates,
-    setPageTabStates,
-    dataMap
+        pageTabStates,
+        setPageTabStates,
+        dataMap
     };
     return (
         <GlobalDataContext.Provider value={value}>

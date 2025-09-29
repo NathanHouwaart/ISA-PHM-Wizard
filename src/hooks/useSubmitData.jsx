@@ -8,7 +8,7 @@ export default function useSubmitData() {
   const {
     investigations,
     publications,
-    authors,
+    contacts,
     studyVariables,
     processingProtocols,
     studies,
@@ -45,13 +45,13 @@ export default function useSubmitData() {
         submission_date: investigations?.submissionDate,
         public_release_date: investigations?.publicReleaseDate,
         publications: publications,
-        authors: authors,
+        authors: contacts,
         study_variables: studyVariables,
         processing_protocols: processingProtocols,
         studies: (studies || []).map((study) => ({
           ...study,
           publications,
-          authors,
+          contacts,
           used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
           study_to_study_variable_mapping: (studyToStudyVariableMapping || [])
             .filter((mapping) => mapping.studyId === study.id)

@@ -1,5 +1,5 @@
 // slides.js
-import AuthorSlide from './AuthorSlide.jsx';
+import ContactSlide from './ContactSlide.jsx';
 import IntroductionSlide from './IntroductionSlide.jsx';
 import InvestigationSlide from './InvestigationSlide.jsx';
 import PublicationSlide from './PublicationSlide.jsx';
@@ -14,7 +14,7 @@ import AssaySlide from './AssaySlide.jsx';
 export const slides = [
   IntroductionSlide,
   InvestigationSlide,
-  AuthorSlide,
+  ContactSlide,
   PublicationSlide,
   TestSetupSelectionSlide,
   StudySlide,

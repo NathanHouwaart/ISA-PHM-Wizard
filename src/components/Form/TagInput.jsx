@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { formatAuthorName } from "../../utils/utils";
+import { formatContactName } from "../../utils/utils";
 
 export function TagInput({
   label,
@@ -21,9 +21,9 @@ export function TagInput({
   useEffect(() => {
     if (inputValue.length > 0 && availableOptions?.length > 0) {
       const filtered = availableOptions
-        .filter(author =>
-          formatAuthorName(author).toLowerCase().includes(inputValue.toLowerCase()) &&
-          !tags.some(tag => tag.id === author.id)
+        .filter(contact =>
+          formatContactName(contact).toLowerCase().includes(inputValue.toLowerCase()) &&
+          !tags.some(tag => tag.id === contact.id)
         )
         .slice(0, 5);
       setSuggestions(filtered);
@@ -72,11 +72,11 @@ export function TagInput({
   };
 
   const handleAddButtonClick = () => {
-    const foundAuthor = availableOptions.find(author =>
-      formatAuthorName(author).toLowerCase() === inputValue.trim().toLowerCase()
+    const foundContact = availableOptions.find(contact =>
+      formatContactName(contact).toLowerCase() === inputValue.trim().toLowerCase()
     );
-    if (foundAuthor) {
-      onAddTag(foundAuthor);
+    if (foundContact) {
+      onAddTag(foundContact);
     }
     setInputValue('');
     setShowSuggestions(false);
@@ -141,9 +141,9 @@ export function TagInput({
           className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-auto"
         >
           {suggestions.length > 0 ? (
-            suggestions.map((author, index) => (
+            suggestions.map((contact, index) => (
               <li
-                key={author.id}
+                key={contact.id}
                 role="option"
                 aria-selected={index === highlightedIndex}
                 className={`px-4 py-2 cursor-pointer hover:bg-blue-100 ${
@@ -151,14 +151,14 @@ export function TagInput({
                 }`}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  selectSuggestion(author);
+                  selectSuggestion(contact);
                 }}
               >
-                {formatAuthorName(author)}
+                {formatContactName(contact)}
               </li>
             ))
           ) : (
-            <li className="px-4 py-2 text-sm text-gray-500 italic">No authors found. Add them on the Authors page.</li>
+            <li className="px-4 py-2 text-sm text-gray-500 italic">No contacts found. Add them on the contacts page.</li>
           )}
         </ul>
       )}

@@ -3,7 +3,7 @@ import { cn } from '../../utils/utils';
 
 /* Class names for styling */
 const paragraphClassName          = "text-sm text-gray-700"
-const SlidePageSubtitleClassName  = "text-center mb-7 pb-7 border-b border-gray-300 px-7";
+const SlidePageSubtitleClassName  = "mb-7 pb-7 border-b border-gray-300 px-7";
 const CardParagraphClassName      = "text-gray-600";
 
 /* This component is used to render paragraphs in slides */
@@ -19,9 +19,11 @@ const Paragraph = ({ children, className, ...props }) => {
    It extends the Paragraph component with additional styling */
 export const SlidePageSubtitle = ({ children, className, ...props }) => {
     return (
-        <Paragraph className={cn(SlidePageSubtitleClassName, className)} {...props}>
-            {children}
-        </Paragraph>
+        <div className={cn(SlidePageSubtitleClassName, className)} {...props}>
+            <Paragraph className="text-center max-w-3xl mx-auto">
+                {children}
+            </Paragraph>
+        </div>
     );
 }
 

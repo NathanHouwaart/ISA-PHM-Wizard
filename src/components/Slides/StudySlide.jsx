@@ -18,7 +18,6 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { usePageTab } from '../../hooks/usePageWidth'; // Import the usePageTab hook
 
-import studySlideContent from '../../data/studySlideContent.json'; // Assuming you have a JSON file for the content
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
@@ -147,11 +146,11 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         <div ref={combinedRef}>
 
             <SlidePageTitle>
-                {studySlideContent.pageTitle}
+                Studies
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                {studySlideContent.pageSubtitle}
+                The studies describe the experiments performed within the research project. For example, each test with a different tested component (e.g. bearing) or run-to-failure trajectory is described in a new study. The relevant study parameters can be described on the following page.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

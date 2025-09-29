@@ -68,22 +68,22 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             name={"name"}
             onChange={handleChange}
             value={formData.name}
-            label="Title"
+            label="Study Name"
             type='text'
-            placeholder="Study Title"
-            example="eg. BPFO Fault Severty 1 100%"
-            explanation={"Title of the study"}
+            placeholder="Study Name"
+            explanation="Name of the study"
+            example="BPFO Fault Severty 1 100%"
           />
 
           <FormField
             name={"description"}
             onChange={handleChange}
             value={formData.description}
-            label="Description"
+            label="Study Description"
             type='textarea'
             placeholder="Study Description"
-            example="eg. BPFO Fault Severty 1 100%"
-            explanation={"Description of the study"}
+            explanation="Description of the study"
+            example="A bearing with a BPFO fault of severity 1 at 100% speed"
           />
 
           <FormField
@@ -92,8 +92,9 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             value={formData.submissionDate}
             label="Submission Date"
             type='date'
+            explanation="The date when the study data was submitted to the database. If not applicable, please leave empty." 
             example="10-12-2024"
-            explanation={"Date when Study was submitted"} />
+          />
 
           <FormField
             name={"publicationDate"}
@@ -101,8 +102,9 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             value={formData.publicationDate}
             label="Publication Date"
             type='date'
+            explanation="The date when the study data was published to the database. If not applicable, please leave empty." 
             example="10-12-2024"
-            explanation={"Date when Study was published"} />
+          />
 
         </div>
 

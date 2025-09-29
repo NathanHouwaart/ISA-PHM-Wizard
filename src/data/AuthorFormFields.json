@@ -1,6 +1,6 @@
 {
-    "pageTitle": "Authors",
-    "pageSubtitle": "Manage Project Authors",
+    "pageTitle": "Contacts",
+    "pageSubtitle": "Manage the contributors to the investigation, and assign their roles.",
     "fields" : [
         {
             "id": "id",
@@ -61,7 +61,7 @@
             "id": "role",
             "label": "Role",
             "type": "text",
-            "placeholder": "e.g., Author, Co-Author, Contributor",
+            "placeholder": "e.g., Contact, Co-Contact, Contributor",
             "explanation": "",
             "example": ""
         },

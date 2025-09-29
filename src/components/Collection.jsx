@@ -149,7 +149,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                         </div>
                     )}
 
-                {/* Author Detail View */}
+                {/* Contact Detail View */}
                 {viewingItem && ViewComponent && (
                     <div className="mb-8">
                         <ViewComponent

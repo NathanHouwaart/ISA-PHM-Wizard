@@ -5,9 +5,9 @@ import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
 
-import { AUTHOR_ROLE_OPTIONS, AUTHOR_SUBROLE_OPTIONS } from "../../constants/authorRoles";
+import { CONTACT_ROLE_OPTIONS, CONTACT_SUBROLE_OPTIONS } from "../../constants/contactRoles";
 
-export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
+export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const [formData, setFormData] = useState({
         id: item?.id || '',
@@ -31,12 +31,12 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             return;
         }
 
-        const authorData = {
+        const contactData = {
             ...formData,
             id: isEditing && item.id ? item.id : uuid(), // Generate a new ID if not editing
         };
 
-        onSave(authorData);
+        onSave(contactData);
     };
 
     const handleChange = (e) => {
@@ -101,7 +101,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
             <div className="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold text-gray-900">
-                        {isEditing ? 'Edit Author' : 'Add new Author'}
+                        {isEditing ? 'Edit contact' : 'Add new contact'}
                     </h3>
                     <TooltipButton
                         className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -213,7 +213,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         name="roles"
                         label="Role(s)"
                         type="multi-select"
-                        tags={AUTHOR_ROLE_OPTIONS}
+                        tags={CONTACT_ROLE_OPTIONS}
                         value={formData.roles}
                         onAddTag={handleAddRole}
                         onRemoveTag={handleRemoveRole}
@@ -223,7 +223,7 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         name="subroles"
                         label="Subrole(s)"
                         type="multi-select"
-                        tags={AUTHOR_SUBROLE_OPTIONS}
+                        tags={CONTACT_SUBROLE_OPTIONS}
                         value={formData.subroles}
                         onAddTag={handleAddSubrole}
                         onRemoveTag={handleRemoveSubrole}
@@ -243,10 +243,10 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         type="button" // Change to "submit" if you want native form submission
                         onClick={handleSubmit}
                         className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
-                        tooltipText={isEditing ? 'Update Author' : 'Add Author'}
+                        tooltipText={isEditing ? 'Update contact' : 'Add contact'}
                     >
                         <Save className="w-4 h-4" />
-                        <span>{isEditing ? 'Update Author' : 'Add Author'}</span>
+                        <span>{isEditing ? 'Update contact' : 'Add contact'}</span>
                     </TooltipButton>
                 </div>
             </div>
@@ -255,4 +255,4 @@ export const AuthorForm = ({ item, onSave, onCancel, isEditing = false }) => {
 };
 
 
-export default AuthorForm;
+export default ContactForm;

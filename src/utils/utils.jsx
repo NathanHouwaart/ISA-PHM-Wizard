@@ -5,7 +5,7 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export const formatAuthorName = (author) => {
-  if (!author) return 'Unknown Author';
-  return `${author.firstName} ${author.midInitials ? author.midInitials + ' ' : ''}${author.lastName}`.trim();
+export const formatContactName = (contact) => {
+  if (!contact) return 'Unknown contact';
+  return `${contact.firstName} ${contact.midInitials ? contact.midInitials + ' ' : ''}${contact.lastName}`.trim();
 };

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import FormField from './Form/FormField';
 
 /**
  * Generic edit modal for entities (variables, processing protocols, ...)
@@ -21,11 +23,6 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleInput = (e) => {
-        const { name, value, type, checked } = e.target;
-        handleChange(name, type === 'checkbox' ? checked : value);
-    };
-
     const handleSave = () => {
         onSave && onSave(tempData);
         onClose && onClose();
@@ -33,9 +30,12 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
 
     if (!isOpen) return null;
 
-    return (
-        <div className="absolute inset-0 p-0 rounded-md bg-black/25 flex items-center justify-center z-50 overflow-auto">
-            <div style={{ scale: 0.98 }} className="bg-white rounded-lg m-0 shadow-xl p-6 w-full max-w-lg transform transition-transform duration-200 ease-out">
+    const modalContent = (
+        // Use a fixed overlay so the modal is pinned to the viewport.
+        // Constrain the inner panel's height and make it scrollable so
+        // large content (or tooltips) doesn't push the modal out of view.
+        <div className="fixed inset-0 p-0 bg-black/25 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+            <div style={{ scale: 0.98 }} className="bg-white rounded-lg m-0 shadow-xl p-6 w-full max-w-lg transform transition-transform duration-200 ease-out max-h-[calc(100vh-4rem)] overflow-auto">
                 <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">{title}</h3>
                 <p className="text-center text-sm text-gray-600 mb-4">Edit the fields below and press Save Changes.</p>
 
@@ -43,43 +43,33 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
                     {fields.map((f) => {
                         const value = tempData?.[f.name] ?? '';
                         const key = `field-${f.name}`;
-                        if (f.type === 'textarea') {
-                            return (
-                                <div key={key}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                                    <textarea name={f.name} value={value} onChange={handleInput} rows={f.rows || 3} className="w-full p-2 border border-gray-300 rounded-md" />
-                                </div>
-                            );
-                        }
 
-                        if (f.type === 'select') {
-                            return (
-                                <div key={key}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                                    <select name={f.name} value={value} onChange={handleInput} className="w-full p-2 border border-gray-300 rounded-md bg-white">
-                                        {(f.options || []).map(opt => {
-                                            if (typeof opt === 'object') return <option key={opt.value} value={opt.value}>{opt.label}</option>;
-                                            return <option key={opt} value={opt}>{opt}</option>;
-                                        })}
-                                    </select>
-                                </div>
-                            );
-                        }
+                        // onChange expects a DOM event from FormField inputs
+                        const onChange = (e) => {
+                            if (!e || !e.target) return;
+                            const { name, value: v, type } = e.target;
+                            if (type === 'number') {
+                                handleChange(name, v === '' ? '' : Number(v));
+                            } else {
+                                handleChange(name, v);
+                            }
+                        };
 
-                        // default: text / number / checkbox
-                        if (f.type === 'checkbox') {
-                            return (
-                                <div key={key} className="flex items-center space-x-2">
-                                    <input id={key} name={f.name} type="checkbox" checked={!!value} onChange={handleInput} />
-                                    <label htmlFor={key} className="text-sm text-gray-700">{f.label}</label>
-                                </div>
-                            );
-                        }
 
                         return (
                             <div key={key}>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                                <input name={f.name} value={value} onChange={handleInput} type={f.type || 'text'} className="w-full p-2 border border-gray-300 rounded-md" />
+                                <FormField
+                                    name={f.name}
+                                    label={f.label}
+                                    type={f.type || 'text'}
+                                    value={value}
+                                    onChange={onChange}
+                                    required={f.required}
+                                    placeholder={f.placeholder}
+                                    tags={f.options}
+                                    explanation={f.explanation}
+                                    example={f.example}
+                                />
                             </div>
                         );
                     })}
@@ -92,6 +82,8 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default EditEntityModal;

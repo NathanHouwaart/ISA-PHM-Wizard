@@ -104,7 +104,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and edit the output of processing protocols across different studies. You can switch between a simple view and a grid view for better data management.
+                This slide allows you to view and edit the processed data files across different studies and sensors of the selected test set-up. You can switch between a simple view and a grid view. Please leave fields empty if no processed data (i.e. if only raw measurement data) are available. 
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

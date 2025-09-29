@@ -3,7 +3,6 @@ import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'luci
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
-import publicationFormFields from '../../data/PublicationFormFields.json'
 import usePublications from '../../hooks/usePublications';
 
 import Collection, {
@@ -26,11 +25,11 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
         <div ref={combinedRef}>
             
             <SlidePageTitle>
-                {publicationFormFields.pageTitle}
+                Publications
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                {publicationFormFields.pageSubtitle}
+                Manage the contributors to the investigation, and assign their roles.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-2'>

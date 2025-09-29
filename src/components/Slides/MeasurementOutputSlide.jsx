@@ -99,11 +99,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Measurement Output
+                Raw Measurement Output
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and edit the output of measurements across different studies. You can switch between a simple view and a grid view for better data management.
+                This slide allows you to view and edit the output of measurements across different studies and sensors of the selected test set-up. You can switch between a simple view and a grid view. Please leave fields empty if no raw measurement data (i.e. if only processed measurement data) are available. Processed measurement data will be implemented in further sheets.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

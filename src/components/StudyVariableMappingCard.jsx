@@ -87,10 +87,34 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                     initialData={item}
                     title={`Edit Variable: ${item.name}`}
                     fields={[
-                        { name: 'name', label: 'Variable Name' },
-                        { name: 'type', label: 'Variable Type', type: 'select', options: VARIABLE_TYPE_OPTIONS },
-                        { name: 'unit', label: 'Unit' },
-                        { name: 'description', label: 'Description', type: 'textarea' }
+                        { 
+                            name: 'name', 
+                            label: 'Variable Name', 
+                            explanation: "Define all variables that can be varied in the experiments. As many variables can be added/removed as required to describe the experiment.",
+                            example: ": Fault type, fault severity or motor speed or other."
+                        
+                        },
+                        { 
+                            name: 'type', 
+                            label: 'Variable Type', 
+                            type: 'select', 
+                            options: VARIABLE_TYPE_OPTIONS,
+                            explanation: "Describe the type of the variable (e.g. operating condition/fault specification).",
+                            example: "Quantitative fault specification, qualitative fault specification, operational condition, environmental condition or other."
+                        },
+                        { 
+                            name: 'unit', 
+                            label: 'Unit',  
+                            explanation: "Unit corresponding with the variable. Please leave empty if none.",
+                            example: "Hz, RPM, m/s."
+                        },
+                        { 
+                            name: 'description', 
+                            label: 'Description', 
+                            type: 'textarea',
+                            explanation: "Description of the variable.",
+                            example: "Measures the impact or intensity of the fault."
+                        }
                     ]}
                 />
             </div>

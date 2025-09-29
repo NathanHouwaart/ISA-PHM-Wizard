@@ -102,7 +102,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                This slide allows you to view and edit the Assay Outputs across different studies. You can switch between a simple view and a grid view for better data management.
+                This slide allows you to view and edit the names of the created assay files. An assay is created for each sensor – study combination. Assay names are created automatically as they are only used on the back-end of the isafication, but assay names can be changed manually if desired. You can switch between a simple view and a grid view.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

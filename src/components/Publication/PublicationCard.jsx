@@ -1,6 +1,6 @@
 import { Edit2, Trash2, UserPen } from "lucide-react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
-import { formatAuthorName } from "../../utils/utils";
+import { formatContactName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
 import TooltipButton from "../Widgets/TooltipButton";
 
@@ -8,13 +8,13 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
 
     const publication = item;
 
-    const { authors } = useGlobalDataContext();
+    const { contacts } = useGlobalDataContext();
 
-    // Maps Author ID's stored in publication.authorList to actual Author Names
-    const authorNames = publication.authorList
-        .map(authorId => authors.find(author => author.id === authorId))
-        .filter(Boolean) // Filter out any undefined authors
-        .map(author => formatAuthorName(author));
+    // Maps contacts ID's stored in publication.contactList to actual Contact Names
+    const contactNames = publication.contactList
+        .map(contactId => contacts.find(contact => contact.id === contactId))
+        .filter(Boolean) // Filter out any undefined contacts
+        .map(contact => formatContactName(contact));
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -26,17 +26,17 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                     </div>
                     <div>
                         <Heading3>{publication.title}</Heading3>
-                        {/* Displaying authors in PublicationCard - now looking up full details by ID */}
+                        {/* Displaying contacts in PublicationCard - now looking up full details by ID */}
                         <div className='flex flex-wrap items-center space-x-1 mt-1 text-sm text-gray-500'>
-                            {authorNames.length > 0 ? (
+                            {contactNames.length > 0 ? (
                                 <p className="text-gray-600 text-sm">
                                     <UserPen className="inline-block w-4 h-4 mr-1 text-gray-500" />
-                                        {authorNames.map((author, index) => {
-                                            return <span key={index} style={{ whiteSpace: "pre" }}>{index + 1}. {author}   </span>
+                                        {contactNames.map((contact, index) => {
+                                            return <span key={index} style={{ whiteSpace: "pre" }}>{index + 1}. {contact}   </span>
                                         })}
-                                    {/* {authorNames.join(', ')} */}
+                                    {/* {contactNames.join(', ')} */}
                                 </p>
-                            ) : <p className="text-gray-500 text-sm">No authors listed</p>
+                            ) : <p className="text-gray-500 text-sm">No contact listed</p>
                             }
                         </div>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">

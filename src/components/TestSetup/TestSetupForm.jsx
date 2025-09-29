@@ -326,19 +326,16 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const addSensor = () => {
     const newSensor = {
       id: uuid4(),
-      alias: '',
-      measurementType: '',
-      measurementUnit: '',
+      // Auto-generate alias like 'Sensor SE01', 'Sensor SE02', zero-padded 2 digits
+      alias: `Sensor SE${String(sensors.length + 1).padStart(2, '0')}`,
+  measurementType: '',
+  measurementUnit: '',
+  samplingRate: '',
       description: '',
       technologyType: '',
       technologyPlatform: '',
-      dataAcquisitionUnit: '',
-      samplingRate: '',
-      samplingUnit: '',
-      sensorLocation: '',
-      locationUnit: '',
-      sensorOrientation: '',
-      orientationUnit: '',
+      // flexible additional info entries (name/value pairs)
+      additionalInfo: [],
       phase: ''
     };
     const newSensors = [...sensors, newSensor];
@@ -346,6 +343,69 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
     // Auto-expand the new sensor
     setExpandedSensors(prev => new Set([...prev, newSensors.length - 1]));
+  };
+
+  // Helper: convert legacy fixed fields into additionalInfo entries
+  const convertOldFieldsToAdditional = (sensor) => {
+    const entries = [];
+    const pushIf = (label, value) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        entries.push({ id: uuid4(), name: label, value: String(value) });
+      }
+    };
+
+    pushIf('Data Acquisition Unit', sensor.dataAcquisitionUnit);
+  // samplingRate is now a dedicated field on the sensor; don't convert it here
+    pushIf('Sampling Unit', sensor.samplingUnit);
+    pushIf('Phase', sensor.phase);
+    pushIf('Sensor Location', sensor.sensorLocation);
+    pushIf('Location Unit', sensor.locationUnit);
+    pushIf('Sensor Orientation', sensor.sensorOrientation);
+    pushIf('Orientation Unit', sensor.orientationUnit);
+
+    return entries;
+  };
+
+  const addAdditionalInfo = (sensorIndex) => {
+    const newEntry = { id: uuid4(), name: '', value: '' };
+    const updatedSensors = sensors.map((s, i) => {
+      if (i !== sensorIndex) return s;
+      const base = { ...s };
+      const current = base.additionalInfo && base.additionalInfo.length > 0
+        ? [...base.additionalInfo]
+        : convertOldFieldsToAdditional(base);
+      base.additionalInfo = [...current, newEntry];
+      return base;
+    });
+    onSensorsChange(updatedSensors);
+  };
+
+  const updateAdditionalInfo = (sensorIndex, entryIndex, field, value) => {
+    const updatedSensors = sensors.map((s, i) => {
+      if (i !== sensorIndex) return s;
+      const base = { ...s };
+      const current = base.additionalInfo && base.additionalInfo.length > 0
+        ? [...base.additionalInfo]
+        : convertOldFieldsToAdditional(base);
+      current[entryIndex] = { ...current[entryIndex], [field]: value };
+      base.additionalInfo = current;
+      return base;
+    });
+    onSensorsChange(updatedSensors);
+  };
+
+  const removeAdditionalInfo = (sensorIndex, entryIndex) => {
+    const updatedSensors = sensors.map((s, i) => {
+      if (i !== sensorIndex) return s;
+      const base = { ...s };
+      const current = base.additionalInfo && base.additionalInfo.length > 0
+        ? [...base.additionalInfo]
+        : convertOldFieldsToAdditional(base);
+      current.splice(entryIndex, 1);
+      base.additionalInfo = current;
+      return base;
+    });
+    onSensorsChange(updatedSensors);
   };
 
   const removeSensor = (index) => {
@@ -495,18 +555,18 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           name={`sensor-${index}-technologyPlatform`}
                           value={sensor.technologyPlatform}
                           onChange={(e) => updateSensor(index, 'technologyPlatform', e.target.value)}
-                          label="Technology Platform"
+                          label="Sensor Model"
                           type="text"
-                          placeholder="Enter technology platform"
+                          placeholder="Enter Sensor model"
                         />
 
                         <FormField
                           name={`sensor-${index}-technologyType`}
                           value={sensor.technologyType}
                           onChange={(e) => updateSensor(index, 'technologyType', e.target.value)}
-                          label="Technology Type"
+                          label="Sensor Type"
                           type="text"
-                          placeholder="Enter technology type"
+                          placeholder="Enter Sensor type"
                         />
                       </div>
                       <div>
@@ -546,23 +606,6 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           type="text"
                           placeholder="Enter measurement unit"
                         />
-                      </div>
-                    </div>
-
-                    {/* Data Acquisition */}
-                    <div>
-                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Data Acquisition
-                      </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <FormField
-                          name={`sensor-${index}-dataAcquisitionUnit`}
-                          value={sensor.dataAcquisitionUnit}
-                          onChange={(e) => updateSensor(index, 'dataAcquisitionUnit', e.target.value)}
-                          label="Data Acquisition Unit"
-                          type="text"
-                          placeholder="Enter data acquisition unit"
-                        />
 
                         <FormField
                           name={`sensor-${index}-samplingRate`}
@@ -572,70 +615,53 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                           type="text"
                           placeholder="Enter sampling rate"
                         />
-
-                        <FormField
-                          name={`sensor-${index}-samplingUnit`}
-                          value={sensor.samplingUnit}
-                          onChange={(e) => updateSensor(index, 'samplingUnit', e.target.value)}
-                          label="Sampling Unit"
-                          type="text"
-                          placeholder="Enter sampling unit"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-phase`}
-                          value={sensor.phase}
-                          onChange={(e) => updateSensor(index, 'phase', e.target.value)}
-                          label="Phase"
-                          type="text"
-                          placeholder="Enter phase"
-                        />
-
                       </div>
                     </div>
 
-                    {/* Location & Orientation */}
+                    {/* Additional Information (dynamic key/value entries) */}
                     <div>
                       <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Location & Orientation
+                        Additional Information
+                        <span className="text-xs text-gray-500 ml-2">(add or remove custom fields)</span>
                       </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <FormField
-                          name={`sensor-${index}-sensorLocation`}
-                          value={sensor.sensorLocation}
-                          onChange={(e) => updateSensor(index, 'sensorLocation', e.target.value)}
-                          label="Sensor Location"
-                          type="text"
-                          placeholder="Enter sensor location"
-                        />
 
-                        <FormField
-                          name={`sensor-${index}-locationUnit`}
-                          value={sensor.locationUnit}
-                          onChange={(e) => updateSensor(index, 'locationUnit', e.target.value)}
-                          label="Location Unit"
-                          type="text"
-                          placeholder="Enter location unit"
-                        />
+                      <div className="space-y-3">
+                        {(sensor.additionalInfo && sensor.additionalInfo.length > 0 ? sensor.additionalInfo : convertOldFieldsToAdditional(sensor)).map((entry, eIdx) => (
+                          <div key={entry.id || eIdx} className="grid grid-cols-3 gap-3 items-center">
+                            <input
+                              type="text"
+                              value={entry.name}
+                              onChange={(e) => updateAdditionalInfo(index, eIdx, 'name', e.target.value)}
+                              placeholder="Field name (e.g. Sampling Rate)"
+                              className="col-span-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={entry.value}
+                              onChange={(e) => updateAdditionalInfo(index, eIdx, 'value', e.target.value)}
+                              placeholder="Value"
+                              className="col-span-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                            <div className="col-span-1 flex justify-end">
+                              <IconTooltipButton
+                                icon={Trash}
+                                onClick={() => removeAdditionalInfo(index, eIdx)}
+                                className="h-8 w-8 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                                tooltipText={"Remove field"}
+                              />
+                            </div>
+                          </div>
+                        ))}
 
-                        <FormField
-                          name={`sensor-${index}-sensorOrientation`}
-                          value={sensor.sensorOrientation}
-                          onChange={(e) => updateSensor(index, 'sensorOrientation', e.target.value)}
-                          label="Sensor Orientation"
-                          type="text"
-                          placeholder="Enter sensor orientation"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-orientationUnit`}
-                          value={sensor.orientationUnit}
-                          onChange={(e) => updateSensor(index, 'orientationUnit', e.target.value)}
-                          label="Orientation Unit"
-                          type="text"
-                          placeholder="Enter orientation unit"
-                        />
-
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => addAdditionalInfo(index)}
+                            className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
+                          >
+                            Add Field
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

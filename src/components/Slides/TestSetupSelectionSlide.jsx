@@ -50,11 +50,12 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
         <div ref={combinedRef}>
 
             <SlidePageTitle>
-                {testSetupSelectionSlideContent.pageTitle}
+                Test Set-up
             </SlidePageTitle>
 
             <SlidePageSubtitle style={{ whiteSpace: 'pre-line' }}>
-                {testSetupSelectionSlideContent.pageSubtitle}
+                {"Please select the test set-up used to collect the data within the investigation. \n \
+                Test Setups can be created and managed in the 'Test Setups' page."}
             </SlidePageSubtitle>
 
             <div className='p-4 bg-gray-50 rounded-lg border border-gray-300'>

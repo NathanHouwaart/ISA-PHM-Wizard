@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { Save, X } from "lucide-react";
-import { formatAuthorName } from "../../utils/utils";
+import { formatContactName } from "../../utils/utils";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 
@@ -9,23 +9,23 @@ import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses"
 
 export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { authors } = useGlobalDataContext();
+  const { contacts } = useGlobalDataContext();
 
   const [formData, setFormData] = useState({
     title: item?.title || '',
     doi: item?.doi || '',
     publicationStatus: item?.publicationStatus || '',
-    authorList: item?.authorList || [],
+    contactList: item?.contactList || [],
   });
 
-  const [selectedAuthors, setSelectedAuthors] = useState([]);
+  const [selectedContacts, setSelectedContacts] = useState([]);
 
-  // Initialize selected authors on mount
+  // Initialize selected contacts on mount
   useEffect(() => {
-    setSelectedAuthors(
-      item?.authorList?.map(id => authors.find(a => a.id === id)) || []
+    setSelectedContacts(
+      item?.contactList?.map(id => contacts.find(a => a.id === id)) || []
     );
-  }, [item, authors]);
+  }, [item, contacts]);
 
   // Handle text inputs
   const handleChange = (e) => {
@@ -35,20 +35,20 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     }));
   };
 
-  // Add author
-  const handleAddAuthor = useCallback((input) => {
-    const authorObj = typeof input === 'object' ? input
-      : authors.find(a => formatAuthorName(a).toLowerCase() === input.toLowerCase());
+  // Add contact
+  const handleAddContact = useCallback((input) => {
+    const contactObj = typeof input === 'object' ? input
+      : contacts.find(a => formatContactName(a).toLowerCase() === input.toLowerCase());
 
-    if (authorObj && !selectedAuthors.some(a => a.id === authorObj.id)) {
-      setSelectedAuthors(prev => [...prev, authorObj]);
+    if (contactObj && !selectedContacts.some(a => a.id === contactObj.id)) {
+      setSelectedContacts(prev => [...prev, contactObj]);
     }
-  }, [authors, selectedAuthors]);
+  }, [contacts, selectedContacts]);
 
-  // Remove author
-  const handleRemoveAuthor = useCallback((authorToRemove) => {
-    setSelectedAuthors(prev =>
-      prev.filter(author => author.id !== authorToRemove.id)
+  // Remove Contact
+  const handleRemoveContact = useCallback((contactToRemove) => {
+    setSelectedContacts(prev =>
+      prev.filter(contact => contact.id !== contactToRemove.id)
     );
   }, []);
 
@@ -62,7 +62,7 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     onSave({
       ...formData,
       id: isEditing ? item.id : `pub-${Date.now()}`,
-      authorList: selectedAuthors.map(a => a.id)
+      contactList: selectedContacts.map(a => a.id)
     });
   };
 
@@ -117,16 +117,16 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
           </div>
         </div>
 
-        {/* Authors TagInput */}
+        {/* Contact TagInput */}
         <FormField
           type="tags"
-          name="authors"
-          label="Authors"
-          placeholder="Type to find and add authors"
-          value={selectedAuthors}        // Current selected authors
-          tags={authors}             // Available authors for suggestions
-          onAddTag={handleAddAuthor}
-          onRemoveTag={handleRemoveAuthor}
+          name="contacts"
+          label="Contacts"
+          placeholder="Type to find and add contacts"
+          value={selectedContacts}        // Current selected contacts
+          tags={contacts}                 // Available contacts for suggestions
+          onAddTag={handleAddContact}
+          onRemoveTag={handleRemoveContact}
       />
 
         {/* Action Buttons */}

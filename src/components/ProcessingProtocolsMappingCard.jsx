@@ -99,7 +99,7 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                     </div>
 
                     {/* mappings Grid - specification + unit per sensor */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {filteredMappings.map(({ sensor, mapping }, index) => {
                             const val = mapping.value || {};
                             return (
@@ -115,6 +115,8 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                                         commitOnBlur={true}
                                         onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), specification: e.target.value })}
                                         placeholder="Enter specification"
+                                        explanation = "Specify the data processing detail."
+                                        example = "Butterworth bandpass filter, 4th order, 0.5-20Hz"
                                     />
 
                                     <FormField
@@ -124,6 +126,8 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                                         commitOnBlur={true}
                                         onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), unit: e.target.value })}
                                         placeholder="Enter unit"
+                                        explanation = "Specify the unit of the data processing detail, if applicable."
+                                        example = "Hz, g, m/s²"
                                     />
                                 </div>
                             )
@@ -139,9 +143,19 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                             initialData={item}
                             title={`Edit Protocol: ${item.name}`}
                             fields={[
-                                { name: 'name', label: 'Protocol Name' },
-                                { name: 'description', label: 'Description', type: 'textarea' },
-                                { name: 'type', label: 'Type' },
+                                { 
+                                    name: 'name', 
+                                    label: 'Protocol Name',
+                                    explanation: "Specify data processing details for each sensor. Each sensor specified in the test set-up is added automatically. As many data processing details can be added/removed as required to describe the data processing. If a detail is only relevant for part of the sensors, please leave cells empty for the sensors where they are not applicable.",
+                                    example: "Filter, scaling range or other"
+                                },
+                                { 
+                                    name: 'description', 
+                                    label: 'Description', 
+                                    type: 'textarea',
+                                    explanation : "",
+                                    example: ""
+                                },
                             ]}
                         />
                     </div>

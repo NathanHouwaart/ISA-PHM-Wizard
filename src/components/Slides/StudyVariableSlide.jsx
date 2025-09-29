@@ -20,9 +20,6 @@ import { Template } from '@revolist/react-datagrid';
 import DataGrid from '../DataGrid';
 import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
 
-// Import content data
-import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
-
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
 import usePageTab from '../../hooks/usePageWidth';
@@ -98,7 +95,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
         title: 'Variables to Studies Grid',
         rowData: studyVariables,
         columnData: studies,
-    mappings: mappingsController.mappings,
+        mappings: mappingsController.mappings,
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
@@ -162,8 +159,13 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
 
     return (
         <div ref={combinedRef}>
-            <SlidePageTitle>{studyVariableSlideContent.pageTitle}</SlidePageTitle>
-            <SlidePageSubtitle>{studyVariableSlideContent.pageSubtitle}</SlidePageSubtitle>
+            <SlidePageTitle>
+                Study Variables
+            </SlidePageTitle>
+
+            <SlidePageSubtitle>
+                Manage the study variables, describing the faults and operational/environmental operating conditions in which the experiments were conducted.
+            </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
                 <TabSwitcher
