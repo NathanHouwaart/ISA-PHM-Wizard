@@ -2,11 +2,12 @@
 
 import React, { forwardRef, useEffect, useState } from 'react';
 
-import Fuse from 'fuse.js';
+import useFuseSearch from '../../hooks/useFuseSearch';
 
 import testSetupSelectionSlideContent from '../../data/testSetupSelectionSlideContent.json';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import TestSetupCard from '../TestSetup/TestSetupCard';
+import TestSetupSelectableCard from '../TestSetup/TestSetupSelectableCard';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { Check } from 'lucide-react';
@@ -20,31 +21,15 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
 
     const { testSetups, selectedTestSetup, selectedTestSetupId, setSelectedTestSetupId } = useGlobalDataContext();
 
-    const [fuse, setFuse] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filteredSetups, setFilteredSetups] = useState(testSetups);
+    const {
+        query: searchQuery,
+        setQuery: setSearchQuery,
+        results: filteredSetups } = useFuseSearch(
+            testSetups, ['name', 'location'],
+            { threshold: 0.3, limit: 10, debounce: 150 }
+        );
 
-
-    useEffect(() => {
-        const fuseInstance = new Fuse(testSetups, {
-            keys: ["name", "location"],
-            threshold: 0.3, // lower = more strict
-        });
-        setFuse(fuseInstance);
-    }, [testSetups]);
-
-    useEffect(() => {
-        if (searchQuery.length > 0 && fuse) {
-            const result = fuse.search(searchQuery, { limit: 10 });
-            setFilteredSetups(result.map((r) => r.item));
-        } else {
-            setFilteredSetups(testSetups);
-        }
-    }, [searchQuery, fuse]);
-
-    const handleSelectSetup = (setup) => {
-        setSelectedTestSetupId(setup.id);
-    };
+    const handleSelectSetup = (setup) => setSelectedTestSetupId(setup.id);
 
     return (
         <div ref={combinedRef}>
@@ -66,24 +51,13 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
 
 
                     {filteredSetups.map((setup, index) => (
-                        <div
+                        <TestSetupSelectableCard
                             key={setup.id}
-                            onClick={() => handleSelectSetup(setup)}
-                            className={`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 
-                                ${selectedTestSetupId === setup.id
-                                    ? 'outline-blue-500 outline-5  border-transparent'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`} >
-
-                            {selectedTestSetupId === setup.id && (
-                                <div className="absolute bottom-4 right-4">
-                                    <div className="bg-blue-500 text-white rounded-full p-1">
-                                        <Check size={20} />
-                                    </div>
-                                </div>
-                            )}
-                            <TestSetupCard item={setup} index={index} isEditable={false} />
-                        </div>
+                            item={setup}
+                            index={index}
+                            isSelected={selectedTestSetupId === setup.id}
+                            onSelect={() => handleSelectSetup(setup)}
+                        />
                     ))}
                 </div>
             </div>
