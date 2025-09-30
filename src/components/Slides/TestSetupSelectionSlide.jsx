@@ -19,12 +19,14 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { testSetups, selectedTestSetup, selectedTestSetupId, setSelectedTestSetupId } = useGlobalDataContext();
+    const { 
+        testSetups, 
+        selectedTestSetupId, setSelectedTestSetupId } = useGlobalDataContext();
 
     const {
-        query: searchQuery,
-        setQuery: setSearchQuery,
-        results: filteredSetups } = useFuseSearch(
+        query,
+        setQuery,
+        results } = useFuseSearch(
             testSetups, ['name', 'location'],
             { threshold: 0.3, limit: 10, debounce: 150 }
         );
@@ -45,12 +47,18 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
 
             <div className='p-4 bg-gray-50 rounded-lg border border-gray-300'>
                 <div className='flex justify-center '>
-                    <input type='text' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder='Search for Test Setups...' className='w-full max-w-md mx-auto mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                    <input 
+                        type='text' 
+                        value={query} 
+                        onChange={(e) => setQuery(e.target.value)} 
+                        placeholder='Search for Test Setups...' 
+                        className='w-full max-w-md mx-auto mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500' 
+                    />
                 </div>
                 <div className='grid grid-cols-1 gap-2 '>
 
 
-                    {filteredSetups.map((setup, index) => (
+                    {results.map((setup, index) => (
                         <TestSetupSelectableCard
                             key={setup.id}
                             item={setup}

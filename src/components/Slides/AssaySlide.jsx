@@ -75,6 +75,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             prop: 'id',
             name: 'Identifier',
             size: 150,
+            pin: 'colPinStart',
             readonly: true,
             cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
         },
@@ -82,6 +83,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             prop: 'name',
             name: 'Study Name',
             size: 200,
+            pin: 'colPinStart',
             readonly: true,
             cellProperties: () => {
                 return {

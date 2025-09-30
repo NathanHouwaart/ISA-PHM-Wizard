@@ -1,4 +1,8 @@
 
+import React from 'react';
+import IconToolTipButton from '../Widgets/IconTooltipButton';
+import { Trash } from 'lucide-react';
+
 // Cell template for bold text
 export const BoldCell = ({ value }) => {
     return (
@@ -27,6 +31,39 @@ export const PatternCellTemplate = ({ prefix, rowIndex }) => {
 export const BoldPatternCellTemplate = ({ prefix, rowIndex }) => {
     return <BoldCell value={PatternCellTemplate({ prefix, rowIndex })} />;
 }
+
+// Cell template that renders a delete icon button and dispatches a custom event
+// The DataGrid component listens for the 'deleteRow' event and will remove the row
+export const DeleteRowCellTemplate = ({ model, rowIndex }) => {
+    const handleDelete = (e) => {
+        // Try to find the enclosing revo-grid element to dispatch the event on
+        const gridElement = e.target.closest && e.target.closest('revo-grid');
+        const detail = { rowIndex, rowId: model?.id };
+
+        const deleteEvent = new CustomEvent('deleteRow', {
+            detail,
+            bubbles: true
+        });
+
+        if (gridElement) {
+            gridElement.dispatchEvent(deleteEvent);
+        } else if (typeof window !== 'undefined') {
+            // Fallback: dispatch on document so DataGrid can still pick it up
+            document.dispatchEvent(deleteEvent);
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center">
+            <IconToolTipButton
+                icon={Trash}
+                onClick={handleDelete}
+                tooltipText={`Delete row ${rowIndex + 1}`}
+                className="h-10 w-10 text-red-500"
+            />
+        </div>
+    );
+};
 
 export const HTML5DateCellTemplate = ({ model, prop, rowIndex }) => {
     const currentValue = model?.[prop] || '';

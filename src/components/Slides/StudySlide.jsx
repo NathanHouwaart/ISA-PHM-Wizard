@@ -23,7 +23,7 @@ import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 import DataGrid from '../DataGrid'; // Import the new DataGrid
-import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
+import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
@@ -98,20 +98,26 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 title: 'Remove the last study'
             }
         ],
-        staticColumns: [
+            staticColumns: [
+            {
+                prop: 'actions',
+                name: '',
+                size: 80,
+                readonly: true,
+                cellTemplate: Template(DeleteRowCellTemplate),
+                cellProperties: () => ({ style: { 'text-align': 'center' } })
+            },
             {
                 prop: 'id',
                 name: 'Identifier',
                 size: 150,
                 readonly: true,
                 cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
-                cellProperties: () => {
-                    return {
-                        style: {
-                            "border-right": "3px solid "
-                        }
+                cellProperties: () => ({
+                    style: {
+                        "border-right": "3px solid "
                     }
-                }
+                })
             },
             {
                 prop: 'name',

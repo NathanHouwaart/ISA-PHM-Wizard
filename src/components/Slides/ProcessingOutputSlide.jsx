@@ -78,6 +78,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             name: 'Identifier',
             size: 150,
             readonly: true,
+            pin: 'colPinStart',
             cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
         },
         {
@@ -85,6 +86,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             name: 'Study Name',
             size: 200,
             readonly: true,
+            pin: 'colPinStart',
             cellProperties: () => {
                 return {
                     style: {

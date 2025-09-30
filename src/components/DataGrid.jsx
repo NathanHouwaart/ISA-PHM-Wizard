@@ -175,6 +175,45 @@ const DataGrid = forwardRef(({
         };
     }, []);
 
+    // Listen for deleteRow events dispatched from cell templates (or document fallback)
+    useEffect(() => {
+        const gridElement = gridRef.current;
+
+        const handleDeleteRequest = (event) => {
+            try {
+                const { rowIndex, rowId } = event.detail || {};
+
+                // Prefer using rowId if provided (stable), otherwise fall back to rowIndex
+                let newData = [];
+                if (rowId !== undefined && rowId !== null) {
+                    newData = hookRowData.filter(r => r.id !== rowId);
+                } else if (typeof rowIndex === 'number') {
+                    newData = hookRowData.filter((_, i) => i !== rowIndex);
+                }
+
+                if (newData.length > -1) {
+                    updateRowDataBatch(newData);
+                }
+            } catch (err) {
+                console.error('Error handling deleteRow event', err);
+            }
+        };
+
+        if (gridElement) {
+            gridElement.addEventListener('deleteRow', handleDeleteRequest);
+        }
+
+        // Also listen on document as fallback when the cell template couldn't find revo-grid
+        document.addEventListener('deleteRow', handleDeleteRequest);
+
+        return () => {
+            if (gridElement) {
+                gridElement.removeEventListener('deleteRow', handleDeleteRequest);
+            }
+            document.removeEventListener('deleteRow', handleDeleteRequest);
+        };
+    }, [hookRowData, updateRowDataBatch]);
+
     // Enhanced column definitions that preserve user-resized widths
     const enhancedColumnDefs = React.useMemo(() => {
         // Use the synchronous ref if available to avoid races when a resize event

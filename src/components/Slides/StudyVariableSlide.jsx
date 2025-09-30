@@ -18,7 +18,7 @@ import useMappingsController from '../../hooks/useMappingsController';
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
 import DataGrid from '../DataGrid';
-import { GrayCell, BoldCell } from '../GridTable/CellTemplates';
+import { GrayCell, BoldCell, DeleteRowCellTemplate } from '../GridTable/CellTemplates';
 
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
@@ -108,10 +108,20 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
         },
         staticColumns: useMemo(() => ([
             {
+                prop: 'actions',
+                name: '',
+                size: 80,
+                readonly: true,
+                pin: 'colPinStart',
+                cellTemplate: Template(DeleteRowCellTemplate),
+                cellProperties: () => ({ style: { 'text-align': 'center' } })
+            },
+            {
                 prop: 'name',
                 name: 'Variable Name',
                 size: 200,
                 readonly: false,
+                pin: 'colPinStart',
                 cellTemplate: Template(BoldCell),
                 cellProperties: () => ({ style: { "border-right": "3px solid " } })
             },

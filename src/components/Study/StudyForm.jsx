@@ -23,7 +23,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      alert('Please fill in all required fields (Name, Location)');
+      alert('Please fill in all required fields (Study Name) ');
       return;
     }
 
@@ -73,6 +73,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             placeholder="Study Name"
             explanation="Name of the study"
             example="BPFO Fault Severty 1 100%"
+            required
           />
 
           <FormField

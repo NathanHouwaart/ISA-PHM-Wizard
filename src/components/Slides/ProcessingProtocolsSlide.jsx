@@ -15,7 +15,7 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { BoldCell } from '../GridTable/CellTemplates';
+import { BoldCell, DeleteRowCellTemplate } from '../GridTable/CellTemplates';
 
 // Import utility functions
 import usePageTab from '../../hooks/usePageWidth';
@@ -122,10 +122,20 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         },
         staticColumns: [
             {
+                prop: 'actions',
+                name: '',
+                size: 80,
+                readonly: true,
+                pin: 'colPinStart',
+                cellTemplate: Template(DeleteRowCellTemplate),
+                cellProperties: () => ({ style: { 'text-align': 'center' } })
+            },
+            {
                 prop: 'name',
                 name: 'Protocol Name',
                 size: 200,
                 // readonly: true,
+                pin: 'colPinStart',
                 cellTemplate: Template(BoldCell),
             },
             {
