@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FormField from './Form/FormField';
+import TooltipButton from './Widgets/TooltipButton';
 
 /**
  * Generic edit modal for entities (variables, processing protocols, ...)
@@ -76,8 +77,8 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-md">Save Changes</button>
+                    <TooltipButton onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md" tooltipText="Cancel and close">Cancel</TooltipButton>
+                    <TooltipButton onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-md" tooltipText="Save changes">Save Changes</TooltipButton>
                 </div>
             </div>
         </div>

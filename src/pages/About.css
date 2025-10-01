@@ -114,3 +114,8 @@ div.autofill-handle {
   height: 8px;
   border-radius: 2px;
 }
+
+
+div.rv-dr-root{
+  @apply bg-white border border-gray-300 rounded shadow-sm;
+}
