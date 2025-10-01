@@ -52,10 +52,12 @@ export const GlobalDataProvider = ({ children }) => {
     const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
+    const [measurementProtocols, setMeasurementProtocols] = useState(() => loadFromLocalStorage('globalAppData_measurementProtocols', []));
     const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage('globalAppData_processingProtocols', initialProcessingProtocols))
 
     // Mappings
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
+    const [sensorToMeasurementProtocolMapping, setSensorToMeasurementProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToMeasurementProtocolMapping', []));
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
     const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
     const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorProcessingMapping', []));
@@ -111,22 +113,23 @@ export const GlobalDataProvider = ({ children }) => {
         localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
         localStorage.setItem('globalAppData_selectedTestSetupId', JSON.stringify(selectedTestSetupId));
         localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
+        localStorage.setItem('globalAppData_measurementProtocols', JSON.stringify(measurementProtocols));
         localStorage.setItem('globalAppData_processingProtocols', JSON.stringify(processingProtocols));
 
         localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
+        localStorage.setItem('globalAppData_sensorToMeasurementProtocolMapping', JSON.stringify(sensorToMeasurementProtocolMapping));
         localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
         localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
         localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
         localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
         localStorage.setItem('globalAppData_pageTabStates', JSON.stringify(pageTabStates));
-    // selectedDataset is persisted to IndexedDB; do not store large trees in localStorage.
-
+        
+        // selectedDataset is persisted to IndexedDB; do not store large trees in localStorage.
         // console.log("Global data saved to localStorage:", dataToStore);
-
-    }, [
+        }, [
         studies, investigations, contacts, testSetups,
-        publications, selectedTestSetupId, studyVariables, processingProtocols,
-        studyToStudyVariableMapping, studyToSensorMeasurementMapping,
+        publications, selectedTestSetupId, studyVariables, measurementProtocols, processingProtocols,
+        studyToStudyVariableMapping, sensorToMeasurementProtocolMapping, studyToSensorMeasurementMapping,
         sensorToProcessingProtocolMapping, studyToSensorProcessingMapping,
         studyToAssayMapping, pageTabStates
     ]);
@@ -179,8 +182,10 @@ export const GlobalDataProvider = ({ children }) => {
         publications: [publications, setPublications],
         selectedTestSetupId: [selectedTestSetupId, setSelectedTestSetupId],
         studyVariables: [studyVariables, setStudyVariables],
+        measurementProtocols: [measurementProtocols, setMeasurementProtocols],
         processingProtocols: [processingProtocols, setProcessingProtocols],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
+        sensorToMeasurementProtocolMapping: [sensorToMeasurementProtocolMapping, setSensorToMeasurementProtocolMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
         sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
         studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
@@ -205,10 +210,14 @@ export const GlobalDataProvider = ({ children }) => {
         setSelectedTestSetupId,
         studyVariables,
         setStudyVariables,
+        measurementProtocols,
+        setMeasurementProtocols,
         processingProtocols,
         setProcessingProtocols,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping,
+        sensorToMeasurementProtocolMapping,
+        setSensorToMeasurementProtocolMapping,
         studyToSensorMeasurementMapping,
         setStudyToSensorMeasurementMapping,
         sensorToProcessingProtocolMapping,
@@ -219,17 +228,17 @@ export const GlobalDataProvider = ({ children }) => {
         setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
-    pageTabStates,
-    setPageTabStates,
-    selectedDataset,
-    setSelectedDataset,
-    loadDatasetSubtree,
-    explorerOpen,
-    setExplorerOpen,
-    openExplorer,
-    resolveExplorer,
-    initDatasetHydrated: initHydrated,
-    dataMap
+        pageTabStates,
+        setPageTabStates,
+        selectedDataset,
+        setSelectedDataset,
+        loadDatasetSubtree,
+        explorerOpen,
+        setExplorerOpen,
+        openExplorer,
+        resolveExplorer,
+        initDatasetHydrated: initHydrated,
+        dataMap
     };
     return (
         <GlobalDataContext.Provider value={value}>

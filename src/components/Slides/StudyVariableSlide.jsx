@@ -79,10 +79,6 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
         });
     }, [setStudyVariables]);
 
-    const removeLastVariable = useCallback(() => {
-        setStudyVariables(prev => (prev.length > 0 ? prev.slice(0, -1) : prev));
-    }, [setStudyVariables]);
-
     // We'll use a single mappings controller so both the simple view and the grid
     // operate on the exact same canonical mappings object.
     const mappingsController = useMappingsController();
@@ -157,18 +153,8 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                 onClick: addNewVariable,
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
                 title: 'Add a new variable'
-            },
-            {
-                label: '- Remove Last',
-                onClick: removeLastVariable,
-                disabled: studyVariables.length === 0,
-                className: `px-3 py-1 text-sm border rounded ${studyVariables.length === 0
-                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                    }`,
-                title: 'Remove the last variable'
             }
-        ]), [addNewVariable, removeLastVariable, studyVariables.length])
+        ]), [addNewVariable, studyVariables.length])
     };
 
     return (

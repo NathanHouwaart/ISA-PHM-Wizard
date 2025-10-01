@@ -63,13 +63,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         setStudies([...studies, newStudy]);
     };
 
-    // Remove last study function
-    const removeLastStudy = () => {
-        if (studies.length > 0) {
-            setStudies(studies.slice(0, -1));
-        }
-    };
-
     // Handle study data changes from the grid
     const handleStudyDataChange = (newStudyData) => {
         setStudies(newStudyData);
@@ -87,16 +80,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 onClick: addNewStudy,
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
                 title: 'Add a new study'
-            },
-            {
-                label: '- Remove Last',
-                onClick: removeLastStudy,
-                disabled: studies.length === 0,
-                className: `px-3 py-1 text-sm border rounded ${studies.length === 0
-                    ? 'bg-gray-50 text-gray-400 border-gray-300 cursor-not-allowed'
-                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                }`,
-                title: 'Remove the last study'
             }
         ],
             staticColumns: [

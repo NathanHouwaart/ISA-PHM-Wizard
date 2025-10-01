@@ -137,11 +137,12 @@ export const IsaQuestionnaire = () => {
             className={cn(
               "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
               {
-                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": !isLastPage(currentPage),
+                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": isLastPage(currentPage),
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
               }
             )}
-            disabled={!isLastPage(currentPage) || isSubmitting}
+            disabled={false}
+            // disabled={!isLastPage(currentPage) || isSubmitting}
           >
             <span className='w-md'>Submit Form</span>
           </TooltipButton>

@@ -25,7 +25,7 @@ import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
 
-export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
     // Use persistent tab state that remembers across page navigation
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view'); // State to manage selected tab
@@ -36,17 +36,10 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
     // Access global context
     const {
-        studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
-        processingProtocols,
-        setProcessingProtocols,
-        sensorToProcessingProtocolMapping,
-        setSensorToProcessingProtocolMapping,
-        setTestSetups,
-        studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
+        measurementProtocols,
+        setMeasurementProtocols
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
@@ -56,7 +49,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
     // Use canonical mapping field names (sourceId/targetId) so the grid and
     // global mappings stay consistent.
     const mappingsController = useMappingsController(
-        'sensorToProcessingProtocolMapping',
+        'sensorToMeasurementProtocolMapping',
         { sourceKey: 'sourceId', targetKey: 'targetId' }
     );
 
@@ -76,29 +69,24 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
     const addNewProtocol = () => {
         const newProtocol = {
             id: generateId(),
-            name: `New Protocol ${processingProtocols.length + 1}`,
+            name: `New Protocol ${measurementProtocols.length + 1}`,
             unit: '',
             description: 'Enter description...'
         };
-        // If the Processing Protocols grid is active, use DataGrid's history-aware API
+        // If the Measurement Protocols grid is active, use DataGrid's history-aware API
         // if (gridMode === 'sensor-protocols' && callGridMethod('addRow', newProtocol)) return;
-        setProcessingProtocols([...processingProtocols, newProtocol]);
+        setMeasurementProtocols([...measurementProtocols, newProtocol]);
     };
-
-    // // Handle cell edits in the grid
-    // const handleDataGridMappingsChange = useCallback((newMappings) => {
-    //     setSensorToProcessingProtocolMapping(newMappings);
-    // }, [setSensorToProcessingProtocolMapping]);
 
     // Handle row data changes
     const handleDataGridRowDataChange = useCallback((newRowData) => {
-        setProcessingProtocols(newRowData);
-    }, [setProcessingProtocols]);
+        setMeasurementProtocols(newRowData);
+    }, [setMeasurementProtocols]);
 
-    // Grid configuration for processing protocols
-    const processingProtocolsGridConfig = {
-        title: 'Processing Protocols to Sensors Grid',
-        rowData: processingProtocols,            // Protocols are now rows
+    // Grid configuration for measurement protocols
+    const measurementProtocolsGridConfig = {
+        title: 'Measurement Protocols to Sensors Grid',
+        rowData: measurementProtocols,            // Protocols are now rows
         columnData: selectedTestSetup?.sensors || [],           // Sensors are now columns
         mappings: mappingsController.mappings, // Mappings from sensors to protocols
         fieldMappings: {
@@ -158,11 +146,11 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Data Processing Protocols
+                Measurement Protocols
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Data processing protocols describe the processes undertaken to obtain processed data files from raw measurements. This slide allows you to view and manage the data processing protocols for the data derived from each sensor used in the studies. You can switch between a simple list view and a grid view.
+                Measurement protocols describe how raw measurement data is acquired. Use this slide to view and manage per-sensor measurement protocol records and acquisition metadata such as sampling rate, phase, data acquisition unit, orientation, calibration parameters, and other sensor-specific settings.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
@@ -179,7 +167,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                 <TabPanel isActive={selectedTab === 'simple-view'}>
 
                     <EntityMappingPanel
-                        name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                        name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
                         itemHook={useProcessingProtocols}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
@@ -190,7 +178,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <DataGrid
-                        {...processingProtocolsGridConfig}
+                        {...measurementProtocolsGridConfig}
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
@@ -205,6 +193,6 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
     );
 });
 
-ProcessingProtocolsSlide.displayName = "Processing Protocols";
+MeasurementProtocolSlide.displayName = "Measurement Protocols";
 
-export default ProcessingProtocolsSlide;
+export default MeasurementProtocolSlide;

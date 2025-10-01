@@ -51,53 +51,125 @@
             }
         ],
         "sensors": [
-            {
-                "id": "37ab2ad3-9e41-4707-a2f5-2ecde5fb5aee",
-                "measurementType": "Pressure",
-                "measurementUnit": "bar",
-                "description": "measures pressure on the radial cylinder",
-                "technologyType": "pressure transmitter",
-                "technologyPlatform": "PT5401",
-                "dataAcquisitionUnit": "PLC S7-1200",
-                "samplingRate": "50",
-                "samplingUnit": "Hz",
-                "sensorLocation": "In radial cylinder tubes",
-                "locationUnit": "",
-                "sensorOrientation": "Slightly rotated forward",
-                "orientationUnit": "",
-                "alias": "vib_ch_1"
+             {
+                "id": "38623db8-0a99-4b6d-b0d2-32eba8ca1529",
+                "alias": "vib_ch_1",
+                "measurementType": "Vibration",
+                "description": "",
+                "technologyType": "Accelerometer",
+                "technologyPlatform": "Wilcoxon 786B-10",
+                "additionalInfo": [
+                    {
+                        "id": "4aa55e98-a84d-47b3-9f20-7f8557ad0c56",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "dbbf5b43-2bf6-47b7-9cb8-97cc7975e4ff",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "c384f2df-62cd-474c-b335-5e668e186405",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "27fa35dc-2a6e-4d98-aecf-f7fefc7df863",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "136c7f12-1ce6-48b4-a773-3ed0552400db",
+                        "name": "Sensor Orientation",
+                        "value": "horizontal"
+                    },
+                    {
+                        "id": "fd9dfd01-0241-4bdc-bdc5-efa81bb67cfc",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
-                "id": "58b81aac-73fb-4775-ad1d-d49c409ee9b2",
-                "measurementType": "Pressure",
-                "measurementUnit": "bar",
-                "description": "measures pressure in the axial cylinder",
-                "technologyType": "pressure transmitter",
-                "technologyPlatform": "PT5401",
-                "dataAcquisitionUnit": "PLC S7-1200",
-                "samplingRate": "50",
-                "samplingUnit": "Hz",
-                "sensorLocation": "In Axial cylinder tubes",
-                "locationUnit": "",
-                "sensorOrientation": "Slightly rotated forward",
-                "orientationUnit": "",
-                "alias": "vib_ch_2"
+                "id": "8254761b-77db-45c1-98a2-fe4da3153595",
+                "alias": "vib_ch_2",
+                "measurementType": "Vibration",
+                "description": "",
+                "technologyType": "Accelerometer",
+                "technologyPlatform": "Wilcoxon 786B-10",
+                "additionalInfo": [
+                    {
+                        "id": "78786266-84a9-4916-a5ee-2e24221190f1",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "5838b01a-3878-4224-8bc6-e90cae30d3c7",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "116c99fb-ddc8-41d5-ada9-874e36ba3fc9",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "0e8eb392-d1b4-42b5-863f-b835fef20f7a",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "3eae6955-b4f7-4087-902b-c6c273bd5a04",
+                        "name": "Sensor Orientation",
+                        "value": "vertical"
+                    },
+                    {
+                        "id": "2c427f06-0185-4857-a826-e8bb3c340d56",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             },
             {
-                "id": "2f948c90-f7e7-4f8e-af16-0c4e8f339a10",
-                "measurementType": "Temperature",
-                "measurementUnit": "celcius",
-                "description": "measures temperature of bearing",
-                "technologyType": "PT",
-                "technologyPlatform": "PT100",
-                "dataAcquisitionUnit": "PLC S7-1200",
-                "samplingRate": "10",
-                "samplingUnit": "Hz",
-                "sensorLocation": "Bearing House",
-                "locationUnit": "",
-                "sensorOrientation": "",
-                "orientationUnit": "",
-                "alias": "vib_ch_3"
+                "id": "72040313-7c7b-4c16-b3d5-78b53736ea99",
+                "alias": "vib_ch_3",
+                "measurementType": "Vibration",
+                "description": "",
+                "technologyType": "Accelerometer",
+                "technologyPlatform": "Wilcoxon 786B-10",
+                "additionalInfo": [
+                    {
+                        "id": "7f3e56ce-1585-4e5b-ad9d-799c4eb66645",
+                        "name": "Sampling Rate",
+                        "value": "20"
+                    },
+                    {
+                        "id": "7da01a69-af9a-45ee-b70a-064874323a42",
+                        "name": "Sampling Unit",
+                        "value": "kHz"
+                    },
+                    {
+                        "id": "27e09b69-f9bf-4696-b1ea-77d729d698e0",
+                        "name": "Data Aquisition Unit",
+                        "value": "NI (USB-4432)"
+                    },
+                    {
+                        "id": "e5276361-166e-47b0-ad2b-f6409352f20b",
+                        "name": "Sensor Location",
+                        "value": "Electric Motor non-driven end bearing"
+                    },
+                    {
+                        "id": "cba82e48-65e8-46e0-b579-1fe8e438022c",
+                        "name": "Sensor Orientation",
+                        "value": "axial"
+                    },
+                    {
+                        "id": "e4cc633b-9539-4fc0-912e-fd8981e1992c",
+                        "name": "Measurement Unit",
+                        "value": "g"
+                    }
+                ]
             }
         ],
         "number_of_sensors": 3,

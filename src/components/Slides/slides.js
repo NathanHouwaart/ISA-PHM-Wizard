@@ -11,6 +11,7 @@ import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
 import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
 import ProcessingOutputSlide from './ProcessingOutputSlide.jsx';
 import AssaySlide from './AssaySlide.jsx';
+import MeasurementProtocolSlide from './MesurementProtocolsSlide.jsx';
 
 export const slides = [
   IntroductionSlide,
@@ -21,6 +22,7 @@ export const slides = [
   RootFolderSelectionSlide,
   StudySlide,
   StudyVariableSlide,
+  MeasurementProtocolSlide,
   MeasurementOutputSlide,
   ProcessingProtocolsSlide,
   ProcessingOutputSlide,

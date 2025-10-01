@@ -10,11 +10,13 @@ export default function useSubmitData() {
     publications,
     contacts,
     studyVariables,
+    measurementProtocols,
     processingProtocols,
     studies,
     testSetups,
     selectedTestSetupId,
     studyToStudyVariableMapping,
+    sensorToMeasurementProtocolMapping,
     studyToSensorMeasurementMapping,
     sensorToProcessingProtocolMapping,
     studyToSensorProcessingMapping,
@@ -25,6 +27,18 @@ export default function useSubmitData() {
   const [message, setMessage] = useState('Submitting data...');
   const [error, setError] = useState(null);
   const controllerRef = useRef(null);
+
+  // Helper: normalize protocol mappings for a given sensor id
+  const mapProtocolsForSensor = (mappings = [], sensorId) => {
+    if (!mappings || mappings.length === 0) return [];
+    return (mappings || [])
+      .filter((m) => String(m.sourceId) === String(sensorId) || String(m.sensorId) === String(sensorId))
+      .map((m) => ({
+        sourceId: m.sourceId ?? m.sensorId ?? null,
+        targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
+        value: m.value ?? [],
+      }));
+  };
 
   const submitData = async () => {
     // create a fresh AbortController for this submit
@@ -47,6 +61,7 @@ export default function useSubmitData() {
         publications: publications,
         authors: contacts,
         study_variables: studyVariables,
+        measurement_protocols: measurementProtocols,
         processing_protocols: processingProtocols,
         studies: (studies || []).map((study) => ({
           ...study,
@@ -69,19 +84,12 @@ export default function useSubmitData() {
               Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
             );
 
-            const normalizedMappings = (sensorToProcessingProtocolMapping || [])
-              .filter((m) => String(m.sourceId) === String(sensor.id) || String(m.sensorId) === String(sensor.id))
-              .map((m) => ({
-                sourceId: m.sourceId ?? m.sensorId ?? null,
-                targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
-                value: m.value ?? [],
-              }));
 
-            const processing_protocols = normalizedMappings;
 
             return {
               used_sensor,
-              processing_protocols,
+              measurement_protocols : mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
+              processing_protocols : mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
               raw_file_name: (studyToSensorMeasurementMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
               processed_file_name: (studyToSensorProcessingMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
               assay_file_name: (studyToAssayMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
@@ -91,6 +99,8 @@ export default function useSubmitData() {
       };
 
       setMessage('Uploading to conversion service...');
+
+      console.log('[useSubmitData] submitting', jsonData);
 
       const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
       const formData = new FormData();
