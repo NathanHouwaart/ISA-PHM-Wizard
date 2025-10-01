@@ -114,3 +114,21 @@ div.autofill-handle {
   height: 8px;
   border-radius: 2px;
 }
+
+/* --- SelectTypePlugin Chevron Fix --- */
+.arrow-down {
+  position: absolute !important;
+  top: 20% !important;
+  right: 9px !important;
+  transform: translateY(-50%) !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-style: solid !important;
+  border-width: 5px 4px 0 4px !important;
+  border-color: transparent !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  opacity: 0.7 !important;
+  pointer-events: none !important;
+}
+
