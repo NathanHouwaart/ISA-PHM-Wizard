@@ -299,6 +299,59 @@ const DataGrid = forwardRef(({
         return [...colPinStart, ...rgCol, ...colPinEnd];
     }, []);
 
+    // Helper: translate RevoGrid's type-relative coordinates to global coordinates
+    // RevoGrid provides coordinates relative to column type (colPinStart, rgCol, colPinEnd)
+    // but we need global coordinates for our flat columns array
+    const translateRangeCoordinates = useCallback((range) => {
+        console.log('[DataGrid] translateRangeCoordinates input:', range);
+        
+        if (!range || !range.colType) {
+            console.log('[DataGrid] No colType found, returning range as-is');
+            return range; // No translation needed
+        }
+        
+        const flatCols = getFlatColumns();
+        console.log('[DataGrid] flatCols:', flatCols.map(c => ({ prop: c.prop, pin: c.pin })));
+        
+        let offset = 0;
+        const colTypeOrder = ['colPinStart', 'rgCol', 'colPinEnd'];
+        const currentTypeIndex = colTypeOrder.indexOf(range.colType);
+        
+        console.log('[DataGrid] colType:', range.colType, 'currentTypeIndex:', currentTypeIndex);
+        
+        // Count columns before current type
+        for (let i = 0; i < currentTypeIndex; i++) {
+            const colType = colTypeOrder[i];
+            const colsOfType = flatCols.filter(col => 
+                colType === 'rgCol' ? !col.pin : col.pin === colType
+            );
+            console.log('[DataGrid] colType', colType, 'has', colsOfType.length, 'columns');
+            offset += colsOfType.length;
+        }
+        
+        const translated = {
+            ...range,
+            x: range.x + offset,
+            x1: range.x1 + offset
+        };
+        
+        console.log('[DataGrid] Translated coordinates:', {
+            original: { x: range.x, x1: range.x1 },
+            offset,
+            translated: { x: translated.x, x1: translated.x1 }
+        });
+        
+        return translated;
+    }, [getFlatColumns]);
+
+    // Helper: get current mapping value for a row/column combination
+    const getCurrentMapping = useCallback((rowId, columnId) => {
+        const mapping = currentMappings.find(m => 
+            m[fields.sourceId] === rowId && m[fields.targetId] === columnId
+        );
+        return mapping ? mapping[fields.value] : '';
+    }, [currentMappings, fields]);
+
     // Force re-render when columns change by using state instead of just ref
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
     
@@ -378,33 +431,36 @@ const DataGrid = forwardRef(({
 
     const handleAfterEdit = useCallback((event) => {
         const detail = event.detail;
+        console.log('[DataGrid] handleAfterEdit event detail:', detail);
 
         // Handle range edits
         if (detail.newRange || detail.oldRange) {
+            console.log('[DataGrid] Processing range edit:', {
+                newRange: detail.newRange,
+                oldRange: detail.oldRange,
+                data: detail.data
+            });
+            
             const { data, newRange } = detail;
 
-            if (!data || !newRange) return;
+            if (!data || !newRange) {
+                console.log('[DataGrid] Missing data or newRange, aborting');
+                return;
+            }
 
             const updates = [];
             const rowDataUpdates = []; // For standalone grids
 
-            // For child columns, we need to handle the flattened structure differently
-            // RevoGrid flattens child columns, so we need to map the column indexes correctly
-            const flatColumnDefs = [];
-            stableColumnDefs.current.forEach(col => {
-                if (col.children) {
-                    // Add child columns to flat structure
-                    col.children.forEach(child => {
-                        flatColumnDefs.push(child);
-                    });
-                } else {
-                    flatColumnDefs.push(col);
-                }
-            });
+            // Translate RevoGrid's type-relative coordinates to global coordinates
+            const translatedRange = translateRangeCoordinates(newRange);
+            console.log('[DataGrid] Range translation complete');
 
-            for (let rowIndex = newRange.y; rowIndex <= (newRange.y1 || newRange.y); rowIndex++) {
-                for (let colIndex = newRange.x; colIndex <= (newRange.x1 || newRange.x); colIndex++) {
-                    // Use flatColumnDefs for child column support
+            // Use getFlatColumns for consistent column mapping
+            const flatColumnDefs = getFlatColumns();
+
+            for (let rowIndex = translatedRange.y; rowIndex <= (translatedRange.y1 || translatedRange.y); rowIndex++) {
+                for (let colIndex = translatedRange.x; colIndex <= (translatedRange.x1 || translatedRange.x); colIndex++) {
+                    // Use flatColumnDefs with translated coordinates
                     const column = flatColumnDefs[colIndex];
                     if (!column) continue;
 
@@ -486,9 +542,17 @@ const DataGrid = forwardRef(({
         }
 
         // Handle single cell edit
+        console.log('[DataGrid] Processing single cell edit');
         const columnProp = detail.prop || detail.model?.prop || detail.column?.prop;
         let newValue = detail.val !== undefined ? detail.val : detail.value;
         const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
+
+        console.log('[DataGrid] Single cell edit details:', {
+            columnProp,
+            newValue,
+            rowIndex,
+            detailProps: Object.keys(detail)
+        });
 
         // Handle RevoGrid reverting empty values
         if (detail.val !== undefined && detail.val === '' && detail.value !== '') {
@@ -497,6 +561,7 @@ const DataGrid = forwardRef(({
 
         const row = getRowByIndex(rowIndex);
         if (!row) {
+            console.log('[DataGrid] Row not found for index:', rowIndex);
             return;
         }
 
@@ -513,28 +578,21 @@ const DataGrid = forwardRef(({
             // Handle mapping edit (existing functionality)
             updateMapping(row[fields.rowId], columnProp, stringValue);
         }
-    }, [stableColumnDefs, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, gridData, fields, onRowDataChange]);
+    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
 
     const handleBeforeRangeEdit = useCallback((event) => {
         const detail = event.detail;
         const { newRange } = detail;
 
-        if (newRange && stableColumnDefs.current) {
-            // Create flattened column structure for child column support
-            const flatColumnDefs = [];
-            stableColumnDefs.current.forEach(col => {
-                if (col.children) {
-                    // Add child columns to flat structure
-                    col.children.forEach(child => {
-                        flatColumnDefs.push(child);
-                    });
-                } else {
-                    flatColumnDefs.push(col);
-                }
-            });
+        if (newRange) {
+            // Translate RevoGrid's type-relative coordinates to global coordinates
+            const translatedRange = translateRangeCoordinates(newRange);
 
-            const rangeStartCol = newRange.x;
-            const rangeEndCol = newRange.x1 || rangeStartCol;
+            // Use getFlatColumns for consistent column mapping
+            const flatColumnDefs = getFlatColumns();
+
+            const rangeStartCol = translatedRange.x;
+            const rangeEndCol = translatedRange.x1 || rangeStartCol;
 
             for (let colIndex = rangeStartCol; colIndex <= rangeEndCol; colIndex++) {
                 const column = flatColumnDefs[colIndex];
@@ -555,7 +613,7 @@ const DataGrid = forwardRef(({
                 }
             }
         }
-    }, [stableColumnDefs, isStandaloneGrid, staticColumns, isEditableColumn]);
+    }, [translateRangeCoordinates, getFlatColumns, isStandaloneGrid, staticColumns, isEditableColumn]);
 
     const handleAfterRangeEdit = useCallback((event) => {
         // Range edits are handled in handleAfterEdit
@@ -563,11 +621,94 @@ const DataGrid = forwardRef(({
     }, [handleAfterEdit]);
 
     // Handle keyboard shortcuts
-    const handleClearCell = useCallback(() => {
-        const gridElement = document.querySelector('revo-grid');
-        if (!gridElement) return false;
+    const handleClearCell = useCallback(async () => {
+        console.log('[DataGrid] handleClearCell called');
+        const gridElement = gridRef.current;
+        if (!gridElement) {
+            console.log('[DataGrid] No grid element found');
+            return false;
+        }
 
         try {
+            // Use the grid's getSelectedRange API instead of DOM parsing
+            if (typeof gridElement.getSelectedRange === 'function') {
+                const selectedRange = await gridElement.getSelectedRange();
+                console.log('[DataGrid] Selected range for clear:', selectedRange);
+                
+                if (selectedRange) {
+                    // Translate coordinates if we have colType
+                    const translatedRange = translateRangeCoordinates(selectedRange);
+                    console.log('[DataGrid] Translated range for clear:', translatedRange);
+                    
+                    const flatColumnDefs = getFlatColumns();
+                    const updates = [];
+                    const rowDataUpdates = [];
+
+                    // Clear all cells in the translated range
+                    for (let rowIndex = translatedRange.y; rowIndex <= (translatedRange.y1 || translatedRange.y); rowIndex++) {
+                        for (let colIndex = translatedRange.x; colIndex <= (translatedRange.x1 || translatedRange.x); colIndex++) {
+                            const column = flatColumnDefs[colIndex];
+                            if (!column) continue;
+
+                            const row = getRowByIndex(rowIndex);
+                            if (!row) continue;
+
+                            const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
+                            const staticColumn = staticColumns.find(col => col.prop === column.prop);
+
+                            // Skip readonly columns
+                            if (isStaticColumn && staticColumn?.readonly) continue;
+                            if (!isStandaloneGrid && !isEditableColumn(column.prop) && !isStaticColumn) continue;
+
+                            if (isStaticColumn) {
+                                // Clear static column (row data)
+                                rowDataUpdates.push({
+                                    rowId: row[fields.rowId],
+                                    columnProp: column.prop,
+                                    value: ''
+                                });
+                            } else if (!isStandaloneGrid && isEditableColumn(column.prop)) {
+                                // Clear mapping cell
+                                updates.push({
+                                    rowId: row[fields.rowId],
+                                    columnId: column.prop,
+                                    value: ''
+                                });
+                            }
+                        }
+                    }
+
+                    // Apply updates
+                    if (rowDataUpdates.length > 0) {
+                        // Group row updates by row ID
+                        const rowUpdatesMap = new Map();
+                        rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
+                            if (!rowUpdatesMap.has(rowId)) {
+                                rowUpdatesMap.set(rowId, {});
+                            }
+                            rowUpdatesMap.get(rowId)[columnProp] = value;
+                        });
+
+                        // Apply row data updates
+                        const currentData = [...rowData.map(row => ({ ...row }))];
+                        rowUpdatesMap.forEach((columnUpdates, rowId) => {
+                            const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
+                            if (rowToUpdate) {
+                                Object.assign(rowToUpdate, columnUpdates);
+                            }
+                        });
+                        updateRowDataBatch(currentData);
+                    }
+
+                    if (updates.length > 0) {
+                        updateMappingsBatch(updates);
+                    }
+
+                    return true;
+                }
+            }
+
+            // Fallback to old DOM-based method if getSelectedRange is not available
             const focusedCell = gridElement.querySelector('[data-rgrow][data-rgcol].focused') ||
                 gridElement.querySelector('[data-rgrow][data-rgcol][tabindex="0"]') ||
                 gridElement.querySelector('[data-rgrow][data-rgcol].selected');
@@ -575,35 +716,22 @@ const DataGrid = forwardRef(({
             if (focusedCell) {
                 const rgRow = parseInt(focusedCell.getAttribute('data-rgrow') || '0', 10);
                 const rgCol = parseInt(focusedCell.getAttribute('data-rgcol') || '0', 10);
+                
+                console.log('[DataGrid] Found focused cell (fallback):', { rgRow, rgCol });
 
-                // Create flattened column structure for child column support
-                const flatColumnDefs = [];
-                stableColumnDefs.current.forEach(col => {
-                    if (col.children) {
-                        // Add child columns to flat structure
-                        col.children.forEach(child => {
-                            flatColumnDefs.push(child);
-                        });
-                    } else {
-                        flatColumnDefs.push(col);
-                    }
-                });
-
+                const flatColumnDefs = getFlatColumns();
                 const column = flatColumnDefs[rgCol];
                 if (!column) return false;
 
                 const row = getRowByIndex(rgRow);
                 if (!row) return false;
 
-                // Handle clearing cells in standalone grids vs mapping grids
                 const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
 
                 if (isStaticColumn) {
-                    // Static columns are row-data fields; clear via updateRowData in both modes
                     updateRowData(row[fields.rowId], column.prop, '');
                     return true;
                 } else if (!isStandaloneGrid && isEditableColumn(column.prop)) {
-                    // Clear mapping cell in mapping grid
                     updateMapping(row[fields.rowId], column.prop, '');
                     return true;
                 }
@@ -613,7 +741,7 @@ const DataGrid = forwardRef(({
         }
 
         return false;
-    }, [stableColumnDefs, isStandaloneGrid, staticColumns, getRowByIndex, updateRowData, isEditableColumn, updateMapping, fields]);
+    }, [gridRef, translateRangeCoordinates, getFlatColumns, getRowByIndex, staticColumns, isStandaloneGrid, isEditableColumn, fields, rowData, updateRowDataBatch, updateMappingsBatch, updateRowData, updateMapping]);
 
     useEffect(() => {
         if (!isActive) return; // Only handle global keys when this grid is active
@@ -654,6 +782,202 @@ const DataGrid = forwardRef(({
     return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [undo, redo, handleClearCell]);
 
+    // Handle paste region event - let RevoGrid handle the paste operation internally
+    // We intercept the clipboardrangepaste event which provides proper coordinate information
+    const handlePasteRegion = useCallback((event) => {
+        console.log('[DataGrid] handlePasteRegion - letting RevoGrid handle paste internally:', event.detail);
+        // RevoGrid's clipboard system will trigger the clipboardrangepaste event with proper coordinates
+        // We don't need to manually handle paste here, just let it flow through RevoGrid's system
+    }, []);
+
+    // Handle clipboard range paste event - this is the proper RevoGrid paste event with coordinate information
+    const handleClipboardRangePaste = useCallback((event) => {
+        console.log('[DataGrid] handleClipboardRangePaste:', event.detail);
+        
+        const { data, range, models } = event.detail;
+        if (!data || !range) {
+            console.log('[DataGrid] No valid clipboard paste data');
+            return;
+        }
+        
+        try {
+            // Translate coordinates if colType is available in the range
+            const translatedRange = range.colType ? translateRangeCoordinates(range) : range;
+            console.log('[DataGrid] Translated clipboard paste range:', translatedRange);
+            
+            // Apply clipboard paste data using the same logic as range edits
+            const flatColumnDefs = getFlatColumns();
+            const updates = [];
+            const rowDataUpdates = [];
+            
+            // Process the data lookup structure from RevoGrid's clipboard system
+            for (const [rowIndexStr, rowDataObj] of Object.entries(data)) {
+                const rowIndex = parseInt(rowIndexStr, 10);
+                const row = getRowByIndex(rowIndex);
+                if (!row) continue;
+                
+                for (const [columnProp, value] of Object.entries(rowDataObj)) {
+                    const stringValue = (value === undefined || value === null) ? '' : String(value);
+                    const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
+                    
+                    if (isStaticColumn) {
+                        rowDataUpdates.push({
+                            rowId: row[fields.rowId],
+                            columnProp: columnProp,
+                            value: stringValue
+                        });
+                    } else if (isEditableColumn(columnProp)) {
+                        updates.push({
+                            rowId: row[fields.rowId],
+                            columnId: columnProp,
+                            value: stringValue
+                        });
+                    }
+                }
+            }
+            
+            // Apply all updates in batch
+            if (rowDataUpdates.length > 0) {
+                const rowUpdatesMap = new Map();
+                rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
+                    if (!rowUpdatesMap.has(rowId)) {
+                        rowUpdatesMap.set(rowId, {});
+                    }
+                    rowUpdatesMap.get(rowId)[columnProp] = value;
+                });
+
+                const currentData = [...rowData.map(row => ({ ...row }))];
+                rowUpdatesMap.forEach((columnUpdates, rowId) => {
+                    const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
+                    if (rowToUpdate) {
+                        Object.assign(rowToUpdate, columnUpdates);
+                    }
+                });
+
+                updateRowDataBatch(currentData);
+            }
+            
+            if (updates.length > 0) {
+                updateMappingsBatch(updates);
+            }
+            
+            console.log('[DataGrid] Clipboard paste operation completed:', {
+                rangeSize: `${range.y1 - range.y + 1}x${range.x1 - range.x + 1}`,
+                rowUpdates: rowDataUpdates.length,
+                mappingUpdates: updates.length
+            });
+            
+        } catch (error) {
+            console.error('[DataGrid] Error in clipboard paste operation:', error);
+        }
+    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
+
+    // Handle clear region event - let the existing handleClearCell handle the logic
+    const handleClearRegion = useCallback((event) => {
+        console.log('[DataGrid] handleClearRegion - delegating to handleClearCell:', event.detail);
+        // RevoGrid's clear region works by calling clearCell on selected ranges
+        // Our existing handleClearCell already handles this with proper coordinate translation
+        handleClearCell(event);
+    }, [handleClearCell]);
+
+    // Handle before autofill event - apply coordinate translation to RevoGrid's processed data
+    const handleBeforeAutofill = useCallback((event) => {
+        console.log('[DataGrid] handleBeforeAutofill:', event.detail);
+        
+        // RevoGrid has already processed the autofill data and calculated newData/mapping
+        // We just need to apply coordinate translation and use RevoGrid's processed data
+        const detail = event.detail;
+        if (!detail || !detail.newData || !detail.newRange || !detail.colType) {
+            console.log('[DataGrid] Missing required autofill data');
+            return;
+        }
+        
+        try {
+            // RevoGrid has already done the work - newData contains the data to apply
+            // We just need to process it with our mapping system
+            console.log('[DataGrid] Processing RevoGrid autofill data:', {
+                newData: detail.newData,
+                mapping: detail.mapping,
+                newRange: detail.newRange,
+                oldRange: detail.oldRange
+            });
+            
+            // Process the data using our mapping system
+            const updates = [];
+            const rowDataUpdates = [];
+            const flatColumnDefs = getFlatColumns();
+            
+            // Process RevoGrid's newData which is in the format: {rowIndex: {columnProp: value}}
+            for (const [rowIndexStr, rowDataObj] of Object.entries(detail.newData)) {
+                const rowIndex = parseInt(rowIndexStr, 10);
+                const row = getRowByIndex(rowIndex);
+                if (!row) continue;
+                
+                for (const [columnProp, value] of Object.entries(rowDataObj)) {
+                    const stringValue = (value === undefined || value === null) ? '' : String(value);
+                    const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
+                    const staticColumn = staticColumns.find(col => col.prop === columnProp);
+                    
+                    // Skip readonly columns
+                    if (staticColumn?.readonly) continue;
+                    
+                    const canEdit = isStandaloneGrid 
+                        ? isStaticColumn 
+                        : (isEditableColumn(columnProp) || isStaticColumn);
+                        
+                    if (canEdit) {
+                        if (isStaticColumn) {
+                            rowDataUpdates.push({
+                                rowId: row[fields.rowId],
+                                columnProp: columnProp,
+                                value: stringValue
+                            });
+                        } else {
+                            updates.push({
+                                rowId: row[fields.rowId],
+                                columnId: columnProp,
+                                value: stringValue
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Apply all updates in batch
+            if (rowDataUpdates.length > 0) {
+                const rowUpdatesMap = new Map();
+                rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
+                    if (!rowUpdatesMap.has(rowId)) {
+                        rowUpdatesMap.set(rowId, {});
+                    }
+                    rowUpdatesMap.get(rowId)[columnProp] = value;
+                });
+
+                const currentData = [...rowData.map(row => ({ ...row }))];
+                rowUpdatesMap.forEach((columnUpdates, rowId) => {
+                    const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
+                    if (rowToUpdate) {
+                        Object.assign(rowToUpdate, columnUpdates);
+                    }
+                });
+
+                updateRowDataBatch(currentData);
+            }
+            
+            if (updates.length > 0) {
+                updateMappingsBatch(updates);
+            }
+            
+            console.log('[DataGrid] Autofill operation completed using RevoGrid data:', {
+                processedRows: Object.keys(detail.newData).length,
+                rowUpdates: rowDataUpdates.length,
+                mappingUpdates: updates.length
+            });
+            
+        } catch (error) {
+            console.error('[DataGrid] Error in autofill operation:', error);
+        }
+    }, [getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
 
     // Action plugins (e.g. file-assign) are supported via the `actionPlugins` prop
 
@@ -733,7 +1057,28 @@ const DataGrid = forwardRef(({
 
                         {/* File assign plugin (extracted) */}
                         <div className="border-l border-gray-300 h-6 mx-2"></div>
-                                            {/* Render action plugin*/}
+                                            {/* Debug button for selection */}
+                        <button
+                            onClick={async () => {
+                                const grid = gridRef.current;
+                                if (grid && typeof grid.getSelectedRange === 'function') {
+                                    try {
+                                        const selection = await grid.getSelectedRange();
+                                        console.log('[DataGrid] Current selection:', selection);
+                                        const flatCols = getFlatColumns();
+                                        console.log('[DataGrid] Flat columns:', flatCols.map((c, i) => ({ index: i, prop: c.prop, pin: c.pin })));
+                                    } catch (err) {
+                                        console.error('[DataGrid] Error getting selection:', err);
+                                    }
+                                }
+                            }}
+                            className="px-3 py-1 text-sm rounded border bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                            title="Debug selection"
+                        >
+                            🔍 Debug Selection
+                        </button>
+
+                        {/* Render action plugin*/}
                                             {(actionPlugins && actionPlugins.length > 0) && actionPlugins.map((P, idx) => {
                                                 const pluginApi = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug };
                                                 // If item is a valid React element, clone it with props
@@ -764,6 +1109,30 @@ const DataGrid = forwardRef(({
                 onAfteredit={handleAfterEdit}
                 onBeforerangeedit={handleBeforeRangeEdit}
                 onAfterangeedit={handleAfterRangeEdit}
+                // Handle copy/paste/clear/autofill events with coordinate translation
+                onBeforecopy={(e) => console.log('[DataGrid] beforecopy:', e.detail)}
+                onBeforepaste={(e) => {
+                    console.log('[DataGrid] beforepaste:', e.detail);
+                    // Note: beforepaste doesn't seem to have range info, actual paste is in pasteregion
+                }}
+                onBeforecut={(e) => console.log('[DataGrid] beforecut:', e.detail)}
+                onCopyregion={(e) => console.log('[DataGrid] copyregion:', e.detail)}
+                onPasteregion={(e) => {
+                    console.log('[DataGrid] pasteregion:', e.detail);
+                    handlePasteRegion(e);
+                }}
+                onClearregion={(e) => {
+                    console.log('[DataGrid] clearregion:', e.detail);
+                    handleClearRegion(e);
+                }}
+                onClipboardrangepaste={(e) => {
+                    console.log('[DataGrid] clipboardrangepaste:', e.detail);
+                    handleClipboardRangePaste(e);
+                }}
+                onBeforeautofill={(e) => {
+                    console.log('[DataGrid] beforeautofill:', e.detail);
+                    handleBeforeAutofill(e);
+                }}
                 readonly={false}
                 resize={true}
                 range={true}
