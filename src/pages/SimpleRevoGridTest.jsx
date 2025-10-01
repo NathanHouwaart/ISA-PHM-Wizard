@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
-import { HTML5DateCellTemplate, PatternCellTemplate } from '../components/GridTable/CellTemplates';
+import { HTML5DateCellTemplate, PatternCellTemplate } from '../components/DataGrid/CellTemplates';
 import { Template } from '@revolist/react-datagrid';
 
 const initial_studies = [

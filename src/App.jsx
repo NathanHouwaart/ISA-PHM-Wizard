@@ -6,7 +6,7 @@ import Navbar from "./components/Navbar";
 import { Routes } from "react-router-dom";
 import { Route } from "react-router-dom";
 
-import { About, IsaQuestionnaire, Home, TestSetups} from "./pages";
+import { About, IsaQuestionnaire, Home, TestSetups, FileExplorer} from "./pages";
 import { GlobalDataProvider } from "./contexts/GlobalDataContext";
 import { GridTest } from "./pages/GridTest";
 import SimpleRevoGridTest from "./pages/SimpleRevoGridTest";
@@ -23,6 +23,7 @@ function App() {
           <Route path="/simplegridtest" element={<SimpleRevoGridTest />} />
           <Route path="/testsetups" element={<TestSetups />} />
           <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
+          <Route path="/filepickertest" element={<FileExplorer />} />
         </Routes>
       </GlobalDataProvider>
     </div>

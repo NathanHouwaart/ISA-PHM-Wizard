@@ -16,12 +16,13 @@ import EntityMappingPanel from '../EntityMappingPanel';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../DataGrid/CellTemplates';
 
 import usePageTab from '../../hooks/usePageWidth';
-import DataGrid from '../DataGrid';
+import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -138,10 +139,13 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                     <DataGrid
                         {...measurementOutputGridConfig}
                         showControls={true}
-                        showDebug={false}
+                        // Enable the debug panel here so you can see selection/file/mapping
+                        // diagnostics directly in the app while we debug the assignment flow.
+                        showDebug={true}
                         onDataChange={handleDataGridMappingsChange}
                         height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
+                        actionPlugins={[FilePickerPlugin]}
                     />
                 </TabPanel>
             </div>

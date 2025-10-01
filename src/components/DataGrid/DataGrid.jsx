@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
-import { useDataGrid } from '../hooks/useDataGrid';
-import "./GridTable/GridTable.css";
+import { useDataGrid } from '../../hooks/useDataGrid';
+import "./DataGrid.css";
 
 /**
  * Generic DataGrid component that handles any type of data with optional mapping functionality.
@@ -43,6 +43,8 @@ const DataGrid = forwardRef(({
 
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
+    // Action plugins rendered in the controls area (components or elements)
+    actionPlugins = [],         // optional array of plugin components/elements
 
     // Other props
     className = '',
@@ -78,6 +80,8 @@ const DataGrid = forwardRef(({
         onRowDataChange // Pass the callback to the hook
     });
 
+    // (removed) currentMappingsCount — was only used by debug UI which we removed
+
     // Expose functions to parent components through ref
     useImperativeHandle(ref, () => ({
         addRow: (newRow) => {
@@ -104,6 +108,28 @@ const DataGrid = forwardRef(({
     // updates and later effects that read the state (which is async).
     const columnSizesRef = useRef(columnSizes);
     const gridRef = useRef();
+    // callback ref to ensure we store the underlying DOM element (revo-grid)
+
+    const setGridRef = (node) => {
+        if (!node) {
+            gridRef.current = null;
+            return;
+        }
+        // If the React wrapper forwards the webcomponent under .element or .el, prefer that
+        if (node instanceof HTMLElement && node.tagName?.toLowerCase() === 'revo-grid') {
+            gridRef.current = node;
+        } else if (node && node.element instanceof HTMLElement) {
+            gridRef.current = node.element;
+        } else if (node && node.el instanceof HTMLElement) {
+            gridRef.current = node.el;
+        } else {
+            // fallback to whatever was provided
+            gridRef.current = node;
+        }
+    };
+    // Refs for file plugin (managed inside plugin)
+    // Key to force RevoGrid remount when necessary
+    const [gridKey, setGridKey] = useState(0);
 
     // Listen for column resize events to preserve user adjustments
     useEffect(() => {
@@ -236,6 +262,42 @@ const DataGrid = forwardRef(({
             return { ...col, size: finalSize };
         });
     }, [columnDefs, columnSizes]);
+
+    // Helper: return flattened columns in RevoGrid's internal order
+    // RevoGrid orders columns as: colPinStart, rgCol, colPinEnd
+    const getFlatColumns = useCallback(() => {
+        const colPinStart = [];
+        const rgCol = [];
+        const colPinEnd = [];
+        
+        // Separate columns by pin type and flatten grouped columns
+        (stableColumnDefs.current || []).forEach(col => {
+            if (col && col.children) {
+                // Handle grouped columns
+                col.children.forEach(ch => {
+                    if (ch.pin === 'colPinStart') {
+                        colPinStart.push(ch);
+                    } else if (ch.pin === 'colPinEnd') {
+                        colPinEnd.push(ch);
+                    } else {
+                        rgCol.push(ch);
+                    }
+                });
+            } else if (col) {
+                // Handle regular columns
+                if (col.pin === 'colPinStart') {
+                    colPinStart.push(col);
+                } else if (col.pin === 'colPinEnd') {
+                    colPinEnd.push(col);
+                } else {
+                    rgCol.push(col);
+                }
+            }
+        });
+        
+        // Return in RevoGrid's internal order: pinned start, regular, pinned end
+        return [...colPinStart, ...rgCol, ...colPinEnd];
+    }, []);
 
     // Force re-render when columns change by using state instead of just ref
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
@@ -592,6 +654,11 @@ const DataGrid = forwardRef(({
     return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [undo, redo, handleClearCell]);
 
+
+    // Action plugins (e.g. file-assign) are supported via the `actionPlugins` prop
+
+    // directory assignment removed; no onDirChange handler
+
     // Render the complete data grid with controls and debug view
     return (
         <div className={`data-grid ${className}`}>
@@ -663,13 +730,32 @@ const DataGrid = forwardRef(({
                                 </button>
                             </>
                         )}
+
+                        {/* File assign plugin (extracted) */}
+                        <div className="border-l border-gray-300 h-6 mx-2"></div>
+                                            {/* Render action plugin*/}
+                                            {(actionPlugins && actionPlugins.length > 0) && actionPlugins.map((P, idx) => {
+                                                const pluginApi = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug };
+                                                // If item is a valid React element, clone it with props
+                                                if (React.isValidElement(P)) {
+                                                    return React.cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
+                                                }
+                                                // If it's a component (function/class), instantiate it
+                                                if (typeof P === 'function') {
+                                                    const PluginComp = P;
+                                                    return <PluginComp key={`plugin-${idx}`} api={pluginApi} />;
+                                                }
+                                                // If it's something else (e.g., null), skip
+                                                return null;
+                                            })}
                     </div>
                 )}
             </div>
 
             {/* Grid */}
             <RevoGrid
-                ref={gridRef}
+                key={gridKey}
+                ref={setGridRef}
                 style={{ height }}
                 source={gridData}
                 rowSize={rowsize}
@@ -692,34 +778,10 @@ const DataGrid = forwardRef(({
                 {...gridProps}
             />
 
-            {/* Debug View */}
-            {showDebug && (
-                <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-4">Debug: Current Data</h3>
+            {/* Action plugins are responsible for any hidden inputs / DOM they need */}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Raw Mappings */}
-                        <div>
-                            <h4 className="font-medium mb-2">Raw Mappings ({currentMappings.length})</h4>
-                            <div className="max-h-64 overflow-y-auto bg-white p-3 rounded border">
-                                {currentMappings.length === 0 ? (
-                                    <p className="text-gray-500 italic">No mappings found</p>
-                                ) : (
-                                    <pre className="text-xs">{JSON.stringify(currentMappings, null, 2)}</pre>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Grid Data */}
-                        <div>
-                            <h4 className="font-medium mb-2">Grid Data ({gridData.length} rows)</h4>
-                            <div className="max-h-64 overflow-y-auto bg-white p-3 rounded border">
-                                <pre className="text-xs">{JSON.stringify(gridData, null, 2)}</pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Directory picker removed temporarily */}
+            {/* debug UI removed to keep component lean — use console.debug for logs */}
         </div>
     );
 });

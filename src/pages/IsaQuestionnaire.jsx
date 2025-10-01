@@ -16,6 +16,7 @@ import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
+import InAppExplorer from '../components/Widgets/InAppExplorer';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -70,7 +71,7 @@ export const IsaQuestionnaire = () => {
         {slides.map((slide, index) => (
           <TooltipButton
             key={index}
-            tooltipText={`${slide.displayName} slide`}
+            tooltipText={`${slide.displayName}`}
             onClick={() => goToPage(index)}
             className={cn(
               "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer",
@@ -85,6 +86,8 @@ export const IsaQuestionnaire = () => {
       </div>
 
       <div className="space-y-6">
+        {/* In-app explorer mounted here so it's available during the ISA Questionnaire flow */}
+        <InAppExplorer />
         <div
           className="relative overflow-hidden transition-all duration-300 ease-in-out"
         >

@@ -22,8 +22,9 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import useCarouselNavigation from '../../hooks/useCarouselNavigation';
-import DataGrid from '../DataGrid'; // Import the new DataGrid
-import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../GridTable/CellTemplates'; // Import cell templates
+
+import DataGrid from '../DataGrid/DataGrid'; // Import the new DataGrid
+import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../DataGrid/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 

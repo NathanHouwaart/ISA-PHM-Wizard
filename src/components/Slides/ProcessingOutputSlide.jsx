@@ -15,13 +15,14 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
-import { PatternCellTemplate } from '../GridTable/CellTemplates';
+import { PatternCellTemplate } from '../DataGrid/CellTemplates';
 
 import usePageTab from '../../hooks/usePageWidth';
-import DataGrid from '../DataGrid';
+import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -143,6 +144,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         onDataChange={handleDataGridMappingsChange}
                         height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
+                        actionPlugins={[FilePickerPlugin]}
                     />
                 </TabPanel>
             </div>
