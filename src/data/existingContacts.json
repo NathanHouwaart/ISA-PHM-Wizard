@@ -8,12 +8,8 @@
     "phone": "",
     "fax": "",
     "roles": [
-      "Author",
-      "Corresponding Author"
-    ],
-    "subroles": [
-      "Supervision",
-      "Writing - review & editing"
+      "Data curation",
+      "Conceptualization"
     ],
     "address": "",
     "orcid": "",
@@ -31,9 +27,6 @@
     "phone": "",
     "fax": "",
     "roles": [
-      "Author"
-    ],
-    "subroles": [
       "Supervision",
       "Writing - review & editing"
     ],
@@ -53,9 +46,6 @@
     "phone": "",
     "fax": "",
     "roles": [
-      "Author"
-    ],
-    "subroles": [
       "Supervision",
       "Writing - review & editing"
     ],

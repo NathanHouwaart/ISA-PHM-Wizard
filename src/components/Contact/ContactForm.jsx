@@ -5,7 +5,7 @@ import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 import { v4 as uuid } from "uuid";
 
-import { CONTACT_ROLE_OPTIONS, CONTACT_SUBROLE_OPTIONS } from "../../constants/contactRoles";
+import { CONTACT_ROLE_OPTIONS } from "../../constants/contactRoles";
 
 export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
@@ -18,7 +18,6 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
         phone: item?.phone || '',
         fax: item?.fax || '',
         roles: item?.roles || [],
-        subroles: item?.subroles || [],
         address: item?.address || '',
         orcid: item?.orcid || '',
         affiliations: item?.affiliations || [],
@@ -74,24 +73,6 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
             return {
                 ...prevData,
                 roles: prevData.roles.filter(role => role !== roleToRemove)
-            };
-        });
-    };
-
-    const handleAddSubrole = (subrole) => {
-        setFormData(prevData => {
-            return {
-                ...prevData,
-                subroles: [...(prevData.subroles || []), subrole]
-            };
-        });
-    };
-
-    const handleRemoveSubrole = (subroleToRemove) => {
-        setFormData(prevData => {
-            return {
-                ...prevData,
-                subroles: prevData.subroles.filter(subrole => subrole !== subroleToRemove)
             };
         });
     };
@@ -218,16 +199,7 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         onAddTag={handleAddRole}
                         onRemoveTag={handleRemoveRole}
                     />
-
-                    <FormField
-                        name="subroles"
-                        label="Subrole(s)"
-                        type="multi-select"
-                        tags={CONTACT_SUBROLE_OPTIONS}
-                        value={formData.subroles}
-                        onAddTag={handleAddSubrole}
-                        onRemoveTag={handleRemoveSubrole}
-                    />
+                
                 </div>
 
                 {/* Action Buttons */}
