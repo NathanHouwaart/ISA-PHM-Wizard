@@ -305,9 +305,10 @@ const DataGrid = forwardRef(({
     const translateRangeCoordinates = useCallback((range) => {
         console.log('[DataGrid] translateRangeCoordinates input:', range);
         
-        if (!range || !range.colType) {
-            console.log('[DataGrid] No colType found, returning range as-is');
-            return range; // No translation needed
+        // If no colType or coordinates, return as-is (may be already translated)
+        if (!range || !range.colType || (range.x === undefined && range.y === undefined)) {
+            console.log('[DataGrid] No colType or coordinates, returning range as-is');
+            return range;
         }
         
         const flatCols = getFlatColumns();
@@ -318,6 +319,12 @@ const DataGrid = forwardRef(({
         const currentTypeIndex = colTypeOrder.indexOf(range.colType);
         
         console.log('[DataGrid] colType:', range.colType, 'currentTypeIndex:', currentTypeIndex);
+        
+        // If colType not found in order, return as-is
+        if (currentTypeIndex < 0) {
+            console.log('[DataGrid] colType not in standard order, returning as-is');
+            return range;
+        }
         
         // Count columns before current type
         for (let i = 0; i < currentTypeIndex; i++) {
@@ -451,42 +458,35 @@ const DataGrid = forwardRef(({
             const updates = [];
             const rowDataUpdates = []; // For standalone grids
 
-            // Translate RevoGrid's type-relative coordinates to global coordinates
-            const translatedRange = translateRangeCoordinates(newRange);
-            console.log('[DataGrid] Range translation complete');
+            // CRITICAL: Do NOT use translated coordinates to iterate!
+            // RevoGrid's data object already has correct column props as keys.
+            // Using translated coordinates with flattened columns array causes misalignment
+            // because RevoGrid's coordinate system doesn't account for child columns in the same way.
+            
+            console.log('[DataGrid] Processing range edit data directly by keys');
 
-            // Use getFlatColumns for consistent column mapping
-            const flatColumnDefs = getFlatColumns();
+            // Iterate through data by rowIndex, then by columnProp
+            for (const [rowIndexStr, rowDataObj] of Object.entries(data)) {
+                const rowIndex = parseInt(rowIndexStr, 10);
+                const row = getRowByIndex(rowIndex);
+                
+                if (!row) {
+                    console.log('[DataGrid] Row not found for index:', rowIndex);
+                    continue;
+                }
 
-            for (let rowIndex = translatedRange.y; rowIndex <= (translatedRange.y1 || translatedRange.y); rowIndex++) {
-                for (let colIndex = translatedRange.x; colIndex <= (translatedRange.x1 || translatedRange.x); colIndex++) {
-                    // Use flatColumnDefs with translated coordinates
-                    const column = flatColumnDefs[colIndex];
-                    if (!column) continue;
+                // Iterate through all column props in this row's data
+                for (const [columnProp, newValue] of Object.entries(rowDataObj)) {
+                    if (newValue === undefined || newValue === null) continue;
 
-                    const columnProp = column.prop;
                     const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
                     const staticColumn = staticColumns.find(col => col.prop === columnProp);
 
-                    // Skip if column is not editable
-                            if (!isEditableColumn(columnProp) && (!isStaticColumn || staticColumn?.readonly)) {
-                        continue;
-                    }
+                    // Skip readonly columns
+                    if (staticColumn?.readonly) continue;
 
-                    const row = getRowByIndex(rowIndex);
-                    if (!row) continue;
-
-                    let newValue;
-                    if (data[rowIndex]) {
-                        newValue = data[rowIndex][columnProp];
-                    } else if (Array.isArray(data) && data[0] && typeof data[0] === 'object') {
-                        const rowData = data.find(r => r.id === row.id || r[fields.rowName] === row[fields.rowName]);
-                        if (rowData) {
-                            newValue = rowData[columnProp];
-                        }
-                    }
-
-                    if (newValue === undefined || newValue === null) continue;
+                    // Skip non-editable columns
+                    if (!isEditableColumn(columnProp) && !isStaticColumn) continue;
 
                     const stringValue = String(newValue);
 
@@ -801,24 +801,35 @@ const DataGrid = forwardRef(({
         }
         
         try {
-            // Translate coordinates if colType is available in the range
-            const translatedRange = range.colType ? translateRangeCoordinates(range) : range;
-            console.log('[DataGrid] Translated clipboard paste range:', translatedRange);
-            
-            // Apply clipboard paste data using the same logic as range edits
-            const flatColumnDefs = getFlatColumns();
+            // RevoGrid's data object already uses column props as keys (not colType-relative indexes)
+            // so we don't need coordinate translation for the data processing
+            // The range coordinates are for display/validation purposes
             const updates = [];
             const rowDataUpdates = [];
             
+            console.log('[DataGrid] Processing clipboard data:', { 
+                dataKeys: Object.keys(data),
+                sampleRow: data[Object.keys(data)[0]]
+            });
+            
             // Process the data lookup structure from RevoGrid's clipboard system
+            // data format: { rowIndex: { columnProp: value } }
             for (const [rowIndexStr, rowDataObj] of Object.entries(data)) {
                 const rowIndex = parseInt(rowIndexStr, 10);
                 const row = getRowByIndex(rowIndex);
-                if (!row) continue;
+                if (!row) {
+                    console.log('[DataGrid] Row not found for index:', rowIndex);
+                    continue;
+                }
                 
+                // Iterate through all column props in this row's data
                 for (const [columnProp, value] of Object.entries(rowDataObj)) {
                     const stringValue = (value === undefined || value === null) ? '' : String(value);
                     const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
+                    const staticColumn = staticColumns.find(col => col.prop === columnProp);
+                    
+                    // Skip readonly columns
+                    if (staticColumn?.readonly) continue;
                     
                     if (isStaticColumn) {
                         rowDataUpdates.push({
@@ -862,7 +873,7 @@ const DataGrid = forwardRef(({
             }
             
             console.log('[DataGrid] Clipboard paste operation completed:', {
-                rangeSize: `${range.y1 - range.y + 1}x${range.x1 - range.x + 1}`,
+                processedRows: Object.keys(data).length,
                 rowUpdates: rowDataUpdates.length,
                 mappingUpdates: updates.length
             });
@@ -870,7 +881,7 @@ const DataGrid = forwardRef(({
         } catch (error) {
             console.error('[DataGrid] Error in clipboard paste operation:', error);
         }
-    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
+    }, [staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
 
     // Handle clear region event - let the existing handleClearCell handle the logic
     const handleClearRegion = useCallback((event) => {
@@ -880,104 +891,8 @@ const DataGrid = forwardRef(({
         handleClearCell(event);
     }, [handleClearCell]);
 
-    // Handle before autofill event - apply coordinate translation to RevoGrid's processed data
-    const handleBeforeAutofill = useCallback((event) => {
-        console.log('[DataGrid] handleBeforeAutofill:', event.detail);
-        
-        // RevoGrid has already processed the autofill data and calculated newData/mapping
-        // We just need to apply coordinate translation and use RevoGrid's processed data
-        const detail = event.detail;
-        if (!detail || !detail.newData || !detail.newRange || !detail.colType) {
-            console.log('[DataGrid] Missing required autofill data');
-            return;
-        }
-        
-        try {
-            // RevoGrid has already done the work - newData contains the data to apply
-            // We just need to process it with our mapping system
-            console.log('[DataGrid] Processing RevoGrid autofill data:', {
-                newData: detail.newData,
-                mapping: detail.mapping,
-                newRange: detail.newRange,
-                oldRange: detail.oldRange
-            });
-            
-            // Process the data using our mapping system
-            const updates = [];
-            const rowDataUpdates = [];
-            const flatColumnDefs = getFlatColumns();
-            
-            // Process RevoGrid's newData which is in the format: {rowIndex: {columnProp: value}}
-            for (const [rowIndexStr, rowDataObj] of Object.entries(detail.newData)) {
-                const rowIndex = parseInt(rowIndexStr, 10);
-                const row = getRowByIndex(rowIndex);
-                if (!row) continue;
-                
-                for (const [columnProp, value] of Object.entries(rowDataObj)) {
-                    const stringValue = (value === undefined || value === null) ? '' : String(value);
-                    const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
-                    const staticColumn = staticColumns.find(col => col.prop === columnProp);
-                    
-                    // Skip readonly columns
-                    if (staticColumn?.readonly) continue;
-                    
-                    const canEdit = isStandaloneGrid 
-                        ? isStaticColumn 
-                        : (isEditableColumn(columnProp) || isStaticColumn);
-                        
-                    if (canEdit) {
-                        if (isStaticColumn) {
-                            rowDataUpdates.push({
-                                rowId: row[fields.rowId],
-                                columnProp: columnProp,
-                                value: stringValue
-                            });
-                        } else {
-                            updates.push({
-                                rowId: row[fields.rowId],
-                                columnId: columnProp,
-                                value: stringValue
-                            });
-                        }
-                    }
-                }
-            }
-            
-            // Apply all updates in batch
-            if (rowDataUpdates.length > 0) {
-                const rowUpdatesMap = new Map();
-                rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
-                    if (!rowUpdatesMap.has(rowId)) {
-                        rowUpdatesMap.set(rowId, {});
-                    }
-                    rowUpdatesMap.get(rowId)[columnProp] = value;
-                });
-
-                const currentData = [...rowData.map(row => ({ ...row }))];
-                rowUpdatesMap.forEach((columnUpdates, rowId) => {
-                    const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
-                    if (rowToUpdate) {
-                        Object.assign(rowToUpdate, columnUpdates);
-                    }
-                });
-
-                updateRowDataBatch(currentData);
-            }
-            
-            if (updates.length > 0) {
-                updateMappingsBatch(updates);
-            }
-            
-            console.log('[DataGrid] Autofill operation completed using RevoGrid data:', {
-                processedRows: Object.keys(detail.newData).length,
-                rowUpdates: rowDataUpdates.length,
-                mappingUpdates: updates.length
-            });
-            
-        } catch (error) {
-            console.error('[DataGrid] Error in autofill operation:', error);
-        }
-    }, [getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
+    // Note: We don't handle beforeautofill - it fires BEFORE RevoGrid calculates the data
+    // The data processing happens in handleAfterEdit which catches range edits from autofill
 
     // Action plugins (e.g. file-assign) are supported via the `actionPlugins` prop
 
@@ -1130,8 +1045,9 @@ const DataGrid = forwardRef(({
                     handleClipboardRangePaste(e);
                 }}
                 onBeforeautofill={(e) => {
-                    console.log('[DataGrid] beforeautofill:', e.detail);
-                    handleBeforeAutofill(e);
+                    // Log for debugging - RevoGrid will handle autofill internally
+                    // Our handleAfterEdit will catch the resulting range edit
+                    console.log('[DataGrid] beforeautofill (letting RevoGrid handle):', e.detail);
                 }}
                 readonly={false}
                 resize={true}

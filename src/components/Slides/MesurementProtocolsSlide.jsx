@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 // Import hooks
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import useProcessingProtocols from '../../hooks/useProcessingProtocols';
+import useMeasurementProtocols from '../../hooks/useMeasurementProtocols';
 
 // Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
@@ -168,7 +168,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
 
                     <EntityMappingPanel
                         name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        itemHook={useProcessingProtocols}
+                        itemHook={useMeasurementProtocols}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
                         minHeight={WINDOW_HEIGHT}
