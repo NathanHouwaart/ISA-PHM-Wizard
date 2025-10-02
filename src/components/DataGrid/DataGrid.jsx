@@ -481,12 +481,21 @@ const DataGrid = forwardRef(({
 
                     const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
                     const staticColumn = staticColumns.find(col => col.prop === columnProp);
+                    const isEditable = isEditableColumn(columnProp);
+
+                    console.log(`[DataGrid] Range edit - column: ${columnProp}, isStatic: ${isStaticColumn}, isEditable: ${isEditable}, readonly: ${staticColumn?.readonly}`);
 
                     // Skip readonly columns
-                    if (staticColumn?.readonly) continue;
+                    if (staticColumn?.readonly) {
+                        console.log(`[DataGrid] Skipping ${columnProp} - readonly`);
+                        continue;
+                    }
 
-                    // Skip non-editable columns
-                    if (!isEditableColumn(columnProp) && !isStaticColumn) continue;
+                    // Skip non-editable columns (must be either static OR editable)
+                    if (!isEditable && !isStaticColumn) {
+                        console.log(`[DataGrid] Skipping ${columnProp} - not editable and not static`);
+                        continue;
+                    }
 
                     const stringValue = String(newValue);
 
@@ -582,38 +591,22 @@ const DataGrid = forwardRef(({
 
     const handleBeforeRangeEdit = useCallback((event) => {
         const detail = event.detail;
-        const { newRange } = detail;
-
-        if (newRange) {
-            // Translate RevoGrid's type-relative coordinates to global coordinates
-            const translatedRange = translateRangeCoordinates(newRange);
-
-            // Use getFlatColumns for consistent column mapping
-            const flatColumnDefs = getFlatColumns();
-
-            const rangeStartCol = translatedRange.x;
-            const rangeEndCol = translatedRange.x1 || rangeStartCol;
-
-            for (let colIndex = rangeStartCol; colIndex <= rangeEndCol; colIndex++) {
-                const column = flatColumnDefs[colIndex];
-                if (column) {
-                    const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
-                    const staticColumn = staticColumns.find(col => col.prop === column.prop);
-
-                    // For standalone grids, allow editing of static columns that are not readonly
-                    // For mapping grids, allow editing of dynamic columns and non-readonly static columns
-                    const canEdit = isStandaloneGrid
-                        ? (isStaticColumn && !staticColumn?.readonly)
-                        : (isEditableColumn(column.prop) || (isStaticColumn && !staticColumn?.readonly));
-
-                    if (!canEdit) {
-                        event.preventDefault();
-                        return;
-                    }
-                }
-            }
-        }
-    }, [translateRangeCoordinates, getFlatColumns, isStandaloneGrid, staticColumns, isEditableColumn]);
+        console.log('[DataGrid] handleBeforeRangeEdit event detail:', detail);
+        
+        // IMPORTANT: Don't use coordinate translation here!
+        // RevoGrid will provide the actual data with column props as keys in afterrangeedit
+        // We just need to check if ANY of the columns in the range are editable
+        // If we prevent here incorrectly, the edit won't reach afterrangeedit where we have the data
+        
+        // For now, allow all range edits through and let handleAfterEdit filter by column
+        // This is safer than using broken coordinate translation
+        
+        // NOTE: If we need stricter validation, we should:
+        // 1. Wait for RevoGrid to provide column information in the event
+        // 2. Or check which columns are actually present in detail.data (if available)
+        // 3. Never use coordinate translation with grouped columns
+        
+    }, []);
 
     const handleAfterRangeEdit = useCallback((event) => {
         // Range edits are handled in handleAfterEdit
