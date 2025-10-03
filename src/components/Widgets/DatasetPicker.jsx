@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { directoryOpen } from 'browser-fs-access';
 
 // Reusable DatasetPicker UI: pick a root folder, index it (count + walk), show progress
 export default function DatasetPicker({ label = 'Index Root Folder', className = '' }) {
@@ -49,37 +50,58 @@ export default function DatasetPicker({ label = 'Index Root Folder', className =
 
     async function pickAndIndex() {
         try {
-            const rootHandle = await window.showDirectoryPicker();
-            if (!rootHandle) return;
+            // Use browser-fs-access to open a directory; recursive:true returns all files inside
+            const files = await directoryOpen({ recursive: true });
+            if (!files || files.length === 0) return;
+
+            // Build a nested tree from the returned File objects using webkitRelativePath
+            const rootName = files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : 'Root';
+
+            const nodesByPath = new Map();
+            // ensure root placeholder
+            nodesByPath.set('', { children: [] });
+
+            for (const f of files) {
+                const rel = f.webkitRelativePath || f.name;
+                const parts = rel.split('/');
+                // top-level path without rootName if present
+                let path = '';
+                for (let i = 0; i < parts.length; i++) {
+                    const name = parts[i];
+                    const relPath = path ? `${path}/${name}` : name;
+                    if (!nodesByPath.has(relPath)) {
+                        nodesByPath.set(relPath, { name, relPath, isDirectory: i < parts.length - 1, children: [] });
+                        // attach to parent
+                        const parentPath = path;
+                        const parent = nodesByPath.get(parentPath);
+                        if (parent) parent.children.push(nodesByPath.get(relPath));
+                    }
+                    path = relPath;
+                }
+            }
+
+            const tree = (nodesByPath.get('')?.children || []).map((n) => n);
+
+            // convert children arrays to sorted structure
+            function sortNodes(nodes) {
+                return nodes
+                    .sort((a, b) => {
+                        if (a.isDirectory && !b.isDirectory) return -1;
+                        if (!a.isDirectory && b.isDirectory) return 1;
+                        return (a.name || '').localeCompare(b.name || '');
+                    })
+                    .map((n) => (n.isDirectory ? { ...n, children: sortNodes(n.children || []) } : n));
+            }
+
+            const dataset = { rootName, tree: sortNodes(tree) };
 
             setLoading(true);
             setProgressPercent(0);
             setProgressMessage('');
             setIndexed(false);
 
-            let rootName = 'Root';
-            try { rootName = rootHandle.name || 'Root'; } catch (err) { }
-
-            setProgressMessage('Counting items...');
-            setRecentFiles([]); // Initialize recentFiles to avoid undefined state
-            let total = 0;
-            try { total = await countEntries(rootHandle); } catch (err) { total = 1; }
-            let processed = 0;
-            const onProgress = ({ current, processed: p = 0 }) => {
-                if (current) {
-                    setProgressMessage(current);
-                    setRecentFiles((prev) => [current, ...prev.filter((x) => x !== current)].slice(0, 8));
-                }
-                if (p) {
-                    processed += p;
-                    const percent = Math.min(100, Math.round((processed / Math.max(1, total)) * 100));
-                    setProgressPercent(percent);
-                }
-            };
-
-            const tree = await walkDir(rootHandle, '', onProgress);
-
-            const dataset = { rootName, tree };
+            setProgressMessage('Indexing...');
+            setRecentFiles([]);
             // show completion state briefly
             setSelectedDataset(dataset);
             setProgressPercent(100);

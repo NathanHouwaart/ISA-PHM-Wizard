@@ -24,6 +24,7 @@ function App() {
           <Route path="/testsetups" element={<TestSetups />} />
           <Route path="/isaquestionnaire" element={<IsaQuestionnaire />} />
           <Route path="/filepickertest" element={<FileExplorer />} />
+          {/* <Route path="/gridtest" element={<GridTest />} /> */}
         </Routes>
       </GlobalDataProvider>
     </div>

@@ -8,15 +8,19 @@ import useDynamicHeightContainer from '../hooks/useDynamicHeightContainer';
 
 
 import PageWrapper from '../layout/PageWrapper';
+import { useLocation } from 'react-router-dom';
 
 import { slides } from "../components/Slides/slides";
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
+// ProjectSelector removed in favor of the single 'Change Project' button in the header
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
+import DatasetSelectionOverlay from '../components/Widgets/DatasetSelectionOverlay';
+import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -38,6 +42,19 @@ export const IsaQuestionnaire = () => {
 
   const { setScreenWidth, pageTabStates } = useGlobalDataContext();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
+
+  // show project sessions modal when dataset hydration finishes and no dataset is selected
+  const [showSessionsModal, setShowSessionsModal] = React.useState(false);
+  const [showDatasetOverlay, setShowDatasetOverlay] = React.useState(false);
+  const { selectedDataset, initDatasetHydrated } = useGlobalDataContext();
+
+  // Always show the sessions modal when navigating to this route so the user can pick a project.
+  // This makes the selection explicit on every visit (reload or client-side navigation).
+  const location = useLocation();
+  React.useEffect(() => {
+    setShowSessionsModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Set screen width based on persisted tab state for the active page. If the
   // persisted tab for the current page is 'grid-view' we'll open a wider layout
@@ -64,8 +81,26 @@ export const IsaQuestionnaire = () => {
 
   {isSubmitting && <LoadingOverlay message={message} onCancel={cancel} />}
   {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
+  {showSessionsModal && (
+    <ProjectSessionsModal onClose={() => setShowSessionsModal(false)} />
+  )}
+  {showDatasetOverlay && (
+    <DatasetSelectionOverlay onClose={() => {
+      setShowDatasetOverlay(false);
+    }} />
+  )}
 
-      <Heading1> ISA Questionnaire Form </Heading1>
+      <div className="flex items-center justify-center gap-4 relative">
+        <div className="absolute left-4">
+          {/* left spacer for balanced center heading */}
+        </div>
+        <Heading1 className="mx-auto"> ISA Questionnaire Form </Heading1>
+        <div className="absolute mr-15 mb-3 right-0">
+          <TooltipButton tooltipText="Open project/session chooser" onClick={() => setShowSessionsModal(true)} className="px-3 py-1 bg-green-500" aria-label="Change Project">
+            Change Project
+          </TooltipButton>
+        </div>
+      </div>
 
       <div className="flex justify-center mb-5">
         {slides.map((slide, index) => (
@@ -88,6 +123,8 @@ export const IsaQuestionnaire = () => {
       <div className="space-y-6">
         {/* In-app explorer mounted here so it's available during the ISA Questionnaire flow */}
         <InAppExplorer />
+        {/* When sessions modal is visible, mark the main content as inert visually and for assistive tech */}
+        <div aria-hidden={showSessionsModal} className={showSessionsModal ? 'pointer-events-none select-none opacity-60' : ''}>
         <div
           className="relative overflow-hidden transition-all duration-300 ease-in-out"
         >
@@ -119,6 +156,7 @@ export const IsaQuestionnaire = () => {
               );
             })}
           </div>
+        </div>
         </div>
 
         <div className="flex items-center justify-center space-x-4 mx-5">

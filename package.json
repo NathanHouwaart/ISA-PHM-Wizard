@@ -60,6 +60,8 @@
     ,
     "dexie": "^3.2.2",
     "lz-string": "^1.4.4"
+    ,
+    "browser-fs-access": "^0.38.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

@@ -21,36 +21,52 @@ Design notes:
 import Dexie from 'dexie';
 import LZString from 'lz-string';
 
-const DB_NAME = 'isa_phm_tree_db_v1';
+// We'll create a new DB name for the updated schema so we don't attempt to change
+// the existing object store primary key in-place (Dexie can't change primary keys).
+// The migration below will try to open the old DB and copy records into the new DB
+// with projectId = 'default'.
+const OLD_DB_NAME = 'isa_phm_tree_db_v1';
+const DB_NAME = 'isa_phm_tree_db_v2';
 const STORE_NAME = 'nodes';
 
 const db = new Dexie(DB_NAME);
 
-// Initial schema (v1) then v2 adds parentPath index for efficient subtree queries.
+// New DB schema: compound primary key projectId+path
 db.version(1).stores({
-  nodes: '&path, updatedAt'
+  // use Dexie's compound primary key syntax: '&[projectId+path]'
+  nodes: '&[projectId+path], projectId, parentPath, updatedAt'
 });
 
-// v2: add parentPath index and migrate existing records to populate parentPath
-db.version(2).stores({
-  nodes: '&path,parentPath,updatedAt'
-}).upgrade(async (tx) => {
-  // Populate parentPath for existing records (path may be '')
-  await tx.table('nodes').toCollection().modify((item) => {
-    try {
-      const p = item.path || '';
-      if (p === '') {
-        item.parentPath = '';
-      } else {
-        const idx = p.lastIndexOf('/');
-        item.parentPath = idx === -1 ? '' : p.slice(0, idx);
-      }
-    } catch (err) {
-      // if any item fails, leave parentPath undefined; it'll be handled later
-      item.parentPath = item.parentPath || '';
+// Try to migrate data from the old DB (if present) into this new DB.
+(async function migrateFromOldDb() {
+  try {
+    const oldDb = new Dexie(OLD_DB_NAME);
+    // we only need a minimal schema to read existing records
+    oldDb.version(1).stores({ nodes: '&path, updatedAt' });
+    // also try v2 shape if it exists
+    oldDb.version(2).stores({ nodes: '&path,parentPath,updatedAt' });
+    await oldDb.open();
+    const all = await oldDb.table('nodes').toArray();
+    if (all && all.length) {
+      const now = Date.now();
+      await db.transaction('rw', 'nodes', async () => {
+        for (const r of all) {
+          try {
+            const p = r.path || '';
+            const parentPath = p === '' ? '' : (p.lastIndexOf('/') === -1 ? '' : p.slice(0, p.lastIndexOf('/')));
+            await db.nodes.put({ projectId: 'default', path: p, compressed: r.compressed, parentPath, updatedAt: r.updatedAt || now });
+          } catch (err) {
+            console.warn('[indexedTreeStore] migration item skipped', r && r.path, err);
+          }
+        }
+      });
     }
-  });
-});
+    try { await oldDb.close(); } catch (e) { /* ignore */ }
+  } catch (err) {
+    // If opening the old DB fails (not present), just skip migration silently.
+    console.debug('[indexedTreeStore] no old DB to migrate from', err && err.message);
+  }
+})();
 
 // Helper: compress + decompress
 function compress(obj) {
@@ -80,24 +96,21 @@ function normPath(p) {
 }
 
 // saveTree: write the root node and create lightweight directory stubs for children
-export async function saveTree(rootNode) {
+export async function saveTree(rootNode, projectId = 'default') {
   if (!rootNode || typeof rootNode !== 'object') throw new Error('rootNode required');
   try {
-    // Use Dexie transaction with callback to ensure proper storeNames resolution
     await db.transaction('rw', 'nodes', async () => {
-      // write root node fully
       const rootPath = '';
       const now = Date.now();
-      await db.nodes.put({ path: rootPath, compressed: compress(rootNode), updatedAt: now, meta: { childrenLoaded: true } });
+      await db.nodes.put({ projectId, path: rootPath, compressed: compress(rootNode), updatedAt: now, meta: { childrenLoaded: true } });
 
-      // recursively save only top-level directory stubs to enable lazy loading
       if (Array.isArray(rootNode.children)) {
         const ops = [];
         for (const child of rootNode.children) {
           const childPath = child.relPath || child.name || null;
           if (!childPath) continue;
           const stub = { name: child.name, relPath: child.relPath, isDirectory: !!child.isDirectory, childrenLoaded: false };
-          ops.push(db.nodes.put({ path: normPath(child.relPath), compressed: compress(stub), updatedAt: now, meta: { childrenLoaded: false } }));
+          ops.push(db.nodes.put({ projectId, path: normPath(child.relPath), compressed: compress(stub), updatedAt: now, meta: { childrenLoaded: false } }));
         }
         await Promise.all(ops);
       }
@@ -110,9 +123,10 @@ export async function saveTree(rootNode) {
 }
 
 // loadTree: loads root node fully; if children stubs found they will be left as-is
-export async function loadTree() {
+export async function loadTree(projectId = 'default') {
   try {
-    const rec = await db.nodes.get('');
+    // get record by compound key projectId+path
+    const rec = await db.nodes.get({ projectId, path: '' });
     if (!rec) return null;
     const root = decompress(rec.compressed);
     return root;
@@ -124,39 +138,34 @@ export async function loadTree() {
 
 // loadSubtree: returns the node at `path`. If it's a directory and childrenLoaded=false,
 // this function should attempt to load stored direct children records and reconstruct children array.
-export async function loadSubtree(path) {
+export async function loadSubtree(path, projectId = 'default') {
   const p = normPath(path);
   try {
-    const rec = await db.nodes.get(p);
+    const rec = await db.nodes.get({ projectId, path: p });
     if (!rec) return null;
     const node = decompress(rec.compressed);
 
-    // if node is a directory and childrenLoaded === false then try to load direct children
     if (node.isDirectory && node.childrenLoaded === false) {
-      // query for keys that start with p + '/'
       const prefix = p === '' ? '' : p + '/';
-      // Dexie doesn't provide startsWith by default on arbitrary index; we'll iterate all keys
-      const all = await db.nodes.toArray();
+      // load all nodes for this project and filter
+      const all = await db.nodes.where({ projectId }).toArray();
       const children = [];
       for (const r of all) {
         if (!r.path) continue;
         if (r.path === p) continue;
         if (r.path.indexOf(prefix) !== 0) continue;
-        // direct children only: path without prefix should not contain '/'
         const rest = prefix === '' ? r.path : r.path.slice(prefix.length);
-        if (rest.indexOf('/') !== -1) continue; // not a direct child
+        if (rest.indexOf('/') !== -1) continue;
         try {
           const childNode = decompress(r.compressed);
           children.push(childNode);
         } catch (err) {
-          // if decompress fails, skip that child
           console.warn('[indexedTreeStore] skipping child decompress error', r.path, err);
         }
       }
       node.children = children;
       node.childrenLoaded = true;
-      // write back the expanded node so next time it's loaded fully
-      await db.nodes.put({ path: p, compressed: compress(node), updatedAt: Date.now(), meta: { childrenLoaded: true } });
+      await db.nodes.put({ projectId, path: p, compressed: compress(node), updatedAt: Date.now(), meta: { childrenLoaded: true } });
     }
 
     return node;
@@ -167,9 +176,10 @@ export async function loadSubtree(path) {
 }
 
 // Utility: remove tree entirely
-export async function clearTree() {
+export async function clearTree(projectId = 'default') {
   try {
-    await db.nodes.clear();
+    // remove only records for this project
+    await db.nodes.where('projectId').equals(projectId).delete();
     return true;
   } catch (err) {
     console.error('[indexedTreeStore] clearTree error', err);

@@ -11,6 +11,7 @@ import initialProcessingProtocols from "../data/InitialProcessingProtocols.json"
 
 import investigationFormFields from '../data/InvestigationFormFields2.json'
 import useDatasetStore from '../hooks/useDatasetStore';
+import { v4 as uuidv4 } from 'uuid';
 
 const GlobalDataContext = createContext();
 
@@ -36,6 +37,15 @@ const loadFromLocalStorage = (key, initialValue) => {
     return initialValue;
 };
 
+// Helper to write JSON to localStorage
+const saveToLocalStorage = (key, value) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+        console.error('[GlobalDataContext] saveToLocalStorage error', err);
+    }
+};
+
 // Main Data Provider Component
 export const GlobalDataProvider = ({ children }) => {
 
@@ -44,29 +54,38 @@ export const GlobalDataProvider = ({ children }) => {
         return acc;
     }, {});
 
-    // Lazy initialization for all state variables from localStorage
-    const [studies, setStudies] = useState(() => loadFromLocalStorage('globalAppData_studies', initialStudies));
-    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage('globalAppData_investigations', initialFormState));
-    const [contacts, setContacts] = useState(() => loadFromLocalStorage('globalAppData_contacts', initialContacts));
-    const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', initialTestSetups));
-    const [publications, setPublications] = useState(() => loadFromLocalStorage('globalAppData_publications', initialPublications));
-    const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage('globalAppData_selectedTestSetupId', null));
-    const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage('globalAppData_studyVariables', initialStudyVariables));
-    const [measurementProtocols, setMeasurementProtocols] = useState(() => loadFromLocalStorage('globalAppData_measurementProtocols', []));
-    const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage('globalAppData_processingProtocols', initialProcessingProtocols))
+    // Projects list and currentProjectId (global across the app)
+    const initialProjects = loadFromLocalStorage('globalAppData_projects', [{ id: 'default', name: 'Default Project' }]);
+    const [projects, setProjects] = useState(() => initialProjects);
+    const initialCurrentProjectId = loadFromLocalStorage('globalAppData_currentProjectId', (initialProjects[0] && initialProjects[0].id) || 'default');
+    const [currentProjectId, setCurrentProjectId] = useState(() => initialCurrentProjectId);
+
+    // helper to construct per-project storage keys
+    const projectKey = (k, projectId = currentProjectId) => `globalAppData_${projectId}_${k}`;
+
+    // Lazy initialization for all state variables from per-project localStorage
+    const [studies, setStudies] = useState(() => loadFromLocalStorage(projectKey('studies'), initialStudies));
+    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage(projectKey('investigations'), initialFormState));
+    const [contacts, setContacts] = useState(() => loadFromLocalStorage(projectKey('contacts'), initialContacts));
+    const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage(projectKey('testSetups'), initialTestSetups));
+    const [publications, setPublications] = useState(() => loadFromLocalStorage(projectKey('publications'), initialPublications));
+    const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage(projectKey('selectedTestSetupId'), null));
+    const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage(projectKey('studyVariables'), initialStudyVariables));
+    const [measurementProtocols, setMeasurementProtocols] = useState(() => loadFromLocalStorage(projectKey('measurementProtocols'), []));
+    const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage(projectKey('processingProtocols'), initialProcessingProtocols))
 
     // Mappings
-    const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToStudyVariableMapping', existingStudyToStudyVariableMapping));
-    const [sensorToMeasurementProtocolMapping, setSensorToMeasurementProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToMeasurementProtocolMapping', []));
-    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorMeasurementMapping', existingStudyToSensorMeasurementMapping));
-    const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage('globalAppData_sensorToProcessingProtocolMapping', []));
-    const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToSensorProcessingMapping', []));
-    const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage('globalAppData_studyToAssayMapping', []));
+    const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => loadFromLocalStorage(projectKey('studyToStudyVariableMapping'), existingStudyToStudyVariableMapping));
+    const [sensorToMeasurementProtocolMapping, setSensorToMeasurementProtocolMapping] = useState(() => loadFromLocalStorage(projectKey('sensorToMeasurementProtocolMapping'), []));
+    const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage(projectKey('studyToSensorMeasurementMapping'), existingStudyToSensorMeasurementMapping));
+    const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage(projectKey('sensorToProcessingProtocolMapping'), []));
+    const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage(projectKey('studyToSensorProcessingMapping'), []));
+    const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage(projectKey('studyToAssayMapping'), []));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
-    const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage('globalAppData_pageTabStates', {}));
-    // Selected dataset (root folder + indexed file tree) — managed by useDatasetStore
-    const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore();
+    const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage(projectKey('pageTabStates'), {}));
+    // Selected dataset (root folder + indexed file tree) — managed by useDatasetStore (scoped to currentProjectId)
+    const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore(currentProjectId);
     // In-app explorer control: allow other components to open the app explorer and await a selection
     const [explorerOpen, setExplorerOpen] = useState(false);
     const explorerResolveRef = useRef(null);
@@ -89,6 +108,80 @@ export const GlobalDataProvider = ({ children }) => {
         }
     };
 
+    // Project management helpers
+    function createProject(name = 'Untitled Project') {
+        const id = uuidv4();
+        const p = { id, name };
+        setProjects((prev) => {
+            const next = [...prev, p];
+            saveToLocalStorage('globalAppData_projects', next);
+            return next;
+        });
+        // create an empty skeleton for the new project's keys
+        setCurrentProjectId(id);
+        saveToLocalStorage('globalAppData_currentProjectId', id);
+        return id;
+    }
+
+    function deleteProject(id) {
+        setProjects((prev) => {
+            const next = prev.filter((p) => p.id !== id);
+            saveToLocalStorage('globalAppData_projects', next);
+            return next;
+        });
+        // if the deleted project was active, switch to the first project if present
+        setCurrentProjectId((cur) => {
+            if (cur === id) {
+                const remaining = loadFromLocalStorage('globalAppData_projects', []);
+                const nextId = (remaining[0] && remaining[0].id) || null;
+                saveToLocalStorage('globalAppData_currentProjectId', nextId);
+                return nextId;
+            }
+            return cur;
+        });
+    }
+
+    function renameProject(id, newName) {
+        setProjects((prev) => {
+            const next = prev.map((p) => (p.id === id ? { ...p, name: newName } : p));
+            saveToLocalStorage('globalAppData_projects', next);
+            return next;
+        });
+    }
+
+    // Switch active project and reload per-project state from storage
+    function switchProject(id) {
+        if (!id) return;
+        const prevId = currentProjectId;
+        setCurrentProjectId(id);
+        saveToLocalStorage('globalAppData_currentProjectId', id);
+
+        // Load each piece of state from the new project's keys and replace local state
+        try {
+            setStudies(loadFromLocalStorage(`globalAppData_${id}_studies`, initialStudies));
+            setInvestigations(loadFromLocalStorage(`globalAppData_${id}_investigations`, initialFormState));
+            setContacts(loadFromLocalStorage(`globalAppData_${id}_contacts`, initialContacts));
+            setTestSetups(loadFromLocalStorage(`globalAppData_${id}_testSetups`, initialTestSetups));
+            setPublications(loadFromLocalStorage(`globalAppData_${id}_publications`, initialPublications));
+            setSelectedTestSetupId(loadFromLocalStorage(`globalAppData_${id}_selectedTestSetupId`, null));
+            setStudyVariables(loadFromLocalStorage(`globalAppData_${id}_studyVariables`, initialStudyVariables));
+            setMeasurementProtocols(loadFromLocalStorage(`globalAppData_${id}_measurementProtocols`, []));
+            setProcessingProtocols(loadFromLocalStorage(`globalAppData_${id}_processingProtocols`, initialProcessingProtocols));
+
+            setStudyToStudyVariableMapping(loadFromLocalStorage(`globalAppData_${id}_studyToStudyVariableMapping`, existingStudyToStudyVariableMapping));
+            setSensorToMeasurementProtocolMapping(loadFromLocalStorage(`globalAppData_${id}_sensorToMeasurementProtocolMapping`, []));
+            setStudyToSensorMeasurementMapping(loadFromLocalStorage(`globalAppData_${id}_studyToSensorMeasurementMapping`, existingStudyToSensorMeasurementMapping));
+            setSensorToProcessingProtocolMapping(loadFromLocalStorage(`globalAppData_${id}_sensorToProcessingProtocolMapping`, []));
+            setStudyToSensorProcessingMapping(loadFromLocalStorage(`globalAppData_${id}_studyToSensorProcessingMapping`, []));
+            setStudyToAssayMapping(loadFromLocalStorage(`globalAppData_${id}_studyToAssayMapping`, []));
+
+            setPageTabStates(loadFromLocalStorage(`globalAppData_${id}_pageTabStates`, {}));
+        } catch (err) {
+            console.error('[GlobalDataContext] switchProject load error', err);
+        }
+        // Note: selectedDataset in IndexedDB is currently global; see next steps to scope datasets per project.
+    }
+
     // Effect for saving all data to local storage
     // This useEffect will run whenever any of its dependencies change, saving the latest state.
     useEffect(() => {
@@ -106,23 +199,28 @@ export const GlobalDataProvider = ({ children }) => {
         //     studyToAssayMapping
         // };
 
-        localStorage.setItem('globalAppData_studies', JSON.stringify(studies));
-        localStorage.setItem('globalAppData_investigations', JSON.stringify(investigations));
-        localStorage.setItem('globalAppData_contacts', JSON.stringify(contacts));
-        localStorage.setItem('globalAppData_testSetups', JSON.stringify(testSetups));
-        localStorage.setItem('globalAppData_publications', JSON.stringify(publications));
-        localStorage.setItem('globalAppData_selectedTestSetupId', JSON.stringify(selectedTestSetupId));
-        localStorage.setItem('globalAppData_studyVariables', JSON.stringify(studyVariables));
-        localStorage.setItem('globalAppData_measurementProtocols', JSON.stringify(measurementProtocols));
-        localStorage.setItem('globalAppData_processingProtocols', JSON.stringify(processingProtocols));
+    // per-project storage keys
+    saveToLocalStorage(projectKey('studies', currentProjectId), studies);
+    saveToLocalStorage(projectKey('investigations', currentProjectId), investigations);
+    saveToLocalStorage(projectKey('contacts', currentProjectId), contacts);
+    saveToLocalStorage(projectKey('testSetups', currentProjectId), testSetups);
+    saveToLocalStorage(projectKey('publications', currentProjectId), publications);
+    saveToLocalStorage(projectKey('selectedTestSetupId', currentProjectId), selectedTestSetupId);
+    saveToLocalStorage(projectKey('studyVariables', currentProjectId), studyVariables);
+    saveToLocalStorage(projectKey('measurementProtocols', currentProjectId), measurementProtocols);
+    saveToLocalStorage(projectKey('processingProtocols', currentProjectId), processingProtocols);
 
-        localStorage.setItem('globalAppData_studyToStudyVariableMapping', JSON.stringify(studyToStudyVariableMapping));
-        localStorage.setItem('globalAppData_sensorToMeasurementProtocolMapping', JSON.stringify(sensorToMeasurementProtocolMapping));
-        localStorage.setItem('globalAppData_studyToSensorMeasurementMapping', JSON.stringify(studyToSensorMeasurementMapping));
-        localStorage.setItem('globalAppData_sensorToProcessingProtocolMapping', JSON.stringify(sensorToProcessingProtocolMapping));
-        localStorage.setItem('globalAppData_studyToSensorProcessingMapping', JSON.stringify(studyToSensorProcessingMapping));
-        localStorage.setItem('globalAppData_studyToAssayMapping', JSON.stringify(studyToAssayMapping));
-        localStorage.setItem('globalAppData_pageTabStates', JSON.stringify(pageTabStates));
+    saveToLocalStorage(projectKey('studyToStudyVariableMapping', currentProjectId), studyToStudyVariableMapping);
+    saveToLocalStorage(projectKey('sensorToMeasurementProtocolMapping', currentProjectId), sensorToMeasurementProtocolMapping);
+    saveToLocalStorage(projectKey('studyToSensorMeasurementMapping', currentProjectId), studyToSensorMeasurementMapping);
+    saveToLocalStorage(projectKey('sensorToProcessingProtocolMapping', currentProjectId), sensorToProcessingProtocolMapping);
+    saveToLocalStorage(projectKey('studyToSensorProcessingMapping', currentProjectId), studyToSensorProcessingMapping);
+    saveToLocalStorage(projectKey('studyToAssayMapping', currentProjectId), studyToAssayMapping);
+    saveToLocalStorage(projectKey('pageTabStates', currentProjectId), pageTabStates);
+
+    // store projects list and active project id globally
+    saveToLocalStorage('globalAppData_projects', projects);
+    saveToLocalStorage('globalAppData_currentProjectId', currentProjectId);
         
         // selectedDataset is persisted to IndexedDB; do not store large trees in localStorage.
         // console.log("Global data saved to localStorage:", dataToStore);
@@ -240,6 +338,13 @@ export const GlobalDataProvider = ({ children }) => {
         initDatasetHydrated: initHydrated,
         dataMap
     };
+    // add project helpers and list
+    value.projects = projects;
+    value.currentProjectId = currentProjectId;
+    value.createProject = createProject;
+    value.deleteProject = deleteProject;
+    value.renameProject = renameProject;
+    value.switchProject = switchProject;
     return (
         <GlobalDataContext.Provider value={value}>
             {children}

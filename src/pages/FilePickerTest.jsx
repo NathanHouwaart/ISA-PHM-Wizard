@@ -2,6 +2,7 @@ import React, { useState, useRef, useContext, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import TooltipButton from "../components/Widgets/TooltipButton";
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { directoryOpen, supported as bfsSupported } from 'browser-fs-access';
 
 export function FileExplorer() {
   const [allFiles, setAllFiles] = useState([]);
@@ -79,64 +80,60 @@ export function FileExplorer() {
   }
 
   async function pickRoot() {
-    // First open the system directory picker before showing any loading UI
     try {
-      const rootHandle = await window.showDirectoryPicker({ mode: "read" });
-      if (!rootHandle) {
-        // user cancelled
-        return;
-      }
+      const files = await directoryOpen({ recursive: true });
+      if (!files || files.length === 0) return;
 
-      // now begin indexing and show loading/progress
       setLoading(true);
       setProgressPercent(0);
-      setProgressMessage("");
+      setProgressMessage('Indexing...');
       setIndexed(false);
 
-      // store root folder name for breadcrumbs and full paths
-      try {
-        setRootName(rootHandle.name || "Root");
-      } catch (err) {
-        setRootName("Root");
-      }
+      const root = files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : 'Root';
+      setRootName(root);
 
-      // first pass: count total entries
-      setProgressMessage("Counting items...");
-      let total = 0;
-      try {
-        total = await countEntries(rootHandle);
-      } catch (err) {
-        // fallback: if counting fails, set total to 1 to avoid division by zero
-        total = 1;
-      }
+      const nodesByPath = new Map();
+      nodesByPath.set('', { children: [] });
 
-      let processed = 0;
-
-      const onProgress = ({ current, processed: p = 0 }) => {
-        if (current) setProgressMessage(current);
-        if (p) {
-          processed += p;
-          const percent = Math.min(100, Math.round((processed / Math.max(1, total)) * 100));
-          setProgressPercent(percent);
+      for (const f of files) {
+        const rel = f.webkitRelativePath || f.name;
+        const parts = rel.split('/');
+        let path = '';
+        for (let i = 0; i < parts.length; i++) {
+          const name = parts[i];
+          const relPath = path ? `${path}/${name}` : name;
+          if (!nodesByPath.has(relPath)) {
+            nodesByPath.set(relPath, { name, relPath, isDirectory: i < parts.length - 1, children: [] });
+            const parent = nodesByPath.get(path);
+            if (parent) parent.children.push(nodesByPath.get(relPath));
+          }
+          path = relPath;
         }
-      };
+      }
 
-      // second pass: build tree with progress updates
-      const tree = await walkDir(rootHandle, "", onProgress);
+      function sortNodes(nodes) {
+        return nodes
+          .sort((a, b) => {
+            if (a.isDirectory && !b.isDirectory) return -1;
+            if (!a.isDirectory && b.isDirectory) return 1;
+            return (a.name || '').localeCompare(b.name || '');
+          })
+          .map((n) => (n.isDirectory ? { ...n, children: sortNodes(n.children || []) } : n));
+      }
 
-      setAllFiles(tree);
-      setCurrentPath("");
+      const tree = (nodesByPath.get('')?.children || []).map((n) => n);
+      setAllFiles(sortNodes(tree));
+      setCurrentPath('');
       setPathStack([]);
       setSelectedFiles([]);
       setLastSelectedIndex(null);
       setIndexed(true);
     } catch (err) {
-      // user cancelled or other error - ensure we don't mark as indexed
-      // console.debug(err);
+      // cancelled or error
     } finally {
       setLoading(false);
       setProgressPercent(0);
-      setProgressMessage("");
+      setProgressMessage('');
     }
   }
 
