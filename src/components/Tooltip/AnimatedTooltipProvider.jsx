@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { isValidElement, Children } from 'react';
 
 export const AnimatedTooltipExplanation = ({ children }) => children;
 AnimatedTooltipExplanation.displayName = 'AnimatedTooltipExplanation';
@@ -7,11 +7,11 @@ export const AnimatedTooltipExample = ({ children }) => children;
 AnimatedTooltipExample.displayName = 'AnimatedTooltipExample';
 
 export function AnimatedTooltip({ isVisible, children, className = '' }) {
-  const explanations = React.Children.toArray(children).filter(
+  const explanations = Children.toArray(children).filter(
     (child) => isValidElement(child) && child.type === AnimatedTooltipExplanation
   );
 
-  const examples = React.Children.toArray(children).filter(
+  const examples = Children.toArray(children).filter(
     (child) => isValidElement(child) && child.type === AnimatedTooltipExample
   );
 

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
  * Custom hook to observe the resize of a DOM element.
  *
  * @param {Function} onResize A callback function that receives the new height.
- * @returns {React.RefObject} A ref object to attach to the DOM element you want to observe.
+ * @returns {RefObject} A ref object to attach to the DOM element you want to observe.
  */
 const useResizeObserver = (onResize) => {
   const elementRef = useRef(null); // Internal ref to the element being observed

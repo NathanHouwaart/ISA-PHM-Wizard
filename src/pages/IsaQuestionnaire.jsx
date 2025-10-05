@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'; // Import useEffect
+import React, { useEffect, useState } from 'react'; // Import useEffect
 
 import "../styles.css";
 
@@ -44,14 +44,14 @@ export const IsaQuestionnaire = () => {
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // show project sessions modal when dataset hydration finishes and no dataset is selected
-  const [showSessionsModal, setShowSessionsModal] = React.useState(false);
-  const [showDatasetOverlay, setShowDatasetOverlay] = React.useState(false);
+  const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [showDatasetOverlay, setShowDatasetOverlay] = useState(false);
   const { selectedDataset, initDatasetHydrated } = useGlobalDataContext();
 
   // Always show the sessions modal when navigating to this route so the user can pick a project.
   // This makes the selection explicit on every visit (reload or client-side navigation).
   const location = useLocation();
-  React.useEffect(() => {
+  useEffect(() => {
     setShowSessionsModal(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);

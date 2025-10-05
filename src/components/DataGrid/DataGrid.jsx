@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle, useMemo, isValidElement } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../../hooks/useDataGrid';
 import "./DataGrid.css";
@@ -241,7 +241,7 @@ const DataGrid = forwardRef(({
     }, [hookRowData, updateRowDataBatch]);
 
     // Enhanced column definitions that preserve user-resized widths
-    const enhancedColumnDefs = React.useMemo(() => {
+    const enhancedColumnDefs = useMemo(() => {
         // Use the synchronous ref if available to avoid races when a resize event
         // just updated the ref but the state update hasn't propagated yet.
         const sizesMap = columnSizesRef.current || columnSizes;
@@ -363,10 +363,10 @@ const DataGrid = forwardRef(({
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
     
     // Keep a ref for internal logic that needs column definitions
-    const stableColumnDefs = React.useRef(enhancedColumnDefs);
-    const lastEnhancedColumnsRef = React.useRef(enhancedColumnDefs);
+    const stableColumnDefs = useRef(enhancedColumnDefs);
+    const lastEnhancedColumnsRef = useRef(enhancedColumnDefs);
 
-    React.useEffect(() => {
+    useEffect(() => {
         // Only update if the columns actually changed (deep comparison of structure and sizes)
         const columnsChanged = enhancedColumnDefs.length !== lastEnhancedColumnsRef.current.length ||
             enhancedColumnDefs.some((col, index) => {
@@ -990,8 +990,8 @@ const DataGrid = forwardRef(({
                                             {(actionPlugins && actionPlugins.length > 0) && actionPlugins.map((P, idx) => {
                                                 const pluginApi = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug };
                                                 // If item is a valid React element, clone it with props
-                                                if (React.isValidElement(P)) {
-                                                    return React.cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
+                                                if (isValidElement(P)) {
+                                                    return cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
                                                 }
                                                 // If it's a component (function/class), instantiate it
                                                 if (typeof P === 'function') {

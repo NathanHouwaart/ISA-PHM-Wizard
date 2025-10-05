@@ -118,8 +118,8 @@ export const GlobalDataProvider = ({ children }) => {
             return next;
         });
         // create an empty skeleton for the new project's keys
-        setCurrentProjectId(id);
-        saveToLocalStorage('globalAppData_currentProjectId', id);
+        // NOTE: do NOT automatically switch to the new project here. Selection
+        // should be explicit by the user in the ProjectSessionsModal.
         return id;
     }
 

@@ -187,6 +187,69 @@ export async function clearTree(projectId = 'default') {
   }
 }
 
+// Export all nodes and per-project localStorage keys for a given projectId
+export async function exportProject(projectId = 'default') {
+  try {
+    const nodes = await db.nodes.where('projectId').equals(projectId).toArray();
+    // collect per-project localStorage entries
+    const ls = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`globalAppData_${projectId}_`)) {
+          try { ls[key] = localStorage.getItem(key); } catch (e) { /* ignore */ }
+        }
+      }
+    } catch (err) {
+      console.warn('[indexedTreeStore] localStorage read error', err);
+    }
+
+    return {
+      exportedAt: Date.now(),
+      projectId,
+      nodes: nodes.map((r) => ({ path: r.path, compressed: r.compressed, parentPath: r.parentPath, updatedAt: r.updatedAt, meta: r.meta })) ,
+      localStorage: ls
+    };
+  } catch (err) {
+    console.error('[indexedTreeStore] exportProject error', err);
+    throw err;
+  }
+}
+
+// Import a project package into the DB under targetProjectId. The package format
+// should be the object produced by exportProject(). Returns true on success.
+export async function importProject(pkg, targetProjectId) {
+  if (!pkg || !Array.isArray(pkg.nodes)) throw new Error('invalid project package');
+  try {
+    await db.transaction('rw', 'nodes', async () => {
+      const ops = [];
+      for (const n of pkg.nodes) {
+        const now = n.updatedAt || Date.now();
+        ops.push(db.nodes.put({ projectId: targetProjectId, path: n.path || '', compressed: n.compressed || null, parentPath: n.parentPath || '', updatedAt: now, meta: n.meta || {} }));
+      }
+      await Promise.all(ops);
+    });
+
+    // restore per-project localStorage keys (if provided). We prefix them with the new project id.
+    if (pkg.localStorage && typeof pkg.localStorage === 'object') {
+      try {
+        for (const key of Object.keys(pkg.localStorage)) {
+          try {
+            const suffix = key.replace(`globalAppData_${pkg.projectId}_`, '');
+            const newKey = `globalAppData_${targetProjectId}_${suffix}`;
+            localStorage.setItem(newKey, pkg.localStorage[key]);
+          } catch (e) { /* ignore individual key errors */ }
+        }
+      } catch (e) { console.warn('[indexedTreeStore] importProject localStorage error', e); }
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[indexedTreeStore] importProject error', err);
+    throw err;
+  }
+}
+
 // React hook wrapper
 export function useIndexedTreeStore() {
   return {
