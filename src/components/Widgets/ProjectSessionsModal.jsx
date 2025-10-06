@@ -306,8 +306,9 @@ export default function ProjectSessionsModal({ onClose }) {
       if (!Array.isArray(setups)) setups = [];
       
       if (resolution === 'keep-local') {
-        // Keep local version - just complete the import without modifying test setups
-        // The project will reference the existing test setup by ID
+        // Keep local version - import the project data but don't modify the test setup
+        // The imported project will reference the existing test setup by ID
+        await importProject(pkg, newProjectId, { skipConflictCheck: true });
         await completeImport(newProjectId);
         
       } else if (resolution === 'use-imported') {
@@ -316,7 +317,14 @@ export default function ProjectSessionsModal({ onClose }) {
         if (index !== -1) {
           setups[index] = conflict.imported.setup;
           localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
+          
+          // Also update the global context's testSetups state if available
+          if (typeof setTestSetups === 'function') {
+            setTestSetups([...setups]);
+          }
         }
+        // Now import the project data
+        await importProject(pkg, newProjectId, { skipConflictCheck: true });
         await completeImport(newProjectId);
         
       } else if (resolution === 'keep-both') {
@@ -329,10 +337,23 @@ export default function ProjectSessionsModal({ onClose }) {
         setups.push(newSetup);
         localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
         
+        // Update the global context's testSetups state if available
+        if (typeof setTestSetups === 'function') {
+          setTestSetups([...setups]);
+        }
+        
+        // Update the imported package to reference the new setup ID
+        const modifiedPkg = {
+          ...pkg,
+          selectedTestSetup: newSetup
+        };
+        
         // Update the project's selectedTestSetupId to point to the new setup
         const selectedIdKey = `globalAppData_${newProjectId}_selectedTestSetupId`;
         localStorage.setItem(selectedIdKey, JSON.stringify(newSetup.id));
         
+        // Now import the project data with the modified package
+        await importProject(modifiedPkg, newProjectId, { skipConflictCheck: true });
         await completeImport(newProjectId);
       }
       

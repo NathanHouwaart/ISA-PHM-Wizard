@@ -22,14 +22,8 @@ import Dexie from 'dexie';
 import LZString from 'lz-string';
 import { hasContentChanged } from './testSetupUtils';
 
-// We'll create a new DB name for the updated schema so we don't attempt to change
-// the existing object store primary key in-place (Dexie can't change primary keys).
-// The migration below will try to open the old DB and copy records into the new DB
-// with projectId = 'default'.
-const OLD_DB_NAME = 'isa_phm_tree_db_v1';
+// DB name and initialization: assume a clean slate - no migration from older DBs.
 const DB_NAME = 'isa_phm_tree_db_v2';
-const STORE_NAME = 'nodes';
-
 const db = new Dexie(DB_NAME);
 
 // New DB schema: compound primary key projectId+path
@@ -37,37 +31,6 @@ db.version(1).stores({
   // use Dexie's compound primary key syntax: '&[projectId+path]'
   nodes: '&[projectId+path], projectId, parentPath, updatedAt'
 });
-
-// Try to migrate data from the old DB (if present) into this new DB.
-(async function migrateFromOldDb() {
-  try {
-    const oldDb = new Dexie(OLD_DB_NAME);
-    // we only need a minimal schema to read existing records
-    oldDb.version(1).stores({ nodes: '&path, updatedAt' });
-    // also try v2 shape if it exists
-    oldDb.version(2).stores({ nodes: '&path,parentPath,updatedAt' });
-    await oldDb.open();
-    const all = await oldDb.table('nodes').toArray();
-    if (all && all.length) {
-      const now = Date.now();
-      await db.transaction('rw', 'nodes', async () => {
-        for (const r of all) {
-          try {
-            const p = r.path || '';
-            const parentPath = p === '' ? '' : (p.lastIndexOf('/') === -1 ? '' : p.slice(0, p.lastIndexOf('/')));
-            await db.nodes.put({ projectId: 'example-project', path: p, compressed: r.compressed, parentPath, updatedAt: r.updatedAt || now });
-          } catch (err) {
-            console.warn('[indexedTreeStore] migration item skipped', r && r.path, err);
-          }
-        }
-      });
-    }
-    try { await oldDb.close(); } catch (e) { /* ignore */ }
-  } catch (err) {
-    // If opening the old DB fails (not present), just skip migration silently.
-    console.debug('[indexedTreeStore] no old DB to migrate from', err && err.message);
-  }
-})();
 
 // Helper: compress + decompress
 function compress(obj) {
@@ -270,12 +233,16 @@ export async function exportProject(projectId = 'example-project') {
 // should be the object produced by exportProject(). Returns an object with status and optional conflict info.
 // Appends the imported test setup to the global testSetups list if not already present.
 // If a conflict is detected (same UUID, different version), returns conflict details for UI resolution.
-export async function importProject(pkg, targetProjectId) {
+// 
+// @param pkg - The project package to import
+// @param targetProjectId - The ID to assign to the imported project
+// @param options - Optional configuration: { skipConflictCheck: boolean }
+export async function importProject(pkg, targetProjectId, options = {}) {
   if (!pkg || !Array.isArray(pkg.nodes)) throw new Error('invalid project package');
   
-  // Check for test setup conflicts BEFORE importing anything
+  // Check for test setup conflicts BEFORE importing anything (unless explicitly skipped)
   let conflict = null;
-  if (pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
+  if (!options.skipConflictCheck && pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
     try {
       const setupsRaw = localStorage.getItem('globalAppData_testSetups');
       let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
