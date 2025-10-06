@@ -3,6 +3,7 @@
 import React, { forwardRef, useEffect, useState } from 'react';
 
 import useFuseSearch from '../../hooks/useFuseSearch';
+import FormField from '../Form/FormField';
 
 import testSetupSelectionSlideContent from '../../data/testSetupSelectionSlideContent.json';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
@@ -19,15 +20,13 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { 
-        testSetups, 
-        selectedTestSetupId, setSelectedTestSetupId } = useGlobalDataContext();
+    const { testSetups, selectedTestSetupId, setSelectedTestSetupId } = useGlobalDataContext();
 
     const {
         query,
         setQuery,
         results } = useFuseSearch(
-            testSetups, ['name', 'location'],
+            testSetups || [], ['name', 'location'],
             { threshold: 0.3, limit: 10, debounce: 150 }
         );
 
@@ -46,15 +45,15 @@ export const TestSetupSelectionSlide = forwardRef(({ onHeightChange }, ref) => {
             </SlidePageSubtitle>
 
             <div className='p-4 bg-gray-50 rounded-lg border border-gray-300'>
-                <div className='flex justify-center '>
-                    <input 
-                        type='text' 
-                        value={query} 
-                        onChange={(e) => setQuery(e.target.value)} 
-                        placeholder='Search for Test Setups...' 
-                        className='w-full max-w-md mx-auto mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500' 
-                    />
-                </div>
+                    <div className='flex justify-center '>
+                        <FormField
+                            name="testsetup-search"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder='Search for Test Setups...'
+                            className='w-full max-w-md mx-auto mb-4 p-2'
+                        />
+                    </div>
                 <div className='grid grid-cols-1 gap-2 '>
 
 

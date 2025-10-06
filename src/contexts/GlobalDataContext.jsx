@@ -74,7 +74,8 @@ export const GlobalDataProvider = ({ children }) => {
     const [studies, setStudies] = useState(() => loadFromLocalStorage(projectKey('studies'), getDefaultValue('studies', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [investigations, setInvestigations] = useState(() => loadFromLocalStorage(projectKey('investigations'), initialFormState));
     const [contacts, setContacts] = useState(() => loadFromLocalStorage(projectKey('contacts'), getDefaultValue('contacts', currentProjectId !== DEFAULT_PROJECT_ID)));
-    const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage(projectKey('testSetups'), getDefaultValue('testSetups', currentProjectId !== DEFAULT_PROJECT_ID)));
+    // Test setups are global and shared across all projects (not per-project)
+    const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', getDefaultValue('testSetups', false)));
     const [publications, setPublications] = useState(() => loadFromLocalStorage(projectKey('publications'), getDefaultValue('publications', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => loadFromLocalStorage(projectKey('selectedTestSetupId'), null));
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage(projectKey('studyVariables'), getDefaultValue('studyVariables', currentProjectId !== DEFAULT_PROJECT_ID)));
@@ -179,7 +180,11 @@ export const GlobalDataProvider = ({ children }) => {
             saveToLocalStorage(`globalAppData_${id}_studies`, getResetValue('studies'));
             saveToLocalStorage(`globalAppData_${id}_investigations`, getResetValue('investigations'));
             saveToLocalStorage(`globalAppData_${id}_contacts`, getResetValue('contacts'));
-            saveToLocalStorage(`globalAppData_${id}_testSetups`, getResetValue('testSetups'));
+            // Do NOT write per-project testSetups. Test setups are global across projects.
+            // If resetting the example project, seed the global testSetups from the example baseline.
+            if (isExampleProject) {
+                try { saveToLocalStorage('globalAppData_testSetups', getResetValue('testSetups')); } catch (e) { /* ignore */ }
+            }
             saveToLocalStorage(`globalAppData_${id}_publications`, getResetValue('publications'));
             saveToLocalStorage(`globalAppData_${id}_selectedTestSetupId`, getResetValue('selectedTestSetupId'));
             saveToLocalStorage(`globalAppData_${id}_studyVariables`, getResetValue('studyVariables'));
@@ -270,7 +275,8 @@ export const GlobalDataProvider = ({ children }) => {
             setStudies(loadFromLocalStorage(`globalAppData_${id}_studies`, getSwitchDefault('studies')));
             setInvestigations(loadFromLocalStorage(`globalAppData_${id}_investigations`, initialFormState));
             setContacts(loadFromLocalStorage(`globalAppData_${id}_contacts`, getSwitchDefault('contacts')));
-            setTestSetups(loadFromLocalStorage(`globalAppData_${id}_testSetups`, getSwitchDefault('testSetups')));
+                // testSetups are global; do not replace them when switching projects.
+                // keep existing testSetups in memory
             setPublications(loadFromLocalStorage(`globalAppData_${id}_publications`, getSwitchDefault('publications')));
             setSelectedTestSetupId(loadFromLocalStorage(`globalAppData_${id}_selectedTestSetupId`, null));
             setStudyVariables(loadFromLocalStorage(`globalAppData_${id}_studyVariables`, getSwitchDefault('studyVariables')));
@@ -316,7 +322,8 @@ export const GlobalDataProvider = ({ children }) => {
     saveToLocalStorage(projectKey('studies', currentProjectId), studies);
     saveToLocalStorage(projectKey('investigations', currentProjectId), investigations);
     saveToLocalStorage(projectKey('contacts', currentProjectId), contacts);
-    saveToLocalStorage(projectKey('testSetups', currentProjectId), testSetups);
+    // testSetups are global (not per-project)
+    saveToLocalStorage('globalAppData_testSetups', testSetups);
     saveToLocalStorage(projectKey('publications', currentProjectId), publications);
     saveToLocalStorage(projectKey('selectedTestSetupId', currentProjectId), selectedTestSetupId);
     saveToLocalStorage(projectKey('studyVariables', currentProjectId), studyVariables);

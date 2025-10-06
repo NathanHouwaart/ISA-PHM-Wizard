@@ -211,7 +211,8 @@ export async function clearTree(projectId = 'example-project') {
   }
 }
 
-// Export all nodes and per-project localStorage keys for a given projectId
+// Export all nodes and per-project localStorage keys for a given projectId.
+// Export only the selected test setup (if any) rather than all test setups.
 export async function exportProject(projectId = 'example-project') {
   // If projectId is null or undefined, throw error (cannot export nothing)
   if (!projectId) {
@@ -233,11 +234,30 @@ export async function exportProject(projectId = 'example-project') {
       console.warn('[indexedTreeStore] localStorage read error', err);
     }
 
+    // Export only the selected test setup (from selectedTestSetupId) if present.
+    // Read global testSetups and per-project selectedTestSetupId, then filter to one setup.
+    let selectedSetup = null;
+    try {
+      const selectedIdRaw = localStorage.getItem(`globalAppData_${projectId}_selectedTestSetupId`);
+      const selectedId = selectedIdRaw ? JSON.parse(selectedIdRaw) : null;
+      if (selectedId) {
+        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+        const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
+        if (Array.isArray(setups)) {
+          const s = setups.find((x) => x.id === selectedId);
+          if (s) selectedSetup = s;
+        }
+      }
+    } catch (e) {
+      console.warn('[indexedTreeStore] export selected test setup error', e);
+    }
+
     return {
       exportedAt: Date.now(),
       projectId,
-      nodes: nodes.map((r) => ({ path: r.path, compressed: r.compressed, parentPath: r.parentPath, updatedAt: r.updatedAt, meta: r.meta })) ,
-      localStorage: ls
+      nodes: nodes.map((r) => ({ path: r.path, compressed: r.compressed, parentPath: r.parentPath, updatedAt: r.updatedAt, meta: r.meta })),
+      localStorage: ls,
+      selectedTestSetup: selectedSetup  // single setup or null
     };
   } catch (err) {
     console.error('[indexedTreeStore] exportProject error', err);
@@ -247,6 +267,7 @@ export async function exportProject(projectId = 'example-project') {
 
 // Import a project package into the DB under targetProjectId. The package format
 // should be the object produced by exportProject(). Returns true on success.
+// Appends the imported test setup to the global testSetups list if not already present.
 export async function importProject(pkg, targetProjectId) {
   if (!pkg || !Array.isArray(pkg.nodes)) throw new Error('invalid project package');
   try {
@@ -270,6 +291,22 @@ export async function importProject(pkg, targetProjectId) {
           } catch (e) { /* ignore individual key errors */ }
         }
       } catch (e) { console.warn('[indexedTreeStore] importProject localStorage error', e); }
+    }
+
+    // Append the imported selectedTestSetup to the global testSetups list if not already present (by UUID)
+    if (pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
+      try {
+        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+        let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+        if (!Array.isArray(setups)) setups = [];
+        const exists = setups.some((s) => s && s.id === pkg.selectedTestSetup.id);
+        if (!exists) {
+          setups.push(pkg.selectedTestSetup);
+          localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
+        }
+      } catch (e) {
+        console.warn('[indexedTreeStore] importProject append test setup error', e);
+      }
     }
 
     return true;

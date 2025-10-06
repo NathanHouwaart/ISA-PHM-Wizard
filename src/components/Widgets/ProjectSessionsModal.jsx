@@ -10,7 +10,7 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID } = useGlobalDataContext();
+  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID, testSetups, setTestSetups } = useGlobalDataContext();
   const [loadingMap, setLoadingMap] = useState({});
   const [trees, setTrees] = useState({});
   const [renameMap, setRenameMap] = useState({});
@@ -251,6 +251,18 @@ export default function ProjectSessionsModal({ onClose }) {
       const pkg = JSON.parse(text);
       const newId = createProject(pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`);
       await importProject(pkg, newId);
+      
+      // Reload the global testSetups from localStorage to reflect the newly imported test setup
+      try {
+        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+        const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+        if (Array.isArray(setups)) {
+          setTestSetups(setups);
+        }
+      } catch (e) {
+        console.warn('[ProjectSessionsModal] failed to reload testSetups after import', e);
+      }
+      
       // Do NOT immediately switch to the new project or close the modal.
       // Instead, keep the ProjectSessionsModal open and select the imported project
       // so the user can inspect/rename it before switching.
@@ -415,7 +427,8 @@ export default function ProjectSessionsModal({ onClose }) {
                         const setupId = setupIdRaw ? JSON.parse(setupIdRaw) : null;
                         let setupName = null;
                         if (setupId) {
-                          const setupsRaw = localStorage.getItem(`globalAppData_${p.id}_testSetups`);
+                          // Test setups are global; read from the global storage key
+                          const setupsRaw = localStorage.getItem(`globalAppData_testSetups`);
                           const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
                           if (Array.isArray(setups)) {
                             const s = setups.find((x) => x.id === setupId);
