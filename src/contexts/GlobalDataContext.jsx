@@ -86,7 +86,9 @@ export const GlobalDataProvider = ({ children }) => {
     const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage(projectKey('pageTabStates'), {}));
     // Selected dataset (root folder + indexed file tree) — managed by useDatasetStore (scoped to currentProjectId)
     const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore(currentProjectId);
-    // In-app explorer control: allow other components to open the app explorer and await a selection
+    // In-app explorer control: promise-based API decoupled from visibility
+    // Parent component (IsaQuestionnaire) controls visibility via local state
+    // This context only manages the promise resolution for async workflows
     const [explorerOpen, setExplorerOpen] = useState(false);
     const explorerResolveRef = useRef(null);
     // Ref that indicates the initial IndexedDB hydration has completed (success or not).
@@ -99,13 +101,16 @@ export const GlobalDataProvider = ({ children }) => {
         });
     };
 
-    const resolveExplorer = (value) => {
-        try {
-            if (explorerResolveRef.current) explorerResolveRef.current(value);
-        } finally {
+    const closeExplorer = () => {
+        setExplorerOpen(false);
+    };
+
+    const resolveExplorerSelection = (value) => {
+        if (explorerResolveRef.current) {
+            explorerResolveRef.current(value);
             explorerResolveRef.current = null;
-            setExplorerOpen(false);
         }
+        setExplorerOpen(false);
     };
 
     // Project management helpers
@@ -334,7 +339,8 @@ export const GlobalDataProvider = ({ children }) => {
         explorerOpen,
         setExplorerOpen,
         openExplorer,
-        resolveExplorer,
+        closeExplorer,
+        resolveExplorerSelection,
         initDatasetHydrated: initHydrated,
         dataMap
     };

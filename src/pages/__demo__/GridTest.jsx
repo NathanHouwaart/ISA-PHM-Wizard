@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import PageWrapper from "../../layout/PageWrapper";
-import "./../About.css";
+
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import DataGrid from '../../components/DataGrid/DataGrid';
 import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate } from '../../components/DataGrid/CellTemplates';

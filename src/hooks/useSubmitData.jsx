@@ -107,7 +107,7 @@ export default function useSubmitData() {
       formData.append('file', blob, 'input.json');
 
       const DEFAULT_PROD_API = 'https://dwvmqgeaan.eu-west-1.awsapprunner.com';
-      const apiBase = (import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
+      const apiBase = (import.meta.env && import.meta.env.VITE_API_BASE)
         ? import.meta.env.VITE_API_BASE
         : (import.meta.env.MODE === 'development' ? 'http://localhost:8000' : DEFAULT_PROD_API);
 

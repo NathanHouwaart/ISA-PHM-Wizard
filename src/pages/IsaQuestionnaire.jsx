@@ -18,8 +18,9 @@ import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
+import IconToolTipButton from '../components/Widgets/IconTooltipButton';
+import { Layers } from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
-import DatasetSelectionOverlay from '../components/Widgets/DatasetSelectionOverlay';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 
 export const IsaQuestionnaire = () => {
@@ -40,13 +41,26 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { setScreenWidth, pageTabStates } = useGlobalDataContext();
+  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection } = useGlobalDataContext();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
-  // show project sessions modal when dataset hydration finishes and no dataset is selected
+  // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
-  const [showDatasetOverlay, setShowDatasetOverlay] = useState(false);
-  const { selectedDataset, initDatasetHydrated } = useGlobalDataContext();
+  
+  // Handler: Close project sessions modal
+  const handleSessionsModalClose = () => {
+    setShowSessionsModal(false);
+  };
+  
+  // Handler: Close explorer (cancel = resolve with null)
+  const handleExplorerClose = () => {
+    resolveExplorerSelection(null);
+  };
+
+  // Handler: Confirm explorer selection
+  const handleExplorerSelect = (files) => {
+    resolveExplorerSelection(files);
+  };
 
   // Always show the sessions modal when navigating to this route so the user can pick a project.
   // This makes the selection explicit on every visit (reload or client-side navigation).
@@ -78,28 +92,25 @@ export const IsaQuestionnaire = () => {
 
   return (
     <PageWrapper>
+      {/* All overlays follow consistent conditional rendering pattern with explicit handlers */}
+      {isSubmitting && <LoadingOverlay message={message} onCancel={cancel} />}
+      {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
+      {showSessionsModal && <ProjectSessionsModal onClose={handleSessionsModalClose} />}
+      {explorerOpen && <InAppExplorer onClose={handleExplorerClose} onSelect={handleExplorerSelect} />}
 
-  {isSubmitting && <LoadingOverlay message={message} onCancel={cancel} />}
-  {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
-  {showSessionsModal && (
-    <ProjectSessionsModal onClose={() => setShowSessionsModal(false)} />
-  )}
-  {showDatasetOverlay && (
-    <DatasetSelectionOverlay onClose={() => {
-      setShowDatasetOverlay(false);
-    }} />
-  )}
+      <div className="relative">
 
-      <div className="flex items-center justify-center gap-4 relative">
-        <div className="absolute left-4">
-          {/* left spacer for balanced center heading */}
+        <div className="absolute top-0 right-0 z-50">
+          <IconToolTipButton
+            icon={Layers}
+            tooltipText="Open project/session chooser"
+            onClick={() => setShowSessionsModal(true)}
+            className=""
+            aria-label="Change Project"
+          />
         </div>
-        <Heading1 className="mx-auto"> ISA Questionnaire Form </Heading1>
-        <div className="absolute mr-15 mb-3 right-0">
-          <TooltipButton tooltipText="Open project/session chooser" onClick={() => setShowSessionsModal(true)} className="px-3 py-1 bg-green-500" aria-label="Change Project">
-            Change Project
-          </TooltipButton>
-        </div>
+
+        <Heading1> ISA Questionnaire Form </Heading1>
       </div>
 
       <div className="flex justify-center mb-5">
@@ -121,42 +132,43 @@ export const IsaQuestionnaire = () => {
       </div>
 
       <div className="space-y-6">
-        {/* In-app explorer mounted here so it's available during the ISA Questionnaire flow */}
-        <InAppExplorer />
-        {/* When sessions modal is visible, mark the main content as inert visually and for assistive tech */}
-        <div aria-hidden={showSessionsModal} className={showSessionsModal ? 'pointer-events-none select-none opacity-60' : ''}>
-        <div
-          className="relative overflow-hidden transition-all duration-300 ease-in-out"
+        {/* Main content - mark as inert when any overlay is visible */}
+        <div 
+          aria-hidden={showSessionsModal || explorerOpen} 
+          className={showSessionsModal || explorerOpen ? 'pointer-events-none select-none opacity-60' : ''}
         >
           <div
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(${translateXValue}%)` }}
+            className="relative overflow-hidden transition-all duration-300 ease-in-out"
           >
-          {slides.map((slide, index) => {
-              const SlideComponent = slide;
-              // Only fully render the current slide and its immediate neighbors
-              const shouldRender = Math.abs(index - currentPage) <= 1;
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(${translateXValue}%)` }}
+            >
+              {slides.map((slide, index) => {
+                const SlideComponent = slide;
+                // Only fully render the current slide and its immediate neighbors
+                const shouldRender = Math.abs(index - currentPage) <= 1;
 
-              return (
-                <div key={index} className='w-full overflow-hidden flex-shrink-0'>
-                  <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
-                    {shouldRender ? (
-                      <SlideComponent
-            ref={el => (childRefs.current[index] = el)}
-            onHeightChange={handleChildHeightChange}
-            currentPage={currentPage}
-            pageIndex={index}
-                      />
-                    ) : (
-                      // Lightweight placeholder keeps layout but avoids mounting heavy components
-                      <div ref={el => (childRefs.current[index] = el)} style={{ width: '100%', height: '100%' }} />
-                    )}
+                return (
+                  <div key={index} className='w-full overflow-hidden flex-shrink-0'>
+                    <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
+                      {shouldRender ? (
+                        <SlideComponent
+                          ref={el => (childRefs.current[index] = el)}
+                          onHeightChange={handleChildHeightChange}
+                          currentPage={currentPage}
+                          pageIndex={index}
+                        />
+                      ) : (
+                        // Lightweight placeholder keeps layout but avoids mounting heavy components
+                        <div ref={el => (childRefs.current[index] = el)} style={{ width: '100%', height: '100%' }} />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
         </div>
 
         <div className="flex items-center justify-center space-x-4 mx-5">
@@ -167,25 +179,23 @@ export const IsaQuestionnaire = () => {
           >
             <span className='w-30'>&lt; Previous</span>
           </TooltipButton>
-        
 
-           <TooltipButton
+          <TooltipButton
             tooltipText="Submit the form"
             onClick={handleSubmit}
             className={cn(
               "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
               {
-                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": isLastPage(currentPage),
+                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": !isLastPage(currentPage),
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
               }
             )}
-            disabled={false}
-            // disabled={!isLastPage(currentPage) || isSubmitting}
+            disabled={!isLastPage(currentPage) || isSubmitting}
           >
             <span className='w-md'>Submit Form</span>
           </TooltipButton>
 
-        <TooltipButton
+          <TooltipButton
             onClick={handleForward}
             tooltipText="Go to next page"
             className={`text-white font-semibold `}

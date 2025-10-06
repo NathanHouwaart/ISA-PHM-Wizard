@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PageWrapper from "../layout/PageWrapper";
-import "./About.css";
+
 import Heading1 from '../components/Typography/Heading1';
 import Heading2 from '../components/Typography/Heading2';
 import Paragraph from '../components/Typography/Paragraph';
