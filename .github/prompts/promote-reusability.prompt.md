@@ -34,6 +34,7 @@ Design guidelines (how to build components)
 - Expose `className` and `data-testid` as optional props for layout customisation and tests.
 - Keep interaction contracts consistent with existing primitives: `FormField` expects DOM events for onChange; tooltips use `TooltipButton`/`IconTooltipButton`.
 - Avoid tight coupling to global context; pass callbacks and state down via props. If a component truly needs context, document why.
+- Never write the same function twice; if you find yourself copying logic, consider extracting a utility function into a hook or a utils function instead of duplicating it.
 
 API & naming conventions
 -----------------------

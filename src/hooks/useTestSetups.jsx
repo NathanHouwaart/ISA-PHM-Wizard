@@ -4,6 +4,7 @@ import Card from '../components/TestSetup/TestSetupCard';
 import Form from '../components/TestSetup/TestSetupForm';
 import View from '../components/TestSetup/TestSetupView';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { hasContentChanged } from '../utils/testSetupUtils';
 
 // Helper to ensure test setup has version tracking fields
 const ensureVersionFields = (setup) => {
@@ -35,22 +36,26 @@ export const useTestSetups = () => {
             
             // If next is an array, process each item
             if (Array.isArray(next)) {
-                return next.map((setup, index) => {
-                    const prevSetup = prev[index];
-                    
+                return next.map((setup) => {
                     // If setup is new (no matching id in prev), ensure version fields
-                    if (!prev.find(p => p.id === setup.id)) {
+                    const existing = prev.find(p => p.id === setup.id);
+                    
+                    if (!existing) {
+                        // New setup - ensure it has version fields
                         return ensureVersionFields(setup);
                     }
                     
-                    // If setup exists and content changed, increment version
-                    const existing = prev.find(p => p.id === setup.id);
-                    if (existing && JSON.stringify(existing) !== JSON.stringify(setup)) {
+                    // If setup exists and content changed (excluding version fields), increment version
+                    if (hasContentChanged(existing, setup)) {
                         return incrementVersion(setup);
                     }
                     
-                    // No change - return as is (already has version fields from migration)
-                    return setup;
+                    // No content change - preserve existing version fields
+                    return {
+                        ...setup,
+                        version: existing.version,
+                        lastModified: existing.lastModified
+                    };
                 });
             }
             

@@ -20,6 +20,7 @@ Design notes:
 
 import Dexie from 'dexie';
 import LZString from 'lz-string';
+import { hasContentChanged } from './testSetupUtils';
 
 // We'll create a new DB name for the updated schema so we don't attempt to change
 // the existing object store primary key in-place (Dexie can't change primary keys).
@@ -282,14 +283,13 @@ export async function importProject(pkg, targetProjectId) {
       
       const existing = setups.find((s) => s && s.id === pkg.selectedTestSetup.id);
       if (existing) {
-        // Same UUID found - check if versions differ
-        const existingVersion = existing.version ?? 0;
-        const importedVersion = pkg.selectedTestSetup.version ?? 0;
-        const existingModified = existing.lastModified ?? 0;
-        const importedModified = pkg.selectedTestSetup.lastModified ?? 0;
-        
-        // Conflict detected if versions or content differ
-        if (existingVersion !== importedVersion || existingModified !== importedModified) {
+        // Same UUID found - check if content differs (excluding version metadata)
+        if (hasContentChanged(existing, pkg.selectedTestSetup)) {
+          const existingVersion = existing.version ?? 0;
+          const importedVersion = pkg.selectedTestSetup.version ?? 0;
+          const existingModified = existing.lastModified ?? 0;
+          const importedModified = pkg.selectedTestSetup.lastModified ?? 0;
+          
           conflict = {
             setupId: pkg.selectedTestSetup.id,
             setupName: pkg.selectedTestSetup.name || 'Unnamed Test Setup',

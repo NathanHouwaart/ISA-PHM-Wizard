@@ -24,10 +24,13 @@ Every test setup now includes:
 **File**: `src/hooks/useTestSetups.jsx`
 
 The `useTestSetups` hook wraps `setTestSetups` to automatically:
-- Detect when test setup content changes (via JSON comparison)
-- Increment version number
+- Detect when test setup **content** changes (via JSON comparison, excluding version/lastModified fields)
+- Increment version number only when actual content changes
 - Update lastModified timestamp
 - Ensure new test setups get version fields (default to v1)
+- Preserve existing version/lastModified when content hasn't changed
+
+**Key improvement**: The comparison uses `hasContentChanged()` helper that excludes `version` and `lastModified` fields from the comparison. This prevents false positives where saving without changes would incorrectly increment the version.
 
 This happens transparently - components using `setItems` from the hook automatically get version tracking.
 
@@ -44,13 +47,18 @@ On first load after the update:
 
 When importing a project:
 1. **Before** importing anything, checks if imported test setup UUID exists locally
-2. Compares versions and lastModified timestamps
-3. If mismatch detected:
+2. Compares **content only** (excluding version/lastModified fields) using `hasContentChanged()` helper
+3. If content differs:
    - Returns `{ success: false, conflict: {...} }` with details
    - Does NOT modify any data
-4. If no conflict:
+4. If no conflict (same content or UUID doesn't exist):
    - Proceeds with normal import
    - Returns `{ success: true, targetProjectId }`
+
+**Key improvement**: Conflict detection now uses content comparison instead of just version number comparison. This means:
+- Exporting and re-importing the same project won't trigger a conflict
+- Only actual content changes trigger conflicts
+- Version numbers are shown for context but aren't the primary comparison
 
 **Conflict object structure**:
 ```javascript
@@ -156,13 +164,16 @@ New modal dialog component (following use-components.prompt.md guidelines):
 
 ### Version Increment Trigger
 Versions increment when:
-- Test setup JSON representation changes (deep comparison)
-- This includes: name, location, description, sensors, characteristics
+- Test setup **content** changes (deep comparison excluding version/lastModified fields)
+- This includes: name, location, description, sensors, characteristics, and any other fields
+- Comparison uses JSON.stringify after removing version metadata
 
 Versions do NOT increment when:
 - Just reading/displaying test setup
 - Switching projects
 - Exporting/importing unchanged data
+- **Saving without making any changes** (key improvement!)
+- Version/lastModified fields themselves changing
 
 ### localStorage Keys
 - Global test setups: `globalAppData_testSetups` (array)
@@ -236,8 +247,10 @@ The migration effect:
 3. ✅ Version increments to 2
 4. Edit sensor
 5. ✅ Version increments to 3
-6. Save without changes
-7. ✅ Version remains 3 (no increment)
+6. **Open edit form and click save without changes**
+7. ✅ Version remains 3 (no increment - content unchanged)
+8. Export and re-import on same machine
+9. ✅ No conflict dialog (content identical)
 
 ## Future Enhancements
 
