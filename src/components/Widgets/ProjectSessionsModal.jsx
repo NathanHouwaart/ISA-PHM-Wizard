@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { loadTree, clearTree, exportProject, importProject, saveTree } from '../../utils/indexedTreeStore';
-import { directoryOpen } from 'browser-fs-access';
+import { useFileSystem } from '../../hooks/useFileSystem';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import FormField from '../Form/FormField';
@@ -15,8 +15,9 @@ export default function ProjectSessionsModal({ onClose }) {
   const [progressMap, setProgressMap] = useState({});
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
-  // default selection is the active project
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
+  const [activeIndexingProjectId, setActiveIndexingProjectId] = useState(null);
+  const fileSystem = useFileSystem();
 
   // When a project card enters rename mode, focus its input so Enter or blur will commit
   useEffect(() => {
@@ -36,6 +37,16 @@ export default function ProjectSessionsModal({ onClose }) {
   useEffect(() => {
     if (show) setSelectedCardId(currentProjectId || null);
   }, [show, currentProjectId]);
+
+  // Sync file system hook progress with project-specific progress map
+  useEffect(() => {
+    if (activeIndexingProjectId && fileSystem.progress) {
+      setProgressMap((m) => ({
+        ...m,
+        [activeIndexingProjectId]: fileSystem.progress
+      }));
+    }
+  }, [fileSystem.progress, activeIndexingProjectId]);
 
   useEffect(() => {
     let mounted = true;
@@ -106,130 +117,44 @@ export default function ProjectSessionsModal({ onClose }) {
   }
 
   function handleEditDataset(id) {
-    // open native directory picker and index the selected folder for the target project
+    // Open directory picker and index the selected folder for the target project
     (async () => {
       try {
         setLoadingMap((m) => ({ ...m, [id]: true }));
+        setActiveIndexingProjectId(id);
         
-        // Log when picker is initiated
-        console.log('[ProjectSessionsModal] Opening directory picker...');
-        const pickerStartTime = performance.now();
+        console.log('[ProjectSessionsModal] Starting directory indexing for project:', id);
+        const indexStartTime = performance.now();
         
-        // Request persistent permission so user doesn't need to grant permission again
-        const files = await directoryOpen({ 
-          recursive: true,
-          mode: 'read'
+        // Use the file system hook to pick and index the directory
+        const dataset = await fileSystem.pickAndIndexDirectory((progress) => {
+          // Update progress for this specific project
+          if (progress.current || progress.processed) {
+            setProgressMap((m) => {
+              const current = m[id] || { percent: 0, message: '' };
+              const newProgress = { ...current };
+              
+              if (fileSystem.progress.percent !== undefined) {
+                newProgress.percent = fileSystem.progress.percent;
+              }
+              if (fileSystem.progress.message) {
+                newProgress.message = fileSystem.progress.message;
+              }
+              
+              return { ...m, [id]: newProgress };
+            });
+          }
         });
-        
-        // Log when picker returns with timing
-        const pickerEndTime = performance.now();
-        const pickerDuration = ((pickerEndTime - pickerStartTime) / 1000).toFixed(2);
-        console.log(`[ProjectSessionsModal] Directory picker returned after ${pickerDuration}s with ${files ? files.length : 0} files`);
-        
-        if (!files || files.length === 0) {
-          console.log('[ProjectSessionsModal] No files selected or picker was cancelled');
+
+        if (!dataset) {
+          console.log('[ProjectSessionsModal] User cancelled directory picker');
           setLoadingMap((m) => ({ ...m, [id]: false }));
+          setActiveIndexingProjectId(null);
           return;
         }
 
-        // Warn user if dataset is very large (may cause performance issues)
-        if (files.length > 50000) {
-          const proceed = confirm(
-            `This folder contains ${files.length.toLocaleString()} files. Indexing may take several minutes and could slow down your browser.\n\nDo you want to continue?`
-          );
-          if (!proceed) {
-            setLoadingMap((m) => ({ ...m, [id]: false }));
-            return;
-          }
-        }
-
-        const rootName = files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : 'Root';
-        const total = files.length;
-        
-        // initialize per-project progress
-        console.log(`[ProjectSessionsModal] Starting indexing process for ${total.toLocaleString()} files from "${rootName}"`);
-        const indexStartTime = performance.now();
-        
-        setProgressMap((m) => ({ ...m, [id]: { percent: 0, message: 'Preparing to index...' } }));
-        const nodesByPath = new Map();
-        nodesByPath.set('', { children: [] });
-
-        let processed = 0;
-        const BATCH_SIZE = 500; // Process files in batches to avoid blocking the UI
-
-        // Helper to yield control back to the browser
-        const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
-
-        // Process files in batches with periodic yields
-        for (let batchStart = 0; batchStart < files.length; batchStart += BATCH_SIZE) {
-          const batchEnd = Math.min(batchStart + BATCH_SIZE, files.length);
-          
-          for (let i = batchStart; i < batchEnd; i++) {
-            try {
-              const f = files[i];
-              const rel = f.webkitRelativePath || f.name;
-              const parts = rel.split('/');
-              let path = '';
-              
-              for (let j = 0; j < parts.length; j++) {
-                const name = parts[j];
-                const relPath = path ? `${path}/${name}` : name;
-                if (!nodesByPath.has(relPath)) {
-                  nodesByPath.set(relPath, { 
-                    name, 
-                    relPath, 
-                    isDirectory: j < parts.length - 1, 
-                    children: [] 
-                  });
-                  const parentPath = path;
-                  const parent = nodesByPath.get(parentPath);
-                  if (parent) parent.children.push(nodesByPath.get(relPath));
-                }
-                path = relPath;
-              }
-              processed += 1;
-            } catch (fileErr) {
-              // Log individual file errors but continue processing
-              console.warn('[ProjectSessionsModal] skipping file due to error', fileErr);
-              processed += 1;
-            }
-          }
-
-          // Update progress after each batch
-          const percent = Math.round((processed / total) * 100);
-          const remaining = total - processed;
-          setProgressMap((m) => ({ 
-            ...m, 
-            [id]: { 
-              percent, 
-              message: `Indexed ${processed.toLocaleString()} of ${total.toLocaleString()} files...` 
-            } 
-          }));
-
-          // Yield to browser to keep UI responsive
-          await yieldToMain();
-        }
-
-        // Sort nodes recursively
-        setProgressMap((m) => ({ ...m, [id]: { percent: 95, message: 'Organizing file tree...' } }));
-        await yieldToMain();
-
-        function sortNodes(nodes) {
-          return nodes
-            .sort((a, b) => {
-              if (a.isDirectory && !b.isDirectory) return -1;
-              if (!a.isDirectory && b.isDirectory) return 1;
-              return (a.name || '').localeCompare(b.name || '');
-            })
-            .map((n) => (n.isDirectory ? { ...n, children: sortNodes(n.children || []) } : n));
-        }
-
-        const tree = (nodesByPath.get('')?.children || []).map((n) => n);
-        const dataset = { rootName, tree: sortNodes(tree) };
-
         // Save to IndexedDB
         setProgressMap((m) => ({ ...m, [id]: { percent: 98, message: 'Saving to database...' } }));
-        await yieldToMain();
         
         const saveStartTime = performance.now();
         await saveTree(dataset, id);
@@ -240,21 +165,29 @@ export default function ProjectSessionsModal({ onClose }) {
         const totalIndexDuration = ((indexEndTime - indexStartTime) / 1000).toFixed(2);
         
         console.log(`[ProjectSessionsModal] IndexedDB save completed in ${saveDuration}s`);
-        console.log(`[ProjectSessionsModal] Total indexing time: ${totalIndexDuration}s for ${total.toLocaleString()} files`);
-        console.log(`[ProjectSessionsModal] Average: ${(total / parseFloat(totalIndexDuration)).toFixed(0)} files/second`);
+        console.log(`[ProjectSessionsModal] Total indexing time: ${totalIndexDuration}s`);
         
         // Update UI state
         setTrees((t) => ({ ...t, [id]: dataset }));
+        
+        // If this is the currently active project, update the global selectedDataset
+        if (id === currentProjectId) {
+          console.log('[ProjectSessionsModal] Updating selectedDataset for active project');
+          setSelectedDataset(dataset);
+        }
         
         // Mark complete
         setProgressMap((m) => ({ ...m, [id]: { percent: 100, message: 'Indexing complete!' } }));
         
         // Clear progress after a short delay
-        setTimeout(() => setProgressMap((m) => { 
-          const copy = { ...m }; 
-          delete copy[id]; 
-          return copy; 
-        }), 1200);
+        setTimeout(() => {
+          setProgressMap((m) => { 
+            const copy = { ...m }; 
+            delete copy[id]; 
+            return copy; 
+          });
+          setActiveIndexingProjectId(null);
+        }, 1200);
       } catch (err) {
         console.error('[ProjectSessionsModal] pick/index error', err);
         console.error('[ProjectSessionsModal] Error details:', {
@@ -262,10 +195,21 @@ export default function ProjectSessionsModal({ onClose }) {
           message: err?.message,
           stack: err?.stack
         });
-        const errorMsg = err && err.name === 'NotFoundError' 
-          ? 'The browser canceled the operation (possibly due to the large dataset size). Try selecting a smaller folder or closing other tabs to free up memory.'
-          : `Failed to pick or index folder: ${err && err.message}`;
+        
+        let errorMsg;
+        if (err && err.name === 'NotAllowedError') {
+          errorMsg = 'Permission denied. Please grant access to the folder.';
+        } else if (err && err.name === 'NotFoundError') {
+          errorMsg = 'The operation was canceled by the browser.\n\nThis can happen with very large folders in Chrome. Try:\n• Selecting a smaller folder\n• Using Firefox instead (better for large datasets)\n• Closing other browser tabs to free memory\n• Restarting your browser';
+        } else if (err && err.name === 'AbortError') {
+          errorMsg = 'Operation was cancelled.';
+        } else {
+          errorMsg = `Failed to index folder: ${err && err.message}`;
+        }
+        
         alert(errorMsg);
+        
+        setActiveIndexingProjectId(null);
       } finally {
         setLoadingMap((m) => ({ ...m, [id]: false }));
         // Ensure progress is cleared on error as well
@@ -305,10 +249,19 @@ export default function ProjectSessionsModal({ onClose }) {
       const pkg = JSON.parse(text);
       const newId = createProject(pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`);
       await importProject(pkg, newId);
-      // switch to new project
-      switchProject(newId);
-      setShow(false);
-      onClose && onClose();
+      // Do NOT immediately switch to the new project or close the modal.
+      // Instead, keep the ProjectSessionsModal open and select the imported project
+      // so the user can inspect/rename it before switching.
+      try {
+        const tree = await loadTree(newId);
+        setTrees((t) => ({ ...t, [newId]: tree }));
+      } catch (e) {
+        // If the imported project has no dataset or loading fails, show as null
+        setTrees((t) => ({ ...t, [newId]: null }));
+      }
+      setSelectedCardId(newId);
+      // Open inline rename so users can rename the imported project right away
+      setRenameMap((m) => ({ ...m, [newId]: true }));
     } catch (err) {
       console.error('[ProjectSessionsModal] import error', err);
       alert('Failed to import project: ' + (err && err.message));
@@ -346,7 +299,19 @@ export default function ProjectSessionsModal({ onClose }) {
                 role="button"
                 tabIndex={0}
                 onClick={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCardId((cur) => (cur === p.id ? null : p.id)); } }}
+                onKeyDown={(e) => {
+                  // If the user is typing in an input/textarea or an editable element inside the card
+                  // (for example the inline FormField used for renaming), don't treat Enter/Space
+                  // as a card toggle — let the input handle the key instead.
+                  const tgt = e && e.target;
+                  if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) {
+                    return;
+                  }
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedCardId((cur) => (cur === p.id ? null : p.id));
+                  }
+                }}
                 className={`relative flex items-center justify-between p-5 rounded-lg border ${p.id === selectedCardId ? 'border-2 border-indigo-600 bg-indigo-50' : 'border-gray-100 bg-white'} cursor-pointer transform transition-all duration-200 hover:shadow-sm`}
                 style={{
                   opacity: show ? 1 : 0,
@@ -370,7 +335,22 @@ export default function ProjectSessionsModal({ onClose }) {
                   <div className="flex items-center gap-3">
                     <div className="text-lg font-medium flex items-center gap-2">
                       {renameMap[p.id] ? (
-                        <div className="w-64" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="w-64"
+                          onClick={(e) => e.stopPropagation()}
+                          onBlur={(e) => {
+                            // If focus moved outside this wrapper, close rename mode.
+                            // React's onBlur bubbles (focusout). If the new focused element
+                            // (relatedTarget) is still inside this wrapper, do nothing.
+                            try {
+                              const rel = e.relatedTarget;
+                              if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
+                            } catch (err) {
+                              // ignore
+                            }
+                            setRenameMap((m) => ({ ...m, [p.id]: false }));
+                          }}
+                        >
                           <FormField
                             name={`project-${p.id}-name`}
                             value={p.name}
