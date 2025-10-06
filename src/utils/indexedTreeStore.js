@@ -54,7 +54,7 @@ db.version(1).stores({
           try {
             const p = r.path || '';
             const parentPath = p === '' ? '' : (p.lastIndexOf('/') === -1 ? '' : p.slice(0, p.lastIndexOf('/')));
-            await db.nodes.put({ projectId: 'default', path: p, compressed: r.compressed, parentPath, updatedAt: r.updatedAt || now });
+            await db.nodes.put({ projectId: 'example-project', path: p, compressed: r.compressed, parentPath, updatedAt: r.updatedAt || now });
           } catch (err) {
             console.warn('[indexedTreeStore] migration item skipped', r && r.path, err);
           }
@@ -96,8 +96,14 @@ function normPath(p) {
 }
 
 // saveTree: write the root node and create lightweight directory stubs for children
-export async function saveTree(rootNode, projectId = 'default') {
+export async function saveTree(rootNode, projectId = 'example-project') {
   if (!rootNode || typeof rootNode !== 'object') throw new Error('rootNode required');
+  // If projectId is null or undefined, skip operation (all projects deleted)
+  if (!projectId) {
+    console.debug('[indexedTreeStore] saveTree skipped: projectId is null');
+    return false;
+  }
+  
   try {
     await db.transaction('rw', 'nodes', async () => {
       const rootPath = '';
@@ -123,7 +129,13 @@ export async function saveTree(rootNode, projectId = 'default') {
 }
 
 // loadTree: loads root node fully; if children stubs found they will be left as-is
-export async function loadTree(projectId = 'default') {
+export async function loadTree(projectId = 'example-project') {
+  // If projectId is null or undefined, return null (all projects deleted)
+  if (!projectId) {
+    console.debug('[indexedTreeStore] loadTree skipped: projectId is null');
+    return null;
+  }
+  
   try {
     // get record by compound key projectId+path
     const rec = await db.nodes.get({ projectId, path: '' });
@@ -138,7 +150,13 @@ export async function loadTree(projectId = 'default') {
 
 // loadSubtree: returns the node at `path`. If it's a directory and childrenLoaded=false,
 // this function should attempt to load stored direct children records and reconstruct children array.
-export async function loadSubtree(path, projectId = 'default') {
+export async function loadSubtree(path, projectId = 'example-project') {
+  // If projectId is null or undefined, return null (all projects deleted)
+  if (!projectId) {
+    console.debug('[indexedTreeStore] loadSubtree skipped: projectId is null');
+    return null;
+  }
+  
   const p = normPath(path);
   try {
     const rec = await db.nodes.get({ projectId, path: p });
@@ -176,7 +194,13 @@ export async function loadSubtree(path, projectId = 'default') {
 }
 
 // Utility: remove tree entirely
-export async function clearTree(projectId = 'default') {
+export async function clearTree(projectId = 'example-project') {
+  // If projectId is null or undefined, skip operation (all projects deleted)
+  if (!projectId) {
+    console.debug('[indexedTreeStore] clearTree skipped: projectId is null');
+    return true;
+  }
+  
   try {
     // remove only records for this project
     await db.nodes.where('projectId').equals(projectId).delete();
@@ -188,7 +212,12 @@ export async function clearTree(projectId = 'default') {
 }
 
 // Export all nodes and per-project localStorage keys for a given projectId
-export async function exportProject(projectId = 'default') {
+export async function exportProject(projectId = 'example-project') {
+  // If projectId is null or undefined, throw error (cannot export nothing)
+  if (!projectId) {
+    throw new Error('Cannot export project: projectId is null or undefined');
+  }
+  
   try {
     const nodes = await db.nodes.where('projectId').equals(projectId).toArray();
     // collect per-project localStorage entries

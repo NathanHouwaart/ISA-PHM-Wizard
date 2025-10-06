@@ -5,12 +5,12 @@ import { useFileSystem } from '../../hooks/useFileSystem';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import FormField from '../Form/FormField';
-import { Plus, Download, X, Edit, Folder, Trash, Trash2, Upload } from 'lucide-react';
+import { Plus, Download, Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset } = useGlobalDataContext();
+  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID } = useGlobalDataContext();
   const [loadingMap, setLoadingMap] = useState({});
   const [trees, setTrees] = useState({});
   const [renameMap, setRenameMap] = useState({});
@@ -283,7 +283,7 @@ export default function ProjectSessionsModal({ onClose }) {
                 Select a project session
               </Heading3>
               <Paragraph className=" text-gray-500 mt-1 max-w-xl">
-                Choose which project you want to work on. You can create, rename or delete projects here. Click a project to open it.
+                Choose which project you want to work on. You can create, rename or delete projects here. You must select a project to continue.
               </Paragraph>
             </div>
             <div className="flex items-center gap-2">
@@ -292,172 +292,191 @@ export default function ProjectSessionsModal({ onClose }) {
               
               <IconToolTipButton icon={Plus} onClick={handleCreate} tooltipText="Create new project" />
               <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project" />
-              <IconToolTipButton icon={X} onClick={() => { setShow(false); setTimeout(() => onClose && onClose(), 220); }} tooltipText="Close" />
+              {/* Close button removed: users must select a project to close the modal */}
             </div>
           </div>
 
           <div className="mt-6 grid gap-3 max-h-[50vh] overflow-y-auto">
-            {projects.map((p, idx) => (
-              <div
-                key={p.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
-                onKeyDown={(e) => {
-                  // If the user is typing in an input/textarea or an editable element inside the card
-                  // (for example the inline FormField used for renaming), don't treat Enter/Space
-                  // as a card toggle — let the input handle the key instead.
-                  const tgt = e && e.target;
-                  if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) {
-                    return;
-                  }
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedCardId((cur) => (cur === p.id ? null : p.id));
-                  }
-                }}
-                className={`relative flex items-center justify-between p-5 rounded-lg border ${p.id === selectedCardId ? 'border-2 border-indigo-600 bg-indigo-50' : 'border-gray-100 bg-white'} cursor-pointer transform transition-all duration-200 hover:shadow-sm`}
-                style={{
-                  opacity: show ? 1 : 0,
-                  transitionDelay: `${idx * 40}ms`
-                }}
-              >
-                {/* full-card progress overlay (centered) */}
-                {progressMap[p.id] ? (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center p-4 rounded-lg">
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-lg" />
-                    <div className="relative w-3/4 max-w-md">
-                      <div className="text-sm text-gray-700 mb-2 text-center">{progressMap[p.id].message}</div>
-                      <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
-                        <div className="h-full bg-indigo-600 transition-all" style={{ width: `${progressMap[p.id].percent}%` }} />
-                      </div>
-                      <div className="mt-2 text-xs text-gray-600 text-right">{progressMap[p.id].percent}%</div>
-                    </div>
-                  </div>
-                ) : null}
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-lg font-medium flex items-center gap-2">
-                      {renameMap[p.id] ? (
-                        <div
-                          className="w-64"
-                          onClick={(e) => e.stopPropagation()}
-                          onBlur={(e) => {
-                            // If focus moved outside this wrapper, close rename mode.
-                            // React's onBlur bubbles (focusout). If the new focused element
-                            // (relatedTarget) is still inside this wrapper, do nothing.
-                            try {
-                              const rel = e.relatedTarget;
-                              if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
-                            } catch (err) {
-                              // ignore
-                            }
-                            setRenameMap((m) => ({ ...m, [p.id]: false }));
-                          }}
-                        >
-                          <FormField
-                            name={`project-${p.id}-name`}
-                            value={p.name}
-                            label={""}
-                            placeholder={`Project ${projects.indexOf(p) + 1}`}
-                            commitOnBlur={true}
-                            onChange={(e) => {
-                              // commit rename immediately when FormField commits on blur/enter
-                              const v = e && e.target ? e.target.value : '';
-                              renameProject(p.id, v.trim() || p.name);
-                              setRenameMap((m) => ({ ...m, [p.id]: false }));
-                            }}
-                            className=""
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-lg font-medium">{p.name}</div>
-                      )}
-                      <div className="text-sm text-gray-400">{p.id === currentProjectId ? '(active)' : ''}</div>
-                    </div>
-                    {/* rename control moved to the right action group to keep header clean */}
-                  </div>
-                  <div className="mt-1 grid grid-cols-12 gap-x-5 items-center">
-                    <div className="col-span-3 text-sm font-medium text-gray-600">Dataset:</div>
-                    <div className="col-span-9 text-sm text-gray-700">
-                      {loadingMap[p.id] ? (
-                        <span className="inline-flex items-center gap-2 text-sm text-indigo-600">
-                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                          </svg>
-                          Indexing...
-                        </span>
-                      ) : (
-                        (trees[p.id] ? (trees[p.id].rootName || trees[p.id].name || 'Indexed') : 'None')
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Selected test setup and last-edited metadata (if available in localStorage) */}
-                  {(() => {
-                    try {
-                      const setupIdRaw = localStorage.getItem(`globalAppData_${p.id}_selectedTestSetupId`);
-                      const setupId = setupIdRaw ? JSON.parse(setupIdRaw) : null;
-                      let setupName = null;
-                      if (setupId) {
-                        const setupsRaw = localStorage.getItem(`globalAppData_${p.id}_testSetups`);
-                        const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
-                        if (Array.isArray(setups)) {
-                          const s = setups.find((x) => x.id === setupId);
-                          setupName = s ? s.name : null;
-                        }
-                      }
-                      const lastEditedRaw = localStorage.getItem(`globalAppData_${p.id}_lastEdited`);
-                      let lastEdited = null;
-                      if (lastEditedRaw) {
-                        try { lastEdited = new Date(JSON.parse(lastEditedRaw)); } catch (e) { try { lastEdited = new Date(lastEditedRaw); } catch (e2) { lastEdited = null; } }
-                      }
-                      const fmt = (d) => d instanceof Date && !isNaN(d) ? d.toLocaleString() : null;
-                      return (
-                        <div className="mt-1 relative">
-                          {setupName ? (
-                            <div className="grid grid-cols-12 gap-x-2 items-center">
-                              <div className="col-span-3 text-sm font-medium text-gray-600">Test setup:</div>
-                              <div className="col-span-9 text-sm text-gray-700">{setupName}</div>
-                            </div>
-                          ) : null}
-                          {lastEdited ? <div className="text-xs text-gray-400 mt-1">Last edited: <span className="text-gray-600">{fmt(lastEdited)}</span></div> : null}
-
-                          {/* progress overlay previously nested here was moved to cover the whole card */}
-                        </div>
-                      );
-                    } catch (err) {
-                      return null;
-                    }
-                  })()}
+            {projects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-gray-300">
+                  <Folder className="w-20 h-20 mx-auto" aria-hidden />
                 </div>
-
-                <div className="flex items-center gap-3">
-                  {/* dataset actions group with label */}
-                  <div className="flex flex-col items-center text-center">
-                    <div className="text-xs text-gray-500 mb-1">Dataset</div>
-                    <div className="flex items-center gap-1">
-                      <IconToolTipButton icon={Folder} tooltipText="Edit dataset (pick folder)" onClick={(e) => { e.stopPropagation(); handleEditDataset(p.id); }} />
-                      <IconToolTipButton icon={Trash} tooltipText="Delete indexed dataset" onClick={(e) => { e.stopPropagation(); handleDeleteDataset(p.id); }} />
-                    </div>
-                  </div>
-
-                  {/* separator between groups */}
-                  <div className="w-px h-10 bg-gray-200" />
-
-                  {/* project actions group with label */}
-                  <div className="flex flex-col items-center text-center">
-                    <div className="text-xs text-gray-500 mb-1">Project</div>
-                    <div className="flex items-center gap-1">
-                      <IconToolTipButton icon={Upload} tooltipText="Export project as JSON" onClick={(e) => { e.stopPropagation(); handleExportProject(p.id); }} />
-                      <IconToolTipButton icon={Edit} tooltipText="Rename project" onClick={(e) => { e.stopPropagation(); setRenameMap((m) => ({ ...m, [p.id]: true })); }} />
-                      <IconToolTipButton icon={Trash2} tooltipText="Delete project" onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} />
-                    </div>
-                  </div>
+                <h3 className="mt-6 text-xl font-semibold">No projects found</h3>
+                <p className="mt-2 text-sm text-gray-500 max-w-lg text-center">There are no projects in your workspace. Start by creating a new project using the + button above, or import an existing project.</p>
+                <div className="mt-6">
+                  <TooltipButton tooltipText="Create new project" onClick={handleCreate} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg">
+                    Create a project
+                  </TooltipButton>
                 </div>
               </div>
-            ))}
+            ) : (
+              projects.map((p, idx) => (
+                <div
+                  key={p.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
+                  onKeyDown={(e) => {
+                    // If the user is typing in an input/textarea or an editable element inside the card
+                    // (for example the inline FormField used for renaming), don't treat Enter/Space
+                    // as a card toggle — let the input handle the key instead.
+                    const tgt = e && e.target;
+                    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) {
+                      return;
+                    }
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedCardId((cur) => (cur === p.id ? null : p.id));
+                    }
+                  }}
+                  className={`relative flex items-center justify-between p-5 rounded-lg border ${p.id === selectedCardId ? 'border-2 border-indigo-600 bg-indigo-50' : 'border-gray-100 bg-white'} cursor-pointer transform transition-all duration-200 hover:shadow-sm`}
+                  style={{
+                    opacity: show ? 1 : 0,
+                    transitionDelay: `${idx * 40}ms`
+                  }}
+                >
+                  {/* full-card progress overlay (centered) */}
+                  {progressMap[p.id] ? (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 rounded-lg">
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-lg" />
+                      <div className="relative w-3/4 max-w-md">
+                        <div className="text-sm text-gray-700 mb-2 text-center">{progressMap[p.id].message}</div>
+                        <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
+                          <div className="h-full bg-indigo-600 transition-all" style={{ width: `${progressMap[p.id].percent}%` }} />
+                        </div>
+                        <div className="mt-2 text-xs text-gray-600 text-right">{progressMap[p.id].percent}%</div>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-lg font-medium flex items-center gap-2">
+                        {renameMap[p.id] ? (
+                          <div
+                            className="w-64"
+                            onClick={(e) => e.stopPropagation()}
+                            onBlur={(e) => {
+                              // If focus moved outside this wrapper, close rename mode.
+                              // React's onBlur bubbles (focusout). If the new focused element
+                              // (relatedTarget) is still inside this wrapper, do nothing.
+                              try {
+                                const rel = e.relatedTarget;
+                                if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
+                              } catch (err) {
+                                // ignore
+                              }
+                              setRenameMap((m) => ({ ...m, [p.id]: false }));
+                            }}
+                          >
+                            <FormField
+                              name={`project-${p.id}-name`}
+                              value={p.name}
+                              label={""}
+                              placeholder={`Project ${projects.indexOf(p) + 1}`}
+                              commitOnBlur={true}
+                              onChange={(e) => {
+                                // commit rename immediately when FormField commits on blur/enter
+                                const v = e && e.target ? e.target.value : '';
+                                renameProject(p.id, v.trim() || p.name);
+                                setRenameMap((m) => ({ ...m, [p.id]: false }));
+                              }}
+                              className=""
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-lg font-medium">{p.name}</div>
+                        )}
+                        <div className="text-sm text-gray-400">{p.id === currentProjectId ? '(active)' : ''}</div>
+                      </div>
+                      {/* rename control moved to the right action group to keep header clean */}
+                    </div>
+                    <div className="mt-1 grid grid-cols-12 gap-x-5 items-center">
+                      <div className="col-span-3 text-sm font-medium text-gray-600">Dataset:</div>
+                      <div className="col-span-9 text-sm text-gray-700">
+                        {loadingMap[p.id] ? (
+                          <span className="inline-flex items-center gap-2 text-sm text-indigo-600">
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            Indexing...
+                          </span>
+                        ) : (
+                          (trees[p.id] ? (trees[p.id].rootName || trees[p.id].name || 'Indexed') : 'None')
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Selected test setup and last-edited metadata (if available in localStorage) */}
+                    {(() => {
+                      try {
+                        const setupIdRaw = localStorage.getItem(`globalAppData_${p.id}_selectedTestSetupId`);
+                        const setupId = setupIdRaw ? JSON.parse(setupIdRaw) : null;
+                        let setupName = null;
+                        if (setupId) {
+                          const setupsRaw = localStorage.getItem(`globalAppData_${p.id}_testSetups`);
+                          const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
+                          if (Array.isArray(setups)) {
+                            const s = setups.find((x) => x.id === setupId);
+                            setupName = s ? s.name : null;
+                          }
+                        }
+                        const lastEditedRaw = localStorage.getItem(`globalAppData_${p.id}_lastEdited`);
+                        let lastEdited = null;
+                        if (lastEditedRaw) {
+                          try { lastEdited = new Date(JSON.parse(lastEditedRaw)); } catch (e) { try { lastEdited = new Date(lastEditedRaw); } catch (e2) { lastEdited = null; } }
+                        }
+                        const fmt = (d) => d instanceof Date && !isNaN(d) ? d.toLocaleString() : null;
+                        return (
+                          <div className="mt-1 relative">
+                            {setupName ? (
+                              <div className="grid grid-cols-12 gap-x-5 items-center">
+                                <div className="col-span-3 text-sm font-medium text-gray-600">Test setup:</div>
+                                <div className="col-span-9 text-sm text-gray-700">{setupName}</div>
+                              </div>
+                            ) : null}
+                            {lastEdited ? <div className="text-xs text-gray-400 mt-1">Last edited: <span className="text-gray-600">{fmt(lastEdited)}</span></div> : null}
+
+                            {/* progress overlay previously nested here was moved to cover the whole card */}
+                          </div>
+                        );
+                      } catch (err) {
+                        return null;
+                      }
+                    })()}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* dataset actions group with label */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="text-xs text-gray-500 mb-1">Dataset</div>
+                      <div className="flex items-center gap-1">
+                        <IconToolTipButton icon={Folder} tooltipText="Edit dataset (pick folder)" onClick={(e) => { e.stopPropagation(); handleEditDataset(p.id); }} />
+                        <IconToolTipButton icon={Trash} tooltipText="Delete indexed dataset" onClick={(e) => { e.stopPropagation(); handleDeleteDataset(p.id); }} />
+                      </div>
+                    </div>
+
+                    {/* separator between groups */}
+                    <div className="w-px h-10 bg-gray-200" />
+
+                    {/* project actions group with label */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="text-xs text-gray-500 mb-1">Project</div>
+                      <div className="flex items-center gap-1">
+                        <IconToolTipButton icon={Upload} tooltipText="Export project as JSON" onClick={(e) => { e.stopPropagation(); handleExportProject(p.id); }} />
+                        <IconToolTipButton icon={Edit} tooltipText="Rename project" onClick={(e) => { e.stopPropagation(); setRenameMap((m) => ({ ...m, [p.id]: true })); }} />
+                        {p.id === DEFAULT_PROJECT_ID ? (
+                          <IconToolTipButton icon={RefreshCw} tooltipText="Reset project to defaults" onClick={(e) => { e.stopPropagation(); if (confirm('Reset the default project to its original state? This will overwrite its local settings and dataset.')) { resetProject(p.id); alert('Default project reset.'); } }} />
+                        ) : (
+                          <IconToolTipButton icon={Trash2} tooltipText="Delete project" onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="mt-6 border-t border-gray-100 pt-5">

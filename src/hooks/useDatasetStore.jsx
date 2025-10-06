@@ -12,6 +12,17 @@ export default function useDatasetStore(projectId = 'default') {
   // Hydrate from IndexedDB on mount
   useEffect(() => {
     let mounted = true;
+    // Immediately clear the dataset when projectId changes to prevent stale data
+    setSelectedDataset(null);
+    setInitHydrated(false);
+    
+    // If projectId is null (all projects deleted), skip hydration
+    if (!projectId) {
+      initLoadedRef.current = true;
+      if (mounted) setInitHydrated(true);
+      return;
+    }
+    
     (async () => {
       try {
         const root = await loadTree(projectId);
@@ -21,7 +32,7 @@ export default function useDatasetStore(projectId = 'default') {
       } finally {
         initLoadedRef.current = true;
         // update state to notify consumers that hydration finished
-        setInitHydrated(true);
+        if (mounted) setInitHydrated(true);
       }
     })();
     return () => { mounted = false; };
@@ -33,6 +44,9 @@ export default function useDatasetStore(projectId = 'default') {
     (async () => {
       try {
         if (!initHydrated) return;
+        // If projectId is null (all projects deleted), skip persistence
+        if (!projectId) return;
+        
         if (!selectedDataset) {
           await clearTree(projectId);
           return;
