@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
-import { HTML5DateCellTemplate, PatternCellTemplate } from '../components/DataGrid/CellTemplates';
+import { HTML5DateCellTemplate, PatternCellTemplate } from '../../components/DataGrid/CellTemplates';
 import { Template } from '@revolist/react-datagrid';
+import PageWrapper from '../../layout/PageWrapper';
 
 const initial_studies = [
   {
@@ -80,13 +81,13 @@ export const SimpleRevoGridTest = () => {
   const handleAfterEdit = (event) => {
     const { detail } = event;
     console.log('🔴 Cell edited:', detail);
-    
+
     // Update the studies data
     const newStudies = [...studies];
     const rowIndex = detail.row;
     const columnProp = detail.column.prop;
     const newValue = detail.val;
-    
+
     if (newStudies[rowIndex]) {
       newStudies[rowIndex][columnProp] = newValue;
       setStudies(newStudies);
@@ -99,7 +100,7 @@ export const SimpleRevoGridTest = () => {
     <div style={{ padding: '20px' }}>
       <h1>Simple RevoGrid Test</h1>
       <p>This bypasses DataGrid entirely and uses RevoGrid directly.</p>
-      
+
       <RevoGrid
         source={studies}
         columns={COLUMNS}

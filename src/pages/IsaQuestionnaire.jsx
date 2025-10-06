@@ -197,3 +197,5 @@ export const IsaQuestionnaire = () => {
     </PageWrapper>
   );
 };
+
+export default IsaQuestionnaire;

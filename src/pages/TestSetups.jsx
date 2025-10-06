@@ -49,3 +49,5 @@ export const TestSetups = () => {
     </PageWrapper>
   );
 };
+
+export default TestSetups;

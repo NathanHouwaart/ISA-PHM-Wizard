@@ -6,6 +6,8 @@ import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import FormField from '../Form/FormField';
 import { Plus, Download, X, Edit, Folder, Trash, Trash2, Upload } from 'lucide-react';
+import Heading3 from '../Typography/Heading3';
+import Paragraph from '../Typography/Paragraph';
 
 export default function ProjectSessionsModal({ onClose }) {
   const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset } = useGlobalDataContext();
@@ -122,10 +124,10 @@ export default function ProjectSessionsModal({ onClose }) {
       try {
         setLoadingMap((m) => ({ ...m, [id]: true }));
         setActiveIndexingProjectId(id);
-        
+
         console.log('[ProjectSessionsModal] Starting directory indexing for project:', id);
         const indexStartTime = performance.now();
-        
+
         // Use the file system hook to pick and index the directory
         const dataset = await fileSystem.pickAndIndexDirectory((progress) => {
           // Update progress for this specific project
@@ -133,14 +135,14 @@ export default function ProjectSessionsModal({ onClose }) {
             setProgressMap((m) => {
               const current = m[id] || { percent: 0, message: '' };
               const newProgress = { ...current };
-              
+
               if (fileSystem.progress.percent !== undefined) {
                 newProgress.percent = fileSystem.progress.percent;
               }
               if (fileSystem.progress.message) {
                 newProgress.message = fileSystem.progress.message;
               }
-              
+
               return { ...m, [id]: newProgress };
             });
           }
@@ -155,36 +157,36 @@ export default function ProjectSessionsModal({ onClose }) {
 
         // Save to IndexedDB
         setProgressMap((m) => ({ ...m, [id]: { percent: 98, message: 'Saving to database...' } }));
-        
+
         const saveStartTime = performance.now();
         await saveTree(dataset, id);
         const saveEndTime = performance.now();
         const saveDuration = ((saveEndTime - saveStartTime) / 1000).toFixed(2);
-        
+
         const indexEndTime = performance.now();
         const totalIndexDuration = ((indexEndTime - indexStartTime) / 1000).toFixed(2);
-        
+
         console.log(`[ProjectSessionsModal] IndexedDB save completed in ${saveDuration}s`);
         console.log(`[ProjectSessionsModal] Total indexing time: ${totalIndexDuration}s`);
-        
+
         // Update UI state
         setTrees((t) => ({ ...t, [id]: dataset }));
-        
+
         // If this is the currently active project, update the global selectedDataset
         if (id === currentProjectId) {
           console.log('[ProjectSessionsModal] Updating selectedDataset for active project');
           setSelectedDataset(dataset);
         }
-        
+
         // Mark complete
         setProgressMap((m) => ({ ...m, [id]: { percent: 100, message: 'Indexing complete!' } }));
-        
+
         // Clear progress after a short delay
         setTimeout(() => {
-          setProgressMap((m) => { 
-            const copy = { ...m }; 
-            delete copy[id]; 
-            return copy; 
+          setProgressMap((m) => {
+            const copy = { ...m };
+            delete copy[id];
+            return copy;
           });
           setActiveIndexingProjectId(null);
         }, 1200);
@@ -195,7 +197,7 @@ export default function ProjectSessionsModal({ onClose }) {
           message: err?.message,
           stack: err?.stack
         });
-        
+
         let errorMsg;
         if (err && err.name === 'NotAllowedError') {
           errorMsg = 'Permission denied. Please grant access to the folder.';
@@ -206,17 +208,17 @@ export default function ProjectSessionsModal({ onClose }) {
         } else {
           errorMsg = `Failed to index folder: ${err && err.message}`;
         }
-        
+
         alert(errorMsg);
-        
+
         setActiveIndexingProjectId(null);
       } finally {
         setLoadingMap((m) => ({ ...m, [id]: false }));
         // Ensure progress is cleared on error as well
-        setProgressMap((m) => { 
-          const copy = { ...m }; 
-          if (copy[id] && copy[id].percent !== 100) delete copy[id]; 
-          return copy; 
+        setProgressMap((m) => {
+          const copy = { ...m };
+          if (copy[id] && copy[id].percent !== 100) delete copy[id];
+          return copy;
         });
       }
     })();
@@ -274,21 +276,23 @@ export default function ProjectSessionsModal({ onClose }) {
       <div className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${show ? 'opacity-100' : 'opacity-0'}`} />
 
       <div className="relative z-60 w-full max-w-4xl mx-4">
-  <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 transform transition-all duration-300 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ minHeight: '60vh' }}>
+        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 transform transition-all duration-300 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ minHeight: '60vh' }}>
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-2xl font-semibold">Select a project session</h3>
-              <p className="text-sm text-gray-500 mt-1 max-w-xl">Choose which project you want to work on. You can create, rename or delete projects here. Click a project to open it.</p>
+              <Heading3>
+                Select a project session
+              </Heading3>
+              <Paragraph className=" text-gray-500 mt-1 max-w-xl">
+                Choose which project you want to work on. You can create, rename or delete projects here. Click a project to open it.
+              </Paragraph>
             </div>
             <div className="flex items-center gap-2">
-              {/* hidden file input used by the import icon */}
+              {/* hidden raw file input used by the import icon */}
               <input ref={fileRef} type="file" accept="application/json" onChange={(e) => { if (e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
-
-              <>
-                <IconToolTipButton icon={Plus} onClick={handleCreate} tooltipText="Create new project" />
-                <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project" />
-                <IconToolTipButton icon={X} onClick={() => { setShow(false); setTimeout(() => onClose && onClose(), 220); }} tooltipText="Close" />
-              </>
+              
+              <IconToolTipButton icon={Plus} onClick={handleCreate} tooltipText="Create new project" />
+              <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project" />
+              <IconToolTipButton icon={X} onClick={() => { setShow(false); setTimeout(() => onClose && onClose(), 220); }} tooltipText="Close" />
             </div>
           </div>
 

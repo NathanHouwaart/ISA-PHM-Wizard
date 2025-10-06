@@ -539,7 +539,7 @@ const Grid = ({ data, columns, rowHeight = 32, plugins = [], onChange }) => {
 };
 
 // Demo Application
-export default function App() {
+export const App = () => {
     const [data, setData] = useState(() => {
         const initialData = [
             { id: 1, name: 'Alice Johnson', age: 28, role: 'Developer', department: 'Engineering', status: 'Active' },
@@ -615,3 +615,5 @@ export default function App() {
         </div>
     );
 }
+
+export default App;

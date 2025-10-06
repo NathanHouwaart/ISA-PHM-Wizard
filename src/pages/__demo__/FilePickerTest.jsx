@@ -1,10 +1,10 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
-import { Button } from "../components/ui/button";
-import TooltipButton from "../components/Widgets/TooltipButton";
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { Button } from "../../components/ui/button";
+import TooltipButton from "../../components/Widgets/TooltipButton";
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { directoryOpen, supported as bfsSupported } from 'browser-fs-access';
 
-export function FileExplorer() {
+export const FileExplorer = () => {
   const [allFiles, setAllFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
   const [pathStack, setPathStack] = useState([]);
@@ -449,3 +449,5 @@ export function FileExplorer() {
     </div>
   );
 }
+
+export default FileExplorer;

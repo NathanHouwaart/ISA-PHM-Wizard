@@ -2,9 +2,9 @@
 // This file can be deleted - it's just for quick manual testing
 
 import React from 'react';
-import { useFileSystem } from '../hooks/useFileSystem';
+import { useFileSystem } from '../../hooks/useFileSystem';
 
-export default function FileSystemTest() {
+export const FileSystemTest = () => {
   const fileSystem = useFileSystem();
 
   async function handleTest() {
@@ -87,3 +87,5 @@ export default function FileSystemTest() {
     </div>
   );
 }
+
+export default FileSystemTest;
