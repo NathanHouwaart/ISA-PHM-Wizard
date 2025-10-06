@@ -266,10 +266,47 @@ export async function exportProject(projectId = 'example-project') {
 }
 
 // Import a project package into the DB under targetProjectId. The package format
-// should be the object produced by exportProject(). Returns true on success.
+// should be the object produced by exportProject(). Returns an object with status and optional conflict info.
 // Appends the imported test setup to the global testSetups list if not already present.
+// If a conflict is detected (same UUID, different version), returns conflict details for UI resolution.
 export async function importProject(pkg, targetProjectId) {
   if (!pkg || !Array.isArray(pkg.nodes)) throw new Error('invalid project package');
+  
+  // Check for test setup conflicts BEFORE importing anything
+  let conflict = null;
+  if (pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
+    try {
+      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+      let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+      if (!Array.isArray(setups)) setups = [];
+      
+      const existing = setups.find((s) => s && s.id === pkg.selectedTestSetup.id);
+      if (existing) {
+        // Same UUID found - check if versions differ
+        const existingVersion = existing.version ?? 0;
+        const importedVersion = pkg.selectedTestSetup.version ?? 0;
+        const existingModified = existing.lastModified ?? 0;
+        const importedModified = pkg.selectedTestSetup.lastModified ?? 0;
+        
+        // Conflict detected if versions or content differ
+        if (existingVersion !== importedVersion || existingModified !== importedModified) {
+          conflict = {
+            setupId: pkg.selectedTestSetup.id,
+            setupName: pkg.selectedTestSetup.name || 'Unnamed Test Setup',
+            local: { version: existingVersion, lastModified: existingModified, setup: existing },
+            imported: { version: importedVersion, lastModified: importedModified, setup: pkg.selectedTestSetup }
+          };
+          // Return early with conflict info - UI will handle resolution
+          return { success: false, conflict, targetProjectId };
+        }
+      }
+    } catch (e) {
+      console.warn('[indexedTreeStore] conflict detection error', e);
+      // If conflict detection fails, proceed with import
+    }
+  }
+  
+  // No conflict - proceed with import
   try {
     await db.transaction('rw', 'nodes', async () => {
       const ops = [];
@@ -293,8 +330,8 @@ export async function importProject(pkg, targetProjectId) {
       } catch (e) { console.warn('[indexedTreeStore] importProject localStorage error', e); }
     }
 
-    // Append the imported selectedTestSetup to the global testSetups list if not already present (by UUID)
-    if (pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
+    // Append the imported selectedTestSetup to the global testSetups list (already checked for duplicates above)
+    if (pkg.selectedTestSetup && pkg.selectedTestSetup.id && !conflict) {
       try {
         const setupsRaw = localStorage.getItem('globalAppData_testSetups');
         let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
@@ -309,7 +346,7 @@ export async function importProject(pkg, targetProjectId) {
       }
     }
 
-    return true;
+    return { success: true, targetProjectId };
   } catch (err) {
     console.error('[indexedTreeStore] importProject error', err);
     throw err;

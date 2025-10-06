@@ -101,6 +101,25 @@ export const GlobalDataProvider = ({ children }) => {
     const explorerResolveRef = useRef(null);
     // Ref that indicates the initial IndexedDB hydration has completed (success or not).
     const initLoadedRef = useRef(false);
+    
+    // Migration: Add version and lastModified fields to existing test setups (runs once on mount)
+    useEffect(() => {
+        let migrated = false;
+        setTestSetups((prev) => {
+            const updated = prev.map((setup) => {
+                if (setup.version === undefined || setup.lastModified === undefined) {
+                    migrated = true;
+                    return {
+                        ...setup,
+                        version: setup.version ?? 1,
+                        lastModified: setup.lastModified ?? Date.now()
+                    };
+                }
+                return setup;
+            });
+            return migrated ? updated : prev;
+        });
+    }, []); // Empty dependency array = runs once on mount
 
     const openExplorer = () => {
         return new Promise((resolve) => {

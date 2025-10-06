@@ -5,9 +5,11 @@ import { useFileSystem } from '../../hooks/useFileSystem';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import FormField from '../Form/FormField';
+import TestSetupConflictDialog from './TestSetupConflictDialog';
 import { Plus, Download, Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function ProjectSessionsModal({ onClose }) {
   const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID, testSetups, setTestSetups } = useGlobalDataContext();
@@ -19,6 +21,7 @@ export default function ProjectSessionsModal({ onClose }) {
   const fileRef = useRef(null);
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
   const [activeIndexingProjectId, setActiveIndexingProjectId] = useState(null);
+  const [pendingImport, setPendingImport] = useState(null); // { pkg, newProjectId, conflict }
   const fileSystem = useFileSystem();
 
   // When a project card enters rename mode, focus its input so Enter or blur will commit
@@ -250,39 +253,101 @@ export default function ProjectSessionsModal({ onClose }) {
       const text = await file.text();
       const pkg = JSON.parse(text);
       const newId = createProject(pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`);
-      await importProject(pkg, newId);
       
-      // Reload the global testSetups from localStorage to reflect the newly imported test setup
-      try {
-        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-        const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
-        if (Array.isArray(setups)) {
-          setTestSetups(setups);
-        }
-      } catch (e) {
-        console.warn('[ProjectSessionsModal] failed to reload testSetups after import', e);
+      // Attempt import - this may return a conflict
+      const result = await importProject(pkg, newId);
+      
+      if (result.conflict) {
+        // Conflict detected - store pending import and show resolution dialog
+        setPendingImport({ pkg, newProjectId: newId, conflict: result.conflict });
+        return;
       }
       
-      // Do NOT immediately switch to the new project or close the modal.
-      // Instead, keep the ProjectSessionsModal open and select the imported project
-      // so the user can inspect/rename it before switching.
-      try {
-        const tree = await loadTree(newId);
-        setTrees((t) => ({ ...t, [newId]: tree }));
-      } catch (e) {
-        // If the imported project has no dataset or loading fails, show as null
-        setTrees((t) => ({ ...t, [newId]: null }));
-      }
-      setSelectedCardId(newId);
-      // Open inline rename so users can rename the imported project right away
-      setRenameMap((m) => ({ ...m, [newId]: true }));
+      // No conflict - complete the import
+      await completeImport(newId);
     } catch (err) {
       console.error('[ProjectSessionsModal] import error', err);
       alert('Failed to import project: ' + (err && err.message));
     }
   }
 
+  async function completeImport(newId) {
+    try {
+      // Reload the global testSetups from localStorage to reflect the newly imported test setup
+      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+      const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+      if (Array.isArray(setups)) {
+        setTestSetups(setups);
+      }
+      
+      // Load the tree for the new project
+      try {
+        const tree = await loadTree(newId);
+        setTrees((t) => ({ ...t, [newId]: tree }));
+      } catch (e) {
+        setTrees((t) => ({ ...t, [newId]: null }));
+      }
+      
+      setSelectedCardId(newId);
+      setRenameMap((m) => ({ ...m, [newId]: true }));
+    } catch (err) {
+      console.error('[ProjectSessionsModal] completeImport error', err);
+    }
+  }
+
+  async function handleConflictResolution(resolution) {
+    if (!pendingImport) return;
+    
+    const { pkg, newProjectId, conflict } = pendingImport;
+    
+    try {
+      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+      let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+      if (!Array.isArray(setups)) setups = [];
+      
+      if (resolution === 'keep-local') {
+        // Keep local version - just complete the import without modifying test setups
+        // The project will reference the existing test setup by ID
+        await completeImport(newProjectId);
+        
+      } else if (resolution === 'use-imported') {
+        // Replace local version with imported version
+        const index = setups.findIndex((s) => s && s.id === conflict.setupId);
+        if (index !== -1) {
+          setups[index] = conflict.imported.setup;
+          localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
+        }
+        await completeImport(newProjectId);
+        
+      } else if (resolution === 'keep-both') {
+        // Create new test setup with new UUID for imported version
+        const newSetup = {
+          ...conflict.imported.setup,
+          id: uuidv4(),
+          name: `${conflict.imported.setup.name} (imported)`
+        };
+        setups.push(newSetup);
+        localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
+        
+        // Update the project's selectedTestSetupId to point to the new setup
+        const selectedIdKey = `globalAppData_${newProjectId}_selectedTestSetupId`;
+        localStorage.setItem(selectedIdKey, JSON.stringify(newSetup.id));
+        
+        await completeImport(newProjectId);
+      }
+      
+      // Clear pending import state
+      setPendingImport(null);
+      
+    } catch (err) {
+      console.error('[ProjectSessionsModal] conflict resolution error', err);
+      alert('Failed to resolve conflict: ' + (err && err.message));
+      setPendingImport(null);
+    }
+  }
+
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* blurred backdrop */}
       <div className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${show ? 'opacity-100' : 'opacity-0'}`} />
@@ -506,5 +571,21 @@ export default function ProjectSessionsModal({ onClose }) {
         </div>
       </div>
     </div>
+    
+    {/* Conflict Resolution Dialog */}
+    {pendingImport && pendingImport.conflict && (
+      <TestSetupConflictDialog
+        conflict={pendingImport.conflict}
+        onResolve={handleConflictResolution}
+        onCancel={() => {
+          // Cancel the import - delete the created project
+          if (pendingImport.newProjectId) {
+            deleteProject(pendingImport.newProjectId);
+          }
+          setPendingImport(null);
+        }}
+      />
+    )}
+    </>
   );
 }
