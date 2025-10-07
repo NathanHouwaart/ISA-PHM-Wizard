@@ -483,7 +483,7 @@ export default function ProjectSessionsModal({ onClose }) {
                             />
                           </div>
                         ) : (
-                          <div className="text-lg font-medium">{p.name}</div>
+                          <div className="text-lg font-medium truncate max-w-[320px]">{p.name}</div>
                         )}
                         <div className="text-sm text-gray-400">{p.id === currentProjectId ? '(active)' : ''}</div>
                       </div>

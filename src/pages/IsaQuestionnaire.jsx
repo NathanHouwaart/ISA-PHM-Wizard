@@ -22,6 +22,7 @@ import IconToolTipButton from '../components/Widgets/IconTooltipButton';
 import { Layers } from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
+import Heading3 from '../components/Typography/Heading3';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -41,7 +42,7 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection } = useGlobalDataContext();
+  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection, currentProjectId, projects } = useGlobalDataContext();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // Overlay state management - all overlays follow the same conditional rendering pattern
@@ -100,14 +101,21 @@ export const IsaQuestionnaire = () => {
 
       <div className="relative">
 
-        <div className="absolute top-0 right-0 z-50">
-          <IconToolTipButton
-            icon={Layers}
-            tooltipText="Open project/session chooser"
-            onClick={() => setShowSessionsModal(true)}
-            className=""
-            aria-label="Change Project"
-          />
+        <div className="absolute top-0 right-0 z-50 flex items-center gap-2">
+          {!showSessionsModal && (
+            <>
+              <Heading3 className="text-sm text-gray-600 font-medium max-w-[220px] truncate whitespace-nowrap mr-2">
+                {projects.find(p => p.id === currentProjectId)?.name || 'No project selected'}
+              </Heading3>
+              <IconToolTipButton
+                icon={Layers}
+                tooltipText="Open project/session chooser"
+                onClick={() => setShowSessionsModal(true)}
+                className=""
+                aria-label="Change Project"
+              />
+            </>
+          )}
         </div>
 
         <Heading1> ISA Questionnaire Form </Heading1>

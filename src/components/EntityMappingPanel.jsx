@@ -3,6 +3,9 @@
 import React, { useMemo, useState } from 'react'
 import { Plus, PlusCircleIcon } from 'lucide-react';
 import useMappingsController from '../hooks/useMappingsController';
+import Paragraph from './Typography/Paragraph';
+import Heading3 from './Typography/Heading3';
+import TooltipButton from './Widgets/TooltipButton';
 
 export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight }) {
 
@@ -28,22 +31,22 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                 <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">{name}</h3>
                 <div className="overflow-y-auto flex-grow">
                     {items.map((item, index) => (
-                        <button
+                        <TooltipButton
                             key={item.id || index}
-                            onClick={() => {
-                                setSelectedEntityIndex(index);
-                            }}
-                            className={`w-full cursor-pointer text-left p-3 rounded-lg mb-2 transition-colors duration-200 ${index === selectedEntityIndex
+                            tooltipText={item.name}
+                            onClick={() => setSelectedEntityIndex(index)}
+                            className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-200 ${index === selectedEntityIndex
                                 ? 'bg-blue-600 text-white shadow-md'
                                 : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                                 }`}
                         >
                             {tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name}
-                        </button>
+                        </TooltipButton>
                     ))}
                 </div>
                 {!disableAdd &&
-                    <button
+                    <TooltipButton
+                        tooltipText="Add a new item"
                         onClick={() => {
                             addItem();
                             // select the newly added item (it will be appended)
@@ -56,7 +59,7 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                             <Plus className='w-5 h-5' />
                             Add New
                         </span>
-                    </button>
+                    </TooltipButton>
                 }
             </div>
 
@@ -77,11 +80,27 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                     }
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                    <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500"></PlusCircleIcon>
-                    <p>No test setup selected</p>
-                    <p>Go to the 'Test-Setup' slide (5) and select a test-setup</p>
-                </div>
+                // Context-aware empty state: test-setup, measurement protocols, processing protocols
+                (() => {
+                    const key = (name || '').toLowerCase();
+                    let title = 'No test setup selected';
+                    let description = "Go to the 'Test-Setup' slide (5) and select a test-setup";
+                    if (key.includes('measurement')) {
+                        title = 'No measurement protocols yet';
+                        description = 'Get started by adding a new protocol.';
+                    } else if (key.includes('processing')) {
+                        title = 'No processing protocols yet';
+                        description = 'Get started by adding a new protocol.';
+                    }
+
+                    return (
+                        <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg min-h-[220px]">
+                            <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500" />
+                            <Heading3 className="mb-2">{title}</Heading3>
+                            <Paragraph className="text-center max-w-md">{description}</Paragraph>
+                        </div>
+                    );
+                })()
             )}
         </div>
     )

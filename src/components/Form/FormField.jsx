@@ -358,10 +358,12 @@ function FormField({
 
     return (
         <div>
-            <label className={`text-sm ml-1 font-medium text-gray-700 w-24 text-right ${type === 'textarea' ? 'pt-3' : ''}`}>
-                {label}
-                {required && <span className="text-red-500 ml-1">*</span>}
-            </label>
+            {label && (
+                <label className={`text-sm ml-1 font-medium text-gray-700 w-24 text-right flex-shrink-0 ${type === 'textarea' ? 'pt-3' : ''}`}>
+                    {label}
+                    {required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+            )}
             <div className="flex flex-grow w-full pt-0.5 ml-0">
                 {renderInput()}
                 {explanation &&
