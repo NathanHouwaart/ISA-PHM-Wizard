@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getLicenses } from '../../services/api';
 import Fuse from 'fuse.js';
 import { cn } from '../../utils/utils';
 
-function LicensePicker({
+const LicensePicker = ({
     name,
     value,
     onChange,
     placeholder,
     required,
     className
-}) {
+}) => {
     const [licenses, setLicenses] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const [fuse, setFuse] = useState(null);
@@ -101,6 +101,6 @@ function LicensePicker({
             </div>
         </>
     );
-}
+};
 
 export default LicensePicker;

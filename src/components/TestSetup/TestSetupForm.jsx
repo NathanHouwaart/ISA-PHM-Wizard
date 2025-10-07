@@ -16,90 +16,88 @@ import Paragraph, { SlidePageSubtitle } from '../Typography/Paragraph';
 
 // Comment Component
 const CommentEditor = ({ comments = [], onCommentsChange }) => {
+  useEffect(() => {
+    if (comments.some((comment) => !comment.id)) {
+      onCommentsChange(
+        comments.map((comment) => (comment.id ? comment : { ...comment, id: uuid4() }))
+      );
+    }
+  }, [comments, onCommentsChange]);
+
   const addComment = () => {
-    const newComments = [...comments, { name: '', value: '' }];
+    const newComments = [...comments, { id: uuid4(), name: '', value: '' }];
     onCommentsChange(newComments);
   };
 
-  const updateComment = (index, field, value) => {
-    const updatedComments = comments.map((comment, i) =>
-      i === index ? { ...comment, [field]: value } : comment
+  const updateComment = (id, field, value) => {
+    const updatedComments = comments.map((comment) =>
+      comment.id === id ? { ...comment, [field]: value } : comment
     );
     onCommentsChange(updatedComments);
   };
 
-  const removeComment = (index) => {
-    const filteredComments = comments.filter((_, i) => i !== index);
+  const removeComment = (id) => {
+    const filteredComments = comments.filter((comment) => comment.id !== id);
     onCommentsChange(filteredComments);
   };
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h6 className="text-sm font-semibold text-gray-700">
+        <Heading3 className="text-sm font-semibold text-gray-700">
           Comments ({comments.length})
-        </h6>
-        <button
-          type="button"
+        </Heading3>
+        <TooltipButton
+          tooltipText="Add comment"
           onClick={addComment}
-          className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
+          className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
         >
-          Add Comment
-        </button>
+          <span>Add Comment</span>
+        </TooltipButton>
       </div>
 
       <div className="space-y-4">
         {comments.map((comment, index) => (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+          <div key={comment.id} className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">
+              <Paragraph className="text-sm font-medium text-gray-700">
                 Comment {index + 1}
-              </span>
-              <button
-                type="button"
-                onClick={() => removeComment(index)}
-                className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1 transition-colors"
-                title="Remove comment"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              </Paragraph>
+              <IconToolTipButton
+                icon={X}
+                onClick={() => removeComment(comment.id)}
+                tooltipText="Remove comment"
+              />
             </div>
 
             <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comment Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={comment.name}
-                  onChange={(e) => updateComment(index, 'name', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter a title for this comment"
-                  required
-                />
-              </div>
+              <FormField
+                name={`comment-${index}-title`}
+                type="text"
+                value={comment.name}
+                label="Comment Title"
+                placeholder="Enter a title for this comment"
+                onChange={(e) => updateComment(comment.id, 'name', e.target.value)}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comment Text
-                </label>
-                <textarea
-                  value={comment.value}
-                  onChange={(e) => updateComment(index, 'value', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your comment text here..."
-                  rows="3"
-                />
-              </div>
+              <FormField
+                name={`comment-${index}-text`}
+                type="textarea"
+                value={comment.value}
+                label="Comment Text"
+                placeholder="Enter your comment text here..."
+                onChange={(e) => updateComment(comment.id, 'value', e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
         ))}
 
         {comments.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-6">
+          <Paragraph className="text-sm text-gray-500 text-center py-6">
             No comments added yet. Click "Add Comment" to get started.
-          </p>
+          </Paragraph>
         )}
       </div>
     </div>
@@ -610,62 +608,6 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
                         />
                       </div>
                     </div>
-
-                    {/* Additional Information (dynamic key/value entries) */}
-                    <div>
-                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Additional Information
-                        <span className="text-xs text-gray-500 ml-2">(add or remove custom fields)</span>
-                      </h6>
-                   
-                      <Paragraph className={"px-2 border-b border-gray-300 pb-3 mb-3 text-sm text-gray-600"}>
-                        Specify measurement details for each sensor. As many measurement details can be added/removed as required to describe the measurement. If a detail is only relevant for part of the sensors, please leave cells empty for the sensors where they are not applicable.
-                      </Paragraph>
-
-                      <div className="space-y-3">
-                        {(sensor.additionalInfo && sensor.additionalInfo.length > 0 ? sensor.additionalInfo : convertOldFieldsToAdditional(sensor)).map((entry, eIdx) => (
-                          <div key={entry.id || eIdx} className="grid gap-3 items-center grid-cols-[1fr_1fr_auto]">
-                            <div>
-                              <FormField
-                                name={`sensor-${index}-additional-${eIdx}-name`}
-                                label={"Name"}
-                                value={entry.name}
-                                onChange={(e) => updateAdditionalInfo(index, eIdx, 'name', e.target.value)}
-                                placeholder="Field name (e.g. Sampling Rate)"
-                              />
-                            </div>
-                            <div>
-                              <FormField
-                                name={`sensor-${index}-additional-${eIdx}-value`}
-                                label={"Value"}
-                                value={entry.value}
-                                onChange={(e) => updateAdditionalInfo(index, eIdx, 'value', e.target.value)}
-                                placeholder="Value"
-                              />
-                            </div>
-                            <div className="flex justify-end">
-                              <IconTooltipButton
-                                icon={Trash}
-                                onClick={() => removeAdditionalInfo(index, eIdx)}
-                                className="h-8 w-8 mt-5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
-                                tooltipText={"Remove field"}
-                              />
-                            </div>
-                          </div>
-                        ))}
-
-                        <div>
-                          <TooltipButton
-                            type="button"
-                            onClick={() => addAdditionalInfo(index)}
-                            tooltipText={"Add a custom field"}
-                            className="px-6 py-3 mt-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                          >
-                            <span className='mr-2'><Plus /></span> Add Field
-                          </TooltipButton>
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                 </div>
@@ -696,6 +638,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  const [formError, setFormError] = useState('');
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [activeTooltips, setActiveTooltips] = useState(false);
 
@@ -723,9 +666,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.location.trim() || !formData.experimentPreparationProtocolName.trim() || !formData.testSpecimenName.trim()) {
-      alert('Please fill in all required fields (Name, Location, Experiment Preparation Protocol Name, Set-up or test specimen-name).');
+      setFormError('Please fill in all required fields (Name, Location, Experiment Preparation Protocol Name, Set-up or test specimen-name).');
       return;
     }
+    setFormError('');
 
     const testSetupData = {
       ...formData,
@@ -755,9 +699,9 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <Heading3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Test Setup' : 'Add New Test Setup'}
-          </h3>
+          </Heading3>
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={onCancel}
@@ -769,6 +713,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       </div>
 
       <div className="p-4">
+        {formError && (
+          <Paragraph className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            {formError}
+          </Paragraph>
+        )}
         <TabSwitcher
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}

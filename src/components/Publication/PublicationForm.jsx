@@ -4,6 +4,8 @@ import { Save, X } from "lucide-react";
 import { formatContactName } from "../../utils/utils";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
+import Heading3 from "../Typography/Heading3";
+import Paragraph from "../Typography/Paragraph";
 
 import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses";
 
@@ -19,6 +21,7 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
   });
 
   const [selectedContacts, setSelectedContacts] = useState([]);
+  const [formError, setFormError] = useState('');
 
   // Initialize selected contacts on mount
   useEffect(() => {
@@ -55,9 +58,10 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert("Please enter a title.");
+      setFormError("Please enter a title.");
       return;
     }
+    setFormError('');
 
     onSave({
       ...formData,
@@ -70,9 +74,9 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     <div className="bg-white rounded-lg shadow-lg border border-gray-300 max-h-[90vh] overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <Heading3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Publication' : 'Add new Publication'}
-          </h3>
+          </Heading3>
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={onCancel}
@@ -84,6 +88,11 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
       </div>
 
       <div className="px-6 space-y-2 pt-2">
+        {formError && (
+          <Paragraph className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            {formError}
+          </Paragraph>
+        )}
         <FormField
           label="Publication Title"
           name="title"

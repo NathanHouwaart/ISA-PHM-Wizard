@@ -7,7 +7,6 @@ import path from "path"
 // vite.config.js
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
-import { Buffer } from 'buffer'; // Import Buffer here
 
 export default defineConfig({
   base: '/ISA-PHM-Wizard/',
@@ -16,10 +15,14 @@ export default defineConfig({
     tailwindcss(),
     svgr()
   ],
+  test: {
+    globals: true,
+    environment: 'node',
+    setupFiles: [],
+  },
   define: {
     // This is important for making Buffer available globally
     global: 'globalThis',
-    Buffer: ['buffer', 'Buffer'], // Provide Buffer
     // Or, for older versions/more direct approach, though the above is preferred
     // 'process.env': {} // If you get 'process is not defined' later
   },

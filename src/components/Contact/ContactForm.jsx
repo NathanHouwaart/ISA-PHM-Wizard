@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { X, Save } from "lucide-react";
 
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
+import Heading3 from "../Typography/Heading3";
+import Paragraph from "../Typography/Paragraph";
 import { v4 as uuid } from "uuid";
 
 import { CONTACT_ROLE_OPTIONS } from "../../constants/contactRoles";
@@ -22,13 +24,15 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
         orcid: item?.orcid || '',
         affiliations: item?.affiliations || [],
     });
+    const [formError, setFormError] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formData.firstName.trim() || !formData.lastName.trim()) {
-            alert('Please fill in all required fields (First Name, Last Name, Role).');
+            setFormError('Please fill in all required fields (First Name, Last Name, Role).');
             return;
         }
+        setFormError('');
 
         const contactData = {
             ...formData,
@@ -81,9 +85,9 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <Heading3 className="text-xl font-semibold text-gray-900">
                         {isEditing ? 'Edit contact' : 'Add new contact'}
-                    </h3>
+                    </Heading3>
                     <TooltipButton
                         className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                         onClick={onCancel}
@@ -95,6 +99,12 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
             </div>
 
             <div className="px-6 space-y-1">
+                {formError && (
+                    <Paragraph className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                        {formError}
+                    </Paragraph>
+                )}
+
                 {/* Group First Name, Mid Initials, Last Name */}
                 <div className='pt-2 grid grid-cols-3 gap-x-8'>
 

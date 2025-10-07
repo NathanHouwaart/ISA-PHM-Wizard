@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
@@ -7,7 +7,7 @@ import { cn } from '../../utils/utils';
 import TooltipButton from '../Widgets/TooltipButton';
 import { X } from 'lucide-react';
 
-function FormField({
+const FormField = ({
     name,
     value,
     label,
@@ -23,7 +23,8 @@ function FormField({
     onRemoveTag,
     rows = 3,
     className = '',
-}) {
+    inputRef: externalInputRef = null,
+}) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -31,7 +32,18 @@ function FormField({
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
     const dropdownRef = useRef(null);
-    const inputRef = useRef(null);
+    const internalInputRef = useRef(null);
+    const assignInputRef = useCallback(
+        (node) => {
+            internalInputRef.current = node;
+            if (typeof externalInputRef === 'function') {
+                externalInputRef(node);
+            } else if (externalInputRef && typeof externalInputRef === 'object') {
+                externalInputRef.current = node;
+            }
+        },
+        [externalInputRef]
+    );
 
     const handleTooltipToggle = () => {
         setShowTooltip(!showTooltip);
@@ -58,8 +70,8 @@ function FormField({
 
     // Update dropdown position when it opens
     useEffect(() => {
-        if (showDropdown && inputRef.current) {
-            const rect = inputRef.current.getBoundingClientRect();
+        if (showDropdown && internalInputRef.current) {
+            const rect = internalInputRef.current.getBoundingClientRect();
             setDropdownPosition({
                 top: rect.bottom + window.scrollY,
                 left: rect.left + window.scrollX,
@@ -122,9 +134,9 @@ function FormField({
         if (tags.length > 0 && inputValue.length > 0) {
             setShowDropdown(true);
         }
-    // mark editing state for default inputs
-    if (!commitOnBlur) return;
-    setIsEditing(true);
+        // mark editing state for default inputs
+        if (!commitOnBlur) return;
+        setIsEditing(true);
     };
 
     const handleInputBlur = (e) => {
@@ -132,7 +144,7 @@ function FormField({
             setTimeout(() => setShowDropdown(false), 150);
         }
         // If commit-on-blur behavior requested, commit value on blur
-        if (commitOnBlur && inputRef.current && inputRef.current === e.target) {
+        if (commitOnBlur && internalInputRef.current && internalInputRef.current === e.target) {
             // Stop editing and call onChange only if value changed
             setIsEditing(false);
             if (String(inputValue) !== String(value) && typeof onChange === 'function') {
@@ -190,7 +202,7 @@ function FormField({
                 return (
                     <div className="relative w-full">
                         <div 
-                            ref={inputRef}
+                            ref={assignInputRef}
                             className="w-full flex flex-wrap items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white"
                         >
                             {currentTags.map((tag, index) => (
@@ -319,7 +331,7 @@ function FormField({
             default:
                 return (
                     <input
-                        ref={inputRef}
+                        ref={assignInputRef}
                         name={name}
                         type={type}
                         value={commitOnBlur ? (isEditing ? inputValue : (value ?? '')) : (value ?? '')}
@@ -335,9 +347,6 @@ function FormField({
                             if (commitOnBlur) {
                                 setInputValue(value ?? '');
                                 setIsEditing(true);
-                            }
-                            if (typeof inputRef.current?.focus === 'function') {
-                                /* noop, keep ref */
                             }
                         }}
                         onBlur={handleInputBlur}
@@ -383,6 +392,6 @@ function FormField({
             </AnimatedTooltip>}
         </div>
     );
-}
+};
 
 export default FormField;

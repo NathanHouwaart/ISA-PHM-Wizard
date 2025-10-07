@@ -158,8 +158,8 @@ export const GlobalDataProvider = ({ children }) => {
     function deleteProject(id) {
         // Protect the default/example project from deletion
         if (id === DEFAULT_PROJECT_ID) {
-            alert('The default example project cannot be deleted. You can reset it to its original state instead.');
-            return;
+            console.warn('The default example project cannot be deleted. You can reset it to its original state instead.');
+            return false;
         }
         setProjects((prev) => {
             const next = prev.filter((p) => p.id !== id);
@@ -176,6 +176,7 @@ export const GlobalDataProvider = ({ children }) => {
             }
             return cur;
         });
+        return true;
     }
 
     // Reset a project's stored state back to the initial defaults (useful for the built-in example project)

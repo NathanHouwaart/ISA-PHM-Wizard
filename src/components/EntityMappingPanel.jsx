@@ -28,11 +28,15 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
 
             {/* Sidebar for Variable Navigation */}
             <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">{name}</h3>
+                <Heading3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                    {name}
+                </Heading3>
                 <div className="overflow-y-auto flex-grow">
-                    {items.map((item, index) => (
+                    {items.map((item, index) => {
+                        const key = item?.id ?? item?.uuid ?? `${name || 'mapping'}-${item?.name || index}`;
+                        return (
                         <TooltipButton
-                            key={item.id || index}
+                            key={key}
                             tooltipText={item.name}
                             onClick={() => setSelectedEntityIndex(index)}
                             className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-200 ${index === selectedEntityIndex
@@ -42,7 +46,8 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                         >
                             {tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name}
                         </TooltipButton>
-                    ))}
+                        );
+                    })}
                 </div>
                 {!disableAdd &&
                     <TooltipButton

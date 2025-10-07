@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { formatContactName } from "../../utils/utils";
 
-export function TagInput({
+export const TagInput = ({
   label,
   tags,
   onAddTag,
@@ -10,7 +10,7 @@ export function TagInput({
   placeholder,
   required = false,
   availableOptions,
-}) {
+}) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -164,4 +164,6 @@ export function TagInput({
       )}
     </div>
   );
-}
+};
+
+export default TagInput;
