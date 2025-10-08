@@ -47,7 +47,9 @@ import { directoryOpen } from 'browser-fs-access';
  */
 export function useFileSystem() {
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState({ percent: 0, message: '' });
+  // progress is null when idle. When indexing is active it becomes an object
+  // { percent:number, message:string }. ProgressOverlay treats null as hidden.
+  const [progress, setProgress] = useState(null);
 
   /**
    * Check if native File System Access API is supported
@@ -64,13 +66,13 @@ export function useFileSystem() {
     try {
       for await (const [, h] of handle.entries()) {
         total += 1;
-        if (h.kind === 'directory') {
-          try {
-            total += await countEntries(h);
-          } catch (err) {
-            // Skip directories we can't access
+          if (h.kind === 'directory') {
+            try {
+              total += await countEntries(h);
+            } catch {
+              // Skip directories we can't access
+            }
           }
-        }
       }
     } catch (err) {
       console.warn('[useFileSystem] Error counting entries:', err);
@@ -106,7 +108,7 @@ export function useFileSystem() {
           // Report progress increment
           try {
             onProgress({ processed: 1 });
-          } catch (e) {
+          } catch {
             // Ignore progress callback errors
           }
         } catch (entryErr) {
@@ -243,7 +245,7 @@ export function useFileSystem() {
       }
 
       let processed = 0;
-      const progressCallback = ({ current, processed: p = 0 }) => {
+      const progressCallback = ({ processed: p = 0 }) => {
         if (p) {
           processed += p;
           const percent = Math.min(95, Math.round((processed / Math.max(1, total)) * 100));
@@ -273,7 +275,7 @@ export function useFileSystem() {
    */
   const pickAndIndexDirectory = useCallback(async (onProgress = () => {}) => {
     setLoading(true);
-    setProgress({ percent: 0, message: '' });
+    // keep progress null until the chosen indexer sets an initial message
 
     try {
       let dataset;
@@ -299,12 +301,10 @@ export function useFileSystem() {
         return null;
       }
 
-      // Show completion
+      // Show completion briefly then clear progress so UI hides overlay
       setProgress({ percent: 100, message: 'Indexing complete!' });
-      
-      // Keep completion message briefly
       setTimeout(() => {
-        setProgress({ percent: 0, message: '' });
+        setProgress(null);
       }, 1200);
 
       return dataset;
@@ -323,7 +323,7 @@ export function useFileSystem() {
    */
   const reset = useCallback(() => {
     setLoading(false);
-    setProgress({ percent: 0, message: '' });
+    setProgress(null);
   }, []);
 
   return {

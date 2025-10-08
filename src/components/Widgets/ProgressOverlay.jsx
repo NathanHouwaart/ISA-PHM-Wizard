@@ -19,7 +19,9 @@ const ProgressOverlay = ({
   className = '',
   'data-testid': dataTestId = 'progress-overlay'
 }) => {
+  // Treat null or an 'idle' progress (0% with no message) as hidden
   if (!progress) return null;
+  if (progress.percent === 0 && (!progress.message || String(progress.message).trim() === '')) return null;
 
   return (
     <div 

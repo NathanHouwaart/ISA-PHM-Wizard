@@ -1,4 +1,5 @@
 import React from 'react';
+import { useProjectDataset } from '../../hooks/useProjectDataset';
 import FormField from '../Form/FormField';
 import IconTooltipButton from './IconTooltipButton';
 import { Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
@@ -68,13 +69,25 @@ const ProjectCard = ({
   className = '',
   'data-testid': dataTestId = 'project-card',
 }) => {
+  const dataset = useProjectDataset(project.id);
+
   const formatDate = (date) => {
-    if (!(date instanceof Date) || isNaN(date)) return null;
-    return date.toLocaleString();
+    if (!date) return null;
+    // Accept Date or ISO string
+    const d = date instanceof Date ? date : new Date(date);
+    if (!(d instanceof Date) || isNaN(d)) return null;
+    return d.toLocaleString();
   };
 
+  // Prefer explicit props; fall back to dataset hook values for tree/loading/progress/metadata
+  const datasetTree = tree ?? dataset.tree;
+  const datasetLoading = loading || dataset.loading;
+  const datasetProgress = progress ?? dataset.progress;
+  const datasetSetupName = setupName ?? (dataset.metadata && dataset.metadata.setupName) ?? null;
+  const datasetLastEdited = lastEdited ?? (dataset.metadata && dataset.metadata.lastEdited ? dataset.metadata.lastEdited : null);
+
   const getDatasetDisplay = () => {
-    if (loading) {
+    if (datasetLoading) {
       return (
         <span className="inline-flex items-center gap-2 text-sm text-indigo-600">
           <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -86,7 +99,7 @@ const ProjectCard = ({
         </span>
       );
     }
-    return tree ? (tree.rootName || tree.name || 'Indexed') : 'None';
+    return datasetTree ? (datasetTree.rootName || datasetTree.name || 'Indexed') : 'None';
   };
 
   const handleKeyDown = (e) => {
@@ -129,8 +142,8 @@ const ProjectCard = ({
       data-testid={dataTestId}
       aria-pressed={isSelected}
     >
-      {/* Progress overlay */}
-      <ProgressOverlay progress={progress} />
+  {/* Progress overlay */}
+  <ProgressOverlay progress={datasetProgress} />
 
       <div className="flex-1">
         <div className="flex items-center gap-3">
@@ -144,9 +157,9 @@ const ProjectCard = ({
                   try {
                     const rel = e.relatedTarget;
                     if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
-                  } catch (err) {
-                    // Ignore blur errors
-                  }
+                  } catch {
+                      // Ignore blur errors
+                    }
                   onToggleRename && onToggleRename();
                 }}
               >
@@ -184,18 +197,18 @@ const ProjectCard = ({
         </div>
 
         {/* Test setup and last edited */}
-        {(setupName || lastEdited) && (
+        {(datasetSetupName || datasetLastEdited) && (
           <div className="mt-1">
-            {setupName && (
+            {datasetSetupName && (
               <KeyValueRow 
                 label="Test setup" 
-                value={setupName} 
+                value={datasetSetupName} 
                 data-testid={`${dataTestId}-setup`}
               />
             )}
-            {lastEdited && (
+            {datasetLastEdited && (
               <div className="text-xs text-gray-400 mt-1" data-testid={`${dataTestId}-last-edited`}>
-                Last edited: <span className="text-gray-600">{formatDate(lastEdited)}</span>
+                Last edited: <span className="text-gray-600">{formatDate(datasetLastEdited)}</span>
               </div>
             )}
           </div>
@@ -213,7 +226,9 @@ const ProjectCard = ({
               tooltipText="Edit dataset (pick folder)" 
               onClick={(e) => {
                 e.stopPropagation();
-                onEditDataset && onEditDataset();
+                // prefer explicit prop handler if provided, otherwise use hook action
+                if (onEditDataset) onEditDataset();
+                else dataset.indexDataset && dataset.indexDataset();
               }}
               data-testid={`${dataTestId}-edit-dataset-btn`}
             />
@@ -222,7 +237,8 @@ const ProjectCard = ({
               tooltipText="Delete indexed dataset" 
               onClick={(e) => {
                 e.stopPropagation();
-                onDeleteDataset && onDeleteDataset();
+                if (onDeleteDataset) onDeleteDataset();
+                else dataset.deleteDataset && dataset.deleteDataset();
               }}
               data-testid={`${dataTestId}-delete-dataset-btn`}
             />
