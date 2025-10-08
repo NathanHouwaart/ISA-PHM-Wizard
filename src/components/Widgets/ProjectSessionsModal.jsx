@@ -5,6 +5,7 @@ import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import ProjectCard from './ProjectCard';
 import TestSetupConflictDialog from './TestSetupConflictDialog';
+import AlertDecisionDialog from './AlertDecisionDialog';
 import { Plus, Download, Folder } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
@@ -26,6 +27,36 @@ export default function ProjectSessionsModal({ onClose }) {
   const fileRef = useRef(null);
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
   const [pendingImport, setPendingImport] = useState(null); // { pkg, newProjectId, conflict }
+  const [dialogConfig, setDialogConfig] = useState(null);
+
+  const showDialog = (config) => {
+    const {
+      onConfirm: confirmHandler,
+      onCancel: cancelHandler,
+      showCancel = true,
+      ...rest
+    } = config || {};
+
+    setDialogConfig({
+      tone: 'info',
+      confirmLabel: 'OK',
+      cancelLabel: 'Cancel',
+      showCancel,
+      ...rest,
+      onConfirm: () => {
+        setDialogConfig(null);
+        if (typeof confirmHandler === 'function') {
+          confirmHandler();
+        }
+      },
+      onCancel: () => {
+        setDialogConfig(null);
+        if (typeof cancelHandler === 'function') {
+          cancelHandler();
+        }
+      }
+    });
+  };
 
   // When a project card enters rename mode, focus its input so Enter or blur will commit
   useEffect(() => {
@@ -68,13 +99,22 @@ export default function ProjectSessionsModal({ onClose }) {
   }
 
   function handleDelete(id) {
-    const p = projects.find((x) => x.id === id);
-    if (!p) return;
-    if (!confirm(`Delete project "${p.name}"? This will remove its local state (this does not affect other projects).`)) return;
-    deleteProject(id);
+    const project = projects.find((x) => x.id === id);
+    if (!project) return;
+    showDialog({
+      tone: 'danger',
+      title: `Delete project "${project.name}"?`,
+      message: "This action removes the project's local state. Other projects are not affected.",
+      confirmLabel: 'Delete project',
+      confirmTooltip: `Delete ${project.name} from this workspace`,
+      cancelLabel: 'Cancel',
+      cancelTooltip: 'Keep project',
+      onConfirm: () => deleteProject(id),
+    });
   }
 
   async function handleExportProject(id) {
+    const project = projects.find((x) => x.id === id);
     try {
       const pkg = await exportProject(id);
       const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
@@ -88,7 +128,16 @@ export default function ProjectSessionsModal({ onClose }) {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('[ProjectSessionsModal] export error', err);
-      alert('Failed to export project: ' + (err && err.message));
+      showDialog({
+        tone: 'danger',
+        title: 'Unable to export project',
+        message: `We could not export${project ? ` "${project.name}"` : ''}. ${err && err.message ? err.message : 'Please try again.'}`,
+        confirmLabel: 'Retry export',
+        confirmTooltip: 'Try exporting the project again',
+        cancelLabel: 'Cancel',
+        cancelTooltip: 'Dismiss this message',
+        onConfirm: () => handleExportProject(id),
+      });
     }
   }
 
@@ -111,7 +160,16 @@ export default function ProjectSessionsModal({ onClose }) {
       await completeImport(newId);
     } catch (err) {
       console.error('[ProjectSessionsModal] import error', err);
-      alert('Failed to import project: ' + (err && err.message));
+      showDialog({
+        tone: 'danger',
+        title: 'Unable to import project',
+        message: `We could not import${file && file.name ? ` "${file.name}"` : ' the selected file'}. ${err && err.message ? err.message : 'Check that the file is a valid project export.'}`,
+        confirmLabel: 'Retry import',
+        confirmTooltip: 'Try importing the file again',
+        cancelLabel: 'Cancel',
+        cancelTooltip: 'Dismiss this message',
+        onConfirm: () => handleImportFile(file),
+      });
     }
   }
 
@@ -194,17 +252,32 @@ export default function ProjectSessionsModal({ onClose }) {
         // Now import the project data with the modified package
         await importProject(modifiedPkg, newProjectId, { skipConflictCheck: true });
         await completeImport(newProjectId);
-      }
-      
-      // Clear pending import state
-      setPendingImport(null);
-      
-    } catch (err) {
-      console.error('[ProjectSessionsModal] conflict resolution error', err);
-      alert('Failed to resolve conflict: ' + (err && err.message));
-      setPendingImport(null);
     }
+    
+    // Clear pending import state
+    setPendingImport(null);
+    
+  } catch (err) {
+    console.error('[ProjectSessionsModal] conflict resolution error', err);
+    const currentPending = pendingImport;
+    showDialog({
+      tone: 'danger',
+      title: 'Import conflict not resolved',
+      message: `${err && err.message ? err.message : 'Something went wrong while applying your choice.'} You can try again or cancel the import.`,
+      confirmLabel: 'Try again',
+      confirmTooltip: 'Attempt the selected resolution again',
+      cancelLabel: 'Cancel import',
+      cancelTooltip: 'Cancel import and discard the imported project',
+      onConfirm: () => handleConflictResolution(resolution),
+      onCancel: () => {
+        if (currentPending && currentPending.newProjectId) {
+          deleteProject(currentPending.newProjectId);
+        }
+        setPendingImport(null);
+      },
+    });
   }
+}
 
   return (
     <>
@@ -265,10 +338,28 @@ export default function ProjectSessionsModal({ onClose }) {
                   onDelete={() => handleDelete(p.id)}
                   onExport={() => handleExportProject(p.id)}
                   onReset={p.id === DEFAULT_PROJECT_ID ? () => {
-                    if (confirm('Reset the default project to its original state? This will overwrite its local settings and dataset.')) {
-                      resetProject(p.id);
-                      alert('Default project reset.');
-                    }
+                    showDialog({
+                      tone: 'warning',
+                      title: 'Reset default project?',
+                      message: "This will overwrite the default project's local settings and dataset with the starter data.",
+                      confirmLabel: 'Reset project',
+                      confirmTooltip: 'Restore the default project to its initial state',
+                      cancelLabel: 'Cancel',
+                      cancelTooltip: 'Keep current project data',
+                      onConfirm: () => {
+                        resetProject(p.id);
+                        setTimeout(() => {
+                          showDialog({
+                            tone: 'success',
+                            title: 'Default project reset',
+                            message: 'The default project has been restored to its initial configuration.',
+                            confirmLabel: 'OK',
+                            confirmTooltip: 'Close dialog',
+                            showCancel: false,
+                          });
+                        }, 0);
+                      },
+                    });
                   } : undefined}
                   index={idx}
                   animationVisible={show}
@@ -306,6 +397,9 @@ export default function ProjectSessionsModal({ onClose }) {
         }}
       />
     )}
+    {dialogConfig ? (
+      <AlertDecisionDialog open {...dialogConfig} />
+    ) : null}
     </>
   );
 }

@@ -1,24 +1,13 @@
-import React, { forwardRef, useState, isValidElement } from 'react';
+import React, { forwardRef, useMemo, useState, isValidElement } from 'react';
 
 import useResizeObserver from '../hooks/useResizeObserver';
 import useCombinedRefs from '../hooks/useCombinedRefs';
 
-import { Book, Plus, Wrench } from 'lucide-react';
+import { Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
 
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import classNames from 'classnames';
 import TooltipButton from './Widgets/TooltipButton';
+import AlertDecisionDialog from './Widgets/AlertDecisionDialog';
 
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
@@ -28,6 +17,42 @@ export const CollectionEmptyStateTitle = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateSubtitle = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateAddButtonText = ({ children }) => <>{children}</>;
 
+const deriveItemLabel = (item) => {
+    if (!item) {
+        return 'this item';
+    }
+
+    const stringCandidates = [
+        item.cardLabel,
+        item.displayName,
+        item.name,
+        item.title,
+        item.label,
+    ];
+
+    for (const candidate of stringCandidates) {
+        if (typeof candidate === 'string') {
+            const trimmed = candidate.trim();
+            if (trimmed) {
+                return trimmed;
+            }
+        }
+    }
+
+    if (item.firstName || item.midInitials || item.lastName) {
+        const fullName = [item.firstName, item.midInitials, item.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (fullName) {
+            return fullName;
+        }
+    }
+
+    return 'this item';
+};
+
 
 // --- Main Collection Component ---
 const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref) => {
@@ -35,6 +60,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [viewingItem, setViewingItem] = useState(null);
+    const [pendingDeleteItem, setPendingDeleteItem] = useState(null);
 
     const { items, setItems, getCard, getForm, getView } = itemHook();
 
@@ -53,15 +79,32 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     };
 
     const handleRemove = (itemId) => {
-        if (window.confirm('Are you sure you want to remove this item?')) {
-            setItems(prevItems => {
-                // 1. Filter out the study to remove
-                const filtered = prevItems.filter(item => item.id !== itemId);
-                return filtered;
-            });
-            setViewingItem(null);
+        const itemToRemove = items.find(item => item.id === itemId);
+        if (itemToRemove) {
+            setPendingDeleteItem(itemToRemove);
         }
     };
+
+    const handleConfirmRemove = () => {
+        if (!pendingDeleteItem) {
+            return;
+        }
+
+        const idToRemove = pendingDeleteItem.id;
+        setItems(prevItems => prevItems.filter(item => item.id !== idToRemove));
+        setViewingItem(prev => (prev?.id === idToRemove ? null : prev));
+        setEditingItem(prev => (prev?.id === idToRemove ? null : prev));
+        setPendingDeleteItem(null);
+    };
+
+    const handleCancelRemove = () => {
+        setPendingDeleteItem(null);
+    };
+
+    const pendingDeleteLabel = useMemo(
+        () => deriveItemLabel(pendingDeleteItem),
+        [pendingDeleteItem]
+    );
 
 
     const startEditMode = (item) => {
@@ -192,6 +235,21 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                     </div>
                 )}
             </div>
+            <AlertDecisionDialog
+                open={Boolean(pendingDeleteItem)}
+                tone="warning"
+                title={`Remove ${pendingDeleteLabel}?`}
+                message={`Are you sure you want to remove ${pendingDeleteLabel}? This action cannot be undone.`}
+                confirmLabel="Remove"
+                cancelLabel="Cancel"
+                confirmTooltip={`Remove ${pendingDeleteLabel}`}
+                cancelTooltip={`Keep ${pendingDeleteLabel}`}
+                onConfirm={handleConfirmRemove}
+                onCancel={handleCancelRemove}
+                confirmButtonProps={{
+                    className: 'bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700',
+                }}
+            />
         </div>
     );
 });

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useProjectDataset } from '../../hooks/useProjectDataset';
 import FormField from '../Form/FormField';
 import IconTooltipButton from './IconTooltipButton';
 import { Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
 import ProgressOverlay from './ProgressOverlay';
 import KeyValueRow from '../Typography/KeyValueRow';
+import AlertDecisionDialog from './AlertDecisionDialog';
 
 /**
  * ProjectCard Component
@@ -70,6 +71,8 @@ const ProjectCard = ({
   'data-testid': dataTestId = 'project-card',
 }) => {
   const dataset = useProjectDataset(project.id);
+  const [showDeleteDatasetDialog, setShowDeleteDatasetDialog] = useState(false);
+  const [isDeletingDataset, setIsDeletingDataset] = useState(false);
 
   const formatDate = (date) => {
     if (!date) return null;
@@ -85,6 +88,30 @@ const ProjectCard = ({
   const datasetProgress = progress ?? dataset.progress;
   const datasetSetupName = setupName ?? (dataset.metadata && dataset.metadata.setupName) ?? null;
   const datasetLastEdited = lastEdited ?? (dataset.metadata && dataset.metadata.lastEdited ? dataset.metadata.lastEdited : null);
+  const datasetDeleteHandler = useMemo(() => {
+    if (typeof onDeleteDataset === 'function') return onDeleteDataset;
+    if (dataset && typeof dataset.deleteDataset === 'function') return dataset.deleteDataset;
+    return null;
+  }, [dataset, onDeleteDataset]);
+  const datasetNameForDialog = datasetTree?.rootName || datasetTree?.name || project?.name || 'this project';
+
+  const handleConfirmDeleteDataset = async () => {
+    if (!datasetDeleteHandler) {
+      setShowDeleteDatasetDialog(false);
+      return;
+    }
+
+    try {
+      setIsDeletingDataset(true);
+      const result = datasetDeleteHandler();
+      if (result && typeof result.then === 'function') {
+        await result;
+      }
+    } finally {
+      setIsDeletingDataset(false);
+      setShowDeleteDatasetDialog(false);
+    }
+  };
 
   const getDatasetDisplay = () => {
     if (datasetLoading) {
@@ -125,176 +152,201 @@ const ProjectCard = ({
   };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={handleKeyDown}
-      className={`relative flex items-center justify-between p-5 rounded-lg border ${
-        isSelected 
-          ? 'border-2 border-indigo-600 bg-indigo-50' 
-          : 'border-gray-100 bg-white'
-      } cursor-pointer transform transition-all duration-200 hover:shadow-sm ${className}`}
-      style={{
-        opacity: animationVisible ? 1 : 0,
-        transitionDelay: `${index * 40}ms`
-      }}
-      data-testid={dataTestId}
-      aria-pressed={isSelected}
-    >
-  {/* Progress overlay */}
-  <ProgressOverlay progress={datasetProgress} />
+    <>
+      <div
+        data-testid={dataTestId}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isSelected}
+        onClick={onSelect}
+        onKeyDown={handleKeyDown}
+        className={`relative flex items-center justify-between p-5 rounded-lg border ${
+          isSelected
+            ? 'border-2 border-indigo-600 bg-indigo-50'
+            : 'border-gray-100 bg-white'
+        } cursor-pointer transform transition-all duration-200 hover:shadow-sm ${className}`}
+        style={{
+          opacity: animationVisible ? 1 : 0,
+          transitionDelay: `${index * 40}ms`
+        }}
+      >
+        {/* Progress overlay */}
+        <ProgressOverlay progress={datasetProgress} />
 
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <div className="text-lg font-medium flex items-center gap-2">
-            {isRenaming ? (
-              <div
-                className="w-64"
-                onClick={(e) => e.stopPropagation()}
-                onBlur={(e) => {
-                  // If focus moved outside this wrapper, exit rename mode
-                  try {
-                    const rel = e.relatedTarget;
-                    if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
-                  } catch {
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <div className="text-lg font-medium flex items-center gap-2">
+              {isRenaming ? (
+                <div
+                  className="w-64"
+                  onClick={(e) => e.stopPropagation()}
+                  onBlur={(e) => {
+                    // If focus moved outside this wrapper, exit rename mode
+                    try {
+                      const rel = e.relatedTarget;
+                      if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
+                    } catch {
                       // Ignore blur errors
                     }
+                    onToggleRename && onToggleRename();
+                  }}
+                >
+                  <FormField
+                    name={`project-${project.id}-name`}
+                    value={project.name}
+                    label=""
+                    placeholder="Project name"
+                    commitOnBlur={true}
+                    onChange={handleRenameCommit}
+                    className=""
+                    data-testid={`${dataTestId}-rename-input`}
+                  />
+                </div>
+              ) : (
+                <div className="text-lg font-medium truncate max-w-[320px]" data-testid={`${dataTestId}-name`}>
+                  {project.name}
+                </div>
+              )}
+              {isActive && (
+                <div className="text-sm text-gray-400" data-testid={`${dataTestId}-active-badge`}>
+                  (active)
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Dataset info */}
+          <div className="mt-1">
+            <KeyValueRow 
+              label="Dataset" 
+              value={getDatasetDisplay()} 
+              data-testid={`${dataTestId}-dataset`}
+            />
+          </div>
+
+          {/* Test setup and last edited */}
+          {(datasetSetupName || datasetLastEdited) && (
+            <div className="mt-1">
+              {datasetSetupName && (
+                <KeyValueRow 
+                  label="Test setup" 
+                  value={datasetSetupName} 
+                  data-testid={`${dataTestId}-setup`}
+                />
+              )}
+              {datasetLastEdited && (
+                <div className="text-xs text-gray-400 mt-1" data-testid={`${dataTestId}-last-edited`}>
+                  Last edited: <span className="text-gray-600">{formatDate(datasetLastEdited)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          {/* Dataset actions group */}
+          <div className="flex flex-col items-center text-center">
+            <div className="text-xs text-gray-500 mb-1">Dataset</div>
+            <div className="flex items-center gap-1">
+              <IconTooltipButton 
+                icon={Folder} 
+                tooltipText="Edit dataset (pick folder)" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // prefer explicit prop handler if provided, otherwise use hook action
+                  if (onEditDataset) onEditDataset();
+                  else dataset.indexDataset && dataset.indexDataset();
+                }}
+                data-testid={`${dataTestId}-edit-dataset-btn`}
+              />
+              <IconTooltipButton 
+                icon={Trash} 
+                tooltipText="Delete indexed dataset" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!datasetDeleteHandler) {
+                    return;
+                  }
+                  setShowDeleteDatasetDialog(true);
+                }}
+                data-testid={`${dataTestId}-delete-dataset-btn`}
+                disabled={!datasetDeleteHandler || datasetLoading}
+              />
+            </div>
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-10 bg-gray-200" aria-hidden="true" />
+
+          {/* Project actions group */}
+          <div className="flex flex-col items-center text-center">
+            <div className="text-xs text-gray-500 mb-1">Project</div>
+            <div className="flex items-center gap-1">
+              <IconTooltipButton 
+                icon={Upload} 
+                tooltipText="Export project as JSON" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExport && onExport();
+                }}
+                data-testid={`${dataTestId}-export-btn`}
+              />
+              <IconTooltipButton 
+                icon={Edit} 
+                tooltipText="Rename project" 
+                onClick={(e) => {
+                  e.stopPropagation();
                   onToggleRename && onToggleRename();
                 }}
-              >
-                <FormField
-                  name={`project-${project.id}-name`}
-                  value={project.name}
-                  label=""
-                  placeholder="Project name"
-                  commitOnBlur={true}
-                  onChange={handleRenameCommit}
-                  className=""
-                  data-testid={`${dataTestId}-rename-input`}
+                data-testid={`${dataTestId}-rename-btn`}
+              />
+              {isDefault ? (
+                <IconTooltipButton 
+                  icon={RefreshCw} 
+                  tooltipText="Reset project to defaults" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReset && onReset();
+                  }}
+                  data-testid={`${dataTestId}-reset-btn`}
                 />
-              </div>
-            ) : (
-              <div className="text-lg font-medium truncate max-w-[320px]" data-testid={`${dataTestId}-name`}>
-                {project.name}
-              </div>
-            )}
-            {isActive && (
-              <div className="text-sm text-gray-400" data-testid={`${dataTestId}-active-badge`}>
-                (active)
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Dataset info */}
-        <div className="mt-1">
-          <KeyValueRow 
-            label="Dataset" 
-            value={getDatasetDisplay()} 
-            data-testid={`${dataTestId}-dataset`}
-          />
-        </div>
-
-        {/* Test setup and last edited */}
-        {(datasetSetupName || datasetLastEdited) && (
-          <div className="mt-1">
-            {datasetSetupName && (
-              <KeyValueRow 
-                label="Test setup" 
-                value={datasetSetupName} 
-                data-testid={`${dataTestId}-setup`}
-              />
-            )}
-            {datasetLastEdited && (
-              <div className="text-xs text-gray-400 mt-1" data-testid={`${dataTestId}-last-edited`}>
-                Last edited: <span className="text-gray-600">{formatDate(datasetLastEdited)}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-        {/* Dataset actions group */}
-        <div className="flex flex-col items-center text-center">
-          <div className="text-xs text-gray-500 mb-1">Dataset</div>
-          <div className="flex items-center gap-1">
-            <IconTooltipButton 
-              icon={Folder} 
-              tooltipText="Edit dataset (pick folder)" 
-              onClick={(e) => {
-                e.stopPropagation();
-                // prefer explicit prop handler if provided, otherwise use hook action
-                if (onEditDataset) onEditDataset();
-                else dataset.indexDataset && dataset.indexDataset();
-              }}
-              data-testid={`${dataTestId}-edit-dataset-btn`}
-            />
-            <IconTooltipButton 
-              icon={Trash} 
-              tooltipText="Delete indexed dataset" 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onDeleteDataset) onDeleteDataset();
-                else dataset.deleteDataset && dataset.deleteDataset();
-              }}
-              data-testid={`${dataTestId}-delete-dataset-btn`}
-            />
-          </div>
-        </div>
-
-        {/* Separator */}
-        <div className="w-px h-10 bg-gray-200" aria-hidden="true" />
-
-        {/* Project actions group */}
-        <div className="flex flex-col items-center text-center">
-          <div className="text-xs text-gray-500 mb-1">Project</div>
-          <div className="flex items-center gap-1">
-            <IconTooltipButton 
-              icon={Upload} 
-              tooltipText="Export project as JSON" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onExport && onExport();
-              }}
-              data-testid={`${dataTestId}-export-btn`}
-            />
-            <IconTooltipButton 
-              icon={Edit} 
-              tooltipText="Rename project" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleRename && onToggleRename();
-              }}
-              data-testid={`${dataTestId}-rename-btn`}
-            />
-            {isDefault ? (
-              <IconTooltipButton 
-                icon={RefreshCw} 
-                tooltipText="Reset project to defaults" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReset && onReset();
-                }}
-                data-testid={`${dataTestId}-reset-btn`}
-              />
-            ) : (
-              <IconTooltipButton 
-                icon={Trash2} 
-                tooltipText="Delete project" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete && onDelete();
-                }}
-                data-testid={`${dataTestId}-delete-btn`}
-              />
-            )}
+              ) : (
+                <IconTooltipButton 
+                  icon={Trash2} 
+                  tooltipText="Delete project" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete && onDelete();
+                  }}
+                  data-testid={`${dataTestId}-delete-btn`}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      {showDeleteDatasetDialog && (
+        <AlertDecisionDialog
+          open
+          tone="danger"
+          title="Delete indexed dataset?"
+          message={`This removes the indexed dataset associated with ${datasetNameForDialog}. You can re-index the folder later if needed.`}
+          confirmLabel={isDeletingDataset ? 'Deleting...' : 'Delete dataset'}
+          confirmTooltip="Remove the indexed dataset from this project"
+          cancelLabel="Keep dataset"
+          cancelTooltip="Close dialog without deleting"
+          onConfirm={handleConfirmDeleteDataset}
+          onCancel={() => {
+            if (!isDeletingDataset) {
+              setShowDeleteDatasetDialog(false);
+            }
+          }}
+          confirmButtonProps={{ disabled: isDeletingDataset }}
+          cancelButtonProps={{ disabled: isDeletingDataset }}
+        />
+      )}
+    </>
   );
 };
 

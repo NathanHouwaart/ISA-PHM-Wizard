@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, createContext, useReducer, useCallback, useMemo, memo } from 'react';
 
+import AlertDecisionDialog from '../../components/Widgets/AlertDecisionDialog';
+
 // Step 1: Design System Components
 const Typography = ({ variant = 'body', children, className = '' }) => {
     const variants = {
@@ -563,6 +565,10 @@ export const App = () => {
         
         return initialData;
     });
+    const [dialogData, setDialogData] = useState(null);
+    const handleViewRow = useCallback((row) => {
+        setDialogData({ row });
+    }, []);
 
     const columns = [
         { key: 'id', title: 'ID', width: 60, pinned: 'left' },
@@ -586,7 +592,7 @@ export const App = () => {
         Plugin.Button({ 
             column: 'actions', 
             label: 'View',
-            onClick: (row) => alert(`Viewing: ${row.name} (ID: ${row.id})`)
+            onClick: (row) => handleViewRow(row)
         })
     ];
 
@@ -612,6 +618,20 @@ export const App = () => {
                     />
                 </div>
             </div>
+            {dialogData ? (
+                <AlertDecisionDialog
+                    open
+                    tone="info"
+                    title="View record"
+                    message={`Viewing: ${dialogData.row?.name ?? 'Unknown'} (ID: ${dialogData.row?.id ?? 'N/A'})`}
+                    confirmLabel="OK"
+                    confirmTooltip="Close dialog"
+                    cancelLabel="Cancel"
+                    cancelTooltip="Dismiss dialog"
+                    onConfirm={() => setDialogData(null)}
+                    onCancel={() => setDialogData(null)}
+                />
+            ) : null}
         </div>
     );
 }

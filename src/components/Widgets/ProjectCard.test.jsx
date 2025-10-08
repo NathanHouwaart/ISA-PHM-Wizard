@@ -1,7 +1,25 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import ProjectCard from './ProjectCard';
+
+var mockDataset;
+var useProjectDatasetMock;
+
+vi.mock('../../hooks/useProjectDataset', () => {
+  mockDataset = {
+    tree: null,
+    loading: false,
+    progress: null,
+    metadata: { setupName: null, lastEdited: null },
+    indexDataset: vi.fn(),
+    deleteDataset: vi.fn(),
+  };
+  useProjectDatasetMock = vi.fn(() => mockDataset);
+  return {
+    useProjectDataset: useProjectDatasetMock,
+  };
+});
 
 describe('ProjectCard', () => {
   const mockProject = {
@@ -22,6 +40,17 @@ describe('ProjectCard', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    if (!mockDataset || !useProjectDatasetMock) {
+      throw new Error('Mock setup failed');
+    }
+    mockDataset.tree = null;
+    mockDataset.loading = false;
+    mockDataset.progress = null;
+    mockDataset.metadata = { setupName: null, lastEdited: null };
+    mockDataset.indexDataset.mockClear();
+    mockDataset.deleteDataset.mockClear();
+    useProjectDatasetMock.mockClear();
+    useProjectDatasetMock.mockImplementation(() => mockDataset);
   });
 
   describe('Rendering', () => {
@@ -101,10 +130,26 @@ describe('ProjectCard', () => {
       expect(defaultProps.onEditDataset).toHaveBeenCalledTimes(1);
     });
 
-    test('calls onDeleteDataset when delete dataset button is clicked', () => {
-      render(<ProjectCard {...defaultProps} />);
+    test('confirms before deleting dataset', async () => {
+      render(<ProjectCard {...defaultProps} tree={{ rootName: 'Sample Dataset' }} />);
       fireEvent.click(screen.getByTestId('project-card-delete-dataset-btn'));
-      expect(defaultProps.onDeleteDataset).toHaveBeenCalledTimes(1);
+
+      expect(defaultProps.onDeleteDataset).not.toHaveBeenCalled();
+      expect(screen.getByRole('heading', { name: 'Delete indexed dataset?' })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete dataset' }));
+      await waitFor(() => {
+        expect(defaultProps.onDeleteDataset).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    test('canceling dataset deletion closes dialog without calling handler', () => {
+      render(<ProjectCard {...defaultProps} tree={{ rootName: 'Another Dataset' }} />);
+      fireEvent.click(screen.getByTestId('project-card-delete-dataset-btn'));
+      fireEvent.click(screen.getByRole('button', { name: 'Keep dataset' }));
+
+      expect(defaultProps.onDeleteDataset).not.toHaveBeenCalled();
+      expect(screen.queryByRole('heading', { name: 'Delete indexed dataset?' })).not.toBeInTheDocument();
     });
 
     test('calls onExport when export button is clicked', () => {
