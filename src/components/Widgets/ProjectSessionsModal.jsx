@@ -28,6 +28,7 @@ export default function ProjectSessionsModal({ onClose }) {
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
   const [pendingImport, setPendingImport] = useState(null); // { pkg, newProjectId, conflict }
   const [dialogConfig, setDialogConfig] = useState(null);
+  const [resetTriggers, setResetTriggers] = useState({}); // { [projectId]: timestamp }
 
   const showDialog = (config) => {
     const {
@@ -339,6 +340,7 @@ export default function ProjectSessionsModal({ onClose }) {
                   isActive={p.id === currentProjectId}
                   isDefault={p.id === DEFAULT_PROJECT_ID}
                   isRenaming={renameMap[p.id]}
+                  resetTrigger={resetTriggers[p.id]}
                   onSelect={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
                   onRename={(newName) => {
                     renameProject(p.id, newName);
@@ -356,8 +358,10 @@ export default function ProjectSessionsModal({ onClose }) {
                       confirmTooltip: 'Restore the default project to its initial state',
                       cancelLabel: 'Cancel',
                       cancelTooltip: 'Keep current project data',
-                      onConfirm: () => {
-                        resetProject(p.id);
+                      onConfirm: async () => {
+                        await resetProject(p.id);
+                        // Trigger ProjectCard to refresh its dataset
+                        setResetTriggers((prev) => ({ ...prev, [p.id]: Date.now() }));
                         setTimeout(() => {
                           showDialog({
                             tone: 'success',

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useProjectDataset } from '../../hooks/useProjectDataset';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import FormField from '../Form/FormField';
@@ -35,6 +35,7 @@ import TestSetupPickerDialog from '../TestSetup/TestSetupPickerDialog';
  * - isRenaming: boolean - Whether the card is in rename mode
  * - setupName: string | null - Name of the selected test setup
  * - lastEdited: Date | null - Last edit timestamp
+ * - resetTrigger: number | undefined - Timestamp to trigger dataset refresh
  * - onSelect: () => void - Called when card is clicked
  * - onRename: (newName: string) => void - Called when rename is committed
  * - onToggleRename: () => void - Called to enter/exit rename mode
@@ -59,6 +60,7 @@ const ProjectCard = ({
   isRenaming = false,
   setupName = null,
   lastEdited = null,
+  resetTrigger,
   onSelect,
   onRename,
   onToggleRename,
@@ -79,6 +81,13 @@ const ProjectCard = ({
   const [showDeleteTestSetupDialog, setShowDeleteTestSetupDialog] = useState(false);
   const [pendingTestSetupId, setPendingTestSetupId] = useState(null);
   const [showAssignSetupConfirm, setShowAssignSetupConfirm] = useState(false);
+
+  // Refresh dataset when reset is triggered
+  useEffect(() => {
+    if (resetTrigger && dataset.refreshDataset) {
+      dataset.refreshDataset();
+    }
+  }, [resetTrigger, dataset.refreshDataset]);
 
   const formatDate = (date) => {
     if (!date) return null;
@@ -333,17 +342,17 @@ const ProjectCard = ({
                 data-testid={`${dataTestId}-edit-dataset-btn`}
               />
               <IconTooltipButton 
-                icon={Trash} 
+                icon={Eraser} 
                 tooltipText="Delete indexed dataset" 
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!datasetDeleteHandler) {
+                  if (!datasetDeleteHandler || !datasetTree) {
                     return;
                   }
                   setShowDeleteDatasetDialog(true);
                 }}
                 data-testid={`${dataTestId}-delete-dataset-btn`}
-                disabled={!datasetDeleteHandler || datasetLoading}
+                disabled={!datasetDeleteHandler || datasetLoading || !datasetTree}
               />
             </div>
           </div>
@@ -432,7 +441,7 @@ const ProjectCard = ({
           open
           tone="danger"
           title="Delete indexed dataset?"
-          message={`This removes the indexed dataset associated with ${datasetNameForDialog}. You can re-index the folder later if needed.`}
+          message={`Remove the indexed dataset: ${datasetNameForDialog} from the project. This won't delete any files from your computer — it only removes the index. You can re-index the folder at any time.`}
           confirmLabel={isDeletingDataset ? 'Deleting...' : 'Delete dataset'}
           confirmTooltip="Remove the indexed dataset from this project"
           cancelLabel="Keep dataset"

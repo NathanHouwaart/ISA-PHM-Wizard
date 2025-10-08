@@ -52,6 +52,7 @@ import { useGlobalDataContext } from '../contexts/GlobalDataContext';
  * @returns {Function} deleteDataset - Remove indexed dataset
  * @returns {Function} clearError - Clear error state
  * @returns {Function} refreshMetadata - Reload metadata from localStorage
+ * @returns {Function} refreshDataset - Reload both tree and metadata from storage
  * 
  * @see useProjectDatasets for managing multiple projects simultaneously
  */
@@ -279,6 +280,24 @@ export function useProjectDataset(projectId) {
     loadMetadata();
   }, [loadMetadata]);
 
+  /**
+   * Refresh both tree and metadata from storage
+   * Useful after external changes like project reset
+   */
+  const refreshDataset = useCallback(async () => {
+    try {
+      setLoading(true);
+      const loadedTree = await loadTree(projectId);
+      setTree(loadedTree);
+      loadMetadata();
+    } catch (err) {
+      console.error('[useProjectDataset] Error refreshing dataset for project', projectId, err);
+      setTree(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, loadMetadata]);
+
   return {
     tree,
     loading,
@@ -289,5 +308,6 @@ export function useProjectDataset(projectId) {
     deleteDataset,
     clearError: clearErrorState,
     refreshMetadata,
+    refreshDataset,
   };
 }
