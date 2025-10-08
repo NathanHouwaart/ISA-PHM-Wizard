@@ -11,9 +11,25 @@ export const IconToolTipButton = ({
     className,
     disabled = false,
     type = 'button',
+    size = 'md', // 'md' or 'sm'
     'data-testid': dataTestId,
 }) => {
     const Icon = icon || HelpCircle;
+
+    const sizeMap = {
+        md: {
+            btn: 'h-12 w-12',
+            icon: 'h-7 w-7',
+            padding: 'p-0',
+        },
+        sm: {
+            btn: 'h-8 w-8',
+            icon: 'h-4 w-4',
+            padding: 'p-0',
+        },
+    };
+
+    const chosen = sizeMap[size] || sizeMap.md;
 
     return (
         <div>
@@ -23,10 +39,10 @@ export const IconToolTipButton = ({
                         <button
                             type={type}
                             className={cn(
-                                'cursor-pointer h-12 w-12 flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200',
-                                disabled
-                                    ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
-                                    : '',
+                                'cursor-pointer flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200',
+                                chosen.btn,
+                                chosen.padding,
+                                disabled ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : '',
                                 className
                             )}
                             onClick={disabled ? undefined : onClick}
@@ -34,7 +50,7 @@ export const IconToolTipButton = ({
                             disabled={disabled}
                         >
                             <Icon className={cn(
-                                'h-7 w-7 text-gray-500 transition-colors duration-200',
+                                chosen.icon + ' text-gray-500 transition-colors duration-200',
                                 disabled ? '' : 'group-hover:text-blue-500'
                             )} />
                         </button>
