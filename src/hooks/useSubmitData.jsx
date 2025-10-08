@@ -42,9 +42,9 @@ export default function useSubmitData() {
 
   const submitData = async () => {
     // create a fresh AbortController for this submit
-  const ac = new AbortController();
-  // keep the controller in a ref for immediate sync access from cancel()
-  controllerRef.current = ac;
+    const ac = new AbortController();
+    // keep the controller in a ref for immediate sync access from cancel()
+    controllerRef.current = ac;
 
     setIsSubmitting(true);
     setMessage('Preparing data...');
@@ -59,7 +59,7 @@ export default function useSubmitData() {
         submission_date: investigations?.submissionDate,
         public_release_date: investigations?.publicReleaseDate,
         publications: publications,
-        authors: contacts,
+        contacts: contacts,
         study_variables: studyVariables,
         measurement_protocols: measurementProtocols,
         processing_protocols: processingProtocols,
@@ -88,8 +88,8 @@ export default function useSubmitData() {
 
             return {
               used_sensor,
-              measurement_protocols : mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
-              processing_protocols : mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
+              measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
+              processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
               raw_file_name: (studyToSensorMeasurementMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
               processed_file_name: (studyToSensorProcessingMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
               assay_file_name: (studyToAssayMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
@@ -113,7 +113,7 @@ export default function useSubmitData() {
 
       const endpoint = `${apiBase.replace(/\/$/, '')}/convert`;
 
-  const response = await fetch(endpoint, { method: 'POST', body: formData, signal: ac.signal });
+      const response = await fetch(endpoint, { method: 'POST', body: formData, signal: ac.signal });
 
       if (!response.ok) {
         const text = await response.text().catch(() => null);

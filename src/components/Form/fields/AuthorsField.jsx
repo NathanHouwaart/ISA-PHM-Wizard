@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { GripVertical, Mail, X, ChevronDown, ChevronUp } from 'lucide-react';
 import IconToolTipButton from '../../Widgets/IconTooltipButton';
+import EmailPromptModal from '../../Publication/EmailPromptModal';
+import { useGlobalDataContext } from '../../../contexts/GlobalDataContext';
 import { cn } from '../../../utils/utils';
 import { BASE_INPUT_CLASSNAME } from './constants';
 
@@ -23,32 +25,77 @@ const AuthorsField = ({
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const [draggedIndex, setDraggedIndex] = useState(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+    const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+    const [pendingCorrespondingAuthor, setPendingCorrespondingAuthor] = useState(null);
 
+    const { contacts, setContacts } = useGlobalDataContext();
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
     const containerRef = useRef(null);
+    const rafRef = useRef(null);
+    const tickingRef = useRef(false);
 
     const currentAuthors = Array.isArray(value) ? value : [];
 
     const filteredAuthors = tags.filter((author) => {
         const authorName = `${author.firstName || ''} ${author.lastName || ''}`.trim();
+        const live = contacts.find(c => c.id === author.id) || {};
+        const emailToCheck = (live.email ?? author.email ?? '').toLowerCase();
+        const affiliationToCheck = (live.affiliation ?? author.affiliation ?? '').toLowerCase();
         const matchesInput =
             authorName.toLowerCase().includes(inputValue.toLowerCase()) ||
-            author.email?.toLowerCase().includes(inputValue.toLowerCase()) ||
-            author.affiliation?.toLowerCase().includes(inputValue.toLowerCase());
+            emailToCheck.includes(inputValue.toLowerCase()) ||
+            affiliationToCheck.includes(inputValue.toLowerCase());
         const notAlreadySelected = !currentAuthors.some((existingAuthor) => existingAuthor.id === author.id);
         return matchesInput && notAlreadySelected;
     });
 
+    const updateDropdownPosition = () => {
+        if (!inputRef.current) return;
+        const rect = inputRef.current.getBoundingClientRect();
+        const gap = 6; // px spacing between input and dropdown
+        setDropdownPosition({
+            top: rect.bottom + window.scrollY + gap,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+        });
+    };
+
     useEffect(() => {
-        if (isDropdownVisible && containerRef.current) {
-            const rect = containerRef.current.getBoundingClientRect();
-            setDropdownPosition({
-                top: rect.bottom + window.scrollY,
-                left: rect.left + window.scrollX,
-                width: rect.width,
-            });
+        if (isDropdownVisible) {
+            updateDropdownPosition();
         }
+    }, [isDropdownVisible]);
+
+    // Reposition on scroll/resize/orientationchange (handles zoom + scroll).
+    useEffect(() => {
+        if (!isDropdownVisible) return undefined;
+
+        const handleTickedUpdate = () => {
+            tickingRef.current = false;
+            updateDropdownPosition();
+        };
+
+        const handler = () => {
+            if (tickingRef.current) return;
+            tickingRef.current = true;
+            rafRef.current = window.requestAnimationFrame(handleTickedUpdate);
+        };
+
+        window.addEventListener('scroll', handler, { passive: true });
+        window.addEventListener('resize', handler);
+        window.addEventListener('orientationchange', handler);
+
+        return () => {
+            window.removeEventListener('scroll', handler, { passive: true });
+            window.removeEventListener('resize', handler);
+            window.removeEventListener('orientationchange', handler);
+            if (rafRef.current) {
+                window.cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+            }
+            tickingRef.current = false;
+        };
     }, [isDropdownVisible]);
 
     const addAuthor = (author) => {
@@ -56,25 +103,83 @@ const AuthorsField = ({
         onChange({ target: { name, value: updatedAuthors } });
         setInputValue('');
         setIsDropdownVisible(false);
-
-        if (currentAuthors.length === 0 && !correspondingAuthorId && onCorrespondingAuthorChange) {
-            onCorrespondingAuthorChange(author.id);
-        }
     };
 
     const removeAuthor = (authorId) => {
         const updatedAuthors = currentAuthors.filter((author) => author.id !== authorId);
         onChange({ target: { name, value: updatedAuthors } });
-
+        // If the removed author was the corresponding author, clear the corresponding
+        // selection instead of implicitly assigning another author. Corresponding
+        // author must be set explicitly by user action.
         if (correspondingAuthorId === authorId && onCorrespondingAuthorChange) {
-            const [first] = updatedAuthors;
-            onCorrespondingAuthorChange(first ? first.id : null);
+            onCorrespondingAuthorChange(null);
         }
     };
 
     const toggleCorrespondingAuthor = (authorId) => {
         if (!onCorrespondingAuthorChange) return;
-        onCorrespondingAuthorChange(correspondingAuthorId === authorId ? null : authorId);
+        
+        // If unsetting (already corresponding), just unset
+        if (correspondingAuthorId === authorId) {
+            onCorrespondingAuthorChange(null);
+            return;
+        }
+        
+        // If setting as corresponding, prefer the live global contact email (contacts)
+        const authorInValue = currentAuthors.find(a => a.id === authorId);
+        const liveContact = contacts.find(c => c.id === authorId);
+        const effectiveEmail = liveContact?.email ?? authorInValue?.email;
+        if (!authorInValue) return;
+
+        if (!effectiveEmail || effectiveEmail.trim() === '') {
+            // No email: show prompt modal (pass the local author object)
+            setPendingCorrespondingAuthor(authorInValue);
+            setShowEmailPrompt(true);
+        } else {
+            // Has email: set immediately
+            onCorrespondingAuthorChange(authorId);
+        }
+    };
+
+    const handleEmailSave = (email) => {
+        if (!pendingCorrespondingAuthor) return;
+        
+        // Capture the author ID before clearing state (needed for setTimeout closure)
+        const authorId = pendingCorrespondingAuthor.id;
+        
+        // Update global contacts first - this ensures the tags prop is updated
+        setContacts(prevContacts =>
+            prevContacts.map(c =>
+                c.id === authorId
+                    ? { ...c, email }
+                    : c
+            )
+        );
+        
+        // Update the author in local state using the current value, not stale closure
+        // CRITICAL: We must map over value prop directly, not currentAuthors which might be stale
+        const updatedAuthors = (Array.isArray(value) ? value : []).map(a =>
+            a.id === authorId
+                ? { ...a, email }
+                : a
+        );
+        
+        onChange({ target: { name, value: updatedAuthors } });
+        
+        // Close modal and clear pending
+        setShowEmailPrompt(false);
+        setPendingCorrespondingAuthor(null);
+
+        // Defer setting corresponding author to the next tick so the modal unmounts
+        // and any portal/z-index ordering updates settle (ensures UI reflects change)
+        setTimeout(() => {
+            onCorrespondingAuthorChange(authorId);
+        }, 0);
+    };
+
+    const handleEmailCancel = () => {
+        setShowEmailPrompt(false);
+        setPendingCorrespondingAuthor(null);
     };
 
     const reorderAuthors = (fromIndex, toIndex) => {
@@ -121,8 +226,6 @@ const AuthorsField = ({
     const getContributionLabel = (index, total) => {
         if (total === 1) return 'Sole Author';
         if (index === 0) return 'Primary Author';
-        // Treat all non-primary authors as generic authors rather than
-        // marking the last one specially as a "Contributing Author".
         return `Contributing Author`;
     };
 
@@ -141,26 +244,33 @@ const AuthorsField = ({
                 }}
             >
                 {filteredAuthors.length > 0 ? (
-                    filteredAuthors.map((author, index) => (
-                        <div
-                            key={author.id}
-                            className={cn(
-                                'px-4 py-3 cursor-pointer hover:bg-indigo-50 border-b border-gray-100 last:border-b-0 transition-colors duration-150',
-                                index === highlightedIndex ? 'bg-indigo-600 text-white hover:bg-indigo-500' : ''
-                            )}
-                            onMouseDown={(event) => {
-                                event.preventDefault();
-                                addAuthor(author);
-                            }}
-                            onMouseEnter={() => setHighlightedIndex(index)}
-                        >
-                            <div className="font-medium text-sm">
-                                {author.firstName} {author.lastName}
+                    filteredAuthors.map((author, index) => {
+                        const live = contacts.find(c => c.id === author.id) || {};
+                        const dropdownEmail = live.email ?? author.email;
+                        const dropdownAffiliation = live.affiliation ?? author.affiliation;
+
+                        return (
+                            <div
+                                key={author.id}
+                                className={cn(
+                                    'px-4 py-3 cursor-pointer hover:bg-indigo-50 border-b border-gray-100 last:border-b-0 transition-colors duration-150',
+                                    // Use a lighter highlight so the text remains readable when selected
+                                    index === highlightedIndex ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200' : ''
+                                )}
+                                onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    addAuthor(author);
+                                }}
+                                onMouseEnter={() => setHighlightedIndex(index)}
+                            >
+                                <div className="font-medium text-sm">
+                                    {author.firstName} {author.lastName}
+                                </div>
+                                {dropdownEmail && <div className="text-xs text-gray-500">{dropdownEmail}</div>}
+                                {dropdownAffiliation && <div className="text-xs text-gray-500">{dropdownAffiliation}</div>}
                             </div>
-                            {author.email && <div className="text-xs text-gray-500">{author.email}</div>}
-                            {author.affiliation && <div className="text-xs text-gray-500">{author.affiliation}</div>}
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
                     <div className="px-4 py-3 text-sm text-gray-500 italic">
                         No matches found for &ldquo;{inputValue}&rdquo;
@@ -203,10 +313,22 @@ const AuthorsField = ({
                         tooltipText={isDropdownVisible ? 'Hide suggestions' : 'Show suggestions'}
                         onClick={(event) => {
                             event.preventDefault();
-                            setIsDropdownVisible((prev) => !prev);
-                            if (!isDropdownVisible && inputRef.current) {
-                                inputRef.current.focus();
-                            }
+                            // Toggle visibility and update dropdown position immediately
+                            setIsDropdownVisible((prev) => {
+                                const next = !prev;
+                                if (next && inputRef.current) {
+                                    const rect = inputRef.current.getBoundingClientRect();
+                                    const gap = 6;
+                                    setDropdownPosition({
+                                        top: rect.bottom + window.scrollY + gap,
+                                        left: rect.left + window.scrollX,
+                                        width: rect.width,
+                                    });
+                                    // focus the input when opening
+                                    inputRef.current.focus();
+                                }
+                                return next;
+                            });
                         }}
                         size="sm"
                         className="text-gray-400"
@@ -218,6 +340,10 @@ const AuthorsField = ({
             {currentAuthors.length > 0 ? (
                 <div className="space-y-3">
                     {currentAuthors.map((author, index) => {
+                        // Prefer live data from global contacts so UI reflects edits/removals
+                        const liveContact = contacts.find(c => c.id === author.id);
+                        const displayEmail = liveContact ? liveContact.email : author.email;
+                        const displayAffiliation = liveContact ? liveContact.affiliation : author.affiliation;
                         const isCorresponding = correspondingAuthorId === author.id;
 
                         return (
@@ -230,7 +356,8 @@ const AuthorsField = ({
                                 className={cn(
                                     'bg-white border-2 rounded-lg p-3 cursor-move transition-all',
                                     draggedIndex === index ? 'opacity-50 border-indigo-400' : 'border-gray-200 hover:border-indigo-300',
-                                    index === 0 ? 'shadow-md bg-gradient-to-r from-indigo-50 to-white' : 'shadow-sm',
+                                    // Primary author: use solid background with subtle left accent instead of gradient
+                                    index === 0 ? 'shadow-md bg-white border-l-4 border-indigo-100' : 'shadow-sm',
                                     isCorresponding ? 'ring-2 ring-emerald-400 ring-offset-1' : ''
                                 )}
                             >
@@ -257,18 +384,28 @@ const AuthorsField = ({
                                         <div className="font-semibold text-gray-800">
                                             {author.firstName} {author.lastName}
                                         </div>
-                                        <div className="text-sm text-gray-600">{author.email}</div>
-                                        {author.affiliation && (
-                                            <div className="text-sm text-indigo-600 font-medium mt-0.5">{author.affiliation}</div>
-                                        )}
+                                        {displayEmail ? (
+                                            <div className="text-sm text-gray-600">{displayEmail}</div>
+                                        ) : null}
+                                        {displayAffiliation ? (
+                                            <div className="text-sm text-indigo-600 font-medium mt-0.5">{displayAffiliation}</div>
+                                        ) : null}
                                     </div>
                                     <div className="flex flex-col gap-1 flex-shrink-0">
                                         <IconToolTipButton
                                             icon={Mail}
-                                            tooltipText={isCorresponding ? 'Unset corresponding author' : 'Set as corresponding author'}
+                                            tooltipText={
+                                                isCorresponding
+                                                    ? 'Unset corresponding author'
+                                                    : 'Set as corresponding author'
+                                            }
                                             onClick={() => toggleCorrespondingAuthor(author.id)}
                                             size="sm"
-                                            className={isCorresponding ? 'bg-emerald-500 text-white' : 'text-gray-400'}
+                                            className={
+                                                isCorresponding
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'text-gray-400'
+                                            }
                                             data-testid={`${name}-corresponding-${author.id}`}
                                         />
                                         <IconToolTipButton
@@ -291,6 +428,14 @@ const AuthorsField = ({
                     <p className="text-xs mt-1">Search and add authors to begin</p>
                 </div>
             )}
+            
+            {/* Email prompt modal */}
+            <EmailPromptModal
+                isOpen={showEmailPrompt}
+                authorName={pendingCorrespondingAuthor ? `${pendingCorrespondingAuthor.firstName || ''} ${pendingCorrespondingAuthor.lastName || ''}`.trim() : ''}
+                onSave={handleEmailSave}
+                onCancel={handleEmailCancel}
+            />
         </div>
     );
 };

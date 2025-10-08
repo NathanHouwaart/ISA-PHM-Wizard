@@ -321,23 +321,8 @@ export const GlobalDataProvider = ({ children }) => {
         // This ensures each project has its own isolated dataset.
     }
 
-    // Effect for saving all data to local storage
-    // This useEffect will run whenever any of its dependencies change, saving the latest state.
+    // Effect for saving all data to local storage. Runs when relevant state changes.
     useEffect(() => {
-        // const dataToStore = {
-        //     studies,
-        //     investigations,
-        //     contacts,
-        //     testSetups,
-        //     publications,
-        //     selectedTestSetupId,
-        //     studyVariables,
-        //     studyToStudyVariableMapping,
-        //     studyToSensorMeasurementMapping,
-        //     studyToSensorProcessingMapping,
-        //     studyToAssayMapping
-        // };
-
     // per-project storage keys
     saveToLocalStorage(projectKey('studies', currentProjectId), studies);
     saveToLocalStorage(projectKey('investigations', currentProjectId), investigations);
