@@ -4,25 +4,63 @@ import { loadTree, clearTree, exportProject, importProject, saveTree } from '../
 import { useFileSystem } from '../../hooks/useFileSystem';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
-import FormField from '../Form/FormField';
+import ProjectCard from './ProjectCard';
 import TestSetupConflictDialog from './TestSetupConflictDialog';
-import { Plus, Download, Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
+import { Plus, Download, Folder } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, openExplorer, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID, testSetups, setTestSetups } = useGlobalDataContext();
+  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, setSelectedDataset, resetProject, DEFAULT_PROJECT_ID, setTestSetups } = useGlobalDataContext();
   const [loadingMap, setLoadingMap] = useState({});
   const [trees, setTrees] = useState({});
   const [renameMap, setRenameMap] = useState({});
   const [progressMap, setProgressMap] = useState({});
+  const [projectMetadata, setProjectMetadata] = useState({}); // { [projectId]: { setupName, lastEdited } }
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
   const [activeIndexingProjectId, setActiveIndexingProjectId] = useState(null);
   const [pendingImport, setPendingImport] = useState(null); // { pkg, newProjectId, conflict }
   const fileSystem = useFileSystem();
+
+  // Helper function to extract project metadata from localStorage
+  const loadProjectMetadata = (projectId) => {
+    try {
+      const setupIdRaw = localStorage.getItem(`globalAppData_${projectId}_selectedTestSetupId`);
+      const setupId = setupIdRaw ? JSON.parse(setupIdRaw) : null;
+      let setupName = null;
+      
+      if (setupId) {
+        const setupsRaw = localStorage.getItem(`globalAppData_testSetups`);
+        const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
+        if (Array.isArray(setups)) {
+          const s = setups.find((x) => x.id === setupId);
+          setupName = s ? s.name : null;
+        }
+      }
+      
+      const lastEditedRaw = localStorage.getItem(`globalAppData_${projectId}_lastEdited`);
+      let lastEdited = null;
+      if (lastEditedRaw) {
+        try { 
+          lastEdited = new Date(JSON.parse(lastEditedRaw)); 
+        } catch (_e) { 
+          try { 
+            lastEdited = new Date(lastEditedRaw); 
+          } catch (_e2) { 
+            lastEdited = null; 
+          } 
+        }
+      }
+      
+      return { setupName, lastEdited };
+    } catch (_err) {
+      console.error('[ProjectSessionsModal] Error loading metadata for project', projectId, _err);
+      return { setupName: null, lastEdited: null };
+    }
+  };
 
   // When a project card enters rename mode, focus its input so Enter or blur will commit
   useEffect(() => {
@@ -33,7 +71,7 @@ export default function ProjectSessionsModal({ onClose }) {
       const sel = document.querySelector(`input[name="project-${active}-name"]`);
       if (sel && typeof sel.focus === 'function') {
         sel.focus();
-        try { sel.select(); } catch (e) { /* ignore */ }
+        try { sel.select(); } catch (_e) { /* ignore */ }
       }
     }, 50);
   }, [renameMap]);
@@ -57,22 +95,31 @@ export default function ProjectSessionsModal({ onClose }) {
     let mounted = true;
     // animate in
     requestAnimationFrame(() => setShow(true));
-    // load dataset rootName for each project
+    // load dataset rootName and metadata for each project
     (async () => {
-      const map = {};
+      const treeMap = {};
+      const metaMap = {};
       for (const p of projects) {
         try {
           setLoadingMap((m) => ({ ...m, [p.id]: true }));
           const tree = await loadTree(p.id);
           if (!mounted) return;
-          map[p.id] = tree;
+          treeMap[p.id] = tree;
+          
+          // Load metadata from localStorage
+          const meta = loadProjectMetadata(p.id);
+          metaMap[p.id] = meta;
         } catch (err) {
-          map[p.id] = null;
+          treeMap[p.id] = null;
+          metaMap[p.id] = { setupName: null, lastEdited: null };
         } finally {
           setLoadingMap((m) => ({ ...m, [p.id]: false }));
         }
       }
-      if (mounted) setTrees(map);
+      if (mounted) {
+        setTrees(treeMap);
+        setProjectMetadata(metaMap);
+      }
     })();
     return () => { mounted = false; };
   }, [projects]);
@@ -409,172 +456,42 @@ export default function ProjectSessionsModal({ onClose }) {
                 </div>
               </div>
             ) : (
-              projects.map((p, idx) => (
-                <div
-                  key={p.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
-                  onKeyDown={(e) => {
-                    // If the user is typing in an input/textarea or an editable element inside the card
-                    // (for example the inline FormField used for renaming), don't treat Enter/Space
-                    // as a card toggle — let the input handle the key instead.
-                    const tgt = e && e.target;
-                    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) {
-                      return;
-                    }
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedCardId((cur) => (cur === p.id ? null : p.id));
-                    }
-                  }}
-                  className={`relative flex items-center justify-between p-5 rounded-lg border ${p.id === selectedCardId ? 'border-2 border-indigo-600 bg-indigo-50' : 'border-gray-100 bg-white'} cursor-pointer transform transition-all duration-200 hover:shadow-sm`}
-                  style={{
-                    opacity: show ? 1 : 0,
-                    transitionDelay: `${idx * 40}ms`
-                  }}
-                >
-                  {/* full-card progress overlay (centered) */}
-                  {progressMap[p.id] ? (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 rounded-lg">
-                      <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-lg" />
-                      <div className="relative w-3/4 max-w-md">
-                        <div className="text-sm text-gray-700 mb-2 text-center">{progressMap[p.id].message}</div>
-                        <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
-                          <div className="h-full bg-indigo-600 transition-all" style={{ width: `${progressMap[p.id].percent}%` }} />
-                        </div>
-                        <div className="mt-2 text-xs text-gray-600 text-right">{progressMap[p.id].percent}%</div>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-lg font-medium flex items-center gap-2">
-                        {renameMap[p.id] ? (
-                          <div
-                            className="w-64"
-                            onClick={(e) => e.stopPropagation()}
-                            onBlur={(e) => {
-                              // If focus moved outside this wrapper, close rename mode.
-                              // React's onBlur bubbles (focusout). If the new focused element
-                              // (relatedTarget) is still inside this wrapper, do nothing.
-                              try {
-                                const rel = e.relatedTarget;
-                                if (rel && e.currentTarget && e.currentTarget.contains(rel)) return;
-                              } catch (err) {
-                                // ignore
-                              }
-                              setRenameMap((m) => ({ ...m, [p.id]: false }));
-                            }}
-                          >
-                            <FormField
-                              name={`project-${p.id}-name`}
-                              value={p.name}
-                              label={""}
-                              placeholder={`Project ${projects.indexOf(p) + 1}`}
-                              commitOnBlur={true}
-                              onChange={(e) => {
-                                // commit rename immediately when FormField commits on blur/enter
-                                const v = e && e.target ? e.target.value : '';
-                                renameProject(p.id, v.trim() || p.name);
-                                setRenameMap((m) => ({ ...m, [p.id]: false }));
-                              }}
-                              className=""
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-lg font-medium truncate max-w-[320px]">{p.name}</div>
-                        )}
-                        <div className="text-sm text-gray-400">{p.id === currentProjectId ? '(active)' : ''}</div>
-                      </div>
-                      {/* rename control moved to the right action group to keep header clean */}
-                    </div>
-                    <div className="mt-1 grid grid-cols-12 gap-x-5 items-center">
-                      <div className="col-span-3 text-sm font-medium text-gray-600">Dataset:</div>
-                      <div className="col-span-9 text-sm text-gray-700">
-                        {loadingMap[p.id] ? (
-                          <span className="inline-flex items-center gap-2 text-sm text-indigo-600">
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            Indexing...
-                          </span>
-                        ) : (
-                          (trees[p.id] ? (trees[p.id].rootName || trees[p.id].name || 'Indexed') : 'None')
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Selected test setup and last-edited metadata (if available in localStorage) */}
-                    {(() => {
-                      try {
-                        const setupIdRaw = localStorage.getItem(`globalAppData_${p.id}_selectedTestSetupId`);
-                        const setupId = setupIdRaw ? JSON.parse(setupIdRaw) : null;
-                        let setupName = null;
-                        if (setupId) {
-                          // Test setups are global; read from the global storage key
-                          const setupsRaw = localStorage.getItem(`globalAppData_testSetups`);
-                          const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
-                          if (Array.isArray(setups)) {
-                            const s = setups.find((x) => x.id === setupId);
-                            setupName = s ? s.name : null;
-                          }
-                        }
-                        const lastEditedRaw = localStorage.getItem(`globalAppData_${p.id}_lastEdited`);
-                        let lastEdited = null;
-                        if (lastEditedRaw) {
-                          try { lastEdited = new Date(JSON.parse(lastEditedRaw)); } catch (e) { try { lastEdited = new Date(lastEditedRaw); } catch (e2) { lastEdited = null; } }
-                        }
-                        const fmt = (d) => d instanceof Date && !isNaN(d) ? d.toLocaleString() : null;
-                        return (
-                          <div className="mt-1 relative">
-                            {setupName ? (
-                              <div className="grid grid-cols-12 gap-x-5 items-center">
-                                <div className="col-span-3 text-sm font-medium text-gray-600">Test setup:</div>
-                                <div className="col-span-9 text-sm text-gray-700">{setupName}</div>
-                              </div>
-                            ) : null}
-                            {lastEdited ? <div className="text-xs text-gray-400 mt-1">Last edited: <span className="text-gray-600">{fmt(lastEdited)}</span></div> : null}
-
-                            {/* progress overlay previously nested here was moved to cover the whole card */}
-                          </div>
-                        );
-                      } catch (err) {
-                        return null;
+              projects.map((p, idx) => {
+                const metadata = projectMetadata[p.id] || { setupName: null, lastEdited: null };
+                return (
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    isSelected={selectedCardId === p.id}
+                    isActive={p.id === currentProjectId}
+                    isDefault={p.id === DEFAULT_PROJECT_ID}
+                    tree={trees[p.id]}
+                    loading={loadingMap[p.id]}
+                    progress={progressMap[p.id]}
+                    isRenaming={renameMap[p.id]}
+                    setupName={metadata.setupName}
+                    lastEdited={metadata.lastEdited}
+                    onSelect={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
+                    onRename={(newName) => {
+                      renameProject(p.id, newName);
+                      setRenameMap((m) => ({ ...m, [p.id]: false }));
+                    }}
+                    onToggleRename={() => setRenameMap((m) => ({ ...m, [p.id]: !m[p.id] }))}
+                    onDelete={() => handleDelete(p.id)}
+                    onEditDataset={() => handleEditDataset(p.id)}
+                    onDeleteDataset={() => handleDeleteDataset(p.id)}
+                    onExport={() => handleExportProject(p.id)}
+                    onReset={p.id === DEFAULT_PROJECT_ID ? () => {
+                      if (confirm('Reset the default project to its original state? This will overwrite its local settings and dataset.')) {
+                        resetProject(p.id);
+                        alert('Default project reset.');
                       }
-                    })()}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* dataset actions group with label */}
-                    <div className="flex flex-col items-center text-center">
-                      <div className="text-xs text-gray-500 mb-1">Dataset</div>
-                      <div className="flex items-center gap-1">
-                        <IconToolTipButton icon={Folder} tooltipText="Edit dataset (pick folder)" onClick={(e) => { e.stopPropagation(); handleEditDataset(p.id); }} />
-                        <IconToolTipButton icon={Trash} tooltipText="Delete indexed dataset" onClick={(e) => { e.stopPropagation(); handleDeleteDataset(p.id); }} />
-                      </div>
-                    </div>
-
-                    {/* separator between groups */}
-                    <div className="w-px h-10 bg-gray-200" />
-
-                    {/* project actions group with label */}
-                    <div className="flex flex-col items-center text-center">
-                      <div className="text-xs text-gray-500 mb-1">Project</div>
-                      <div className="flex items-center gap-1">
-                        <IconToolTipButton icon={Upload} tooltipText="Export project as JSON" onClick={(e) => { e.stopPropagation(); handleExportProject(p.id); }} />
-                        <IconToolTipButton icon={Edit} tooltipText="Rename project" onClick={(e) => { e.stopPropagation(); setRenameMap((m) => ({ ...m, [p.id]: true })); }} />
-                        {p.id === DEFAULT_PROJECT_ID ? (
-                          <IconToolTipButton icon={RefreshCw} tooltipText="Reset project to defaults" onClick={(e) => { e.stopPropagation(); if (confirm('Reset the default project to its original state? This will overwrite its local settings and dataset.')) { resetProject(p.id); alert('Default project reset.'); } }} />
-                        ) : (
-                          <IconToolTipButton icon={Trash2} tooltipText="Delete project" onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
+                    } : undefined}
+                    index={idx}
+                    animationVisible={show}
+                  />
+                );
+              })
             )}
           </div>
 

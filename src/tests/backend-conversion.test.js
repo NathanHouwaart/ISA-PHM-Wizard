@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import inputDataRaw from '../data/isa-project-example.json';
-import expectedOutput from './isa-phm-out.json'; 
+import expectedOutput from './isa-phm-out.json';
+
 
 /**
  * ISA-PHM Conversion Integration Test Suite
@@ -24,7 +25,7 @@ import expectedOutput from './isa-phm-out.json';
  */
 
 const BACKEND_URL = 'http://localhost:8080';
-const CONVERT_ENDPOINT = `${BACKEND_URL}/convert`;
+const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
 
 // Helper function to prepare the conversion payload from localStorage data
 function prepareConversionPayload(projectData) {
@@ -112,21 +113,22 @@ function prepareConversionPayload(projectData) {
 
 // Helper function to call the backend API
 async function callConversionAPI(payload) {
-  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-  const formData = new FormData();
-  formData.append('file', blob, 'input.json');
+  // Use the Node helper (form-data + node-fetch) to send a multipart file like curl/browser
+  try {
+    const { postJsonFile } = await import('./utils/nodeFormFetch.js');
+    console.log('🚀 Calling conversion API at', CONVERT_ENDPOINT);
+    const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json');
 
-  const response = await fetch(CONVERT_ENDPOINT, {
-    method: 'POST',
-    body: formData,
-  });
+    if (!response.ok) {
+      const text = await response.text().catch(() => null);
+      throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
+    }
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => null);
-    throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
+    return await response.json();
+  } catch (err) {
+    // Re-throw to be handled by caller
+    throw err;
   }
-
-  return await response.json();
 }
 
 describe('ISA-PHM Conversion Integration Tests', () => {

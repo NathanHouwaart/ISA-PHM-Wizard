@@ -4,7 +4,7 @@ import { HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip';
 import { cn } from '../../utils/utils';
 
-export const IconToolTipButton = ({ icon, onClick, tooltipText, className }) => {
+export const IconToolTipButton = ({ icon, onClick, tooltipText, className, 'data-testid': dataTestId }) => {
     const Icon = icon || HelpCircle;
 
     return (
@@ -19,6 +19,7 @@ export const IconToolTipButton = ({ icon, onClick, tooltipText, className }) => 
                                 className
                             )}
                             onClick={onClick}
+                            data-testid={dataTestId}
                         >
                             <Icon className="h-7 w-7 text-gray-500 group-hover:text-blue-500 transition-colors duration-200" />
                         </button>

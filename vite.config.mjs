@@ -17,8 +17,8 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    environment: 'node',
-    setupFiles: [],
+    environment: 'jsdom',
+    setupFiles: ['./src/tests/setup.js'],
   },
   define: {
     // This is important for making Buffer available globally
