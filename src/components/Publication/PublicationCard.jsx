@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen } from "lucide-react";
+import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen, Mail } from "lucide-react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { formatContactName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
@@ -53,7 +53,8 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                                                     {index + 1}. {formatContactName(contact)}
                                                 </span>
                                                 {contact.isCorresponding && (
-                                                    <span className="ml-2 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                                                    <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1">
+                                                        <Mail className="w-3 h-3" />
                                                         Corresponding
                                                     </span>
                                                 )}

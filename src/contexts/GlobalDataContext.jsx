@@ -403,35 +403,49 @@ export const GlobalDataProvider = ({ children }) => {
         return () => { mounted = false; };
     }, [currentProjectId, initHydrated, selectedDataset]);
 
-    // Auto-generate default studyToAssayMapping entries when none exist.
-    // This is non-destructive: if the mapping already contains entries we leave it alone.
+    // Auto-generate default studyToAssayMapping entries when missing.
+    // Preserve any existing mappings (including user-edited filenames) and only append
+    // defaults for studyId/sensorId combinations that are not yet present.
     useEffect(() => {
         try {
-            if (Array.isArray(studyToAssayMapping) && studyToAssayMapping.length > 0) return; // already populated
-
             // Build defaults using studies and sensors from testSetups
             const pad = (n) => String(n + 1).padStart(2, '0');
-            const defaults = [];
+            const newEntries = [];
 
             // If testSetups is empty, nothing to generate
             if (!Array.isArray(testSetups) || testSetups.length === 0) {
                 return;
             }
 
+            // Build a set of existing mappings to avoid duplicates (keyed by `${studyId}|${sensorId}`)
+            const existing = new Set();
+            if (Array.isArray(studyToAssayMapping)) {
+                studyToAssayMapping.forEach((m) => {
+                    if (m && m.studyId && m.sensorId) existing.add(`${m.studyId}|${m.sensorId}`);
+                });
+            }
+
             studies.forEach((study, si) => {
-                // choose the first testSetup or iterate all testSetups -- we iterate all to be exhaustive
                 testSetups.forEach((setup) => {
                     if (!Array.isArray(setup.sensors)) return;
                     setup.sensors.forEach((sensor, sidx) => {
+                        const key = `${study.id}|${sensor.id}`;
+                        if (existing.has(key)) return; // already present
+
                         // Default assay filename pattern: ST{studyIdx}_SE{sensorIdx}_ASSO.csv
                         const value = `ST${pad(si)}_SE${pad(sidx)}_ASSO.csv`;
-                        defaults.push({ studyId: study.id, sensorId: sensor.id, value });
+                        newEntries.push({ studyId: study.id, sensorId: sensor.id, value });
+                        existing.add(key);
                     });
                 });
             });
 
-            if (defaults.length > 0) {
-                setStudyToAssayMapping(defaults);
+            if (newEntries.length > 0) {
+                // Append to existing mapping if any, or set new array when empty
+                setStudyToAssayMapping((prev) => {
+                    const base = Array.isArray(prev) ? prev : [];
+                    return [...base, ...newEntries];
+                });
             }
         } catch (err) {
             console.error('[GlobalDataContext] error generating default studyToAssayMapping', err);

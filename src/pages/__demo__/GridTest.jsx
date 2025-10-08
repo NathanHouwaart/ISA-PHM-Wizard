@@ -1000,7 +1000,7 @@ export const GridTest = () => {
           {...currentConfig}
           showControls={true}
           plugins={plugin}
-          showDebug={true} // Set to true to see raw data
+          showDebug={false} // debug off for demos
           onDataChange={handleDataChange}
           onRowDataChange={handleRowDataChange}
         />

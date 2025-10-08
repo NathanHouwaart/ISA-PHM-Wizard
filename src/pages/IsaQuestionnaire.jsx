@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; // Import useEffect
+import React, { useEffect, useRef, useState } from 'react'; // Import useEffect
 
 import "../styles.css";
 
@@ -11,6 +11,7 @@ import PageWrapper from '../layout/PageWrapper';
 import { useLocation } from 'react-router-dom';
 
 import { slides } from "../components/Slides/slides";
+import SlideReloadOverlay from '../components/Slides/SlideReloadOverlay';
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
 // ProjectSelector removed in favor of the single 'Change Project' button in the header
@@ -47,6 +48,12 @@ export const IsaQuestionnaire = () => {
 
   // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [isRemountingSlides, setIsRemountingSlides] = useState(false);
+  const [slidesKey, setSlidesKey] = useState(() => currentProjectId ? `slides-${currentProjectId}-${Date.now()}` : 'slides-none');
+  const hasInitializedProjectRef = useRef(false);
+  const overlayTimeoutRef = useRef(null);
+  const keyUpdateTimeoutRef = useRef(null);
+  const MIN_OVERLAY_DURATION = 700;
   
   // Handler: Close project sessions modal
   const handleSessionsModalClose = () => {
@@ -83,6 +90,44 @@ export const IsaQuestionnaire = () => {
       setScreenWidth('max-w-5xl');
     }
   }, [currentPage, pageTabStates, setScreenWidth]);
+
+  useEffect(() => {
+    if (!currentProjectId) {
+      return;
+    }
+
+    if (!hasInitializedProjectRef.current) {
+      hasInitializedProjectRef.current = true;
+      return;
+    }
+
+    childRefs.current = [];
+    setIsRemountingSlides(true);
+
+    if (keyUpdateTimeoutRef.current) {
+      clearTimeout(keyUpdateTimeoutRef.current);
+    }
+    if (overlayTimeoutRef.current) {
+      clearTimeout(overlayTimeoutRef.current);
+    }
+
+    keyUpdateTimeoutRef.current = setTimeout(() => {
+      setSlidesKey(`slides-${currentProjectId}-${Date.now()}`);
+    }, 0);
+
+    overlayTimeoutRef.current = setTimeout(() => {
+      setIsRemountingSlides(false);
+    }, MIN_OVERLAY_DURATION);
+
+    return () => {
+      if (keyUpdateTimeoutRef.current) {
+        clearTimeout(keyUpdateTimeoutRef.current);
+      }
+      if (overlayTimeoutRef.current) {
+        clearTimeout(overlayTimeoutRef.current);
+      }
+    };
+  }, [currentProjectId, childRefs]);
 
   const handleSubmit = () => {
     // In a real application, you'd collect data from all forms here
@@ -127,8 +172,9 @@ export const IsaQuestionnaire = () => {
             key={index}
             tooltipText={`${slide.displayName}`}
             onClick={() => goToPage(index)}
+            disabled={isRemountingSlides}
             className={cn(
-              "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer",
+              "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
               index === currentPage
                 ? 'bg-blue-500'
                 : index < currentPage
@@ -147,9 +193,15 @@ export const IsaQuestionnaire = () => {
         >
           <div
             className="relative overflow-hidden transition-all duration-300 ease-in-out"
+            aria-busy={isRemountingSlides}
           >
             <div
-              className="flex transition-transform duration-500 ease-in-out"
+              key={slidesKey}
+              aria-hidden={isRemountingSlides}
+              className={cn(
+                "flex transition-transform duration-500 ease-in-out",
+                isRemountingSlides ? 'pointer-events-none' : ''
+              )}
               style={{ transform: `translateX(${translateXValue}%)` }}
             >
               {slides.map((slide, index) => {
@@ -176,6 +228,7 @@ export const IsaQuestionnaire = () => {
                 );
               })}
             </div>
+            <SlideReloadOverlay isVisible={isRemountingSlides} animationMs={MIN_OVERLAY_DURATION - 100} />
           </div>
         </div>
 
@@ -183,7 +236,8 @@ export const IsaQuestionnaire = () => {
           <TooltipButton
             onClick={handlePrevious}
             tooltipText="Go to previous page"
-            className={`text-center text-white font-semibold `}
+            disabled={isRemountingSlides}
+            className={`text-center text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <span className='w-30'>&lt; Previous</span>
           </TooltipButton>
@@ -198,7 +252,7 @@ export const IsaQuestionnaire = () => {
                 "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
               }
             )}
-            disabled={!isLastPage(currentPage) || isSubmitting}
+            disabled={!isLastPage(currentPage) || isSubmitting || isRemountingSlides}
           >
             <span className='w-md'>Submit Form</span>
           </TooltipButton>
@@ -206,7 +260,8 @@ export const IsaQuestionnaire = () => {
           <TooltipButton
             onClick={handleForward}
             tooltipText="Go to next page"
-            className={`text-white font-semibold `}
+            disabled={isRemountingSlides}
+            className={`text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <span className='w-30'>Next &gt;</span>
           </TooltipButton>

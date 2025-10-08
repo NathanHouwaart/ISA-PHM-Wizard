@@ -2,6 +2,7 @@ import React, { useRef, useCallback } from 'react';
 import applyFilesToRange from './dataGridUtils';
 import { captureGridSelection } from './dataGridHelpers';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import TooltipButton from '../Widgets/TooltipButton';
 
 /**
  * FilePickerPlugin
@@ -92,10 +93,10 @@ export default function FilePickerPlugin({ api = {} }) {
 
   return (
     <div className="file-assign-plugin inline-flex items-center">
-      <button
+      <TooltipButton
         type="button"
-        onMouseDown={async (e) => {
-          e.preventDefault();
+        onClick={async (e) => {
+          e?.preventDefault?.();
           try {
             const snap = await snapshotSelectionBeforePicker();
             if (snap) selectionSnapshotRef.current = { range: snap };
@@ -126,10 +127,10 @@ export default function FilePickerPlugin({ api = {} }) {
           }
         }}
         className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
-        title="Assign files to current selection"
+        tooltipText="Assign files to current selection"
       >
         📁 Assign files
-      </button>
+      </TooltipButton>
     </div>
   );
 }

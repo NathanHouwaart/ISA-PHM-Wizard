@@ -139,9 +139,8 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                     <DataGrid
                         {...measurementOutputGridConfig}
                         showControls={true}
-                        // Enable the debug panel here so you can see selection/file/mapping
-                        // diagnostics directly in the app while we debug the assignment flow.
-                        showDebug={true}
+                        // Debugging turned off by default
+                        showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
