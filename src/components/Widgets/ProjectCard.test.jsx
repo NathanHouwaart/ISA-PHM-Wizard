@@ -5,6 +5,11 @@ import ProjectCard from './ProjectCard';
 
 var mockDataset;
 var useProjectDatasetMock;
+let mockContextValue;
+
+vi.mock('../../contexts/GlobalDataContext', () => ({
+  useGlobalDataContext: () => mockContextValue,
+}));
 
 vi.mock('../../hooks/useProjectDataset', () => {
   mockDataset = {
@@ -14,6 +19,7 @@ vi.mock('../../hooks/useProjectDataset', () => {
     metadata: { setupName: null, lastEdited: null },
     indexDataset: vi.fn(),
     deleteDataset: vi.fn(),
+    refreshMetadata: vi.fn(),
   };
   useProjectDatasetMock = vi.fn(() => mockDataset);
   return {
@@ -43,14 +49,24 @@ describe('ProjectCard', () => {
     if (!mockDataset || !useProjectDatasetMock) {
       throw new Error('Mock setup failed');
     }
+    window.localStorage.clear();
     mockDataset.tree = null;
     mockDataset.loading = false;
     mockDataset.progress = null;
     mockDataset.metadata = { setupName: null, lastEdited: null };
     mockDataset.indexDataset.mockClear();
     mockDataset.deleteDataset.mockClear();
+    mockDataset.refreshMetadata.mockClear();
     useProjectDatasetMock.mockClear();
     useProjectDatasetMock.mockImplementation(() => mockDataset);
+    mockContextValue = {
+      testSetups: [
+        { id: 'setup-1', name: 'Test Setup One', location: 'Lab A' },
+        { id: 'setup-2', name: 'Test Setup Two', location: 'Lab B' },
+      ],
+      currentProjectId: mockProject.id,
+      setSelectedTestSetupId: vi.fn(),
+    };
   });
 
   describe('Rendering', () => {
@@ -260,6 +276,63 @@ describe('ProjectCard', () => {
       
       rerender(<ProjectCard {...defaultProps} isSelected={true} />);
       expect(screen.getByTestId('project-card')).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  describe('Test setup actions', () => {
+    test('opens picker and assigns selected test setup', () => {
+      render(<ProjectCard {...defaultProps} />);
+
+      fireEvent.click(screen.getByTestId('project-card-edit-setup-btn'));
+      expect(screen.getByText('Test setup selection')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Test Setup One'));
+      const confirmBtn = screen.getByRole('button', { name: 'Assign test setup' });
+      expect(confirmBtn).not.toBeDisabled();
+      fireEvent.click(confirmBtn);
+
+      expect(window.localStorage.getItem('globalAppData_test-123_selectedTestSetupId')).toBe(JSON.stringify('setup-1'));
+      expect(mockDataset.refreshMetadata).toHaveBeenCalled();
+      expect(mockContextValue.setSelectedTestSetupId).toHaveBeenCalledWith('setup-1');
+      expect(screen.queryByText('Test setup selection')).not.toBeInTheDocument();
+    });
+
+    test('disable clear button when no test setup is assigned', () => {
+      render(<ProjectCard {...defaultProps} />);
+      expect(screen.getByTestId('project-card-delete-setup-btn')).toBeDisabled();
+    });
+
+    test('shows confirmation dialog when replacing existing test setup', () => {
+      window.localStorage.setItem('globalAppData_test-123_selectedTestSetupId', JSON.stringify('setup-1'));
+      render(<ProjectCard {...defaultProps} />);
+
+      fireEvent.click(screen.getByTestId('project-card-edit-setup-btn'));
+      fireEvent.click(screen.getByText('Test Setup Two'));
+      fireEvent.click(screen.getByRole('button', { name: 'Assign test setup' }));
+
+      expect(screen.getByRole('heading', { name: 'Replace associated test setup?' })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Replace test setup' }));
+
+      expect(window.localStorage.getItem('globalAppData_test-123_selectedTestSetupId')).toBe(JSON.stringify('setup-2'));
+      expect(mockDataset.refreshMetadata).toHaveBeenCalled();
+      expect(mockContextValue.setSelectedTestSetupId).toHaveBeenCalledWith('setup-2');
+    });
+
+    test('clears associated test setup after confirmation', () => {
+      window.localStorage.setItem('globalAppData_test-123_selectedTestSetupId', JSON.stringify('setup-1'));
+      render(<ProjectCard {...defaultProps} />);
+
+      const clearBtn = screen.getByTestId('project-card-delete-setup-btn');
+      expect(clearBtn).not.toBeDisabled();
+
+      fireEvent.click(clearBtn);
+      expect(screen.getByRole('heading', { name: 'Remove associated test setup?' })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove test setup' }));
+      expect(window.localStorage.getItem('globalAppData_test-123_selectedTestSetupId')).toBeNull();
+      expect(mockDataset.refreshMetadata).toHaveBeenCalled();
+      expect(mockContextValue.setSelectedTestSetupId).toHaveBeenCalledWith(null);
     });
   });
 });

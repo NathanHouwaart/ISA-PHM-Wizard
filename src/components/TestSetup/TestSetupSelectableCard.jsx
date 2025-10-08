@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import TestSetupCard from './TestSetupCard';
+import { cn } from '../../utils/utils';
 
 /**
  * A small wrapper that renders a TestSetupCard and makes it selectable.
@@ -10,15 +11,15 @@ import TestSetupCard from './TestSetupCard';
  * - isSelected: boolean whether this item is selected
  * - onSelect: callback when the card is clicked
  */
-const TestSetupSelectableCard = ({ item, index, isSelected, onSelect }) => {
+const TestSetupSelectableCard = ({ item, index, isSelected, onSelect, className }) => {
   return (
     <div
       onClick={onSelect}
-      className={`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 
+      className={cn(`relative bg-white rounded-xl shadow-md border-2 cursor-pointer hover:shadow-lg transition-all duration-200 
         ${isSelected
           ? 'outline-blue-500 outline-5  border-transparent'
           : 'border-gray-200 hover:border-gray-300'
-        }`}
+        }`, className)}
     >
       {isSelected && (
         <div className="absolute bottom-4 right-4">

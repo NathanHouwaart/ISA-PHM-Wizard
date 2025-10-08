@@ -3,10 +3,11 @@ import { useProjectDataset } from '../../hooks/useProjectDataset';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import FormField from '../Form/FormField';
 import IconTooltipButton from './IconTooltipButton';
-import { Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
+import { Edit, Folder, Trash, Trash2, Upload, RefreshCw, Pencil, Eraser } from 'lucide-react';
 import ProgressOverlay from './ProgressOverlay';
 import KeyValueRow from '../Typography/KeyValueRow';
 import AlertDecisionDialog from './AlertDecisionDialog';
+import TestSetupPickerDialog from '../TestSetup/TestSetupPickerDialog';
 
 /**
  * ProjectCard Component
@@ -74,6 +75,10 @@ const ProjectCard = ({
   const dataset = useProjectDataset(project.id);
   const [showDeleteDatasetDialog, setShowDeleteDatasetDialog] = useState(false);
   const [isDeletingDataset, setIsDeletingDataset] = useState(false);
+  const [showTestSetupPicker, setShowTestSetupPicker] = useState(false);
+  const [showDeleteTestSetupDialog, setShowDeleteTestSetupDialog] = useState(false);
+  const [pendingTestSetupId, setPendingTestSetupId] = useState(null);
+  const [showAssignSetupConfirm, setShowAssignSetupConfirm] = useState(false);
 
   const formatDate = (date) => {
     if (!date) return null;
@@ -92,7 +97,11 @@ const ProjectCard = ({
 
   // Attempt to derive a test setup name even when dataset metadata is not available.
   // Per-project selection is stored in localStorage under `globalAppData_{projectId}_selectedTestSetupId`.
-  const { testSetups = [] } = useGlobalDataContext();
+  const {
+    testSetups = [],
+    currentProjectId,
+    setSelectedTestSetupId,
+  } = useGlobalDataContext();
   const projectSelectedSetupId = (() => {
     try {
       const raw = localStorage.getItem(`globalAppData_${project.id}_selectedTestSetupId`);
@@ -126,6 +135,58 @@ const ProjectCard = ({
       setIsDeletingDataset(false);
       setShowDeleteDatasetDialog(false);
     }
+  };
+
+  const persistTestSetupSelection = (setupId) => {
+    const storageKey = `globalAppData_${project.id}_selectedTestSetupId`;
+    if (setupId) {
+      localStorage.setItem(storageKey, JSON.stringify(setupId));
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+
+    if (project.id === currentProjectId && typeof setSelectedTestSetupId === 'function') {
+      setSelectedTestSetupId(setupId ?? null);
+    }
+    if (dataset && typeof dataset.refreshMetadata === 'function') {
+      dataset.refreshMetadata();
+    }
+  };
+
+  const handleAssignTestSetup = (setupId) => {
+    const previousId = projectSelectedSetupId;
+    setShowTestSetupPicker(false);
+
+    if (previousId && previousId !== setupId) {
+      setPendingTestSetupId(setupId);
+      setShowAssignSetupConfirm(true);
+      return;
+    }
+
+    setPendingTestSetupId(null);
+    setShowAssignSetupConfirm(false);
+    persistTestSetupSelection(setupId);
+  };
+
+  const handleClearTestSetup = () => {
+    persistTestSetupSelection(null);
+    setShowDeleteTestSetupDialog(false);
+  };
+
+  const handleConfirmAssign = () => {
+    if (pendingTestSetupId) {
+      persistTestSetupSelection(pendingTestSetupId);
+    }
+    setPendingTestSetupId(null);
+    setShowAssignSetupConfirm(false);
+  };
+
+  const handleCancelAssign = () => {
+    setPendingTestSetupId(null);
+    setShowAssignSetupConfirm(false);
+    setTimeout(() => {
+      setShowTestSetupPicker(true);
+    }, 0);
   };
 
   const getDatasetDisplay = () => {
@@ -290,6 +351,35 @@ const ProjectCard = ({
           {/* Separator */}
           <div className="w-px h-10 bg-gray-200" aria-hidden="true" />
 
+          {/* Test setup actions group */}
+          <div className="flex flex-col items-center text-center">
+            <div className="text-xs text-gray-500 mb-1">Test setup</div>
+            <div className="flex items-center gap-1">
+              <IconTooltipButton
+                icon={Pencil}
+                tooltipText="Edit associated test setup"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowTestSetupPicker(true);
+                }}
+                data-testid={`${dataTestId}-edit-setup-btn`}
+              />
+              <IconTooltipButton
+                icon={Eraser}
+                tooltipText="Remove associated test setup"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteTestSetupDialog(true);
+                }}
+                data-testid={`${dataTestId}-delete-setup-btn`}
+                disabled={!projectSelectedSetupId}
+              />
+            </div>
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-10 bg-gray-200" aria-hidden="true" />
+
           {/* Project actions group */}
           <div className="flex flex-col items-center text-center">
             <div className="text-xs text-gray-500 mb-1">Project</div>
@@ -355,6 +445,43 @@ const ProjectCard = ({
           }}
           confirmButtonProps={{ disabled: isDeletingDataset }}
           cancelButtonProps={{ disabled: isDeletingDataset }}
+        />
+      )}
+      {showDeleteTestSetupDialog && (
+        <AlertDecisionDialog
+          open
+          tone="warning"
+          title="Remove associated test setup?"
+          message={`This will clear the test setup assignment${displaySetupName && displaySetupName !== 'N/A' ? ` (“${displaySetupName}”)` : ''} for this project. You can assign a new test setup later.`}
+          confirmLabel="Remove test setup"
+          confirmTooltip="Clear the associated test setup from this project"
+          cancelLabel="Keep test setup"
+          cancelTooltip="Close dialog without changes"
+          onConfirm={handleClearTestSetup}
+          onCancel={() => setShowDeleteTestSetupDialog(false)}
+        />
+      )}
+      {showTestSetupPicker && (
+        <TestSetupPickerDialog
+          open={showTestSetupPicker}
+          testSetups={testSetups}
+          selectedSetupId={projectSelectedSetupId}
+          onClose={() => setShowTestSetupPicker(false)}
+          onConfirm={handleAssignTestSetup}
+        />
+      )}
+      {showAssignSetupConfirm && (
+        <AlertDecisionDialog
+          open
+          tone="warning"
+          title="Replace associated test setup?"
+          message="Assigning a new test setup will remove existing mappings linked to the previous setup for this project. This action cannot be undone."
+          confirmLabel="Replace test setup"
+          confirmTooltip="Remove old mappings and assign the selected test setup"
+          cancelLabel="Keep current setup"
+          cancelTooltip="Cancel and keep the existing test setup"
+          onConfirm={handleConfirmAssign}
+          onCancel={handleCancelAssign}
         />
       )}
     </>
