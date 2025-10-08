@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useProjectDataset } from '../../hooks/useProjectDataset';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import FormField from '../Form/FormField';
 import IconTooltipButton from './IconTooltipButton';
 import { Edit, Folder, Trash, Trash2, Upload, RefreshCw } from 'lucide-react';
@@ -88,6 +89,20 @@ const ProjectCard = ({
   const datasetProgress = progress ?? dataset.progress;
   const datasetSetupName = setupName ?? (dataset.metadata && dataset.metadata.setupName) ?? null;
   const datasetLastEdited = lastEdited ?? (dataset.metadata && dataset.metadata.lastEdited ? dataset.metadata.lastEdited : null);
+
+  // Attempt to derive a test setup name even when dataset metadata is not available.
+  // Per-project selection is stored in localStorage under `globalAppData_{projectId}_selectedTestSetupId`.
+  const { testSetups = [] } = useGlobalDataContext();
+  const projectSelectedSetupId = (() => {
+    try {
+      const raw = localStorage.getItem(`globalAppData_${project.id}_selectedTestSetupId`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+  const selectedSetupFromGlobal = Array.isArray(testSetups) ? testSetups.find((s) => s && s.id === projectSelectedSetupId) : null;
+  const displaySetupName = datasetSetupName ?? (selectedSetupFromGlobal && selectedSetupFromGlobal.name) ?? 'N/A';
   const datasetDeleteHandler = useMemo(() => {
     if (typeof onDeleteDataset === 'function') return onDeleteDataset;
     if (dataset && typeof dataset.deleteDataset === 'function') return dataset.deleteDataset;
@@ -225,22 +240,18 @@ const ProjectCard = ({
           </div>
 
           {/* Test setup and last edited */}
-          {(datasetSetupName || datasetLastEdited) && (
-            <div className="mt-1">
-              {datasetSetupName && (
-                <KeyValueRow 
-                  label="Test setup" 
-                  value={datasetSetupName} 
-                  data-testid={`${dataTestId}-setup`}
-                />
-              )}
-              {datasetLastEdited && (
-                <div className="text-xs text-gray-400 mt-1" data-testid={`${dataTestId}-last-edited`}>
-                  Last edited: <span className="text-gray-600">{formatDate(datasetLastEdited)}</span>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="mt-1">
+            <KeyValueRow
+              label="Test setup"
+              value={displaySetupName}
+              data-testid={`${dataTestId}-setup`}
+            />
+            {datasetLastEdited && (
+              <div className="text-xs text-gray-400 mt-1" data-testid={`${dataTestId}-last-edited`}>
+                Last edited: <span className="text-gray-600">{formatDate(datasetLastEdited)}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action buttons */}

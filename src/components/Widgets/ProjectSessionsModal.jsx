@@ -240,15 +240,25 @@ export default function ProjectSessionsModal({ onClose }) {
         }
         
         // Update the imported package to reference the new setup ID
+        // Also ensure the package's localStorage snapshot (if present) points the project's
+        // selectedTestSetupId to the new UUID so importProject doesn't later overwrite it
         const modifiedPkg = {
           ...pkg,
-          selectedTestSetup: newSetup
+          selectedTestSetup: newSetup,
+          localStorage: { ...(pkg.localStorage || {}) }
         };
-        
-        // Update the project's selectedTestSetupId to point to the new setup
+
+        // Update the package-local localStorage entry that will be restored by importProject
+        const originalSelectedKey = `globalAppData_${pkg.projectId}_selectedTestSetupId`;
+        // Store JSON-stringified id because exportProject saved raw localStorage values (strings)
+        modifiedPkg.localStorage[originalSelectedKey] = JSON.stringify(newSetup.id);
+
+        // Also set the per-project selectedTestSetupId in the current runtime localStorage
+        // (this will be overwritten by importProject unless the package localStorage contains
+        // the updated value, which we ensured above).
         const selectedIdKey = `globalAppData_${newProjectId}_selectedTestSetupId`;
         localStorage.setItem(selectedIdKey, JSON.stringify(newSetup.id));
-        
+
         // Now import the project data with the modified package
         await importProject(modifiedPkg, newProjectId, { skipConflictCheck: true });
         await completeImport(newProjectId);
