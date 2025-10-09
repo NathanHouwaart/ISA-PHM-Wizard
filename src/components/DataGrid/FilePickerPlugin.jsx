@@ -99,7 +99,7 @@ export default function FilePickerPlugin({ api = {} }) {
       <TooltipButton
         type="button"
         disabled={isDisabled}
-        onClick={async (e) => {
+        onMouseDown={async (e) => {
           e?.preventDefault?.();
           
           // Don't proceed if disabled
