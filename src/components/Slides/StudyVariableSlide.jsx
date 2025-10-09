@@ -23,9 +23,6 @@ import { Template } from '@revolist/react-datagrid';
 import DataGrid from '../DataGrid/DataGrid';
 import { GrayCell, BoldCell, DeleteRowCellTemplate} from '../DataGrid/CellTemplates';
 
-// Import content data
-import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
-
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
 import usePageTab from '../../hooks/usePageWidth';

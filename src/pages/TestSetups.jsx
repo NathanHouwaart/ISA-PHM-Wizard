@@ -40,7 +40,7 @@ export const TestSetups = () => {
               <CollectionSubtitle>View, add and edit test-setups used in the investigations, by specifying relevant components and sensors.</CollectionSubtitle>
               <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
               <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
-              <CollectionEmptyStateSubtitle>Click below to add your first test setup</CollectionEmptyStateSubtitle>
+              <CollectionEmptyStateSubtitle>Get started by adding your first Test Setup</CollectionEmptyStateSubtitle>
               <CollectionEmptyStateAddButtonText>Add test setup Now</CollectionEmptyStateAddButtonText>
             </Collection>
           }

@@ -8,6 +8,7 @@ import Paragraph from './Typography/Paragraph';
 
 import TooltipButton from './Widgets/TooltipButton';
 import AlertDecisionDialog from './Widgets/AlertDecisionDialog';
+import Heading3 from './Typography/Heading3';
 
 // --- Sub-components for Collection ---
 export const CollectionTitle = ({ children }) => <>{children}</>;
@@ -224,14 +225,8 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 {items.length === 0 && !showAddForm && !editingItem && (
                     <div className="text-center py-12">
                         <Wrench className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-medium text-gray-900 mb-2">{emptyStateTitle}</h3>
-                        <p className="text-gray-500 mb-6">{emptyStateSubtitle}</p>
-                        <button
-                            onClick={() => setShowAddForm(true)}
-                            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            {emptyStateAddButtonText}
-                        </button>
+                        <Heading3>{emptyStateTitle}</Heading3>
+                        <Paragraph>{emptyStateSubtitle}</Paragraph>
                     </div>
                 )}
             </div>

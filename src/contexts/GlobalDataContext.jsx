@@ -2,7 +2,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import isaProjectExample from "../data/isa-project-example.json";
 
-import investigationFormFields from '../data/InvestigationFormFields2.json'
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,11 +42,6 @@ const saveToLocalStorage = (key, value) => {
 // Main Data Provider Component
 export const GlobalDataProvider = ({ children }) => {
 
-    const initialFormState = investigationFormFields.fields.reduce((acc, field) => {
-        acc[field.id] = ''; // Initialize each field with an empty string
-        return acc;
-    }, {});
-
     // Projects list and currentProjectId (global across the app)
     const DEFAULT_PROJECT_ID = 'example-project';
     const DEFAULT_PROJECT_NAME = 'Example Project';
@@ -61,18 +55,18 @@ export const GlobalDataProvider = ({ children }) => {
 
     // Helper to get baseline defaults for example project or empty for new projects
     const getDefaultValue = (key, isEmpty = false) => {
-        if (isEmpty) return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []);
+        if (isEmpty) return (key === 'selectedTestSetupId' ? null : []);
         const ls = isaProjectExample.localStorage;
         const lsKey = `globalAppData_default_${key}`;
         if (ls[lsKey]) {
-            try { return JSON.parse(ls[lsKey]); } catch (e) { return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []); }
+            try { return JSON.parse(ls[lsKey]); } catch (e) { return  (key === 'selectedTestSetupId' ? null : []); }
         }
-        return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []);
+        return key === (key === 'selectedTestSetupId' ? null : []);
     };
 
     // Lazy initialization for all state variables from per-project localStorage
     const [studies, setStudies] = useState(() => loadFromLocalStorage(projectKey('studies'), getDefaultValue('studies', currentProjectId !== DEFAULT_PROJECT_ID)));
-    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage(projectKey('investigations'), initialFormState));
+    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage(projectKey('investigations'), getDefaultValue('investigations', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [contacts, setContacts] = useState(() => loadFromLocalStorage(projectKey('contacts'), getDefaultValue('contacts', currentProjectId !== DEFAULT_PROJECT_ID)));
     // Test setups are global and shared across all projects (not per-project)
     const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', getDefaultValue('testSetups', false)));
@@ -188,12 +182,12 @@ export const GlobalDataProvider = ({ children }) => {
             const baselineLS = isaProjectExample.localStorage;
             
             const getResetValue = (key) => {
-                if (!isExampleProject) return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []);
+                if (!isExampleProject) return (key === 'selectedTestSetupId' ? null : []);
                 const lsKey = `globalAppData_default_${key}`;
                 if (baselineLS[lsKey]) {
-                    try { return JSON.parse(baselineLS[lsKey]); } catch (e) { return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []); }
+                    try { return JSON.parse(baselineLS[lsKey]); } catch (e) { return (key === 'selectedTestSetupId' ? null : []); }
                 }
-                return key === 'investigations' ? initialFormState : (key === 'selectedTestSetupId' ? null : []);
+                return (key === 'selectedTestSetupId' ? null : []);
             };
 
             // Write the baseline data into per-project localStorage keys
@@ -293,7 +287,7 @@ export const GlobalDataProvider = ({ children }) => {
             const getSwitchDefault = (key) => getDefaultValue(key, !isExampleProject);
             
             setStudies(loadFromLocalStorage(`globalAppData_${id}_studies`, getSwitchDefault('studies')));
-            setInvestigations(loadFromLocalStorage(`globalAppData_${id}_investigations`, initialFormState));
+            setInvestigations(loadFromLocalStorage(`globalAppData_${id}_investigations`, getSwitchDefault('investigations')));
             setContacts(loadFromLocalStorage(`globalAppData_${id}_contacts`, getSwitchDefault('contacts')));
                 // testSetups are global; do not replace them when switching projects.
                 // keep existing testSetups in memory
