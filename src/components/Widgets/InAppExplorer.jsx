@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TooltipButton from './TooltipButton';
-import DatasetPicker from './DatasetPicker';
 import { Folder } from 'lucide-react';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
@@ -55,7 +54,6 @@ const InAppExplorer = ({ onClose, onSelect }) => {
   const currentNode = findNode(tree, currentPath);
   const nodesToShow = currentNode?.children || [];
   const hasItems = Array.isArray(tree) && tree.length > 0;
-  const datasetSlideName = 'Root Folder Selection';
 
   function enterFolder(relPath) {
     (async () => {
@@ -244,11 +242,10 @@ const InAppExplorer = ({ onClose, onSelect }) => {
               <div className="flex items-center justify-center mb-3">
                 <Folder className="w-12 h-12 text-gray-300" aria-hidden />
               </div>
-              <p className="text-lg font-semibold text-gray-800">No dataset defined</p>
-              <p className="mt-2 text-sm text-gray-600 max-w-[480px]">There are no indexed files to show. Index a dataset now to enable file browsing and assignment.</p>
-              <div className="mt-4 flex justify-center">
-                <DatasetPicker />
-              </div>
+              <p className="text-lg font-semibold text-gray-800">No dataset indexed</p>
+              <p className="mt-2 text-sm text-gray-600 max-w-[480px]">
+                There are no indexed files to show. Go to the project settings to index a dataset folder containing your measurement files.
+              </p>
             </div>
           </div>
         ) : (

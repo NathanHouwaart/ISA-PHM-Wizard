@@ -1,4 +1,5 @@
 import React, { forwardRef, useEffect, useMemo, useState, useCallback } from 'react'
+import { Layers } from 'lucide-react';
 
 // Import hooks
 import useVariables from '../../hooks/useVariables';
@@ -14,6 +15,7 @@ import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useMappingsController from '../../hooks/useMappingsController';
+import WarningBanner from '../Widgets/WarningBanner';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
@@ -49,8 +51,12 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
         setScreenWidth,
         setStudyVariables,
         studyToStudyVariableMapping,
-        setStudyToStudyVariableMapping
+        setStudyToStudyVariableMapping,
+        selectedTestSetupId,
+        testSetups
     } = useGlobalDataContext();
+
+    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
     // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
@@ -176,6 +182,18 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                         { id: 'grid-view', label: 'Grid View', tooltip: 'View study variables in a grid format for better data management' }
                     ]}
                 />
+
+                {/* Warning banners */}
+                {!selectedTestSetupId && (
+                    <WarningBanner type="warning" icon={Layers}>
+                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
+                    </WarningBanner>
+                )}
+                {selectedTestSetupId && studies.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No studies available.</strong> You must create studies in order to map variables to them. Go to the Studies slide to add studies to your project.
+                    </WarningBanner>
+                )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                         <EntityMappingPanel

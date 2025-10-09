@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Layers } from 'lucide-react';
 
 // Import hooks
 import useResizeObserver from '../../hooks/useResizeObserver';
@@ -11,6 +12,7 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import WarningBanner from '../Widgets/WarningBanner';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
@@ -43,6 +45,10 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+
+    const sensors = Array.isArray(selectedTestSetup?.sensors)
+        ? selectedTestSetup.sensors
+        : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
 
     const mappingsController = useMappingsController(
         'studyToAssayMapping',
@@ -117,6 +123,18 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         { id: 'grid-view', label: 'Grid View', tooltip: 'View measurements in a grid format for better data management' }
                     ]}
                 />
+
+                {/* Warning banners */}
+                {!selectedTestSetupId && (
+                    <WarningBanner type="warning" icon={Layers}>
+                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
+                    </WarningBanner>
+                )}
+                {selectedTestSetupId && sensors.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to generate assay outputs. Add sensors to your test setup or select a different one.
+                    </WarningBanner>
+                )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                     

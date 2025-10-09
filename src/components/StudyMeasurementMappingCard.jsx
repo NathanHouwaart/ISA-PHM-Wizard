@@ -1,6 +1,6 @@
 
 
-import { Edit2, PlusCircleIcon, Trash2 } from 'lucide-react';
+import { Edit2, PlusCircleIcon, Trash2, Layers } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
@@ -61,10 +61,10 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg h-full">
-                    <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500"></PlusCircleIcon>
-                    <p>No test setup selected</p>
-                    <p>Go to the 'Test-Setup' slide (5) and select a test-setup</p>
+                <div className="h-full w-full flex flex-col items-center justify-center text-gray-500 text-lg">
+                    <Layers className="w-16 h-16 mb-4 text-gray-500" />
+                    <p className="text-xl font-semibold">No test setup selected</p>
+                    <p>Go to the project settings (icon with three layers) and select a test setup for your project</p>
                 </div>
             )}
         </div>

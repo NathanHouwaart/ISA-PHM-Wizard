@@ -22,7 +22,10 @@ export default function FilePickerPlugin({ api = {} }) {
   const fileInputRef = useRef(null);
   const selectionSnapshotRef = useRef(null);
   const filesRef = useRef(null);
-  const { openExplorer } = useGlobalDataContext();
+  const { openExplorer, selectedDataset } = useGlobalDataContext();
+  
+  // Disable button if no dataset is indexed
+  const isDisabled = !selectedDataset;
 
   const snapshotSelectionBeforePicker = useCallback(async () => {
     try {
@@ -95,8 +98,13 @@ export default function FilePickerPlugin({ api = {} }) {
     <div className="file-assign-plugin inline-flex items-center">
       <TooltipButton
         type="button"
+        disabled={isDisabled}
         onClick={async (e) => {
           e?.preventDefault?.();
+          
+          // Don't proceed if disabled
+          if (isDisabled) return;
+          
           try {
             const snap = await snapshotSelectionBeforePicker();
             if (snap) selectionSnapshotRef.current = { range: snap };
@@ -126,8 +134,12 @@ export default function FilePickerPlugin({ api = {} }) {
             selectionSnapshotRef.current = null;
           }
         }}
-        className={`px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100`}
-        tooltipText="Assign files to current selection"
+        className={`px-3 py-1 text-sm rounded border ${
+          isDisabled 
+            ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed' 
+            : 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+        }`}
+        tooltipText={isDisabled ? "No dataset indexed - index a dataset in project settings first" : "Assign files to current selection"}
       >
         📁 Assign files
       </TooltipButton>
