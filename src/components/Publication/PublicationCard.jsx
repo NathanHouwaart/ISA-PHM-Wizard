@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen, Mail } from "lucide-react";
+import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen, Mail, Link, BookOpen } from "lucide-react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
 import { formatContactName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
@@ -39,55 +39,66 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
                         <div className="mt-1 text-sm text-gray-500 space-y-2">
                             {contactDetails.length > 0 ? (
                                 <>
-                                    <Paragraph className="flex items-center gap-2 text-gray-600">
-                                        <UserPen className="w-4 h-4 text-gray-500" />
-                                        <span className="font-semibold text-gray-700">Author contributions</span>
-                                    </Paragraph>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {contactDetails.map((contact, index) => (
-                                            <div
-                                                key={contact.id}
-                                                className="w-full flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700"
-                                            >
-                                                <span className="font-semibold truncate">
-                                                    {index + 1}. {formatContactName(contact)}
-                                                </span>
-                                                {contact.isCorresponding && (
-                                                    <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1">
-                                                        <Mail className="w-3 h-3" />
-                                                        Corresponding
-                                                    </span>
-                                                )}
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-50 text-gray-600">
+                                            <UserPen className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className='text-xs font-bold text-gray-700'>Author contributions</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                                {contactDetails.map((contact, index) => (
+                                                    <div
+                                                        key={contact.id}
+                                                        className="w-full flex items-center gap-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                                                    >
+                                                        <span className="font-semibold truncate">
+                                                            {index + 1}. {formatContactName(contact)}
+                                                        </span>
+                                                        {contact.isCorresponding && (
+                                                            <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1">
+                                                                <Mail className="w-3 h-3" />
+                                                                Corresponding
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
                                 </>
                             ) : (
                                 <Paragraph className="text-gray-500 text-sm">No contact listed</Paragraph>
                             )}
                         </div>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                            <div className="flex items-center space-x-1">
-                                <p className='font-bold'>DOI - </p>
-                                <span>{
-                                    publication.doi ? (
-                                        <p className="text-blue-600 text-sm hover:underline">
-                                            <a href={`https://doi.org/${publication.doi}`} target="_blank" rel="noopener noreferrer">
-                                                {publication.doi}
-                                            </a>
-                                        </p>) :
-                                        "not provided"}
-                                </span>
+                        <div className="mt-3 text-sm text-gray-500 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-50 text-gray-600">
+                                    <Link className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className='text-xs font-bold text-gray-700'>DOI</p>
+                                    {publication.doi ? (
+                                        <a className="text-blue-600 text-sm hover:underline" href={`https://doi.org/${publication.doi}`} target="_blank" rel="noopener noreferrer">
+                                            {publication.doi}
+                                        </a>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">not provided</p>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-1">
-                                <p className='font-bold'>Publication Satus - </p>
-                                <span>{
-                                    publication.publicationStatus ? (
-                                        <p>
-                                            {publication.publicationStatus}
-                                        </p>) :
-                                        "not provided"}
-                                </span>
+
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 flex items-center justify-center rounded-md bg-gray-50 text-gray-600">
+                                    <BookOpen className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className='text-xs font-bold text-gray-700'>Publication status</p>
+                                    {publication.publicationStatus ? (
+                                        <p className="text-sm text-gray-700">{publication.publicationStatus}</p>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">not provided</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
