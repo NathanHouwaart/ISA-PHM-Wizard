@@ -227,7 +227,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
           const summary = `${characteristic.value || 'No value'} ${characteristic.unit}`;
 
           return (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div key={characteristic.id ?? `characteristic-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => toggleExpanded(index)}
@@ -503,7 +503,7 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
           const isExpanded = expandedSensors.has(index);
 
           return (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div key={sensor.id ?? `sensor-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => toggleSensor(index)}

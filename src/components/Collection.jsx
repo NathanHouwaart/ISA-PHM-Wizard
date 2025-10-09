@@ -123,31 +123,32 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     let emptyStateSubtitle = 'Get started by adding your first item.';
     let emptyStateAddButtonText = 'Add First Item';
 
-    children.forEach(child => {
-        if (isValidElement(child)) {
-            switch (child.type) {
-                case CollectionTitle:
-                    title = child.props.children;
-                    break;
-                case CollectionSubtitle:
-                    subtitle = child.props.children;
-                    break;
-                case CollectionAddButtonText:
-                    addButtonText = child.props.children;
-                    addButtonTooltip = child.props.children + ' to the collection';
-                    break;
-                case CollectionEmptyStateTitle:
-                    emptyStateTitle = child.props.children;
-                    break;
-                case CollectionEmptyStateSubtitle:
-                    emptyStateSubtitle = child.props.children;
-                    break;
-                case CollectionEmptyStateAddButtonText:
-                    emptyStateAddButtonText = child.props.children;
-                    break;
-                default:
-                    break;
-            }
+    React.Children.forEach(children, (child) => {
+        if (!isValidElement(child)) {
+            return;
+        }
+        switch (child.type) {
+            case CollectionTitle:
+                title = child.props.children;
+                break;
+            case CollectionSubtitle:
+                subtitle = child.props.children;
+                break;
+            case CollectionAddButtonText:
+                addButtonText = child.props.children;
+                addButtonTooltip = `${child.props.children} to the collection`;
+                break;
+            case CollectionEmptyStateTitle:
+                emptyStateTitle = child.props.children;
+                break;
+            case CollectionEmptyStateSubtitle:
+                emptyStateSubtitle = child.props.children;
+                break;
+            case CollectionEmptyStateAddButtonText:
+                emptyStateAddButtonText = child.props.children;
+                break;
+            default:
+                break;
         }
     });
 

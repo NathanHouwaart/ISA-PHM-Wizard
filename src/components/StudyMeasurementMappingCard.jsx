@@ -1,9 +1,9 @@
-
-
-import { Edit2, PlusCircleIcon, Trash2, Layers } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
+import { Layers } from 'lucide-react';
 import FormField from './Form/FormField';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import Heading3 from './Typography/Heading3';
+import Paragraph from './Typography/Paragraph';
 
 
 export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter }) {
@@ -20,12 +20,14 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
                     {/* Variable Header, Edit/Remove Buttons */}
                     <div className='mb-4 border-b pb-4'>
                         <div className="flex justify-between items-start ">
-                            <h2 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
+                            <Heading3 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
                                 {item.name}
-                            </h2>
+                            </Heading3>
 
                         </div>
-                        <p className="text-md text-gray-700 mt-2 italic">{item.description || "no description available"}</p>
+                        <Paragraph className="text-md text-gray-700 mt-2 italic">
+                            {item.description || "no description available"}
+                        </Paragraph>
                     </div>
                     {/* Studies Grid - this is where the dynamic inputs are */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -43,7 +45,7 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
 
                             return (
                                 <div
-                                    key={index}
+                                    key={sensor?.id ?? `sensor-${index}`}
                                     className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                                 >
                                     <FormField
@@ -63,8 +65,12 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
             ) : (
                 <div className="h-full w-full flex flex-col items-center justify-center text-gray-500 text-lg">
                     <Layers className="w-16 h-16 mb-4 text-gray-500" />
-                    <p className="text-xl font-semibold">No test setup selected</p>
-                    <p>Go to the project settings (icon with three layers) and select a test setup for your project</p>
+                    <Heading3 className="text-xl font-semibold text-gray-700">
+                        No test setup selected
+                    </Heading3>
+                    <Paragraph className="text-center mt-1">
+                        Go to the project settings (icon with three layers) and select a test setup for your project
+                    </Paragraph>
                 </div>
             )}
         </div>

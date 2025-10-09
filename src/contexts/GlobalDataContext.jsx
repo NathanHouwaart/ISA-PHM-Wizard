@@ -61,7 +61,7 @@ export const GlobalDataProvider = ({ children }) => {
         if (ls[lsKey]) {
             try { return JSON.parse(ls[lsKey]); } catch (e) { return  (key === 'selectedTestSetupId' ? null : []); }
         }
-        return key === (key === 'selectedTestSetupId' ? null : []);
+        return key === 'selectedTestSetupId' ? null : [];
     };
 
     // Lazy initialization for all state variables from per-project localStorage
