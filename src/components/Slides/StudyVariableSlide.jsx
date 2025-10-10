@@ -22,6 +22,7 @@ import { Template } from '@revolist/react-datagrid';
 
 import DataGrid from '../DataGrid/DataGrid';
 import { GrayCell, BoldCell, DeleteRowCellTemplate} from '../DataGrid/CellTemplates';
+import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
@@ -207,6 +208,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                         {...studyVariableGridConfig}
                         showControls={true}
                         plugins={plugin}
+                        actionPlugins={[FilePickerPlugin]}
                         showDebug={false}
                         onDataChange={mappingsController.setMappings}
                         onRowDataChange={handleDataGridRowDataChange}
