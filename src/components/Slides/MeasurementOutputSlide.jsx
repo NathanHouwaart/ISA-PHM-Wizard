@@ -103,8 +103,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         ]), [])
     };
 
-    // mappingsController already created above
-
     return (
         <div ref={combinedRef} >
 
