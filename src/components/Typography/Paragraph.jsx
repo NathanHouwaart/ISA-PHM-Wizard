@@ -7,7 +7,7 @@ const SlidePageSubtitleClassName  = "mb-7 pb-7 border-b border-gray-300 px-7";
 const CardParagraphClassName      = "text-gray-600";
 
 /* This component is used to render paragraphs in slides */
-const Paragraph = ({ children, className, ...props }) => {
+export const Paragraph = ({ children, className, ...props }) => {
   return (
     <p className={cn(paragraphClassName, className)} {...props}>
         {children}

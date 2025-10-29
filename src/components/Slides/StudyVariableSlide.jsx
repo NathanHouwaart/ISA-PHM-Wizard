@@ -1,4 +1,5 @@
 import React, { forwardRef, useEffect, useMemo, useState, useCallback } from 'react'
+import { Layers } from 'lucide-react';
 
 // Import hooks
 import useVariables from '../../hooks/useVariables';
@@ -14,15 +15,14 @@ import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useMappingsController from '../../hooks/useMappingsController';
+import WarningBanner from '../Widgets/WarningBanner';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
 
 import DataGrid from '../DataGrid/DataGrid';
 import { GrayCell, BoldCell, DeleteRowCellTemplate} from '../DataGrid/CellTemplates';
-
-// Import content data
-import studyVariableSlideContent from '../../data/StudyVariableSlideContent.json'; // Assuming you have a JSON file for the content
+import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 
 import SelectTypePlugin from '@revolist/revogrid-column-select'
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
@@ -49,8 +49,12 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
         setScreenWidth,
         setStudyVariables,
         studyToStudyVariableMapping,
-        setStudyToStudyVariableMapping
+        setStudyToStudyVariableMapping,
+        selectedTestSetupId,
+        testSetups
     } = useGlobalDataContext();
+
+    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
     // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
 
@@ -177,6 +181,18 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                     ]}
                 />
 
+                {/* Warning banners */}
+                {!selectedTestSetupId && (
+                    <WarningBanner type="warning" icon={Layers}>
+                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
+                    </WarningBanner>
+                )}
+                {selectedTestSetupId && studies.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No studies available.</strong> You must create studies in order to map variables to them. Go to the Studies slide to add studies to your project.
+                    </WarningBanner>
+                )}
+
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                         <EntityMappingPanel
                             minHeight={WINDOW_HEIGHT}
@@ -192,6 +208,7 @@ export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pag
                         {...studyVariableGridConfig}
                         showControls={true}
                         plugins={plugin}
+                        actionPlugins={[FilePickerPlugin]}
                         showDebug={false}
                         onDataChange={mappingsController.setMappings}
                         onRowDataChange={handleDataGridRowDataChange}

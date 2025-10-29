@@ -41,7 +41,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
                     <CollectionSubtitle>Add, Remove And Edit Contacts</CollectionSubtitle>
                     <CollectionAddButtonText>Add Contact</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Contacts Found</CollectionEmptyStateTitle>
-                    <CollectionEmptyStateSubtitle>Click below to add your first Contact</CollectionEmptyStateSubtitle>
+                    <CollectionEmptyStateSubtitle>Get started by adding your first Contact</CollectionEmptyStateSubtitle>
                     <CollectionEmptyStateAddButtonText>Add Contact Now</CollectionEmptyStateAddButtonText>
                 </Collection>
             </div>

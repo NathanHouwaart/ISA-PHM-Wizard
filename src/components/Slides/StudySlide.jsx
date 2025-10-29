@@ -163,7 +163,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         <CollectionSubtitle>View, add and edit Studies</CollectionSubtitle>
                         <CollectionAddButtonText>Add Study</CollectionAddButtonText>
                         <CollectionEmptyStateTitle>No Studies Found</CollectionEmptyStateTitle>
-                        <CollectionEmptyStateSubtitle>Click below to add your first Study</CollectionEmptyStateSubtitle>
+                        <CollectionEmptyStateSubtitle>Get started by adding your first Study</CollectionEmptyStateSubtitle>
                         <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
                     </Collection>
                 </TabPanel>

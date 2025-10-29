@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Fuse from 'fuse.js';
 
 import { getLicenses } from '../../../services/api';
@@ -31,6 +32,7 @@ const LicenseField = ({
     const inputRef = useRef(null);
     const closeTimeoutRef = useRef(null);
     const skipNextSuggestionsRef = useRef(false);
+    const [dropdownStyle, setDropdownStyle] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -97,6 +99,36 @@ const LicenseField = ({
         const matches = updateSuggestions(value ?? '');
         setIsDropdownVisible(matches.length > 0);
     }, [isFocused, updateSuggestions, value]);
+
+    // Position the dropdown using a portal so it isn't clipped by parent overflow
+    useEffect(() => {
+        if (!isDropdownVisible) {
+            setDropdownStyle(null);
+            return;
+        }
+
+        const updatePosition = () => {
+            const el = inputRef.current;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            setDropdownStyle({
+                position: 'absolute',
+                top: `${rect.bottom + window.scrollY}px`,
+                left: `${rect.left + window.scrollX}px`,
+                width: `${rect.width}px`,
+                zIndex: 9999,
+            });
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        window.addEventListener('scroll', updatePosition, true);
+
+        return () => {
+            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
+        };
+    }, [isDropdownVisible]);
 
     const handleInputChange = (event) => {
         onChange?.(event);
@@ -187,8 +219,8 @@ const LicenseField = ({
                 {...rest}
             />
 
-            {isDropdownVisible && suggestions.length > 0 && (
-                <ul className="absolute z-20 mt-2 w-full max-h-60 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            {isDropdownVisible && suggestions.length > 0 && dropdownStyle && createPortal(
+                <ul style={dropdownStyle} className="max-h-60 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                     {suggestions.map((license) => (
                         <li
                             key={license.licenseId ?? license.name}
@@ -202,7 +234,8 @@ const LicenseField = ({
                             )}
                         </li>
                     ))}
-                </ul>
+                </ul>,
+                document.body
             )}
         </div>
     );

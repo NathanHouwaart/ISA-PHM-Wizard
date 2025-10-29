@@ -1,7 +1,7 @@
 
 
 import React, { useMemo, useState } from 'react'
-import { Plus, PlusCircleIcon } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import useMappingsController from '../hooks/useMappingsController';
 import Paragraph from './Typography/Paragraph';
 import Heading3 from './Typography/Heading3';
@@ -85,27 +85,9 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                     }
                 </div>
             ) : (
-                // Context-aware empty state: test-setup, measurement protocols, processing protocols
-                (() => {
-                    const key = (name || '').toLowerCase();
-                    let title = 'No test setup selected';
-                    let description = "Go to the 'Test-Setup' slide (5) and select a test-setup";
-                    if (key.includes('measurement')) {
-                        title = 'No measurement protocols yet';
-                        description = 'Get started by adding a new protocol.';
-                    } else if (key.includes('processing')) {
-                        title = 'No processing protocols yet';
-                        description = 'Get started by adding a new protocol.';
-                    }
-
-                    return (
-                        <div className="flex flex-col items-center justify-center flex-grow text-gray-500 text-lg min-h-[220px]">
-                            <PlusCircleIcon className="w-16 h-16 mb-4 text-gray-500" />
-                            <Heading3 className="mb-2">{title}</Heading3>
-                            <Paragraph className="text-center max-w-md">{description}</Paragraph>
-                        </div>
-                    );
-                })()
+                <div className="h-full w-full flex items-center justify-center bg-white border-2 border-dashed border-gray-200 rounded-xl min-h-[220px]">
+                    <Paragraph className="text-gray-400 text-sm">Select an item from the list</Paragraph>
+                </div>
             )}
         </div>
     )

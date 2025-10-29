@@ -281,7 +281,7 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
                     <FormField
                         name="affiliations"
                         label="Affiliations"
-                        placeholder="Add an affiliation and press Enter or comma"
+                        placeholder="Add an affiliation and press Enter"
                         value={formData.affiliations}
                         onAddTag={handleAddAffiliation}
                         onRemoveTag={handleRemoveAffiliation}

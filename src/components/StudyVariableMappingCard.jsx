@@ -4,6 +4,8 @@ import FormField from './Form/FormField';
 import EditEntityModal from './EditEntityModal';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
+import Heading3 from './Typography/Heading3';
+import Paragraph from './Typography/Paragraph';
 
 export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled }) {
 
@@ -29,9 +31,9 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
         <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
             {/* Variable Header, Edit/Remove Buttons */}
             <div className="flex justify-between items-start mb-4 border-b pb-4">
-                <h2 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
+                <Heading3 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
                     {item.name}
-                </h2>
+                </Heading3>
                 <div className="flex space-x-3">
                     <button
                         onClick={() => setIsEditModalOpen(true)}
@@ -51,7 +53,9 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                     </button>
                 </div>
             </div>
-            <p className="text-md text-gray-700 mb-4">{item.description}</p>
+            <Paragraph className="text-md text-gray-700 mb-4">
+                {item.description}
+            </Paragraph>
             <div className="flex justify-between items-center text-sm font-medium text-gray-600 bg-gray-50 px-4 py-2 rounded-md mb-6 border border-gray-200">
                 <span>Type: <span className="font-semibold text-gray-800">{item.type}</span></span>
                 {item.unit && <span>Unit: <span className="font-semibold text-gray-800">{item.unit}</span></span>}
@@ -59,18 +63,24 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
 
             {/* mappings Grid - this is where the dynamic inputs are */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredMappings.map((item, index) => {
+                {filteredMappings.map((mapping, index) => {
                     return (
                         <div
-                            key={index}
+                            key={`${mapping.studyId}-${mapping.studyVariableId}`}
                             className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                         >
                             <FormField
                                 label={`Study S${(index + 1).toString().padStart(2, '0')}`}
                                 name={`Study S${(index + 1).toString().padStart(2, '0')}`}
-                                value={item ? item.value : ''} // Ensure value is not undefined
+                                value={mapping ? mapping.value : ''} // Ensure value is not undefined
                                 commitOnBlur={true}
-                                onChange={(e) => handleInputChange(itemIndex, { studyVariableId: item.studyVariableId, studyId: item.studyId }, e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        itemIndex,
+                                        { studyVariableId: mapping.studyVariableId, studyId: mapping.studyId },
+                                        e.target.value
+                                    )
+                                }
                                 placeholder={"Enter value"}
                             />
                         </div>
