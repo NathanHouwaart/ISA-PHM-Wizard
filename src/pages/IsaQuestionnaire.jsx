@@ -233,11 +233,13 @@ export const IsaQuestionnaire = () => {
         </div>
 
         <div className="flex items-center justify-center space-x-4 mx-5">
+          {/* Previous: always rendered but invisible/disabled on first page to reserve space */}
           <TooltipButton
             onClick={handlePrevious}
-            tooltipText="Go to previous page"
-            disabled={isRemountingSlides}
-            className={`text-center text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+            tooltipText={currentPage > 0 ? "Go to previous page" : undefined}
+            disabled={isRemountingSlides || currentPage === 0}
+            aria-hidden={currentPage === 0}
+            className={`text-center text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${currentPage === 0 ? 'invisible' : ''}`}
           >
             <span className='w-30'>&lt; Previous</span>
           </TooltipButton>
@@ -254,16 +256,18 @@ export const IsaQuestionnaire = () => {
             )}
             disabled={!isLastPage(currentPage) || isSubmitting || isRemountingSlides}
           >
-            <span className='w-md'>Submit Form</span>
+            <span className='w-md'>Convert to ISA-PHM</span>
           </TooltipButton>
 
+          {/* Next: always rendered but invisible/disabled on last page to reserve space */}
           <TooltipButton
             onClick={handleForward}
-            tooltipText="Go to next page"
-            disabled={isRemountingSlides}
-            className={`text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+            tooltipText={!isLastPage(currentPage) ? "Go to next page" : undefined}
+            disabled={isRemountingSlides || isLastPage(currentPage)}
+            aria-hidden={isLastPage(currentPage)}
+            className={`text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${isLastPage(currentPage) ? 'invisible' : ''}`}
           >
-            <span className='w-30'>Next &gt;</span>
+            <span className='w-30'>{currentPage === 0 ? 'Start' : 'Next >'}</span>
           </TooltipButton>
         </div>
       </div>
