@@ -122,11 +122,12 @@ const LicenseField = ({
 
         updatePosition();
         window.addEventListener('resize', updatePosition);
-        window.addEventListener('scroll', updatePosition, true);
+        // Mark scroll listener as passive to avoid blocking the main thread on touch/scroll
+        window.addEventListener('scroll', updatePosition, { passive: true, capture: true });
 
         return () => {
             window.removeEventListener('resize', updatePosition);
-            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('scroll', updatePosition, { passive: true, capture: true });
         };
     }, [isDropdownVisible]);
 
