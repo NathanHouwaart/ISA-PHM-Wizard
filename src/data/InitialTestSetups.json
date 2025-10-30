@@ -3,6 +3,8 @@
         "name": "Wentelteef",
         "location": "Hogeschool van Amsterdam (HvA)",
         "description": "Hydraulic testing equipment with dual pressure monitoring system",
+        "version": 1,
+        "lastModified": 1696550400000,
         "characteristics": [
             {
                 "id": "3527339b-14c1-451d-886c-69a50962c656",
@@ -181,6 +183,8 @@
         "experimentPreparationProtocolName": "Experiment Preparation Protocol",
         "testSpecimenName": "Techpoort test-setup",
         "description": "A brief description",
+        "version": 1,
+        "lastModified": 1696550400000,
         "characteristics": [
             {
                 "id": "b375a4bf-7614-4f39-a54f-46c22e827865",

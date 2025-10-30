@@ -1,12 +1,35 @@
-import React from 'react'
+import React from 'react';
 
-import { HelpCircle } from 'lucide-react'
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip'
+import { HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip';
 import { cn } from '../../utils/utils';
 
-export function IconToolTipButton( {icon, onClick, tooltipText, className} ) {
-
+export const IconToolTipButton = ({
+    icon,
+    onClick,
+    tooltipText,
+    className,
+    disabled = false,
+    type = 'button',
+    size = 'md', // 'md' or 'sm'
+    'data-testid': dataTestId,
+}) => {
     const Icon = icon || HelpCircle;
+
+    const sizeMap = {
+        md: {
+            btn: 'h-12 w-12',
+            icon: 'h-7 w-7',
+            padding: 'p-0',
+        },
+        sm: {
+            btn: 'h-8 w-8',
+            icon: 'h-4 w-4',
+            padding: 'p-0',
+        },
+    };
+
+    const chosen = sizeMap[size] || sizeMap.md;
 
     return (
         <div>
@@ -14,22 +37,31 @@ export function IconToolTipButton( {icon, onClick, tooltipText, className} ) {
                 <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
                         <button
-                            type="button"
+                            type={type}
                             className={cn(
-                                "cursor-pointer h-12 w-12 flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200",
-                                className)}
-                            onClick={onClick}
+                                'cursor-pointer flex items-center justify-center group hover:bg-gray-100 rounded-full transition-colors duration-200',
+                                chosen.btn,
+                                chosen.padding,
+                                disabled ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : '',
+                                className
+                            )}
+                            onClick={disabled ? undefined : onClick}
+                            data-testid={dataTestId}
+                            disabled={disabled}
                         >
-                            <Icon className="h-7 w-7 text-gray-500 group-hover:text-blue-500 transition-colors duration-200" />
+                            <Icon className={cn(
+                                chosen.icon + ' text-gray-500 transition-colors duration-200',
+                                disabled ? '' : 'group-hover:text-blue-500'
+                            )} />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p className='max-w-sm'>{tooltipText}</p>
+                        <p className="max-w-sm">{tooltipText}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </div>
-    )
-}
+    );
+};
 
-export default IconToolTipButton
+export default IconToolTipButton;

@@ -41,7 +41,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
                     <CollectionSubtitle>Add, Remove And Edit Publications</CollectionSubtitle>
                     <CollectionAddButtonText>Add Publication</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Publication Found</CollectionEmptyStateTitle>
-                    <CollectionEmptyStateSubtitle>Click below to add your first Publication</CollectionEmptyStateSubtitle>
+                    <CollectionEmptyStateSubtitle>Get started by adding your first Publication</CollectionEmptyStateSubtitle>
                     <CollectionEmptyStateAddButtonText>Add Publication Now</CollectionEmptyStateAddButtonText>
                 </Collection>
             </div>

@@ -3,8 +3,27 @@ import TooltipButton from './TooltipButton';
 import { Folder } from 'lucide-react';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
-export default function InAppExplorer() {
-  const { explorerOpen, resolveExplorer, selectedDataset, loadDatasetSubtree } = useGlobalDataContext();
+/**
+ * InAppExplorer - File browser overlay for selecting files from indexed dataset
+ * 
+ * Pure presentational component that follows the standard overlay pattern.
+ * Parent controls visibility and receives selection via onSelect callback.
+ * 
+ * @param {function} onClose - Called when user cancels (no selection)
+ * @param {function} onSelect - Called when user confirms selection (array of file objects)
+ * 
+ * Example:
+ * ```jsx
+ * {showExplorer && (
+ *   <InAppExplorer 
+ *     onClose={() => setShowExplorer(false)}
+ *     onSelect={(files) => handleFiles(files)}
+ *   />
+ * )}
+ * ```
+ */
+const InAppExplorer = ({ onClose, onSelect }) => {
+  const { selectedDataset, loadDatasetSubtree } = useGlobalDataContext();
 
   const [currentPath, setCurrentPath] = useState("");
   const [pathStack, setPathStack] = useState([]);
@@ -35,7 +54,6 @@ export default function InAppExplorer() {
   const currentNode = findNode(tree, currentPath);
   const nodesToShow = currentNode?.children || [];
   const hasItems = Array.isArray(tree) && tree.length > 0;
-  const datasetSlideName = 'Root Folder Selection';
 
   function enterFolder(relPath) {
     (async () => {
@@ -160,15 +178,14 @@ export default function InAppExplorer() {
     setDragBox(null);
   }
 
-  // close when explorerOpen toggles off
+  // Reset state when component unmounts
   useEffect(() => {
-    if (!explorerOpen) {
+    return () => {
       setSelectedFiles([]);
       setCurrentPath('');
-    }
-  }, [explorerOpen]);
-
-  if (!explorerOpen) return null;
+      setPathStack([]);
+    };
+  }, []);
 
   const rootName = selectedDataset?.rootName || 'Root';
 
@@ -201,17 +218,18 @@ export default function InAppExplorer() {
             <div className="inline-flex items-center px-3 py-1 rounded-md bg-indigo-50 text-indigo-700 font-medium">{selectedFiles.length}</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <TooltipButton tooltipText="Cancel and close without selecting" className="bg-gray-200 text-gray-800 hover:bg-gray-300" onClick={() => { try { resolveExplorer(null); } catch (e) {} }}>
+            <TooltipButton tooltipText="Cancel and close without selecting" className="bg-gray-200 text-gray-800 hover:bg-gray-300" onClick={onClose}>
               Cancel
             </TooltipButton>
             <TooltipButton tooltipText="Confirm selection and close" className="bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700" onClick={() => {
               if (!hasItems) {
-                try { resolveExplorer(null); } catch (e) {}
+                onClose();
                 return;
               }
               const fileLike = selectedFiles.map((rel) => ({ name: rel.split('/').pop(), webkitRelativePath: rel }));
               const prefixed = fileLike.map((f) => ({ ...f, webkitRelativePath: selectedDataset && selectedDataset.rootName ? `./${f.webkitRelativePath}` : f.webkitRelativePath }));
-              try { resolveExplorer(prefixed); } catch (e) {}
+              onSelect(prefixed);
+              onClose();
             }}>
               OK
             </TooltipButton>
@@ -224,8 +242,10 @@ export default function InAppExplorer() {
               <div className="flex items-center justify-center mb-3">
                 <Folder className="w-12 h-12 text-gray-300" aria-hidden />
               </div>
-              <p className="text-lg font-semibold text-gray-800">No dataset defined</p>
-              <p className="mt-2 text-sm text-gray-600 max-w-[480px]">There are no indexed files to show. Please index a dataset on the "{datasetSlideName}" slide before using the in-app explorer.</p>
+              <p className="text-lg font-semibold text-gray-800">No dataset indexed</p>
+              <p className="mt-2 text-sm text-gray-600 max-w-[480px]">
+                There are no indexed files to show. Go to the project settings to index a dataset folder containing your measurement files.
+              </p>
             </div>
           </div>
         ) : (
@@ -245,4 +265,6 @@ export default function InAppExplorer() {
       </div>
     </div>
   );
-}
+};
+
+export default InAppExplorer;

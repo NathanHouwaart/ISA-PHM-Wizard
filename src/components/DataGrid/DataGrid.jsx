@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle, useMemo, isValidElement, cloneElement } from 'react';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../../hooks/useDataGrid';
 import "./DataGrid.css";
+import TooltipButton from '../Widgets/TooltipButton';
 
 /**
  * Generic DataGrid component that handles any type of data with optional mapping functionality.
@@ -79,6 +80,9 @@ const DataGrid = forwardRef(({
         staticColumns,
         onRowDataChange // Pass the callback to the hook
     });
+
+    // Debug flag helper - when false all debug logging in this component is suppressed
+    const DBG = !!showDebug;
 
     // (removed) currentMappingsCount — was only used by debug UI which we removed
 
@@ -241,7 +245,7 @@ const DataGrid = forwardRef(({
     }, [hookRowData, updateRowDataBatch]);
 
     // Enhanced column definitions that preserve user-resized widths
-    const enhancedColumnDefs = React.useMemo(() => {
+    const enhancedColumnDefs = useMemo(() => {
         // Use the synchronous ref if available to avoid races when a resize event
         // just updated the ref but the state update hasn't propagated yet.
         const sizesMap = columnSizesRef.current || columnSizes;
@@ -303,26 +307,26 @@ const DataGrid = forwardRef(({
     // RevoGrid provides coordinates relative to column type (colPinStart, rgCol, colPinEnd)
     // but we need global coordinates for our flat columns array
     const translateRangeCoordinates = useCallback((range) => {
-        console.log('[DataGrid] translateRangeCoordinates input:', range);
+        if (DBG) console.log('[DataGrid] translateRangeCoordinates input:', range);
         
         // If no colType or coordinates, return as-is (may be already translated)
         if (!range || !range.colType || (range.x === undefined && range.y === undefined)) {
-            console.log('[DataGrid] No colType or coordinates, returning range as-is');
+            if (DBG) console.log('[DataGrid] No colType or coordinates, returning range as-is');
             return range;
         }
         
         const flatCols = getFlatColumns();
-        console.log('[DataGrid] flatCols:', flatCols.map(c => ({ prop: c.prop, pin: c.pin })));
+    if (DBG) console.log('[DataGrid] flatCols:', flatCols.map(c => ({ prop: c.prop, pin: c.pin })));
         
         let offset = 0;
         const colTypeOrder = ['colPinStart', 'rgCol', 'colPinEnd'];
         const currentTypeIndex = colTypeOrder.indexOf(range.colType);
         
-        console.log('[DataGrid] colType:', range.colType, 'currentTypeIndex:', currentTypeIndex);
+    if (DBG) console.log('[DataGrid] colType:', range.colType, 'currentTypeIndex:', currentTypeIndex);
         
         // If colType not found in order, return as-is
         if (currentTypeIndex < 0) {
-            console.log('[DataGrid] colType not in standard order, returning as-is');
+            if (DBG) console.log('[DataGrid] colType not in standard order, returning as-is');
             return range;
         }
         
@@ -332,7 +336,7 @@ const DataGrid = forwardRef(({
             const colsOfType = flatCols.filter(col => 
                 colType === 'rgCol' ? !col.pin : col.pin === colType
             );
-            console.log('[DataGrid] colType', colType, 'has', colsOfType.length, 'columns');
+            if (DBG) console.log('[DataGrid] colType', colType, 'has', colsOfType.length, 'columns');
             offset += colsOfType.length;
         }
         
@@ -342,7 +346,7 @@ const DataGrid = forwardRef(({
             x1: range.x1 + offset
         };
         
-        console.log('[DataGrid] Translated coordinates:', {
+        if (DBG) console.log('[DataGrid] Translated coordinates:', {
             original: { x: range.x, x1: range.x1 },
             offset,
             translated: { x: translated.x, x1: translated.x1 }
@@ -363,10 +367,10 @@ const DataGrid = forwardRef(({
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
     
     // Keep a ref for internal logic that needs column definitions
-    const stableColumnDefs = React.useRef(enhancedColumnDefs);
-    const lastEnhancedColumnsRef = React.useRef(enhancedColumnDefs);
+    const stableColumnDefs = useRef(enhancedColumnDefs);
+    const lastEnhancedColumnsRef = useRef(enhancedColumnDefs);
 
-    React.useEffect(() => {
+    useEffect(() => {
         // Only update if the columns actually changed (deep comparison of structure and sizes)
         const columnsChanged = enhancedColumnDefs.length !== lastEnhancedColumnsRef.current.length ||
             enhancedColumnDefs.some((col, index) => {
@@ -438,11 +442,11 @@ const DataGrid = forwardRef(({
 
     const handleAfterEdit = useCallback((event) => {
         const detail = event.detail;
-        console.log('[DataGrid] handleAfterEdit event detail:', detail);
+        if (DBG) console.log('[DataGrid] handleAfterEdit event detail:', detail);
 
         // Handle range edits
         if (detail.newRange || detail.oldRange) {
-            console.log('[DataGrid] Processing range edit:', {
+            if (DBG) console.log('[DataGrid] Processing range edit:', {
                 newRange: detail.newRange,
                 oldRange: detail.oldRange,
                 data: detail.data
@@ -451,7 +455,7 @@ const DataGrid = forwardRef(({
             const { data, newRange } = detail;
 
             if (!data || !newRange) {
-                console.log('[DataGrid] Missing data or newRange, aborting');
+                if (DBG) console.log('[DataGrid] Missing data or newRange, aborting');
                 return;
             }
 
@@ -463,7 +467,7 @@ const DataGrid = forwardRef(({
             // Using translated coordinates with flattened columns array causes misalignment
             // because RevoGrid's coordinate system doesn't account for child columns in the same way.
             
-            console.log('[DataGrid] Processing range edit data directly by keys');
+            if (DBG) console.log('[DataGrid] Processing range edit data directly by keys');
 
             // Iterate through data by rowIndex, then by columnProp
             for (const [rowIndexStr, rowDataObj] of Object.entries(data)) {
@@ -471,7 +475,7 @@ const DataGrid = forwardRef(({
                 const row = getRowByIndex(rowIndex);
                 
                 if (!row) {
-                    console.log('[DataGrid] Row not found for index:', rowIndex);
+                    if (DBG) console.log('[DataGrid] Row not found for index:', rowIndex);
                     continue;
                 }
 
@@ -483,17 +487,17 @@ const DataGrid = forwardRef(({
                     const staticColumn = staticColumns.find(col => col.prop === columnProp);
                     const isEditable = isEditableColumn(columnProp);
 
-                    console.log(`[DataGrid] Range edit - column: ${columnProp}, isStatic: ${isStaticColumn}, isEditable: ${isEditable}, readonly: ${staticColumn?.readonly}`);
+                    if (DBG) console.log(`[DataGrid] Range edit - column: ${columnProp}, isStatic: ${isStaticColumn}, isEditable: ${isEditable}, readonly: ${staticColumn?.readonly}`);
 
                     // Skip readonly columns
                     if (staticColumn?.readonly) {
-                        console.log(`[DataGrid] Skipping ${columnProp} - readonly`);
+                        if (DBG) console.log(`[DataGrid] Skipping ${columnProp} - readonly`);
                         continue;
                     }
 
                     // Skip non-editable columns (must be either static OR editable)
                     if (!isEditable && !isStaticColumn) {
-                        console.log(`[DataGrid] Skipping ${columnProp} - not editable and not static`);
+                        if (DBG) console.log(`[DataGrid] Skipping ${columnProp} - not editable and not static`);
                         continue;
                     }
 
@@ -550,13 +554,13 @@ const DataGrid = forwardRef(({
             return;
         }
 
-        // Handle single cell edit
-        console.log('[DataGrid] Processing single cell edit');
+    // Handle single cell edit
+    if (DBG) console.log('[DataGrid] Processing single cell edit');
         const columnProp = detail.prop || detail.model?.prop || detail.column?.prop;
         let newValue = detail.val !== undefined ? detail.val : detail.value;
         const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
 
-        console.log('[DataGrid] Single cell edit details:', {
+        if (DBG) console.log('[DataGrid] Single cell edit details:', {
             columnProp,
             newValue,
             rowIndex,
@@ -570,7 +574,7 @@ const DataGrid = forwardRef(({
 
         const row = getRowByIndex(rowIndex);
         if (!row) {
-            console.log('[DataGrid] Row not found for index:', rowIndex);
+            if (DBG) console.log('[DataGrid] Row not found for index:', rowIndex);
             return;
         }
 
@@ -591,7 +595,7 @@ const DataGrid = forwardRef(({
 
     const handleBeforeRangeEdit = useCallback((event) => {
         const detail = event.detail;
-        console.log('[DataGrid] handleBeforeRangeEdit event detail:', detail);
+        if (DBG) console.log('[DataGrid] handleBeforeRangeEdit event detail:', detail);
         
         // IMPORTANT: Don't use coordinate translation here!
         // RevoGrid will provide the actual data with column props as keys in afterrangeedit
@@ -615,7 +619,7 @@ const DataGrid = forwardRef(({
 
     // Handle keyboard shortcuts
     const handleClearCell = useCallback(async () => {
-        console.log('[DataGrid] handleClearCell called');
+        if (DBG) console.log('[DataGrid] handleClearCell called');
         const gridElement = gridRef.current;
         if (!gridElement) {
             console.log('[DataGrid] No grid element found');
@@ -631,7 +635,7 @@ const DataGrid = forwardRef(({
                 if (selectedRange) {
                     // Translate coordinates if we have colType
                     const translatedRange = translateRangeCoordinates(selectedRange);
-                    console.log('[DataGrid] Translated range for clear:', translatedRange);
+                    if (DBG) console.log('[DataGrid] Translated range for clear:', translatedRange);
                     
                     const flatColumnDefs = getFlatColumns();
                     const updates = [];
@@ -702,7 +706,7 @@ const DataGrid = forwardRef(({
             }
 
             // Fallback to old DOM-based method if getSelectedRange is not available
-            const focusedCell = gridElement.querySelector('[data-rgrow][data-rgcol].focused') ||
+                const focusedCell = gridElement.querySelector('[data-rgrow][data-rgcol].focused') ||
                 gridElement.querySelector('[data-rgrow][data-rgcol][tabindex="0"]') ||
                 gridElement.querySelector('[data-rgrow][data-rgcol].selected');
 
@@ -710,7 +714,7 @@ const DataGrid = forwardRef(({
                 const rgRow = parseInt(focusedCell.getAttribute('data-rgrow') || '0', 10);
                 const rgCol = parseInt(focusedCell.getAttribute('data-rgcol') || '0', 10);
                 
-                console.log('[DataGrid] Found focused cell (fallback):', { rgRow, rgCol });
+                if (DBG) console.log('[DataGrid] Found focused cell (fallback):', { rgRow, rgCol });
 
                 const flatColumnDefs = getFlatColumns();
                 const column = flatColumnDefs[rgCol];
@@ -730,7 +734,7 @@ const DataGrid = forwardRef(({
                 }
             }
         } catch (error) {
-            console.error('Error clearing cell:', error);
+            if (DBG) console.error('Error clearing cell:', error);
         }
 
         return false;
@@ -778,14 +782,14 @@ const DataGrid = forwardRef(({
     // Handle paste region event - let RevoGrid handle the paste operation internally
     // We intercept the clipboardrangepaste event which provides proper coordinate information
     const handlePasteRegion = useCallback((event) => {
-        console.log('[DataGrid] handlePasteRegion - letting RevoGrid handle paste internally:', event.detail);
+        if (DBG) console.log('[DataGrid] handlePasteRegion - letting RevoGrid handle paste internally:', event.detail);
         // RevoGrid's clipboard system will trigger the clipboardrangepaste event with proper coordinates
         // We don't need to manually handle paste here, just let it flow through RevoGrid's system
     }, []);
 
     // Handle clipboard range paste event - this is the proper RevoGrid paste event with coordinate information
     const handleClipboardRangePaste = useCallback((event) => {
-        console.log('[DataGrid] handleClipboardRangePaste:', event.detail);
+        if (DBG) console.log('[DataGrid] handleClipboardRangePaste:', event.detail);
         
         const { data, range, models } = event.detail;
         if (!data || !range) {
@@ -800,7 +804,7 @@ const DataGrid = forwardRef(({
             const updates = [];
             const rowDataUpdates = [];
             
-            console.log('[DataGrid] Processing clipboard data:', { 
+            if (DBG) console.log('[DataGrid] Processing clipboard data:', { 
                 dataKeys: Object.keys(data),
                 sampleRow: data[Object.keys(data)[0]]
             });
@@ -865,14 +869,14 @@ const DataGrid = forwardRef(({
                 updateMappingsBatch(updates);
             }
             
-            console.log('[DataGrid] Clipboard paste operation completed:', {
+            if (DBG) console.log('[DataGrid] Clipboard paste operation completed:', {
                 processedRows: Object.keys(data).length,
                 rowUpdates: rowDataUpdates.length,
                 mappingUpdates: updates.length
             });
             
         } catch (error) {
-            console.error('[DataGrid] Error in clipboard paste operation:', error);
+            if (DBG) console.error('[DataGrid] Error in clipboard paste operation:', error);
         }
     }, [staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
 
@@ -905,35 +909,35 @@ const DataGrid = forwardRef(({
                 {/* Controls */}
                 {showControls && (
                     <div className="flex items-center gap-2 mt-2">
-                        <button
+                        <TooltipButton
                             onClick={undo}
                             disabled={!canUndo}
-                            className={`px-3 py-1 text-sm rounded border ${canUndo
-                                    ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
-                                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                                }`}
-                            title="Undo (Ctrl+Z)"
+                            className={`px-3 py-1 text-sm rounded ${canUndo
+                                ? 'bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100'
+                                : 'bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed'
+                            }`}
+                            tooltipText="Undo (Ctrl+Z)"
                         >
                             ↶ Undo
-                        </button>
-                        <button
+                        </TooltipButton>
+                        <TooltipButton
                             onClick={redo}
                             disabled={!canRedo}
-                            className={`px-3 py-1 text-sm rounded border ${canRedo
-                                    ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
-                                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                                }`}
-                            title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+                            className={`px-3 py-1 text-sm rounded ${canRedo
+                                ? 'bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100'
+                                : 'bg-gray-100 text-gray-400 border border-gray-300 cursor-not-allowed'
+                            }`}
+                            tooltipText="Redo (Ctrl+Y or Ctrl+Shift+Z)"
                         >
                             ↷ Redo
-                        </button>
+                        </TooltipButton>
 
                         {/* Custom Actions */}
                         {customActions.length > 0 && (
                             <>
                                 <div className="border-l border-gray-300 h-6 mx-2"></div>
                                 {customActions.map((action, index) => (
-                                    <button
+                                    <TooltipButton
                                         key={index}
                                         onClick={action.onClick}
                                         disabled={action.disabled}
@@ -942,56 +946,63 @@ const DataGrid = forwardRef(({
                                                 ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
                                                 : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
                                         }`}
-                                        title={action.title}
+                                        tooltipText={action.title}
                                     >
                                         {action.label}
-                                    </button>
+                                    </TooltipButton>
                                 ))}
                             </>
                         )}
 
-                        {stats.totalMappings > 0 && (
-                            <>
-                                <div className="border-l border-gray-300 h-6 mx-2"></div>
-                                <button
-                                    onClick={clearAllMappings}
-                                    className="px-3 py-1 text-sm rounded border bg-red-50 text-red-700 border-red-300 hover:bg-red-100"
-                                    title="Clear all values"
-                                >
-                                    🗑️ Clear All
-                                </button>
-                            </>
-                        )}
+                        {/* Always show the clear-all mappings button; disable when there are no mappings */}
+                        <>
+                            <div className="border-l border-gray-300 h-6 mx-2"></div>
+                            <TooltipButton
+                                onClick={clearAllMappings}
+                                disabled={!(stats && stats.totalMappings > 0)}
+                                className={`px-3 py-1 text-sm rounded border ${stats && stats.totalMappings > 0
+                                    ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                }`}
+                                tooltipText={stats && stats.totalMappings > 0 ? 'Clear all mappings' : 'No mappings to clear'}
+                            >
+                                🗑️ Clear all mappings
+                            </TooltipButton>
+                        </>
 
-                        {/* File assign plugin (extracted) */}
-                        <div className="border-l border-gray-300 h-6 mx-2"></div>
-                                            {/* Debug button for selection */}
-                        <button
-                            onClick={async () => {
-                                const grid = gridRef.current;
-                                if (grid && typeof grid.getSelectedRange === 'function') {
-                                    try {
-                                        const selection = await grid.getSelectedRange();
-                                        console.log('[DataGrid] Current selection:', selection);
-                                        const flatCols = getFlatColumns();
-                                        console.log('[DataGrid] Flat columns:', flatCols.map((c, i) => ({ index: i, prop: c.prop, pin: c.pin })));
-                                    } catch (err) {
-                                        console.error('[DataGrid] Error getting selection:', err);
+                        {/* File assign / plugin area - only show separator when something follows */}
+                        {(DBG || (actionPlugins && actionPlugins.length > 0)) && (
+                            <div className="border-l border-gray-300 h-6 mx-2"></div>
+                        )}
+                        {/* Debug button for selection */}
+                        {DBG && (
+                            <TooltipButton
+                                onClick={async () => {
+                                    const grid = gridRef.current;
+                                    if (grid && typeof grid.getSelectedRange === 'function') {
+                                        try {
+                                            const selection = await grid.getSelectedRange();
+                                            console.log('[DataGrid] Current selection:', selection);
+                                            const flatCols = getFlatColumns();
+                                            console.log('[DataGrid] Flat columns:', flatCols.map((c, i) => ({ index: i, prop: c.prop, pin: c.pin })));
+                                        } catch (err) {
+                                            console.error('[DataGrid] Error getting selection:', err);
+                                        }
                                     }
-                                }
-                            }}
-                            className="px-3 py-1 text-sm rounded border bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100"
-                            title="Debug selection"
-                        >
-                            🔍 Debug Selection
-                        </button>
+                                }}
+                                className="px-3 py-1 text-sm rounded border bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                                tooltipText="Debug selection"
+                            >
+                                🔍 Debug Selection
+                            </TooltipButton>
+                        )}
 
                         {/* Render action plugin*/}
                                             {(actionPlugins && actionPlugins.length > 0) && actionPlugins.map((P, idx) => {
                                                 const pluginApi = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug };
                                                 // If item is a valid React element, clone it with props
-                                                if (React.isValidElement(P)) {
-                                                    return React.cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
+                                                if (isValidElement(P)) {
+                                                    return cloneElement(P, { key: `plugin-${idx}`, api: pluginApi });
                                                 }
                                                 // If it's a component (function/class), instantiate it
                                                 if (typeof P === 'function') {

@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { isValidElement, Children } from 'react';
 
 export const AnimatedTooltipExplanation = ({ children }) => children;
 AnimatedTooltipExplanation.displayName = 'AnimatedTooltipExplanation';
@@ -7,12 +7,24 @@ export const AnimatedTooltipExample = ({ children }) => children;
 AnimatedTooltipExample.displayName = 'AnimatedTooltipExample';
 
 export function AnimatedTooltip({ isVisible, children, className = '' }) {
-  const explanations = React.Children.toArray(children).filter(
+  const explanations = Children.toArray(children).filter(
     (child) => isValidElement(child) && child.type === AnimatedTooltipExplanation
   );
 
-  const examples = React.Children.toArray(children).filter(
-    (child) => isValidElement(child) && child.type === AnimatedTooltipExample
+  // Helper: determine whether a node has meaningful/renderable children.
+  const hasRenderableChildren = (node) => {
+    if (node == null) return false;
+    if (typeof node === 'string') return node.trim().length > 0;
+    if (typeof node === 'number' || typeof node === 'boolean') return true;
+    if (Array.isArray(node)) return node.some(hasRenderableChildren);
+    if (isValidElement(node)) return hasRenderableChildren(node.props?.children);
+    // For other values (objects, etc.), assume renderable
+    return true;
+  };
+
+  // Only consider AnimatedTooltipExample children that actually contain content.
+  const examples = Children.toArray(children).filter(
+    (child) => isValidElement(child) && child.type === AnimatedTooltipExample && hasRenderableChildren(child.props?.children)
   );
 
   return (

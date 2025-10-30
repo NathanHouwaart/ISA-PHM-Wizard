@@ -50,6 +50,12 @@ API calls handled in `src/services/api.js` (currently minimal - only license fet
 
 ## Key File Patterns
 
+### Import conventions
+- always import on the top of the file
+- separate third-party imports from local imports with a blank line
+- group related imports together (e.g., all React imports, all context imports)
+
+
 ### Data Structure Files (`src/data/`)
 - Follow JSON array format for entities: `[{id, name, ...}, ...]`
 - Mapping files use format: `[{sourceId, targetId, value}, ...]`

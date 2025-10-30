@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Layers } from 'lucide-react';
 
 // Import hooks
 import useMeasurements from '../../hooks/useMeasurements';
@@ -13,6 +14,7 @@ import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
+import WarningBanner from '../Widgets/WarningBanner';
 
 // Data Grid Imports
 import { Template } from '@revolist/react-datagrid';
@@ -39,9 +41,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         studies,
         testSetups,
         selectedTestSetupId,
+        selectedDataset,
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    
+    const sensors = Array.isArray(selectedTestSetup?.sensors)
+        ? selectedTestSetup.sensors
+        : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
 
     // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
     const mappingsController = useMappingsController(
@@ -96,8 +103,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         ]), [])
     };
 
-    // mappingsController already created above
-
     return (
         <div ref={combinedRef} >
 
@@ -120,8 +125,24 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                     ]}
                 />
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                {/* Warning banners */}
+                {!selectedTestSetupId && (
+                    <WarningBanner type="warning" icon={Layers}>
+                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
+                    </WarningBanner>
+                )}
+                {selectedTestSetupId && sensors.length === 0 && (
+                    <WarningBanner type="warning">
+                        <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map measurement outputs. Add sensors to your test setup or select a different one.
+                    </WarningBanner>
+                )}
+                {studies.length === 0 && (
+                    <WarningBanner type="warning">
+                        <strong>No studies available.</strong> There are no studies in the workspace. Create or import studies first so you can map measurement outputs to them.
+                    </WarningBanner>
+                )}
 
+                <TabPanel isActive={selectedTab === 'simple-view'}>
                     <EntityMappingPanel
                         name={`Sensor Output Mapping`}
                         tileNamePrefix="Study S"
@@ -132,16 +153,19 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         minHeight={WINDOW_HEIGHT}
                         disableAdd
                     />
-
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
+                    {!selectedDataset && (
+                        <WarningBanner type="info">
+                            <strong>No dataset indexed.</strong> To use the file assignment feature (<strong>📁 Assign files</strong> button), you need to index a dataset first. Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and index a folder containing your measurement files.
+                        </WarningBanner>
+                    )}
                     <DataGrid
                         {...measurementOutputGridConfig}
                         showControls={true}
-                        // Enable the debug panel here so you can see selection/file/mapping
-                        // diagnostics directly in the app while we debug the assignment flow.
-                        showDebug={true}
+                        // Debugging turned off by default
+                        showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}

@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
-import { Save, X } from "lucide-react";
+import { Save, Star, X } from "lucide-react";
 import { formatContactName } from "../../utils/utils";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
+import Heading3 from "../Typography/Heading3";
+import Paragraph from "../Typography/Paragraph";
 
 import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses";
 
@@ -15,17 +17,34 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     title: item?.title || '',
     doi: item?.doi || '',
     publicationStatus: item?.publicationStatus || '',
-    contactList: item?.contactList || [],
   });
 
   const [selectedContacts, setSelectedContacts] = useState([]);
+  const [correspondingContactId, setCorrespondingContactId] = useState(item?.correspondingContactId || '');
+  const [formError, setFormError] = useState('');
 
-  // Initialize selected contacts on mount
+  // Initialize selected contacts on mount or when item changes
+  // NOTE: Do NOT include 'contacts' in deps - we only want to re-initialize when
+  // the item changes, not when global contacts are updated (e.g., when emails are added).
+  // Including 'contacts' causes the form to reset and lose unsaved author additions.
   useEffect(() => {
-    setSelectedContacts(
-      item?.contactList?.map(id => contacts.find(a => a.id === id)) || []
-    );
-  }, [item, contacts]);
+    const initialContacts =
+      item?.contactList
+        ?.map(id => contacts.find(contact => contact.id === id))
+        .filter(Boolean) || [];
+
+    setSelectedContacts(initialContacts);
+
+    // Preserve an explicit correspondingContactId from the item if present.
+    // Do not implicitly set the corresponding contact to the first contact
+    // — corresponding author must be chosen explicitly by the user.
+    if (item?.correspondingContactId) {
+      setCorrespondingContactId(item.correspondingContactId);
+    } else {
+      setCorrespondingContactId('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item]);
 
   // Handle text inputs
   const handleChange = (e) => {
@@ -37,32 +56,65 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
 
   // Add contact
   const handleAddContact = useCallback((input) => {
-    const contactObj = typeof input === 'object' ? input
+    const contactObj = typeof input === 'object'
+      ? input
       : contacts.find(a => formatContactName(a).toLowerCase() === input.toLowerCase());
 
-    if (contactObj && !selectedContacts.some(a => a.id === contactObj.id)) {
-      setSelectedContacts(prev => [...prev, contactObj]);
-    }
-  }, [contacts, selectedContacts]);
+    if (!contactObj) return;
+
+    setSelectedContacts(prev => {
+      if (prev.some(contact => contact.id === contactObj.id)) return prev;
+
+      const nextContacts = [...prev, { ...contactObj }];
+      // Do not auto-set the corresponding contact when adding. The user must
+      // explicitly choose the corresponding contact via the UI.
+      return nextContacts;
+    });
+  }, [contacts, correspondingContactId]);
 
   // Remove Contact
   const handleRemoveContact = useCallback((contactToRemove) => {
-    setSelectedContacts(prev =>
-      prev.filter(contact => contact.id !== contactToRemove.id)
-    );
+    setSelectedContacts(prev => {
+      const updated = prev.filter(contact => contact.id !== contactToRemove.id);
+      if (contactToRemove.id === correspondingContactId) {
+        // Clear corresponding contact instead of implicitly assigning another.
+        setCorrespondingContactId('');
+      }
+      return updated;
+    });
+  }, [correspondingContactId]);
+
+  const handleSetCorrespondingContact = useCallback((contactId) => {
+    setCorrespondingContactId(contactId);
   }, []);
+
+  // Contacts are stored as simple objects and corresponding author selection remains explicit.
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert("Please enter a title.");
+      setFormError("Please enter a title.");
       return;
     }
+    // Ensure the selected corresponding contact (if any) has an email
+    if (correspondingContactId) {
+      const corresponding = contacts.find(c => c.id === correspondingContactId);
+      if (!corresponding || !corresponding.email || corresponding.email.trim() === '') {
+        setFormError('The selected corresponding contact does not have an email address. Please add an email to the contact or choose a different corresponding contact.');
+        return;
+      }
+    }
+    if (selectedContacts.length > 0 && !correspondingContactId) {
+      setFormError("Please select a corresponding contact.");
+      return;
+    }
+    setFormError('');
 
     onSave({
       ...formData,
       id: isEditing ? item.id : `pub-${Date.now()}`,
-      contactList: selectedContacts.map(a => a.id)
+      contactList: selectedContacts.map(a => a.id),
+      correspondingContactId: correspondingContactId || null,
     });
   };
 
@@ -70,9 +122,9 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     <div className="bg-white rounded-lg shadow-lg border border-gray-300 max-h-[90vh] overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <Heading3 className="text-xl font-semibold text-gray-900">
             {isEditing ? 'Edit Publication' : 'Add new Publication'}
-          </h3>
+          </Heading3>
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={onCancel}
@@ -84,6 +136,11 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
       </div>
 
       <div className="px-6 space-y-2 pt-2">
+        {formError && (
+          <Paragraph className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            {formError}
+          </Paragraph>
+        )}
         <FormField
           label="Publication Title"
           name="title"
@@ -117,18 +174,28 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
           </div>
         </div>
 
-        {/* Contact TagInput */}
+        {/* Authors field with drag-reorder and corresponding author selection */}
         <FormField
-          type="tags"
+          type="authors"
           name="contacts"
-          label="Contacts"
-          placeholder="Type to find and add contacts"
-          value={selectedContacts}        // Current selected contacts
-          tags={contacts}                 // Available contacts for suggestions
-          onAddTag={handleAddContact}
-          onRemoveTag={handleRemoveContact}
-      />
+          label="Authors"
+          placeholder="Search and add authors..."
+          value={selectedContacts}
+          tags={contacts}
+          onChange={(e) => {
+            const next = Array.isArray(e.target.value) ? e.target.value : [];
+            // Determine whether this change added a new author (length increased)
+            const addedAnAuthor = next.length > selectedContacts.length;
+                    setSelectedContacts(next);
+                    // Do not auto-set correspondingContactId here. Corresponding author
+                    // must be chosen explicitly by clicking the corresponding control.
+          }}
+          correspondingAuthorId={correspondingContactId}
+          onCorrespondingAuthorChange={setCorrespondingContactId}
+          explanation="Drag to reorder authors. Click envelope icon to designate corresponding author. First author indicates primary contribution."
+        />
 
+      
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 pr-0 flex justify-end space-x-3">
           <TooltipButton
