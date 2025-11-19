@@ -25,6 +25,7 @@ import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useMeasurements from '../../hooks/useMeasurements';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import useStudyRuns from '../../hooks/useStudyRuns';
 
 
 export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -45,6 +46,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    const studyRuns = useStudyRuns();
 
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
@@ -52,7 +54,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
 
     const mappingsController = useMappingsController(
         'studyToAssayMapping',
-        { sourceKey: 'sensorId', targetKey: 'studyId' }
+        { sourceKey: 'sensorId', targetKey: 'studyRunId' }
     );
 
     // Handle data grid changes (use controller to keep canonical mapping)
@@ -63,16 +65,16 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     // Grid configuration for mapping studies to processing protocols output
     const assayOutputGridConfig = {
         title: 'Mappings for assay output',
-        rowData: studies,
+        rowData: studyRuns,
         columnData: selectedTestSetup?.sensors || [],
-        mappings: studyToAssayMapping,
+        mappings: mappingsController.mappings,
         fieldMappings: {
             rowId: 'id',
             rowName: 'name',
             columnId: 'id',
             columnName: 'alias',
             columnUnit: '',
-            mappingRowId: 'studyId',
+            mappingRowId: 'studyRunId',
             mappingColumnId: 'sensorId',
             mappingValue: 'value'
         },

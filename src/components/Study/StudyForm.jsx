@@ -19,6 +19,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     description: item?.description || '',
     submissionDate: item?.submissionDate || '',
     publicationDate: item?.publicationDate || '',
+    runCount: item?.runCount ?? 1,
   });
   const [formError, setFormError] = useState('');
 
@@ -31,8 +32,11 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     }
     setFormError('');
 
+    const normalizedRunCount = Math.max(1, Number.parseInt(formData.runCount, 10) || 1);
+
     const studyData = {
       ...formData,
+      runCount: normalizedRunCount,
       id: isEditing && item.id ? item.id : uuidv4(), // Generate a new ID if not editing}`
     };
 
@@ -114,6 +118,18 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             type='date'
             explanation="The date when the study data was published to the database. If not applicable, please leave empty." 
             example="10-12-2024"
+          />
+
+          <FormField
+            name={"runCount"}
+            onChange={handleChange}
+            value={formData.runCount}
+            label="Number of runs"
+            type='number'
+            min={1}
+            explanation="Specify how many repeated runs/trajectories were collected for this study. Set to 1 if only a single run exists."
+            example="3"
+            required
           />
 
         </div>

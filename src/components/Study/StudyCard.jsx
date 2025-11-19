@@ -76,6 +76,10 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
                     "not provided"}
                 </span>
               </div>
+              <div className="flex items-center space-x-1">
+                <p className='font-bold'>Runs - </p>
+                <span>{Number.parseInt(study?.runCount, 10) || 1}</span>
+              </div>
             </div>
           </div>
         </div>

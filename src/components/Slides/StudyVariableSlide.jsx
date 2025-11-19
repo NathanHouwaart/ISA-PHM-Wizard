@@ -1,226 +1,226 @@
-import React, { forwardRef, useEffect, useMemo, useState, useCallback } from 'react'
-import { Layers } from 'lucide-react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-// Import hooks
-import useVariables from '../../hooks/useVariables';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-
-// Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
-// Import components
 import { SlidePageTitle } from '../Typography/Heading2';
-import { SlidePageSubtitle } from '../Typography/Paragraph';
+import { SlidePageSubtitle, default as Paragraph } from '../Typography/Paragraph';
+import Heading3 from '../Typography/Heading3';
+import WarningBanner from '../Widgets/WarningBanner';
+import DataGrid from '../DataGrid/DataGrid';
+import { Template } from '@revolist/react-datagrid';
+import { BoldCell } from '../DataGrid/CellTemplates';
+import useMappingsController from '../../hooks/useMappingsController';
+import useStudyRuns from '../../hooks/useStudyRuns';
+import { groupStudyRuns } from '../../utils/studyRuns';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
-import useMappingsController from '../../hooks/useMappingsController';
-import WarningBanner from '../Widgets/WarningBanner';
-
-// Data Grid Imports
-import { Template } from '@revolist/react-datagrid';
-
-import DataGrid from '../DataGrid/DataGrid';
-import { GrayCell, BoldCell, DeleteRowCellTemplate} from '../DataGrid/CellTemplates';
-import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
-
-import SelectTypePlugin from '@revolist/revogrid-column-select'
-import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
+import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
-import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 
-// register column type
-const plugin = { select: new SelectTypePlugin() }
+const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+    const resizeRef = useResizeObserver(onHeightChange);
+    const combinedRef = useCombinedRefs(ref, resizeRef);
 
-// TODO: ADD PAGE NUMBER IN PARAMETERS
-export const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
-
-    // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
-
-    // Observe height changes
-    const elementToObserveRef = useResizeObserver(onHeightChange);
-    const combinedRef = useCombinedRefs(ref, elementToObserveRef);
-
-    // Access global context
     const {
         studies,
         studyVariables,
-        setScreenWidth,
-        setStudyVariables,
-        studyToStudyVariableMapping,
-        setStudyToStudyVariableMapping,
-        selectedTestSetupId,
-        testSetups
+        setScreenWidth
     } = useGlobalDataContext();
 
-    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+    const studyRuns = useStudyRuns();
+    const groupedRuns = useMemo(() => groupStudyRuns(studyRuns), [studyRuns]);
 
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
+    const mappingsController = useMappingsController(
+        'studyToStudyVariableMapping',
+        { sourceKey: 'studyVariableId', targetKey: 'studyRunId' }
+    );
 
-    // Create a dropdown for the 'type' column (memoized)
-    const dropdown = useMemo(() => ({
-        labelKey: 'label',
-        valueKey: 'value',
-        source: VARIABLE_TYPE_OPTIONS.map(type => ({ label: type, value: type })),
-    }), []);
+    const [activeStudyId, setActiveStudyId] = useState(() => studies?.[0]?.id || null);
 
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
+    useEffect(() => {
+        setScreenWidth(selectedTab === 'grid-view' ? 'max-w-[100rem]' : 'max-w-5xl');
+    }, [selectedTab, setScreenWidth]);
 
-    const addNewVariable = useCallback(() => {
-        setStudyVariables(prev => {
-            const newVariable = {
-                id: generateId(),
-                name: `New Variable ${prev.length + 1}`,
-                type: '',
-                unit: '',
-                description: ''
-            };
-            return [...prev, newVariable];
-        });
-    }, [setStudyVariables]);
+    useEffect(() => {
+        if (studies.length === 0) {
+            setActiveStudyId(null);
+            return;
+        }
+        if (!activeStudyId || !studies.some(study => study.id === activeStudyId)) {
+            setActiveStudyId(studies[0].id);
+        }
+    }, [studies, activeStudyId]);
 
-    // We'll use a single mappings controller so both the simple view and the grid
-    // operate on the exact same canonical mappings object.
-    const mappingsController = useMappingsController();
-
-    // Handle row data changes
-    const handleDataGridRowDataChange = useCallback((newRowData) => {
-        setStudyVariables(newRowData);
-    }, [setStudyVariables]);
-
-    // Note: simple view input updates will use mappingsController.updateMappingValue
-
-    // Grid configuration for studies
-    const studyVariableGridConfig = {
-        title: 'Variables to Studies Grid',
-        rowData: studyVariables,
-        columnData: studies,
-        mappings: mappingsController.mappings,
-        fieldMappings: {
-            rowId: 'id',
-            rowName: 'name',
-            columnId: 'id',
-            columnName: 'name',
-            columnUnit: '',
-            mappingRowId: 'studyVariableId',
-            mappingColumnId: 'studyId',
-            mappingValue: 'value'
+    const staticColumns = useMemo(() => ([
+        {
+            prop: 'name',
+            name: 'Variable',
+            size: 220,
+            readonly: true,
+            pin: 'colPinStart',
+            cellTemplate: Template(BoldCell),
+            cellProperties: () => ({ style: { "border-right": "3px solid " } })
         },
-        staticColumns: useMemo(() => ([
-            {
-                prop: 'actions',
-                name: '',
-                size: 80,
-                readonly: true,
-                pin: 'colPinStart',
-                cellTemplate: Template(DeleteRowCellTemplate),
-                cellProperties: () => ({ style: { 'text-align': 'center' } })
-            },
-            {
-                prop: 'name',
-                name: 'Variable Name',
-                size: 200,
-                readonly: false,
-                pin: 'colPinStart',
-                cellTemplate: Template(BoldCell),
-                cellProperties: () => ({ style: { "border-right": "3px solid " } })
-            },
-            {
-                prop: 'type',
-                name: 'Type',
-                size: 150,
-                readonly: false,
-                columnType: 'select',
-                ...dropdown
-            },
-            {
-                prop: 'unit',
-                name: 'Unit',
-                size: 100,
-                readonly: false
-            },
-            {
-                prop: 'description',
-                name: 'Description',
-                size: 300,
-                readonly: false,
-                cellProperties: () => ({ style: { "border-right": "3px solid " } })
-            }
-        ]), [dropdown]),
-        customActions : useMemo(() => ([
-            {
-                label: '+ Add Variable',
-                onClick: addNewVariable,
-                className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
-                title: 'Add a new variable'
-            }
-        ]), [addNewVariable, studyVariables.length])
-    };
+        {
+            prop: 'type',
+            name: 'Type',
+            size: 160,
+            readonly: true
+        },
+        {
+            prop: 'unit',
+            name: 'Unit',
+            size: 120,
+            readonly: true
+        },
+        {
+            prop: 'description',
+            name: 'Description',
+            size: 360,
+            readonly: true
+        }
+    ]), []);
+
+    const handleGridFocus = useCallback((studyId) => {
+        setActiveStudyId(studyId);
+    }, []);
+
+    const gridHeight = useMemo(() => {
+        const rows = Math.max(1, studyVariables.length);
+        const rowHeight = 50;
+        const structuralPadding = 60;
+        const desired = (rows * rowHeight) + structuralPadding;
+        const maxHeight = 500;
+        return Math.min(maxHeight, desired);
+    }, [studyVariables.length]);
 
     return (
         <div ref={combinedRef}>
             <SlidePageTitle>
-                Study Variables
+                Study Variable Mappings
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Manage the study variables, describing the faults and operational/environmental operating conditions in which the experiments were conducted.
+                Map each defined variable to the runs that belong to your studies. Variable definitions are read-only in this view to keep the focus on assigning run-specific values.
             </SlidePageSubtitle>
 
-            <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
-                <TabSwitcher
-                    selectedTab={selectedTab}
-                    onTabChange={setSelectedTab}
-                    tabs={[
-                        { id: 'simple-view', label: 'Simple View', tooltip: 'View study variables in a simple list format' },
-                        { id: 'grid-view', label: 'Grid View', tooltip: 'View study variables in a grid format for better data management' }
-                    ]}
-                />
+            <TabSwitcher
+                selectedTab={selectedTab}
+                onTabChange={setSelectedTab}
+                tabs={[
+                    { id: 'simple-view', label: 'Simple View', tooltip: 'Work variable by variable with per-run tabs' },
+                    { id: 'grid-view', label: 'Grid View', tooltip: 'See mappings per study/run in stacked grids' }
+                ]}
+                className="mb-4"
+            />
 
-                {/* Warning banners */}
-                {!selectedTestSetupId && (
-                    <WarningBanner type="warning" icon={Layers}>
-                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
-                    </WarningBanner>
-                )}
-                {selectedTestSetupId && studies.length === 0 && (
+            <TabPanel isActive={selectedTab === 'simple-view'}>
+                {studyVariables.length === 0 && (
                     <WarningBanner type="info">
-                        <strong>No studies available.</strong> You must create studies in order to map variables to them. Go to the Studies slide to add studies to your project.
+                        <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.
+                    </WarningBanner>
+                )}
+                <EntityMappingPanel
+                    minHeight={Math.max(400, studyVariables.length * 120)}
+                    name="Variables"
+                    itemHook={useVariables}
+                    mappings={mappingsController.mappings}
+                    handleInputChange={mappingsController.updateMappingValue}
+                />
+            </TabPanel>
+
+            <TabPanel isActive={selectedTab === 'grid-view'}>
+                {studies.length === 0 && (
+                    <WarningBanner type="warning">
+                        <strong>No studies available.</strong> Create studies before mapping variables.
                     </WarningBanner>
                 )}
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
-                        <EntityMappingPanel
-                            minHeight={WINDOW_HEIGHT}
-                            name={"Variables"}
-                            itemHook={useVariables}
-                            mappings={mappingsController.mappings}
-                            handleInputChange={mappingsController.updateMappingValue}
-                        />
-                </TabPanel>
+                {studyVariables.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No variables defined.</strong> Add variables first to work in the grid view.
+                    </WarningBanner>
+                )}
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
-                    <DataGrid
-                        {...studyVariableGridConfig}
-                        showControls={true}
-                        plugins={plugin}
-                        actionPlugins={[FilePickerPlugin]}
-                        showDebug={false}
-                        onDataChange={mappingsController.setMappings}
-                        onRowDataChange={handleDataGridRowDataChange}
-                        height={WINDOW_HEIGHT}
-                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
-                    />
-                </TabPanel>
-            </div>
+                <div className="space-y-4 mt-4">
+                    {studies.map((study) => {
+                        const runsForStudy = groupedRuns.get(study.id) || [];
+                        const hasRuns = runsForStudy.length > 0;
+
+                        const gridConfig = {
+                            title: `${study.name} variable mappings`,
+                            rowData: studyVariables,
+                            columnData: runsForStudy,
+                            mappings: mappingsController.mappings,
+                            fieldMappings: {
+                                rowId: 'id',
+                                rowName: 'name',
+                                columnId: 'runId',
+                                columnName: 'shortLabel',
+                                columnParentId: 'studyId',
+                                columnParentName: 'studyName',
+                                columnChildNameFormatter: (run) => run?.shortLabel || `Run ${run?.runNumber}`,
+                                enableColumnGroups: true,
+                                mappingRowId: 'studyVariableId',
+                                mappingColumnId: 'studyRunId',
+                                mappingValue: 'value'
+                            },
+                            staticColumns,
+                            customActions: []
+                        };
+
+                        return (
+                            <section
+                                key={study.id}
+                                className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2"
+                            >
+                                <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                                    <Heading3 className="text-lg font-semibold text-gray-900">
+                                        {study.name}
+                                    </Heading3>
+                                    {hasRuns && (
+                                        <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                            {runsForStudy.length} run{runsForStudy.length > 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                {!hasRuns && (
+                                    <Paragraph className="text-sm text-gray-500">
+                                        This study has no runs defined yet.
+                                    </Paragraph>
+                                )}
+
+                                {hasRuns ? (
+                                    <div
+                                        onPointerDown={() => handleGridFocus(study.id)}
+                                        className="border border-gray-100 rounded-lg"
+                                    >
+                                        <DataGrid
+                                            {...gridConfig}
+                                            showControls={true}
+                                            showDebug={false}
+                                            onDataChange={mappingsController.setMappings}
+                                            height={gridHeight}
+                                            isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                        />
+                                    </div>
+                                ) : (
+                                    <Paragraph className="text-sm text-gray-500 italic">
+                                        Add runs to this study to enable variable mappings.
+                                    </Paragraph>
+                                )}
+                            </section>
+                        );
+                    })}
+                </div>
+            </TabPanel>
         </div>
     );
 });
 
-StudyVariableSlide.displayName = "Study Variables"; // Set display name for better debugging
+StudyVariableSlide.displayName = 'Study Variable Mappings';
 
 export default StudyVariableSlide;

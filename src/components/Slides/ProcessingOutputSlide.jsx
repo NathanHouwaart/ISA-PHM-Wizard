@@ -25,6 +25,7 @@ import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
+import useStudyRuns from '../../hooks/useStudyRuns';
 
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -46,6 +47,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    const studyRuns = useStudyRuns();
 
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
@@ -53,7 +55,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
 
     const mappingsController = useMappingsController(
         'studyToSensorProcessingMapping',
-        { sourceKey: 'sensorId', targetKey: 'studyId' }
+        { sourceKey: 'sensorId', targetKey: 'studyRunId' }
     );
 
     // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
@@ -66,7 +68,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     // Grid configuration for mapping studies to processing protocols output
     const processingOutputGridConfig = {
         title: 'Mappings for processing protocol output',
-        rowData: studies,
+        rowData: studyRuns,
         columnData: selectedTestSetup?.sensors || [],
         mappings: mappingsController.mappings,
         fieldMappings: {
@@ -75,7 +77,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             columnId: 'id',
             columnName: 'alias',
             columnUnit: '',
-            mappingRowId: 'studyId',
+            mappingRowId: 'studyRunId',
             mappingColumnId: 'sensorId',
             mappingValue: 'value'
         },

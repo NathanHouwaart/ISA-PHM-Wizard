@@ -1,11 +1,11 @@
 // src/components/TabSwitcher.js
 import React from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { TooltipButton } from './Widgets/TooltipButton';
+import { cn } from '../utils/utils';
 
-const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
+const TabSwitcher = ({ selectedTab, onTabChange, tabs, className = '' }) => {
     return (
-        <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
+        <div className={cn("flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm", className)}>
             {tabs.map((tab) => (
                  <TooltipButton 
                     key={tab.id}

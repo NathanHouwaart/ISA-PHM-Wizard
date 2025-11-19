@@ -25,6 +25,7 @@ import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
+import useStudyRuns from '../../hooks/useStudyRuns';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -45,6 +46,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
+    const studyRuns = useStudyRuns();
     
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
@@ -53,7 +55,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
     const mappingsController = useMappingsController(
         'studyToSensorMeasurementMapping',
-        { sourceKey: 'sensorId', targetKey: 'studyId' }
+        { sourceKey: 'sensorId', targetKey: 'studyRunId' }
     );
 
     // Handle data grid changes (use controller to keep canonical mapping)
@@ -64,7 +66,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     // Grid configuration for mapping studies to sensor measurements
     const measurementOutputGridConfig = {
         title: 'Mappings for measurement output',
-        rowData: studies,
+        rowData: studyRuns,
         columnData: selectedTestSetup?.sensors || [],
         mappings: mappingsController.mappings,
         fieldMappings: {
@@ -73,7 +75,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             columnId: 'id',
             columnName: 'alias',
             columnUnit: '',
-            mappingRowId: 'studyId',
+            mappingRowId: 'studyRunId',
             mappingColumnId: 'sensorId',
             mappingValue: 'value'
         },

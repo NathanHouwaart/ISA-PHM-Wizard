@@ -47,10 +47,18 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
     setMappingsState(prev => {
       const copy = Array.isArray(prev) ? prev.slice() : [];
       const idx = copy.findIndex(m => String(m[sourceKey]) === String(mappingObj[sourceKey]) && String(m[targetKey]) === String(mappingObj[targetKey]));
+      const merged = {
+        ...copy[idx],
+        ...mappingObj,
+        [sourceKey]: mappingObj[sourceKey],
+        [targetKey]: mappingObj[targetKey],
+        value
+      };
+
       if (idx >= 0) {
-        copy[idx] = { ...copy[idx], value };
+        copy[idx] = merged;
       } else {
-        copy.push({ [sourceKey]: mappingObj[sourceKey], [targetKey]: mappingObj[targetKey], value });
+        copy.push(merged);
       }
       lastRef.current = copy;
       return copy;

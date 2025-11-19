@@ -128,6 +128,9 @@ export const useDataGrid = ({
       } catch (err) {
         console.error('[useDataGrid] error handling external rowData structural change', err);
       }
+    } else if (isStandaloneGrid) {
+      // For standalone grids, sync inline edits so consumers (like Studies grid) see updates from external forms
+      setCurrentRowData(rowData);
     }
 
     prevRowDataRef.current = rowData;

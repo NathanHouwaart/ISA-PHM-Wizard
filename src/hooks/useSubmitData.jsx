@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { expandStudiesIntoRuns } from '../utils/studyRuns';
 
 // Hook responsibility: perform the submit/convert API call using data from the
 // GlobalDataContext. Keeps isSubmitting and message local to the hook so the
@@ -27,6 +28,25 @@ export default function useSubmitData() {
   const [message, setMessage] = useState('Submitting data...');
   const [error, setError] = useState(null);
   const controllerRef = useRef(null);
+  const allStudyRuns = useMemo(() => expandStudiesIntoRuns(studies), [studies]);
+  const runsByStudyId = useMemo(() => {
+    return allStudyRuns.reduce((acc, run) => {
+      if (!run?.studyId) return acc;
+      if (!acc[run.studyId]) {
+        acc[run.studyId] = [];
+      }
+      acc[run.studyId].push(run);
+      return acc;
+    }, {});
+  }, [allStudyRuns]);
+
+  const getRunsForStudy = (study) => {
+    const runs = runsByStudyId[study.id];
+    if (runs && runs.length > 0) {
+      return runs;
+    }
+    return expandStudiesIntoRuns([study]);
+  };
 
   // Helper: normalize protocol mappings for a given sensor id
   const mapProtocolsForSensor = (mappings = [], sensorId) => {
@@ -38,6 +58,17 @@ export default function useSubmitData() {
         targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
         value: m.value ?? [],
       }));
+  };
+
+  const resolveRunMapping = (mappings = [], sensorId, run) => {
+    if (!Array.isArray(mappings)) return null;
+    return mappings.find((mapping) => {
+      if (!mapping || mapping.sensorId !== sensorId) return false;
+      if (mapping.studyRunId) {
+        return mapping.studyRunId === run.runId;
+      }
+      return mapping.studyId === run.studyId;
+    }) || null;
   };
 
   const submitData = async () => {
@@ -63,39 +94,59 @@ export default function useSubmitData() {
         study_variables: studyVariables,
         measurement_protocols: measurementProtocols,
         processing_protocols: processingProtocols,
-        studies: (studies || []).map((study) => ({
-          ...study,
-          publications,
-          contacts,
-          used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
-          study_to_study_variable_mapping: (studyToStudyVariableMapping || [])
-            .filter((mapping) => mapping.studyId === study.id)
-            .map((mapping) => {
-              const variable = (studyVariables || []).find((v) => v.id === mapping.studyVariableId);
-              return {
-                studyId: mapping.studyId,
-                studyVariableId: mapping.studyVariableId,
-                value: mapping.value,
-                variableName: variable?.name || 'Unknown Variable',
-              };
+        studies: (studies || []).map((study) => {
+          const studyRuns = getRunsForStudy(study);
+          return {
+            ...study,
+            publications,
+            contacts,
+            used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
+            study_to_study_variable_mapping: studyRuns.flatMap((run) => (
+              (studyToStudyVariableMapping || [])
+                .filter((mapping) => {
+                  if (mapping.studyRunId) {
+                    return mapping.studyRunId === run.runId;
+                  }
+                  return mapping.studyId === run.studyId;
+                })
+                .map((mapping) => {
+                  const variable = (studyVariables || []).find((v) => v.id === mapping.studyVariableId);
+                  return {
+                    studyId: run.studyId,
+                    studyRunId: mapping.studyRunId || run.runId,
+                    runNumber: run.runNumber,
+                    studyVariableId: mapping.studyVariableId,
+                    value: mapping.value,
+                    variableName: variable?.name || 'Unknown Variable',
+                  };
+                })
+            )),
+            assay_details: studyRuns.flatMap((run) => {
+              const sensors = ((testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || []);
+              return sensors.map((sensor) => {
+                const used_sensor = Object.fromEntries(
+                  Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
+                );
+
+                const rawMapping = resolveRunMapping(studyToSensorMeasurementMapping, sensor.id, run);
+                const processingMapping = resolveRunMapping(studyToSensorProcessingMapping, sensor.id, run);
+                const assayMapping = resolveRunMapping(studyToAssayMapping, sensor.id, run);
+
+                return {
+                  used_sensor,
+                  run_number: run.runNumber,
+                  study_run_id: run.runId,
+                  study_id: run.studyId,
+                  measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
+                  processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
+                  raw_file_name: rawMapping?.value || '',
+                  processed_file_name: processingMapping?.value || '',
+                  assay_file_name: assayMapping?.value || '',
+                };
+              });
             }),
-          assay_details: ((testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || []).map((sensor) => {
-            const used_sensor = Object.fromEntries(
-              Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-            );
-
-
-
-            return {
-              used_sensor,
-              measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
-              processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
-              raw_file_name: (studyToSensorMeasurementMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-              processed_file_name: (studyToSensorProcessingMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-              assay_file_name: (studyToAssayMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-            };
-          }),
-        })),
+          };
+        }),
       };
 
       setMessage('Uploading to conversion service...');

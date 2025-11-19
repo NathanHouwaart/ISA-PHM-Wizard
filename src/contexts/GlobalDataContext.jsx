@@ -5,6 +5,7 @@ import isaProjectExample from "../data/isa-project-example.json";
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import { v4 as uuidv4 } from 'uuid';
+import { expandStudiesIntoRuns, createStudyRunId } from '../utils/studyRuns';
 
 const GlobalDataContext = createContext();
 
@@ -402,40 +403,56 @@ export const GlobalDataProvider = ({ children }) => {
     // defaults for studyId/sensorId combinations that are not yet present.
     useEffect(() => {
         try {
-            // Build defaults using studies and sensors from testSetups
-            const pad = (n) => String(n + 1).padStart(2, '0');
-            const newEntries = [];
-
-            // If testSetups is empty, nothing to generate
             if (!Array.isArray(testSetups) || testSetups.length === 0) {
                 return;
             }
 
-            // Build a set of existing mappings to avoid duplicates (keyed by `${studyId}|${sensorId}`)
+            const pad = (n) => String(n + 1).padStart(2, '0');
+            const padRun = (n) => String(n).padStart(2, '0');
+            const studyRuns = expandStudiesIntoRuns(studies);
+            if (studyRuns.length === 0) {
+                return;
+            }
+
             const existing = new Set();
             if (Array.isArray(studyToAssayMapping)) {
                 studyToAssayMapping.forEach((m) => {
-                    if (m && m.studyId && m.sensorId) existing.add(`${m.studyId}|${m.sensorId}`);
+                    if (!m || !m.sensorId) return;
+                    const runKey = m.studyRunId || createStudyRunId(m.studyId, 1);
+                    existing.add(`${runKey}|${m.sensorId}`);
                 });
             }
 
-            studies.forEach((study, si) => {
-                testSetups.forEach((setup) => {
-                    if (!Array.isArray(setup.sensors)) return;
-                    setup.sensors.forEach((sensor, sidx) => {
-                        const key = `${study.id}|${sensor.id}`;
-                        if (existing.has(key)) return; // already present
+            const newEntries = [];
 
-                        // Default assay filename pattern: ST{studyIdx}_SE{sensorIdx}_ASSO.csv
-                        const value = `ST${pad(si)}_SE${pad(sidx)}_ASSO.csv`;
-                        newEntries.push({ studyId: study.id, sensorId: sensor.id, value });
+            studyRuns.forEach((run) => {
+                testSetups.forEach((setup) => {
+                    if (!Array.isArray(setup.sensors)) {
+                        return;
+                    }
+                    setup.sensors.forEach((sensor, sensorIndex) => {
+                        const key = `${run.runId}|${sensor.id}`;
+                        if (existing.has(key)) {
+                            return;
+                        }
+
+                        const studyCode = pad(run.studyIndex ?? 0);
+                        const sensorCode = pad(sensorIndex);
+                        const runSuffix = run.runCount > 1 ? `_RUN${padRun(run.runNumber)}` : '';
+                        const value = `ST${studyCode}${runSuffix}_SE${sensorCode}_ASSO.csv`;
+
+                        newEntries.push({
+                            studyId: run.studyId,
+                            studyRunId: run.runId,
+                            sensorId: sensor.id,
+                            value
+                        });
                         existing.add(key);
                     });
                 });
             });
 
             if (newEntries.length > 0) {
-                // Append to existing mapping if any, or set new array when empty
                 setStudyToAssayMapping((prev) => {
                     const base = Array.isArray(prev) ? prev : [];
                     return [...base, ...newEntries];

@@ -27,6 +27,7 @@ revo-grid {
   @apply font-sans text-sm;
   overflow: hidden;
   background-color: #f9fafb; /* Tailwind gray-50 */
+  min-height: 0 !important; /* override RevoGrid default 300px min height */
 }
 
 /* --- Header Bar Styling --- */
@@ -135,4 +136,3 @@ div.rv-dr-root{
   opacity: 0.7 !important;
   pointer-events: none !important;
 }
-

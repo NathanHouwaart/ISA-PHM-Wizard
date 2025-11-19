@@ -58,7 +58,8 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             name: `New Study ${studies.length + 1}`,
             description: 'Enter description...',
             submissionDate: "",
-            publicationDate: ""
+            publicationDate: "",
+            runCount: 1
         };
         setStudies([...studies, newStudy]);
     };
@@ -128,6 +129,12 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 size: 250,
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
+            },
+            {
+                prop: 'runCount',
+                name: 'Number of Runs',
+                size: 160,
+                readonly: false,
             }
         ]
     };

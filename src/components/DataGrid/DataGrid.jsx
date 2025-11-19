@@ -1020,7 +1020,7 @@ const DataGrid = forwardRef(({
             <RevoGrid
                 key={gridKey}
                 ref={setGridRef}
-                style={{ height }}
+                style={{ height }}                
                 source={gridData}
                 rowSize={rowsize}
                 columns={appliedColumns}
