@@ -33,6 +33,22 @@ export default function ProjectSessionsModal({ onClose }) {
   const visibleProjects = pendingProjectId
     ? projects.filter((p) => p.id !== pendingProjectId)
     : projects;
+  const selectedProject = selectedCardId
+    ? visibleProjects.find((p) => p.id === selectedCardId) || null
+    : null;
+
+  useEffect(() => {
+    if (visibleProjects.length === 0) {
+      if (selectedCardId) {
+        setSelectedCardId(null);
+      }
+      return;
+    }
+    if (selectedCardId && visibleProjects.some((p) => p.id === selectedCardId)) {
+      return;
+    }
+    setSelectedCardId(visibleProjects[0].id);
+  }, [visibleProjects, selectedCardId]);
 
   const showDialog = (config) => {
     const {
@@ -340,93 +356,128 @@ export default function ProjectSessionsModal({ onClose }) {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-6">
-            <div className="space-y-4">
-              <div className="max-h-[50vh] overflow-y-auto pr-1 space-y-3">
-                {visibleProjects.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-gray-300 rounded-2xl">
-                    <Layers3 className="w-16 h-16 text-gray-300" />
-                    <h3 className="mt-4 text-xl font-semibold text-gray-700">No projects found</h3>
-                    <p className="mt-2 text-sm text-gray-500 max-w-sm">
-                      Start by creating a new project with the + button above, or import an existing session.
-                    </p>
-                    <TooltipButton tooltipText="Create new project" onClick={handleCreate} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg">
-                      Create a project
-                    </TooltipButton>
-                  </div>
-                ) : (
-                  visibleProjects.map((p) => (
-                    <ProjectCard
-                      key={p.id}
-                      project={p}
-                      isSelected={selectedCardId === p.id}
-                      isActive={p.id === currentProjectId}
-                      isDefault={p.id === DEFAULT_PROJECT_ID}
-                      refreshToken={resetTriggers[p.id]}
-                      onSelect={setSelectedCardId}
-                      onOpenName={(id) => setSectionDialog({ type: 'name', projectId: id })}
-                      onOpenDataset={(id) => setSectionDialog({ type: 'dataset', projectId: id })}
-                      onOpenTestSetup={(id) => setSectionDialog({ type: 'test', projectId: id })}
-                      onOpenTemplate={(id) => setSectionDialog({ type: 'template', projectId: id })}
-                      onExport={(id) => handleExportProject(id)}
-                      onReset={(id) => {
-                        if (p.id !== DEFAULT_PROJECT_ID) return;
-                        showDialog({
-                          tone: 'warning',
-                          title: 'Reset default project?',
-                          message: "This will overwrite the default project's local settings and dataset with the starter data.",
-                          confirmLabel: 'Reset project',
-                          confirmTooltip: 'Restore the default project to its initial state',
-                          cancelLabel: 'Cancel',
-                          cancelTooltip: 'Keep current project data',
-                          onConfirm: async () => {
-                            await resetProject(id);
-                            setResetTriggers((prev) => ({ ...prev, [id]: Date.now() }));
-                            setTimeout(() => {
-                              showDialog({
-                                tone: 'success',
-                                title: 'Default project reset',
-                                message: 'The default project has been restored to its initial configuration.',
-                                confirmLabel: 'OK',
-                                confirmTooltip: 'Close dialog',
-                                showCancel: false,
-                              });
-                            }, 0);
-                          },
-                        });
-                      }}
-                      onDelete={(id) => handleDelete(id)}
-                    />
-                  ))
-                )}
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-                <div className="text-sm text-gray-500">
+          {visibleProjects.length === 0 ? (
+            <div className="mt-6 flex flex-col items-center justify-center py-12 text-center border border-dashed border-gray-300 rounded-2xl">
+              <Layers3 className="w-16 h-16 text-gray-300" />
+              <h3 className="mt-4 text-xl font-semibold text-gray-700">No projects found</h3>
+              <p className="mt-2 text-sm text-gray-500 max-w-sm">
+                Start by creating a new project with the + button above, or import an existing session.
+              </p>
+              <TooltipButton tooltipText="Create new project" onClick={handleCreate} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg">
+                Create a project
+              </TooltipButton>
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-col lg:flex-row gap-6">
+              <div className="lg:w-1/3 space-y-4 lg:pr-4 lg:border-r lg:border-gray-200">
+                <div className="flex items-center justify-between">
+                  <Heading3 className="text-lg">Projects</Heading3>
+                  <span className="text-xs text-gray-500">{visibleProjects.length} total</span>
+                </div>
+                <div className="border border-gray-200 rounded-2xl bg-white max-h-[50vh] overflow-y-auto divide-y divide-gray-100">
+                  {visibleProjects.map((p) => {
+                    const isSelected = selectedCardId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedCardId(p.id)}
+                        className={`w-full text-left px-4 py-3 flex items-center justify-between gap-3 transition-colors ${
+                          isSelected ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                          <p className="text-xs text-gray-500">ID: {p.id.slice(0, 8)}</p>
+                        </div>
+                        <div className="flex flex-col items-end text-xs text-gray-400 gap-1">
+                          {p.id === currentProjectId && (
+                            <span className="text-green-600 font-semibold">Active</span>
+                          )}
+                          {resetTriggers[p.id] && (
+                            <span>updated</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <Paragraph className="text-xs text-gray-500">
                   {pendingProjectId
                     ? 'Finish the wizard to add your new project.'
-                    : 'Select a project to configure or activate it.'}
-                </div>
-                <div className="flex flex-wrap gap-2">
+                    : 'Click a project to view its details.'}
+                </Paragraph>
+              </div>
+
+              <div className="flex-1 flex flex-col">
+                {selectedProject ? (
+                  <ProjectCard
+                    project={selectedProject}
+                    isSelected
+                    isActive={selectedProject.id === currentProjectId}
+                    isDefault={selectedProject.id === DEFAULT_PROJECT_ID}
+                    refreshToken={resetTriggers[selectedProject.id]}
+                    onSelect={setSelectedCardId}
+                    onOpenName={(id) => setSectionDialog({ type: 'name', projectId: id })}
+                    onOpenDataset={(id) => setSectionDialog({ type: 'dataset', projectId: id })}
+                    onOpenTestSetup={(id) => setSectionDialog({ type: 'test', projectId: id })}
+                    onOpenTemplate={(id) => setSectionDialog({ type: 'template', projectId: id })}
+                    onExport={(id) => handleExportProject(id)}
+                    onReset={(id) => {
+                      if (id !== DEFAULT_PROJECT_ID) return;
+                      showDialog({
+                        tone: 'warning',
+                        title: 'Reset default project?',
+                        message: "This will overwrite the default project's local settings and dataset with the starter data.",
+                        confirmLabel: 'Reset project',
+                        confirmTooltip: 'Restore the default project to its initial state',
+                        cancelLabel: 'Cancel',
+                        cancelTooltip: 'Keep current project data',
+                        onConfirm: async () => {
+                          await resetProject(id);
+                          setResetTriggers((prev) => ({ ...prev, [id]: Date.now() }));
+                          setTimeout(() => {
+                            showDialog({
+                              tone: 'success',
+                              title: 'Default project reset',
+                              message: 'The default project has been restored to its initial configuration.',
+                              confirmLabel: 'OK',
+                              confirmTooltip: 'Close dialog',
+                              showCancel: false,
+                            });
+                          }, 0);
+                        },
+                      });
+                    }}
+                    onDelete={(id) => handleDelete(id)}
+                    className="max-w-3xl w-full mx-auto"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center flex-1 border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500">
+                    Select a project from the list to view its details.
+                  </div>
+                )}
+                <div className="flex flex-wrap justify-end gap-2 mt-4">
                   <TooltipButton
-                    tooltipText={selectedCardId ? 'Open the full configuration wizard' : 'Select a project to configure'}
-                    onClick={() => selectedCardId && openWizardForProject(selectedCardId, 0)}
-                    disabled={!selectedCardId}
-                    className={selectedCardId ? '' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}
+                    tooltipText={selectedProject ? 'Open the full configuration wizard' : 'Select a project to configure'}
+                    onClick={() => selectedProject && openWizardForProject(selectedProject.id, 0)}
+                    disabled={!selectedProject}
+                    className={selectedProject ? '' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}
                   >
                     Configure project
                   </TooltipButton>
                   <TooltipButton
-                    tooltipText={selectedCardId ? 'Select project and continue' : 'Select a project to continue'}
-                    onClick={() => selectedCardId && handleSelect(selectedCardId)}
-                    disabled={!selectedCardId}
-                    className={selectedCardId ? '' : 'bg-gray-200 text-gray-700'}
+                    tooltipText={selectedProject ? 'Select project and continue' : 'Select a project to continue'}
+                    onClick={() => selectedProject && handleSelect(selectedProject.id)}
+                    disabled={!selectedProject}
+                    className={selectedProject ? '' : 'bg-gray-200 text-gray-700'}
                   >
                     Select project
                   </TooltipButton>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

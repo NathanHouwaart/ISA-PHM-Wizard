@@ -2,7 +2,6 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 import { Layers } from 'lucide-react';
 
 // Import hooks
-import useMeasurements from '../../hooks/useMeasurements';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
@@ -13,19 +12,18 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import EntityMappingPanel from '../EntityMappingPanel';
 import WarningBanner from '../Widgets/WarningBanner';
 
 // Data Grid Imports
-import { Template } from '@revolist/react-datagrid';
-import { PatternCellTemplate } from '../DataGrid/CellTemplates';
-
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import useStudyRuns from '../../hooks/useStudyRuns';
+import StudyRunMappingPanel from '../Study/StudyRunMappingPanel';
+import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
+import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -64,9 +62,37 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     }, [mappingsController]);
 
     // Grid configuration for mapping studies to sensor measurements
+    const hierarchicalRows = useMemo(
+        () => buildStudyRunRowData(studies, studyRuns),
+        [studies, studyRuns]
+    );
+
+    const studyCellTemplate = useMemo(() => (
+        (createElement, props = {}) => {
+            const model = props?.model;
+            if (!model) return createElement('div', null, '');
+            if (!model.showStudyLabel) {
+                return createElement('div', { class: 'text-xs text-gray-400' }, '');
+            }
+            const label = `Study S${String(model.studyDisplayIndex || 0).padStart(2, '0')}`;
+            return createElement('div', { class: 'flex flex-col gap-0.5' }, [
+                createElement('div', { class: 'text-xs text-gray-500' }, label),
+                createElement('div', { class: 'font-semibold text-gray-900' }, model.studyDisplayName || label),
+            ]);
+        }
+    ), []);
+
+    const runCellTemplate = useMemo(() => (
+        (createElement, props = {}) => {
+            const model = props?.model;
+            if (!model) return createElement('div', null, '');
+            return createElement('div', { class: 'font-medium text-gray-800' }, model.runLabel || `Run ${model.runNumber || ''}`);
+        }
+    ), []);
+
     const measurementOutputGridConfig = {
         title: 'Mappings for measurement output',
-        rowData: studyRuns,
+        rowData: hierarchicalRows,
         columnData: selectedTestSetup?.sensors || [],
         mappings: mappingsController.mappings,
         fieldMappings: {
@@ -81,28 +107,22 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         },
         customActions: [],
         staticColumns: useMemo(() => ([{
-            prop: 'id',
-            name: 'Identifier',
-            size: 150,
+            prop: 'studyDisplayName',
+            name: 'Study',
+            size: 220,
             readonly: true,
             pin: 'colPinStart',
-            cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+            cellTemplate: studyCellTemplate,
         },
         {
-            prop: 'name',
-            name: 'Study Name',
-            size: 200,
+            prop: 'runLabel',
+            name: 'Run',
+            size: 140,
             readonly: true,
             pin: 'colPinStart',
-            cellProperties: () => {
-                return {
-                    style: {
-                        "border-right": "3px solid "
-                    }
-                }
-            }
+            cellTemplate: runCellTemplate,
         }
-        ]), [])
+        ]), [studyCellTemplate, runCellTemplate])
     };
 
     return (
@@ -145,15 +165,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <EntityMappingPanel
-                        name={`Sensor Output Mapping`}
-                        tileNamePrefix="Study S"
-                        items={studies}
-                        itemHook={useMeasurements}
+                    <StudyRunMappingPanel
+                        title="Sensor Output Mapping"
+                        studies={studies}
+                        studyRuns={studyRuns}
                         mappings={mappingsController.mappings}
                         handleInputChange={mappingsController.updateMappingValue}
                         minHeight={WINDOW_HEIGHT}
-                        disableAdd
+                        MappingCardComponent={StudyMeasurementMappingCard}
                     />
                 </TabPanel>
 

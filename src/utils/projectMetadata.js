@@ -8,6 +8,23 @@ const readJson = (key, fallback = null) => {
   }
 };
 
+const readCollectionCount = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return 0;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data)) {
+      return data.length;
+    }
+    if (data && typeof data === 'object') {
+      return Object.keys(data).length;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+};
+
 export const getProjectDatasetName = (projectId) => {
   if (!projectId) return null;
   return readJson(`globalAppData_${projectId}_datasetName`);
@@ -45,5 +62,23 @@ export const getProjectSummary = (projectId, { testSetups = [] } = {}) => {
     lastEdited,
     experimentTypeId,
     setup,
+  };
+};
+
+export const getProjectCollectionStats = (projectId) => {
+  if (!projectId) {
+    return {
+      studies: 0,
+      assays: 0,
+      contacts: 0,
+      publications: 0,
+    };
+  }
+
+  return {
+    studies: readCollectionCount(`globalAppData_${projectId}_studies`),
+    assays: readCollectionCount(`globalAppData_${projectId}_assays`),
+    contacts: readCollectionCount(`globalAppData_${projectId}_contacts`),
+    publications: readCollectionCount(`globalAppData_${projectId}_publications`),
   };
 };
