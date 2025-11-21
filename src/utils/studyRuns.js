@@ -12,10 +12,15 @@ export const createStudyRunId = (studyId, runNumber = 1) => {
     return `${studyId || uuidv4()}::${RUN_ID_PREFIX}-${paddedRun}`;
 };
 
-export const expandStudiesIntoRuns = (studies = []) => {
+export const expandStudiesIntoRuns = (studies = [], options = {}) => {
     if (!Array.isArray(studies)) {
         return [];
     }
+
+    const {
+        singleRunLabel = 'Run 1',
+        multiRunLabelFormatter = (runNumber) => `Run ${runNumber}`,
+    } = options || {};
 
     return studies.flatMap((study, studyIndex) => {
         const runCount = normalizeRunCount(study?.runCount);
@@ -23,8 +28,10 @@ export const expandStudiesIntoRuns = (studies = []) => {
         return Array.from({ length: runCount }, (_, idx) => {
             const runNumber = idx + 1;
             const runId = createStudyRunId(study?.id, runNumber);
-            const displayName = runCount > 1 ? `${study?.name || 'Study'} (Run ${runNumber})` : study?.name;
-            const shortLabel = runCount > 1 ? `Run ${runNumber}` : 'Run 1';
+            const shortLabel = runCount > 1 ? multiRunLabelFormatter(runNumber, study) : singleRunLabel;
+            const displayName = shortLabel
+                ? `${study?.name || 'Study'} (${shortLabel})`
+                : (study?.name || 'Study');
 
             return {
                 ...study,

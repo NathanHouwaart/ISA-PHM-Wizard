@@ -139,10 +139,10 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                                             <div
                                                 key={`${run.runId}-${item.id}`}
                                                 className="bg-white border border-blue-100 rounded-lg p-4 shadow-sm"
-                                            >
-                                                <Heading3 className="text-sm font-semibold text-blue-900 mb-2">
-                                                    {run.runCount > 1 ? `Run ${run.runNumber}` : 'Single run'}
-                                                </Heading3>
+                                                >
+                                                    <Heading3 className="text-sm font-semibold text-blue-900 mb-2">
+                                                        {run.runCount > 1 ? `Run ${run.runNumber}` : 'Single run'}
+                                                    </Heading3>
                                                 <FormField
                                                     label="Mapping value"
                                                     name={`mapping-${run.runId}`}

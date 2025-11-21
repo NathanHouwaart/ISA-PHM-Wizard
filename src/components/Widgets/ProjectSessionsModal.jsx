@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { exportProject, importProject } from '../../utils/indexedTreeStore';
 import IconToolTipButton from './IconTooltipButton';
@@ -6,29 +6,33 @@ import TooltipButton from './TooltipButton';
 import ProjectCard from './ProjectCard';
 import TestSetupConflictDialog from './TestSetupConflictDialog';
 import AlertDecisionDialog from './AlertDecisionDialog';
-import { Plus, Download, Folder } from 'lucide-react';
+import { Plus, Download, Layers3 } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { v4 as uuidv4 } from 'uuid';
+import { DEFAULT_EXPERIMENT_TYPE_ID } from '../../constants/experimentTypes';
+import ProjectConfigurationWizard from './ProjectConfigurationWizard';
+import ProjectNameDialog from '../ProjectConfiguration/ProjectNameDialog';
+import ProjectTemplateDialog from '../ProjectConfiguration/ProjectTemplateDialog';
+import ProjectDatasetDialog from '../ProjectConfiguration/ProjectDatasetDialog';
+import ProjectTestSetupDialog from '../ProjectConfiguration/ProjectTestSetupDialog';
 
-/**
- * ProjectSessionsModal Component
- * 
- * Modal for managing project sessions.
- * Dataset operations are now handled by the useProjectDataset hook via ProjectCardWithDataset.
- * 
- * @see ProjectCardWithDataset for dataset management
- * @see useProjectDataset hook for dataset operations (indexing, deleting, metadata)
- */
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, renameProject, resetProject, DEFAULT_PROJECT_ID, setTestSetups } = useGlobalDataContext();
-  const [renameMap, setRenameMap] = useState({});
+  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, resetProject, DEFAULT_PROJECT_ID, setTestSetups } = useGlobalDataContext();
+  
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
   const [selectedCardId, setSelectedCardId] = useState(currentProjectId || null);
   const [pendingImport, setPendingImport] = useState(null); // { pkg, newProjectId, conflict }
   const [dialogConfig, setDialogConfig] = useState(null);
   const [resetTriggers, setResetTriggers] = useState({}); // { [projectId]: timestamp }
+  const [wizardConfig, setWizardConfig] = useState({ open: false, projectId: null, initialStep: 0 });
+  const [pendingProjectId, setPendingProjectId] = useState(null);
+  const [sectionDialog, setSectionDialog] = useState({ type: null, projectId: null });
+
+  const visibleProjects = pendingProjectId
+    ? projects.filter((p) => p.id !== pendingProjectId)
+    : projects;
 
   const showDialog = (config) => {
     const {
@@ -59,20 +63,6 @@ export default function ProjectSessionsModal({ onClose }) {
     });
   };
 
-  // When a project card enters rename mode, focus its input so Enter or blur will commit
-  useEffect(() => {
-    const active = Object.keys(renameMap).find((k) => renameMap[k]);
-    if (!active) return;
-    // focus the underlying input rendered by FormField. Use a small timeout to ensure render.
-    setTimeout(() => {
-      const sel = document.querySelector(`input[name="project-${active}-name"]`);
-      if (sel && typeof sel.focus === 'function') {
-        sel.focus();
-        try { sel.select(); } catch { /* ignore */ }
-      }
-    }, 50);
-  }, [renameMap]);
-
   // when modal opens, reset selection to the current project so it's obvious
   useEffect(() => {
     if (show) setSelectedCardId(currentProjectId || null);
@@ -83,23 +73,59 @@ export default function ProjectSessionsModal({ onClose }) {
     requestAnimationFrame(() => setShow(true));
   }, []);
 
-  function handleSelect(id) {
+  const handleSelect = useCallback((id) => {
     // animate out then switch
     setShow(false);
     setTimeout(() => {
       switchProject(id);
       onClose && onClose();
     }, 240);
-  }
+  }, [switchProject, onClose]);
 
-  function handleCreate() {
-    // create a new project with a default name and open its inline rename
-    const id = createProject(`Project ${projects.length + 1}`);
-    setSelectedCardId(id);
-    setRenameMap((m) => ({ ...m, [id]: true }));
-  }
+  const openWizardForProject = useCallback((projectId, initialStep = 0) => {
+    if (!projectId) return;
+    setWizardConfig({ open: true, projectId, initialStep });
+  }, []);
 
-  function handleDelete(id) {
+  const hideWizard = useCallback(() => {
+    setWizardConfig({ open: false, projectId: null, initialStep: 0 });
+  }, []);
+
+  const handleWizardCancel = useCallback((projectId) => {
+    if (pendingProjectId && projectId === pendingProjectId) {
+      deleteProject(projectId);
+      setPendingProjectId(null);
+      setSelectedCardId((prev) => (prev === projectId ? currentProjectId || null : prev));
+    }
+    hideWizard();
+  }, [pendingProjectId, deleteProject, currentProjectId, hideWizard, setSelectedCardId]);
+
+  const handleWizardComplete = useCallback((projectId) => {
+    if (!projectId) {
+      hideWizard();
+      return;
+    }
+    if (pendingProjectId && projectId === pendingProjectId) {
+      setPendingProjectId(null);
+      setSelectedCardId(projectId);
+    }
+    setResetTriggers((prev) => ({ ...prev, [projectId]: Date.now() }));
+    hideWizard();
+  }, [pendingProjectId, hideWizard, setSelectedCardId]);
+
+  const handleProjectMetaChange = useCallback((projectId) => {
+    if (!projectId) return;
+    setResetTriggers((prev) => ({ ...prev, [projectId]: Date.now() }));
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    const defaultName = `Project ${projects.length + 1}`;
+    const newId = createProject(defaultName, DEFAULT_EXPERIMENT_TYPE_ID);
+    setPendingProjectId(newId);
+    openWizardForProject(newId, 0);
+  }, [projects.length, createProject, openWizardForProject]);
+
+  const handleDelete = useCallback((id) => {
     const project = projects.find((x) => x.id === id);
     if (!project) return;
     showDialog({
@@ -112,9 +138,9 @@ export default function ProjectSessionsModal({ onClose }) {
       cancelTooltip: 'Keep project',
       onConfirm: () => deleteProject(id),
     });
-  }
+  }, [projects, deleteProject]);
 
-  async function handleExportProject(id) {
+  const handleExportProject = useCallback(async (id) => {
     const project = projects.find((x) => x.id === id);
     try {
       const pkg = await exportProject(id);
@@ -140,13 +166,34 @@ export default function ProjectSessionsModal({ onClose }) {
         onConfirm: () => handleExportProject(id),
       });
     }
-  }
+  }, [projects]);
 
-  async function handleImportFile(file) {
+  const completeImport = useCallback(async (newId) => {
+    try {
+      // Reload the global testSetups from localStorage to reflect the newly imported test setup
+      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
+      const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+      if (Array.isArray(setups)) {
+        setTestSetups(setups);
+      }
+      
+      // Note: Dataset tree will be loaded automatically by useProjectDataset hook
+      // when the new project card is rendered
+      
+      setSelectedCardId(newId);
+    } catch (err) {
+      console.error('[ProjectSessionsModal] completeImport error', err);
+    }
+  }, [setTestSetups]);
+
+  const handleImportFile = useCallback(async (file) => {
     try {
       const text = await file.text();
       const pkg = JSON.parse(text);
-      const newId = createProject(pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`);
+      const newId = createProject(
+        pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`,
+        pkg?.experimentType || DEFAULT_EXPERIMENT_TYPE_ID
+      );
       
       // Attempt import - this may return a conflict
       const result = await importProject(pkg, newId);
@@ -172,26 +219,7 @@ export default function ProjectSessionsModal({ onClose }) {
         onConfirm: () => handleImportFile(file),
       });
     }
-  }
-
-  async function completeImport(newId) {
-    try {
-      // Reload the global testSetups from localStorage to reflect the newly imported test setup
-      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-      const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
-      if (Array.isArray(setups)) {
-        setTestSetups(setups);
-      }
-      
-      // Note: Dataset tree will be loaded automatically by useProjectDataset hook
-      // when the new project card is rendered
-      
-      setSelectedCardId(newId);
-      setRenameMap((m) => ({ ...m, [newId]: true }));
-    } catch (err) {
-      console.error('[ProjectSessionsModal] completeImport error', err);
-    }
-  }
+  }, [createProject, completeImport]);
 
   async function handleConflictResolution(resolution) {
     if (!pendingImport) return;
@@ -296,106 +324,155 @@ export default function ProjectSessionsModal({ onClose }) {
       {/* blurred backdrop */}
       <div className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${show ? 'opacity-100' : 'opacity-0'}`} />
 
-      <div className="relative z-60 w-full max-w-4xl mx-4">
-        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 transform transition-all duration-300 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ minHeight: '60vh' }}>
-          <div className="flex items-start justify-between">
+      <div className="relative z-60 w-full max-w-6xl mx-4">
+        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 transform transition-all duration-300 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ minHeight: '70vh' }}>
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <Heading3>
-                Select a project session
-              </Heading3>
-              <Paragraph className=" text-gray-500 mt-1 max-w-xl">
-                Choose which project you want to work on. You can create, rename or delete projects here. You must select a project to continue.
+              <Heading3 className="text-2xl">Project sessions</Heading3>
+              <Paragraph className="text-gray-500 mt-1 max-w-2xl">
+                Manage your projects, inspect their metadata, and launch focused editors for datasets, templates, and test setups.
               </Paragraph>
             </div>
             <div className="flex items-center gap-2">
-              {/* hidden raw file input used by the import icon */}
               <input ref={fileRef} type="file" accept="application/json" onChange={(e) => { if (e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
-              
               <IconToolTipButton icon={Plus} onClick={handleCreate} tooltipText="Create new project" />
               <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project" />
-              {/* Close button removed: users must select a project to close the modal */}
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 max-h-[50vh] overflow-y-auto">
-            {projects.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="text-gray-300">
-                  <Folder className="w-20 h-20 mx-auto" aria-hidden />
+          <div className="mt-6 flex flex-col gap-6">
+            <div className="space-y-4">
+              <div className="max-h-[50vh] overflow-y-auto pr-1 space-y-3">
+                {visibleProjects.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-gray-300 rounded-2xl">
+                    <Layers3 className="w-16 h-16 text-gray-300" />
+                    <h3 className="mt-4 text-xl font-semibold text-gray-700">No projects found</h3>
+                    <p className="mt-2 text-sm text-gray-500 max-w-sm">
+                      Start by creating a new project with the + button above, or import an existing session.
+                    </p>
+                    <TooltipButton tooltipText="Create new project" onClick={handleCreate} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg">
+                      Create a project
+                    </TooltipButton>
+                  </div>
+                ) : (
+                  visibleProjects.map((p) => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      isSelected={selectedCardId === p.id}
+                      isActive={p.id === currentProjectId}
+                      isDefault={p.id === DEFAULT_PROJECT_ID}
+                      refreshToken={resetTriggers[p.id]}
+                      onSelect={setSelectedCardId}
+                      onOpenName={(id) => setSectionDialog({ type: 'name', projectId: id })}
+                      onOpenDataset={(id) => setSectionDialog({ type: 'dataset', projectId: id })}
+                      onOpenTestSetup={(id) => setSectionDialog({ type: 'test', projectId: id })}
+                      onOpenTemplate={(id) => setSectionDialog({ type: 'template', projectId: id })}
+                      onExport={(id) => handleExportProject(id)}
+                      onReset={(id) => {
+                        if (p.id !== DEFAULT_PROJECT_ID) return;
+                        showDialog({
+                          tone: 'warning',
+                          title: 'Reset default project?',
+                          message: "This will overwrite the default project's local settings and dataset with the starter data.",
+                          confirmLabel: 'Reset project',
+                          confirmTooltip: 'Restore the default project to its initial state',
+                          cancelLabel: 'Cancel',
+                          cancelTooltip: 'Keep current project data',
+                          onConfirm: async () => {
+                            await resetProject(id);
+                            setResetTriggers((prev) => ({ ...prev, [id]: Date.now() }));
+                            setTimeout(() => {
+                              showDialog({
+                                tone: 'success',
+                                title: 'Default project reset',
+                                message: 'The default project has been restored to its initial configuration.',
+                                confirmLabel: 'OK',
+                                confirmTooltip: 'Close dialog',
+                                showCancel: false,
+                              });
+                            }, 0);
+                          },
+                        });
+                      }}
+                      onDelete={(id) => handleDelete(id)}
+                    />
+                  ))
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+                <div className="text-sm text-gray-500">
+                  {pendingProjectId
+                    ? 'Finish the wizard to add your new project.'
+                    : 'Select a project to configure or activate it.'}
                 </div>
-                <h3 className="mt-6 text-xl font-semibold">No projects found</h3>
-                <p className="mt-2 text-sm text-gray-500 max-w-lg text-center">There are no projects in your workspace. Start by creating a new project using the + button above, or import an existing project.</p>
-                <div className="mt-6">
-                  <TooltipButton tooltipText="Create new project" onClick={handleCreate} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg">
-                    Create a project
+                <div className="flex flex-wrap gap-2">
+                  <TooltipButton
+                    tooltipText={selectedCardId ? 'Open the full configuration wizard' : 'Select a project to configure'}
+                    onClick={() => selectedCardId && openWizardForProject(selectedCardId, 0)}
+                    disabled={!selectedCardId}
+                    className={selectedCardId ? '' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}
+                  >
+                    Configure project
+                  </TooltipButton>
+                  <TooltipButton
+                    tooltipText={selectedCardId ? 'Select project and continue' : 'Select a project to continue'}
+                    onClick={() => selectedCardId && handleSelect(selectedCardId)}
+                    disabled={!selectedCardId}
+                    className={selectedCardId ? '' : 'bg-gray-200 text-gray-700'}
+                  >
+                    Select project
                   </TooltipButton>
                 </div>
-              </div>
-            ) : (
-              projects.map((p, idx) => (
-                <ProjectCard
-                  key={p.id}
-                  project={p}
-                  isSelected={selectedCardId === p.id}
-                  isActive={p.id === currentProjectId}
-                  isDefault={p.id === DEFAULT_PROJECT_ID}
-                  isRenaming={renameMap[p.id]}
-                  resetTrigger={resetTriggers[p.id]}
-                  onSelect={() => setSelectedCardId((cur) => (cur === p.id ? null : p.id))}
-                  onRename={(newName) => {
-                    renameProject(p.id, newName);
-                    setRenameMap((m) => ({ ...m, [p.id]: false }));
-                  }}
-                  onToggleRename={() => setRenameMap((m) => ({ ...m, [p.id]: !m[p.id] }))}
-                  onDelete={() => handleDelete(p.id)}
-                  onExport={() => handleExportProject(p.id)}
-                  onReset={p.id === DEFAULT_PROJECT_ID ? () => {
-                    showDialog({
-                      tone: 'warning',
-                      title: 'Reset default project?',
-                      message: "This will overwrite the default project's local settings and dataset with the starter data.",
-                      confirmLabel: 'Reset project',
-                      confirmTooltip: 'Restore the default project to its initial state',
-                      cancelLabel: 'Cancel',
-                      cancelTooltip: 'Keep current project data',
-                      onConfirm: async () => {
-                        await resetProject(p.id);
-                        // Trigger ProjectCard to refresh its dataset
-                        setResetTriggers((prev) => ({ ...prev, [p.id]: Date.now() }));
-                        setTimeout(() => {
-                          showDialog({
-                            tone: 'success',
-                            title: 'Default project reset',
-                            message: 'The default project has been restored to its initial configuration.',
-                            confirmLabel: 'OK',
-                            confirmTooltip: 'Close dialog',
-                            showCancel: false,
-                          });
-                        }, 0);
-                      },
-                    });
-                  } : undefined}
-                  index={idx}
-                  animationVisible={show}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="mt-6 border-t border-gray-100 pt-5">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-500">You can always change the active project later.</div>
-              <div>
-                {/* TooltipButton is used here; button is disabled (grayed) when no selection */}
-                <TooltipButton tooltipText={selectedCardId ? 'Select project and continue' : 'Select a project to continue'} onClick={() => { if (selectedCardId) handleSelect(selectedCardId); }} disabled={!selectedCardId} className={selectedCardId ? '' : 'bg-gray-200 text-gray-700'}>
-                  Select project
-                </TooltipButton>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    
+    {sectionDialog.type === 'name' && (
+      <ProjectNameDialog
+        projectId={sectionDialog.projectId}
+        isOpen={true}
+        onClose={() => setSectionDialog({ type: null, projectId: null })}
+      />
+    )}
+    {sectionDialog.type === 'template' && (
+      <ProjectTemplateDialog
+        projectId={sectionDialog.projectId}
+        isOpen={true}
+        onClose={() => setSectionDialog({ type: null, projectId: null })}
+        onProjectMetaChange={handleProjectMetaChange}
+      />
+    )}
+    {sectionDialog.type === 'dataset' && (
+      <ProjectDatasetDialog
+        projectId={sectionDialog.projectId}
+        isOpen={true}
+        onClose={() => setSectionDialog({ type: null, projectId: null })}
+        onDatasetChanged={handleProjectMetaChange}
+      />
+    )}
+    {sectionDialog.type === 'test' && (
+      <ProjectTestSetupDialog
+        projectId={sectionDialog.projectId}
+        isOpen={true}
+        onClose={() => setSectionDialog({ type: null, projectId: null })}
+        onProjectMetaChange={handleProjectMetaChange}
+      />
+    )}
+
+    {wizardConfig.open && (
+      <ProjectConfigurationWizard
+        open={wizardConfig.open}
+        projectId={wizardConfig.projectId}
+        initialStep={wizardConfig.initialStep}
+        onCancel={() => handleWizardCancel(wizardConfig.projectId)}
+        onComplete={() => handleWizardComplete(wizardConfig.projectId)}
+        onProjectMetaChange={handleProjectMetaChange}
+      />
+    )}
     
     {/* Conflict Resolution Dialog */}
     {pendingImport && pendingImport.conflict && (

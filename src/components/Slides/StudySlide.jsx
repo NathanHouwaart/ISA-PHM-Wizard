@@ -19,14 +19,15 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { usePageTab } from '../../hooks/usePageWidth'; // Import the usePageTab hook
 
 import { SlidePageTitle } from '../Typography/Heading2';
-import { SlidePageSubtitle } from '../Typography/Paragraph';
+import { SlidePageSubtitle, default as Paragraph } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 
 import DataGrid from '../DataGrid/DataGrid'; // Import the new DataGrid
-import { BoldCell, HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../DataGrid/CellTemplates'; // Import cell templates
+import { HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../DataGrid/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -41,8 +42,12 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const { 
         setScreenWidth, 
         studies, 
-        setStudies 
+        setStudies,
+        experimentType
     } = useGlobalDataContext();
+
+    const experimentConfig = getExperimentTypeConfig(experimentType);
+    const runCountReadOnly = !experimentConfig.supportsMultipleRuns;
 
     // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
 
@@ -132,9 +137,9 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             },
             {
                 prop: 'runCount',
-                name: 'Number of Runs',
+                name: runCountReadOnly ? 'File count (fixed to 1)' : 'Number of runs',
                 size: 160,
-                readonly: false,
+                readonly: runCountReadOnly,
             }
         ]
     };
@@ -149,6 +154,9 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             <SlidePageSubtitle>
                 The studies describe the experiments performed within the research project. For example, each test with a different tested component (e.g. bearing) or run-to-failure trajectory is described in a new study. The relevant study parameters can be described on the following page.
             </SlidePageSubtitle>
+            <Paragraph className="text-sm text-gray-600 mt-2">
+                Selected template: <span className="font-semibold">{experimentConfig.title}</span> · {runCountReadOnly ? 'Each study produces a single file, so run counts are fixed to 1.' : 'Manage how many files/runs each study contains.'}
+            </Paragraph>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
                <TabSwitcher

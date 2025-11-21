@@ -66,11 +66,30 @@ export function useProjectDataset(projectId) {
   const fileSystem = useFileSystem();
   const { currentProjectId, setSelectedDataset } = useGlobalDataContext();
 
+  const DATASET_NAME_KEY = (id) => `globalAppData_${id}_datasetName`;
+
+  const setCachedDatasetName = (name) => {
+    try {
+      if (!projectId) return;
+      if (name) {
+        localStorage.setItem(DATASET_NAME_KEY(projectId), JSON.stringify(name));
+      } else {
+        localStorage.removeItem(DATASET_NAME_KEY(projectId));
+      }
+    } catch (err) {
+      console.warn('[useProjectDataset] cache dataset name failed', err);
+    }
+  };
+
   /**
    * Load project metadata from localStorage
    * Includes test setup name and last edited timestamp
    */
   const loadMetadata = useCallback(() => {
+    if (!projectId) {
+      setMetadata({ setupName: null, lastEdited: null });
+      return;
+    }
     try {
       // Load test setup name
       const setupIdRaw = localStorage.getItem(`globalAppData_${projectId}_selectedTestSetupId`);
@@ -114,17 +133,29 @@ export function useProjectDataset(projectId) {
   useEffect(() => {
     let mounted = true;
 
+    if (!projectId) {
+      setTree(null);
+      setCachedDatasetName(null);
+      setLoading(false);
+      setProgress(null);
+      return () => {
+        mounted = false;
+      };
+    }
+
     (async () => {
       try {
         setLoading(true);
         const loadedTree = await loadTree(projectId);
         if (mounted) {
           setTree(loadedTree);
+          setCachedDatasetName(loadedTree?.rootName || loadedTree?.name || null);
         }
       } catch (err) {
         console.error('[useProjectDataset] Error loading tree for project', projectId, err);
         if (mounted) {
           setTree(null);
+          setCachedDatasetName(null);
         }
       } finally {
         if (mounted) {
@@ -133,7 +164,6 @@ export function useProjectDataset(projectId) {
       }
     })();
 
-    // Load metadata
     loadMetadata();
 
     return () => {
@@ -155,6 +185,10 @@ export function useProjectDataset(projectId) {
    * Shows progress and handles errors gracefully
    */
   const indexDataset = useCallback(async () => {
+    if (!projectId) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -193,6 +227,7 @@ export function useProjectDataset(projectId) {
 
       // Update state
       setTree(dataset);
+      setCachedDatasetName(dataset?.rootName || dataset?.name || null);
 
       // If this is the currently active project, update the global selectedDataset
       if (projectId === currentProjectId) {
@@ -239,6 +274,10 @@ export function useProjectDataset(projectId) {
    * Removes from IndexedDB and clears in-memory state
    */
   const deleteDataset = useCallback(async () => {
+    if (!projectId) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -255,6 +294,7 @@ export function useProjectDataset(projectId) {
       }
 
       setTree(null);
+      setCachedDatasetName(null);
       console.log('[useProjectDataset] Dataset deleted for project:', projectId);
 
     } catch (err) {

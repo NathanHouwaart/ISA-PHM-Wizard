@@ -28,11 +28,9 @@ export function StudyMeasurementMappingCard({ item, itemIndex, mappings, onSave,
                         <Paragraph className="text-md text-gray-700 mt-2 italic">
                             {item.description || "no description available"}
                         </Paragraph>
-                        {item.runCount > 1 && (
-                            <Paragraph className="text-sm text-gray-600 mt-1">
-                                {`Run ${item.runNumber} of ${item.runCount}`}
-                            </Paragraph>
-                        )}
+                        <Paragraph className="text-sm text-gray-600 mt-1">
+                            {item.runCount > 1 ? `Run ${item.runNumber} of ${item.runCount}` : 'Single run'}
+                        </Paragraph>
                     </div>
                     {/* Studies Grid - this is where the dynamic inputs are */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

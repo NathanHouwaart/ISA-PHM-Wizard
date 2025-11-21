@@ -1,4 +1,4 @@
-import { CalendarDays, Edit2, MapPin, Trash2 } from 'lucide-react';
+import { CalendarDays, Edit2, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import {
@@ -8,12 +8,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"; // Import Shadcn UI Tooltip components
 import TooltipButton from '../Widgets/TooltipButton';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
 
 // --- Publication Card Component ---
 export const StudyCard = ({ item, onEdit, onRemove }) => {
 
   const study = item;
+  const { experimentType } = useGlobalDataContext();
+  const experimentConfig = getExperimentTypeConfig(experimentType);
+  const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
+  const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -77,8 +83,8 @@ export const StudyCard = ({ item, onEdit, onRemove }) => {
                 </span>
               </div>
               <div className="flex items-center space-x-1">
-                <p className='font-bold'>Runs - </p>
-                <span>{Number.parseInt(study?.runCount, 10) || 1}</span>
+                <p className='font-bold'>{runsLabel} - </p>
+                <span>{normalizedRunCount}</span>
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { Layers } from 'lucide-react';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
@@ -18,6 +19,7 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
+import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -26,7 +28,8 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const {
         studies,
         studyVariables,
-        setScreenWidth
+        setScreenWidth,
+        selectedDataset
     } = useGlobalDataContext();
 
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
@@ -116,6 +119,9 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 ]}
                 className="mb-4"
             />
+            <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
+                Each cell can contain either a literal value (e.g. a threshold) or the filename of a run-specific time-series dataset. Pick the approach that best documents the study.
+            </Paragraph>
 
             <TabPanel isActive={selectedTab === 'simple-view'}>
                 {studyVariables.length === 0 && (
@@ -144,6 +150,11 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                         <strong>No variables defined.</strong> Add variables first to work in the grid view.
                     </WarningBanner>
                 )}
+                {!selectedDataset && (
+                    <WarningBanner type="info">
+                        <strong>No dataset indexed.</strong> To use the <strong>�Y"? Assign files</strong> helper, index a dataset via the project settings <Layers className="inline w-4 h-4 mx-1" /> first.
+                    </WarningBanner>
+                )}
 
                 <div className="space-y-4 mt-4">
                     {studies.map((study) => {
@@ -151,7 +162,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                         const hasRuns = runsForStudy.length > 0;
 
                         const gridConfig = {
-                            title: `${study.name} variable mappings`,
+                            title: null,
                             rowData: studyVariables,
                             columnData: runsForStudy,
                             mappings: mappingsController.mappings,
@@ -179,7 +190,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                             >
                                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                     <Heading3 className="text-lg font-semibold text-gray-900">
-                                        {study.name}
+                                        Study variable mappings – {study.name}
                                     </Heading3>
                                     {hasRuns && (
                                         <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -205,6 +216,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                             onDataChange={mappingsController.setMappings}
                                             height={gridHeight}
                                             isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                            actionPlugins={[FilePickerPlugin]}
                                         />
                                     </div>
                                 ) : (

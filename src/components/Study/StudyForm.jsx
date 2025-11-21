@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import FormField from '../Form/FormField';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
@@ -6,11 +6,14 @@ import { v4 as uuidv4 } from 'uuid';
 import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
+import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { studies } = useGlobalDataContext();
+  const { studies, experimentType } = useGlobalDataContext();
+  const experimentConfig = getExperimentTypeConfig(experimentType);
+  const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 
   // Define your initial form state here, outside the component
   const [formData, setFormData] = useState({
@@ -32,7 +35,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     }
     setFormError('');
 
-    const normalizedRunCount = Math.max(1, Number.parseInt(formData.runCount, 10) || 1);
+    const normalizedRunCount = runCountDisabled ? 1 : Math.max(1, Number.parseInt(formData.runCount, 10) || 1);
 
     const studyData = {
       ...formData,
@@ -44,11 +47,27 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   };
 
   const handleChange = (e) => {
+    if (runCountDisabled && e.target.name === 'runCount') {
+      return;
+    }
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
+
+  useEffect(() => {
+    if (runCountDisabled && formData.runCount !== 1) {
+      setFormData((prev) => ({
+        ...prev,
+        runCount: 1
+      }));
+    }
+  }, [runCountDisabled, formData.runCount]);
+
+  const runCountExplanation = runCountDisabled
+    ? 'This experiment type always uses a single file per study.'
+    : 'Specify how many repeated runs/trajectories were collected for this study. Set to 1 if only a single run exists.';
 
 
   return (
@@ -123,13 +142,14 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
           <FormField
             name={"runCount"}
             onChange={handleChange}
-            value={formData.runCount}
+            value={runCountDisabled ? 1 : formData.runCount}
             label="Number of runs"
             type='number'
             min={1}
-            explanation="Specify how many repeated runs/trajectories were collected for this study. Set to 1 if only a single run exists."
-            example="3"
+            explanation={runCountExplanation}
+            example={runCountDisabled ? undefined : "3"}
             required
+            disabled={runCountDisabled}
           />
 
         </div>
