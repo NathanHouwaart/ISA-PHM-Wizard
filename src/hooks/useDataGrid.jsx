@@ -401,7 +401,16 @@ export const useDataGrid = ({
             prop: column[fields.columnId],
             name: `${column[fields.columnName]}${column[fields.columnUnit] ? ` (${column[fields.columnUnit]})` : ''}`,
             size: 150,
-            readonly: false
+            readonly: false,
+            cellProperties: (props) => {
+              const model = props?.model;
+              if (model?.isLastRunInStudy) {
+                return {
+                  style: { "border-bottom": "3px solid black" }
+                };
+              }
+              return {};
+            }
           };
           columns.push(dynamicColumn);
         }

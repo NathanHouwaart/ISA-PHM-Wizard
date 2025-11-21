@@ -45,7 +45,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
     const studyRuns = useStudyRuns();
-    
+
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
         : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
@@ -113,6 +113,15 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             readonly: true,
             pin: 'colPinStart',
             cellTemplate: studyCellTemplate,
+            cellProperties: (props) => {
+                const model = props?.model;
+                if (model?.isLastRunInStudy) {
+                    return {
+                        style: { "border-bottom": "3px solid black" }
+                    };
+                }
+                return {};
+            }
         },
         {
             prop: 'runLabel',
@@ -121,6 +130,19 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             readonly: true,
             pin: 'colPinStart',
             cellTemplate: runCellTemplate,
+            cellProperties: (props) => {
+                const model = props?.model;
+                const style = {
+                    "border-right": "3px solid black"
+                };
+                
+                // Add bottom border if this is the last run of a study (but not the last study)
+                if (model?.isLastRunInStudy) {
+                    style["border-bottom"] = "3px solid black";
+                }
+                
+                return { style };
+            }
         }
         ]), [studyCellTemplate, runCellTemplate])
     };
