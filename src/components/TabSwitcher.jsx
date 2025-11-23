@@ -1,6 +1,6 @@
 // src/components/TabSwitcher.js
 import React from 'react';
-import { TooltipButton } from './Widgets/TooltipButton';
+import TooltipButton from './Widgets/TooltipButton';
 import { cn } from '../utils/utils';
 
 const TabSwitcher = ({ selectedTab, onTabChange, tabs, className = '' }) => {

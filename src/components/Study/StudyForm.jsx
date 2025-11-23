@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import FormField from '../Form/FormField';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import { v4 as uuidv4 } from 'uuid';
+import generateId from '../../utils/generateId';
 import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
@@ -40,7 +40,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const studyData = {
       ...formData,
       runCount: normalizedRunCount,
-      id: isEditing && item.id ? item.id : uuidv4(), // Generate a new ID if not editing}`
+      id: isEditing && item.id ? item.id : generateId(), // Generate a new ID if not editing}`
     };
 
     onSave(studyData);

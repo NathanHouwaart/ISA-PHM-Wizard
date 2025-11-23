@@ -25,7 +25,7 @@ import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
-
+import generateId from '../../utils/generateId';
 
 export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -63,13 +63,6 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
     const handleDataGridMappingsChange = useCallback((newMappings) => {
         mappingsController.setMappings(newMappings);
     }, [mappingsController]);
-
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
-
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
 
     // Handle input changes in EntityMappingPanel
     const addNewProtocol = () => {
@@ -183,28 +176,27 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-
-                    <EntityMappingPanel
-                        name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        itemHook={useMeasurementProtocols}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                    />
-
+                    <div className="h-[45vh]">
+                        <EntityMappingPanel
+                            name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                            itemHook={useMeasurementProtocols}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                            minHeight={WINDOW_HEIGHT}
+                        />
+                    </div>
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <DataGrid
                         {...measurementProtocolsGridConfig}
+                        height="45vh"
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
-
                 </TabPanel>
             </div>
         </div>

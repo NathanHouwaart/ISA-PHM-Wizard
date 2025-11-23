@@ -6,7 +6,7 @@ import IconToolTipButton from "../Widgets/IconTooltipButton";
 import TooltipButton from "../Widgets/TooltipButton";
 
 
-export const ContactCard = ({ item, onEdit, onRemove }) => {
+const ContactCard = ({ item, onEdit, onRemove }) => {
     const contact = item;
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">

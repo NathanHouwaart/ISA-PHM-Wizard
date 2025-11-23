@@ -9,7 +9,7 @@ import Paragraph from "../Typography/Paragraph";
 
 import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses";
 
-export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
+const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const { contacts } = useGlobalDataContext();
 
@@ -219,3 +219,5 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     </div>
   );
 };
+
+export default PublicationForm;

@@ -20,6 +20,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
 
     const resizeElementRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
+    const cnt = useContacts();
 
     return (
         <div ref={combinedRef}>
@@ -37,7 +38,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
                     onHeightChange={() => { }}
                     itemHook={useContacts} // This hook will need to pull 'studies' from the global context
                 >
-                    <CollectionTitle>Contacts</CollectionTitle>
+                    <CollectionTitle>Contacts ({cnt?.items?.length || 0})</CollectionTitle>
                     <CollectionSubtitle>Add, Remove And Edit Contacts</CollectionSubtitle>
                     <CollectionAddButtonText>Add Contact</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Contacts Found</CollectionEmptyStateTitle>

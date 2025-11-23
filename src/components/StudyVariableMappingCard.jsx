@@ -1,25 +1,21 @@
-import { Edit2, Trash2 } from 'lucide-react';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
+
 import FormField from './Form/FormField';
-import EditEntityModal from './EditEntityModal';
-import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 import Heading3 from './Typography/Heading3';
 import Paragraph from './Typography/Paragraph';
 import useStudyRuns from '../hooks/useStudyRuns';
-import TabSwitcher, { TabPanel } from './TabSwitcher';
+import ItemSelector from './Selectors/ItemSelector';
+import { TabPanel } from './TabSwitcher';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
-export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled }) {
-
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange, singleRunMode = false }) => {
     const studyRuns = useStudyRuns();
-    const { studies } = useGlobalDataContext();
+    const { studies, studyVariables } = useGlobalDataContext();
 
-    // Open modal when parent signals an add-created item
-    if (openEdit && !isEditModalOpen) {
-        setIsEditModalOpen(true);
-        onOpenHandled && onOpenHandled();
-    }
+    // When singleRunMode is true, item is the active run passed from DualSidebarStudyRunPanel
+    // In that case, we just display that single run's mapping
+    const activeVariable = singleRunMode ? studyVariables[itemIndex] : item;
+
 
     const runsByStudy = useMemo(() => {
         const grouped = new Map();
@@ -75,54 +71,83 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
 
     return (
         <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
-            {/* Variable Header, Edit/Remove Buttons */}
-            <div className="flex justify-between items-start mb-4 border-b pb-4">
-                <Heading3 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
-                    {item.name}
+            <div className="mb-4 border-b pb-4">
+                <Heading3 className="text-3xl font-bold text-gray-800">
+                    {activeVariable?.name || 'Unnamed variable'}
                 </Heading3>
-                <div className="flex space-x-3">
-                    <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                        title="Edit Variable Details"
-                    >
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        Edit Details
-                    </button>
-                    <button
-                        onClick={() => removeParameter(item.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                        title="Remove Parameter"
-                    >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove
-                    </button>
-                </div>
             </div>
             <Paragraph className="text-md text-gray-700 mb-4">
-                {item.description}
+                {activeVariable?.description}
             </Paragraph>
             <div className="flex justify-between items-center text-sm font-medium text-gray-600 bg-gray-50 px-4 py-2 rounded-md mb-6 border border-gray-200">
-                <span>Type: <span className="font-semibold text-gray-800">{item.type}</span></span>
-                {item.unit && <span>Unit: <span className="font-semibold text-gray-800">{item.unit}</span></span>}
+                <span>Type: <span className="font-semibold text-gray-800">{activeVariable?.type}</span></span>
+                {activeVariable?.unit && <span>Unit: <span className="font-semibold text-gray-800">{activeVariable?.unit}</span></span>}
             </div>
 
-            {/* mappings Grid - this is where the dynamic inputs are */}
-            {studyTabs.length === 0 ? (
+            {singleRunMode ? (
+                // When used in DualSidebarStudyRunPanel: item is the active run
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    {studyVariables.map((variable, varIndex) => {
+                        const mapping = mappings.find((m) => 
+                            m.studyVariableId === variable.id && 
+                            (m.studyRunId === item.runId || m.studyRunId === item.id)
+                        ) || {
+                            studyVariableId: variable.id,
+                            studyRunId: item.runId || item.id,
+                            studyId: item.studyId,
+                            value: ''
+                        };
+
+                        return (
+                            <div key={variable.id} className="bg-white border border-blue-100 rounded-xl p-4 shadow-sm mb-3">
+                                <div className="mb-2">
+                                    <Heading3 className="text-base font-semibold text-blue-900">
+                                        {variable.name}
+                                    </Heading3>
+                                    <Paragraph className="text-xs text-gray-600">{variable.description}</Paragraph>
+                                </div>
+                                <FormField
+                                    label=""
+                                    name={`mapping-${variable.id}`}
+                                    value={mapping.value || ''}
+                                    commitOnBlur
+                                    className="w-full"
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            varIndex,
+                                            {
+                                                studyVariableId: variable.id,
+                                                studyRunId: item.runId || item.id,
+                                                studyId: item.studyId
+                                            },
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Enter mapped value"
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                // Original EntityMappingPanel usage: item is a variable, show all runs
+                <>
+                    {studyTabs.length === 0 ? (
                 <Paragraph className="italic text-gray-500">
                     No studies with runs available. Add runs to start mapping this variable.
                 </Paragraph>
             ) : (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <TabSwitcher
-                        selectedTab={activeStudyId}
-                        onTabChange={setActiveStudyId}
-                        tabs={studyTabs.map(study => ({
-                            id: study.studyId,
-                            label: study.label,
-                            tooltip: `${study.label} (${study.runs.length} run${study.runs.length > 1 ? 's' : ''})`
-                        }))}
-                        className="mb-3 overflow-x-auto"
+                    <ItemSelector
+                        items={studyTabs}
+                        selectedId={activeStudyId}
+                        onChange={setActiveStudyId}
+                        idKey="studyId"
+                        labelKey="label"
+                        getBadgeContent={(study) => `${study.runs.length} run${study.runs.length !== 1 ? 's' : ''}`}
+                        placeholder="Search studies..."
+                        searchLabel="Search Studies"
+                        className="mb-3"
                     />
 
                     {studyTabs.map((study) => (
@@ -132,22 +157,33 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                                     This study has no runs defined yet.
                                 </Paragraph>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {study.runs.map((run) => {
                                         const mapping = mappingByRunId.get(run.runId);
                                         return (
                                             <div
                                                 key={`${run.runId}-${item.id}`}
-                                                className="bg-white border border-blue-100 rounded-lg p-4 shadow-sm"
+                                                className="bg-white border border-blue-100 rounded-xl p-4 shadow-sm flex flex-col gap-3"
                                                 >
-                                                    <Heading3 className="text-sm font-semibold text-blue-900 mb-2">
-                                                        {run.runCount > 1 ? `Run ${run.runNumber}` : 'Single run'}
-                                                    </Heading3>
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[11px] uppercase tracking-wide text-blue-500">
+                                                            {study.label}
+                                                        </p>
+                                                        <Heading3 className="text-base font-semibold text-blue-900">
+                                                            {run.runCount > 1 ? `Run ${run.runNumber}` : 'Single run'}
+                                                        </Heading3>
+                                                    </div>
+                                                    <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700">
+                                                        {run.studyIndex !== undefined ? `S${run.studyIndex + 1}` : 'Run'}
+                                                    </span>
+                                                </div>
                                                 <FormField
-                                                    label="Mapping value"
+                                                    label=""
                                                     name={`mapping-${run.runId}`}
                                                     value={mapping?.value || ''}
-                                                    commitOnBlur={true}
+                                                    commitOnBlur
+                                                    className="w-full min-w-[160px]"
                                                     onChange={(e) =>
                                                         handleInputChange(
                                                             itemIndex,
@@ -159,7 +195,7 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="Enter value"
+                                                    placeholder="Enter mapped value"
                                                 />
                                             </div>
                                         );
@@ -170,49 +206,10 @@ export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, ha
                     ))}
                 </div>
             )}
-
-            {/* Edit Variable Details Modal */}
-            <div className={`transition-all duration-200 ${(isEditModalOpen) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <EditEntityModal
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    onSave={onSave}
-                    initialData={item}
-                    title={`Edit Variable: ${item.name}`}
-                    fields={[
-                        { 
-                            name: 'name', 
-                            label: 'Variable Name', 
-                            explanation: "Define all variables that can be varied in the experiments. As many variables can be added/removed as required to describe the experiment.",
-                            example: ": Fault type, fault severity or motor speed or other."
-                        
-                        },
-                        { 
-                            name: 'type', 
-                            label: 'Variable Type', 
-                            type: 'select', 
-                            options: VARIABLE_TYPE_OPTIONS,
-                            explanation: "Describe the type of the variable (e.g. operating condition/fault specification).",
-                            example: "Quantitative fault specification, qualitative fault specification, operational condition, environmental condition or other."
-                        },
-                        { 
-                            name: 'unit', 
-                            label: 'Unit',  
-                            explanation: "Unit corresponding with the variable. Please leave empty if none.",
-                            example: "Hz, RPM, m/s."
-                        },
-                        { 
-                            name: 'description', 
-                            label: 'Description', 
-                            type: 'textarea',
-                            explanation: "Description of the variable.",
-                            example: "Measures the impact or intensity of the fault."
-                        }
-                    ]}
-                />
-            </div>
+                </>
+            )}
         </div >
-    )
-}
+    );
+};
 
-export default StudyVariableMappingCard
+export default StudyVariableMappingCard;

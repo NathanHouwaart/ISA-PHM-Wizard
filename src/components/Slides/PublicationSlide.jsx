@@ -20,6 +20,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
 
     const resizeElementRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
+    const pubs = usePublications();
 
     return (
         <div ref={combinedRef}>
@@ -37,7 +38,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
                     onHeightChange={() => { }}
                     itemHook={usePublications} // This hook will need to pull 'studies' from the global context
                 >
-                    <CollectionTitle>Publications</CollectionTitle>
+                    <CollectionTitle>Publications ({pubs?.items?.length || 0})</CollectionTitle>
                     <CollectionSubtitle>Add, Remove And Edit Publications</CollectionSubtitle>
                     <CollectionAddButtonText>Add Publication</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Publication Found</CollectionEmptyStateTitle>

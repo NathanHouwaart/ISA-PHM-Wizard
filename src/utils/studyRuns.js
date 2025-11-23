@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import generateId from './generateId';
 
 const RUN_ID_PREFIX = 'run';
 
@@ -9,7 +9,7 @@ export const normalizeRunCount = (value) => {
 
 export const createStudyRunId = (studyId, runNumber = 1) => {
     const paddedRun = String(runNumber).padStart(2, '0');
-    return `${studyId || uuidv4()}::${RUN_ID_PREFIX}-${paddedRun}`;
+    return `${studyId || generateId()}::${RUN_ID_PREFIX}-${paddedRun}`;
 };
 
 export const expandStudiesIntoRuns = (studies = [], options = {}) => {

@@ -5,7 +5,7 @@ import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 import Heading3 from "../Typography/Heading3";
 import Paragraph from "../Typography/Paragraph";
-import { v4 as uuid } from "uuid";
+import generateId from "../../utils/generateId";
 
 import { CONTACT_ROLE_OPTIONS } from "../../constants/contactRoles";
 import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
@@ -114,7 +114,7 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
         const contactData = {
             ...formData,
-            id: isEditing && item.id ? item.id : uuid(), // Generate a new ID if not editing
+            id: isEditing && item.id ? item.id : generateId(), // Generate a new ID if not editing
         };
 
         onSave(contactData);
@@ -319,10 +319,9 @@ export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
                         <span>{isEditing ? 'Update contact' : 'Add contact'}</span>
                     </TooltipButton>
                 </div>
-            </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 };
-
 
 export default ContactForm;

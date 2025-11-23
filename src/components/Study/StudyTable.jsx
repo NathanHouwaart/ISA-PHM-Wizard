@@ -7,7 +7,7 @@ import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import Paragraph from '../Typography/Paragraph';
-import { v4 as uuidv4 } from 'uuid';
+import generateId from '../../utils/generateId';
 
 
 const BoldCell = ({ value }) => {
@@ -163,7 +163,7 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
         const rowIndex = studies.length + 1;
         const newRow = columns.reduce((acc, col) => {
             if (col.prop === 'id') {
-                acc[col.prop] = uuidv4();
+                acc[col.prop] = generateId();
             } else {
                 acc[col.prop] = '';
             }

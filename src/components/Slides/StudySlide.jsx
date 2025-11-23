@@ -28,6 +28,7 @@ import { HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } fro
 import { Template } from '@revolist/react-datagrid';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
+import generateId from '../../utils/generateId';
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -40,7 +41,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
 
     // Access global context
     const { 
-        setScreenWidth, 
         studies, 
         setStudies,
         experimentType
@@ -50,11 +50,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const runCountReadOnly = !experimentConfig.supportsMultipleRuns;
 
     // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
-
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
 
     // Add new study function
     const addNewStudy = () => {
@@ -137,7 +132,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             },
             {
                 prop: 'runCount',
-                name: runCountReadOnly ? 'File count (fixed to 1)' : 'Number of runs',
+                name: runCountReadOnly ? 'Runs (fixed to 1)' : 'Number of runs',
                 size: 160,
                 readonly: runCountReadOnly,
             }
@@ -169,18 +164,20 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <Collection
-                        onHeightChange={() => { }}
-                        itemHook={useStudies} // This hook will need to pull 'studies' from the global context
-                        grid={true}
-                    >
-                        <CollectionTitle>Studies</CollectionTitle>
-                        <CollectionSubtitle>View, add and edit Studies</CollectionSubtitle>
-                        <CollectionAddButtonText>Add Study</CollectionAddButtonText>
-                        <CollectionEmptyStateTitle>No Studies Found</CollectionEmptyStateTitle>
-                        <CollectionEmptyStateSubtitle>Get started by adding your first Study</CollectionEmptyStateSubtitle>
-                        <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
-                    </Collection>
+                    <div className="max-h-[45vh] overflow-y-auto">
+                        <Collection
+                            onHeightChange={() => { }}
+                            itemHook={useStudies} // This hook will need to pull 'studies' from the global context
+                            grid={true}
+                        >
+                            <CollectionTitle>Studies ({studies?.length || 0})</CollectionTitle>
+                            <CollectionSubtitle>View, add and edit Studies</CollectionSubtitle>
+                            <CollectionAddButtonText>Add Study</CollectionAddButtonText>
+                            <CollectionEmptyStateTitle>No Studies Found</CollectionEmptyStateTitle>
+                            <CollectionEmptyStateSubtitle>Get started by adding your first Study</CollectionEmptyStateSubtitle>
+                            <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
+                        </Collection>
+                    </div>
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
@@ -189,7 +186,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         showControls={true}
                         showDebug={false}
                         onRowDataChange={handleStudyDataChange}
-                        height={WINDOW_HEIGHT}
+                        height={"45vh"}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
                 </TabPanel>

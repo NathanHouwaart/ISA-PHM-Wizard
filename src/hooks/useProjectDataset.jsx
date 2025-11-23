@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { loadTree, clearTree, saveTree } from '../utils/indexedTreeStore';
 import { useFileSystem } from './useFileSystem';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-
+import {
+  ensureProjectDatasetStats,
+  setProjectDatasetStats,
+  clearProjectDatasetStats,
+  setProjectDatasetName,
+  clearProjectDatasetName
+} from '../utils/projectMetadata';
 /**
  * Custom hook for managing dataset operations for a single project.
  * 
@@ -65,21 +71,6 @@ export function useProjectDataset(projectId) {
   
   const fileSystem = useFileSystem();
   const { currentProjectId, setSelectedDataset } = useGlobalDataContext();
-
-  const DATASET_NAME_KEY = (id) => `globalAppData_${id}_datasetName`;
-
-  const setCachedDatasetName = (name) => {
-    try {
-      if (!projectId) return;
-      if (name) {
-        localStorage.setItem(DATASET_NAME_KEY(projectId), JSON.stringify(name));
-      } else {
-        localStorage.removeItem(DATASET_NAME_KEY(projectId));
-      }
-    } catch (err) {
-      console.warn('[useProjectDataset] cache dataset name failed', err);
-    }
-  };
 
   /**
    * Load project metadata from localStorage
@@ -149,13 +140,20 @@ export function useProjectDataset(projectId) {
         const loadedTree = await loadTree(projectId);
         if (mounted) {
           setTree(loadedTree);
-          setCachedDatasetName(loadedTree?.rootName || loadedTree?.name || null);
+          if (loadedTree) {
+            setProjectDatasetName(projectId, loadedTree.rootName || loadedTree.name || null);
+            ensureProjectDatasetStats(projectId, loadedTree);
+          } else {
+            clearProjectDatasetName(projectId);
+            clearProjectDatasetStats(projectId);
+          }
         }
       } catch (err) {
         console.error('[useProjectDataset] Error loading tree for project', projectId, err);
         if (mounted) {
           setTree(null);
-          setCachedDatasetName(null);
+          clearProjectDatasetName(projectId);
+          clearProjectDatasetStats(projectId);
         }
       } finally {
         if (mounted) {
@@ -227,7 +225,8 @@ export function useProjectDataset(projectId) {
 
       // Update state
       setTree(dataset);
-      setCachedDatasetName(dataset?.rootName || dataset?.name || null);
+      setProjectDatasetName(projectId, dataset?.rootName || dataset?.name || null);
+      setProjectDatasetStats(projectId, dataset);
 
       // If this is the currently active project, update the global selectedDataset
       if (projectId === currentProjectId) {
@@ -294,7 +293,9 @@ export function useProjectDataset(projectId) {
       }
 
       setTree(null);
-      setCachedDatasetName(null);
+      clearProjectDatasetName(projectId);
+      clearProjectDatasetStats(projectId);
+      clearProjectDatasetStats(projectId);
       console.log('[useProjectDataset] Dataset deleted for project:', projectId);
 
     } catch (err) {
@@ -330,6 +331,13 @@ export function useProjectDataset(projectId) {
       const loadedTree = await loadTree(projectId);
       setTree(loadedTree);
       loadMetadata();
+      if (loadedTree) {
+        setProjectDatasetName(projectId, loadedTree.rootName || loadedTree.name || null);
+        setProjectDatasetStats(projectId, loadedTree);
+      } else {
+        clearProjectDatasetName(projectId);
+        clearProjectDatasetStats(projectId);
+      }
     } catch (err) {
       console.error('[useProjectDataset] Error refreshing dataset for project', projectId, err);
       setTree(null);

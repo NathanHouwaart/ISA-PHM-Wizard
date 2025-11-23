@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle, useMemo, isValidElement, cloneElement } from 'react';
+import Heading2 from '../Typography/Heading2';
 import { RevoGrid } from '@revolist/react-datagrid';
 import { useDataGrid } from '../../hooks/useDataGrid';
 import "./DataGrid.css";
@@ -28,7 +29,7 @@ const DataGrid = forwardRef(({
     staticColumns = [],     // Static columns always shown (e.g., name, description)
 
     // Grid display configuration
-    height = '600px',       // Grid height
+    height = '45vh',        // Grid height (total container height, defaults to 45vh to match EntityMappingPanel)
     title = 'Data Grid',    // Grid title
     showControls = true,    // Show undo/redo controls
     showDebug = false,      // Show debug information
@@ -897,11 +898,11 @@ const DataGrid = forwardRef(({
 
     // Render the complete data grid with controls and debug view
     return (
-        <div className={`data-grid ${className}`}>
+        <div className={`data-grid ${className} flex flex-col`} style={{ height }}>
             {/* Header */}
-            <div className="mb-4">
+            <div className="mb-4 flex-shrink-0">
                 {title && (
-                    <h2 className="text-xl font-bold">{title}</h2>
+                    <Heading2 className="text-xl font-bold">{title}</Heading2>
                 )}
                 {/* <p className="text-gray-600">
                     Rows: {stats.totalRows} | Columns: {stats.totalColumns} | Mappings: {stats.totalMappings}
@@ -1019,12 +1020,13 @@ const DataGrid = forwardRef(({
             </div>
 
             {/* Grid */}
-            <RevoGrid
-                key={gridKey}
-                ref={setGridRef}
-                style={{ height }}                
-                source={gridData}
-                rowSize={rowsize}
+            <div className="flex-1 min-h-0">
+                <RevoGrid
+                    key={gridKey}
+                    ref={setGridRef}
+                    style={{ height: '100%' }}                
+                    source={gridData}
+                    rowSize={rowsize}
                 columns={appliedColumns}
                 onBeforeedit={handleBeforeEdit}
                 onAfteredit={handleAfterEdit}
@@ -1068,6 +1070,7 @@ const DataGrid = forwardRef(({
                 }}
                 {...gridProps}
             />
+            </div>
 
             {/* Action plugins are responsible for any hidden inputs / DOM they need */}
 

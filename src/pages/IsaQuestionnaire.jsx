@@ -20,7 +20,7 @@ import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
 import IconToolTipButton from '../components/Widgets/IconTooltipButton';
-import { Layers } from 'lucide-react';
+import { Layers, ChevronLeft, ChevronRight } from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 import Heading3 from '../components/Typography/Heading3';
@@ -43,7 +43,7 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection, currentProjectId, projects } = useGlobalDataContext();
+  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection, currentProjectId, projects, selectedTestSetupId, testSetups } = useGlobalDataContext();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // Overlay state management - all overlays follow the same conditional rendering pattern
@@ -78,16 +78,25 @@ export const IsaQuestionnaire = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // Set screen width based on persisted tab state for the active page. If the
-  // persisted tab for the current page is 'grid-view' we'll open a wider layout
-  // immediately (fixes the reload-then-navigate case). Otherwise fall back to
-  // the standard max-w-5xl.
+  // Set screen width based on persisted tab state for the active page and slide index.
+  // Slides 0-5 (IntroductionSlide through StudyVariableDefinitionSlide): tab-aware width
+  //   - simple-view: max-w-5xl
+  //   - grid-view: max-w-[100rem]
+  // Slides 6+ (StudyVariableSlide onwards): always max-w-[100rem] for both simple and grid views
   useEffect(() => {
-    const activeTab = pageTabStates?.[currentPage];
-    if (activeTab === 'grid-view') {
+    const FIRST_WIDE_SLIDE_INDEX = 6; // StudyVariableSlide is at index 6
+    
+    if (currentPage >= FIRST_WIDE_SLIDE_INDEX) {
+      // Always wide for slides from StudyVariableSlide onwards
       setScreenWidth('max-w-[100rem]');
     } else {
-      setScreenWidth('max-w-5xl');
+      // Tab-aware width for earlier slides (Introduction through StudyVariableDefinitionSlide)
+      const activeTab = pageTabStates?.[currentPage];
+      if (activeTab === 'grid-view') {
+        setScreenWidth('max-w-[100rem]');
+      } else {
+        setScreenWidth('max-w-5xl');
+      }
     }
   }, [currentPage, pageTabStates, setScreenWidth]);
 
@@ -149,9 +158,14 @@ export const IsaQuestionnaire = () => {
         <div className="absolute top-0 right-0 z-50 flex items-center gap-2">
           {!showSessionsModal && (
             <>
-              <Heading3 className="text-sm text-gray-600 font-medium max-w-[220px] truncate whitespace-nowrap mr-2">
-                {projects.find(p => p.id === currentProjectId)?.name || 'No project selected'}
-              </Heading3>
+              <div className="flex flex-col items-end max-w-[220px] mr-2">
+                <div className="text-xs text-gray-500 truncate whitespace-nowrap">
+                  {testSetups?.find(s => s.id === selectedTestSetupId)?.name || 'No test setup selected'}
+                </div>
+                <Heading3 className="text-sm text-gray-600 font-medium truncate whitespace-nowrap">
+                  {projects.find(p => p.id === currentProjectId)?.name || 'No project selected'}
+                </Heading3>
+              </div>
               <IconToolTipButton
                 icon={Layers}
                 tooltipText="Open project/session chooser"
@@ -166,23 +180,53 @@ export const IsaQuestionnaire = () => {
         <Heading1> ISA Questionnaire Form </Heading1>
       </div>
 
-      <div className="flex justify-center mb-5">
-        {slides.map((slide, index) => (
-          <TooltipButton
-            key={index}
-            tooltipText={`${slide.displayName}`}
-            onClick={() => goToPage(index)}
-            disabled={isRemountingSlides}
-            className={cn(
-              "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
-              index === currentPage
-                ? 'bg-blue-500'
-                : index < currentPage
-                  ? 'bg-green-400'
-                  : 'bg-gray-300'
-            )}
-          />
-        ))}
+      <div className="flex justify-center items-center mb-1 gap-4">
+        <TooltipButton
+          onClick={handlePrevious}
+          tooltipText={currentPage > 0 ? "Previous slide" : undefined}
+          disabled={isRemountingSlides || currentPage === 0}
+          className={cn(
+            "p-2 rounded-full transition-colors duration-200",
+            currentPage === 0
+              ? "invisible"
+              : "bg-blue-100 hover:bg-blue-200 text-blue-700"
+          )}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </TooltipButton>
+
+        <div className="flex">
+          {slides.map((slide, index) => (
+            <TooltipButton
+              key={index}
+              tooltipText={`${slide.displayName}`}
+              onClick={() => goToPage(index)}
+              disabled={isRemountingSlides}
+              className={cn(
+                "h-2 p-1.5 w-12 mx-1 rounded-full transition-colors duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
+                index === currentPage
+                  ? 'bg-blue-500'
+                  : index < currentPage
+                    ? 'bg-green-400'
+                    : 'bg-gray-300'
+              )}
+            />
+          ))}
+        </div>
+
+        <TooltipButton
+          onClick={handleForward}
+          tooltipText={!isLastPage(currentPage) ? "Next slide" : undefined}
+          disabled={isRemountingSlides || isLastPage(currentPage)}
+          className={cn(
+            "p-2 rounded-full transition-colors duration-200",
+            isLastPage(currentPage)
+              ? "invisible"
+              : "bg-blue-100 hover:bg-blue-200 text-blue-700"
+          )}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </TooltipButton>
       </div>
 
       <div className="space-y-6">

@@ -6,16 +6,100 @@ import TooltipButton from './TooltipButton';
 import ProjectCard from './ProjectCard';
 import TestSetupConflictDialog from './TestSetupConflictDialog';
 import AlertDecisionDialog from './AlertDecisionDialog';
-import { Plus, Download, Layers3 } from 'lucide-react';
+import {
+  Plus,
+  Download,
+  Layers3,
+  HardDrive,
+  Repeat,
+  FlaskRound,
+  Pencil,
+  Upload,
+  RefreshCw,
+  Trash2
+} from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
-import { v4 as uuidv4 } from 'uuid';
+import generateId from '../../utils/generateId';
 import { DEFAULT_EXPERIMENT_TYPE_ID } from '../../constants/experimentTypes';
 import ProjectConfigurationWizard from './ProjectConfigurationWizard';
 import ProjectNameDialog from '../ProjectConfiguration/ProjectNameDialog';
 import ProjectTemplateDialog from '../ProjectConfiguration/ProjectTemplateDialog';
 import ProjectDatasetDialog from '../ProjectConfiguration/ProjectDatasetDialog';
 import ProjectTestSetupDialog from '../ProjectConfiguration/ProjectTestSetupDialog';
+import IconTooltipButton from './IconTooltipButton';
+
+const ActionGroup = ({ label, children, wrap = true }) => (
+  <div className="flex items-center gap-3 pr-4 mr-4 border-r border-gray-200 last:mr-0 last:pr-0 last:border-none">
+    <span className="text-xs uppercase tracking-wide font-semibold text-gray-500 whitespace-nowrap">{label}</span>
+    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap'}`}>{children}</div>
+  </div>
+);
+
+const ProjectActionToolbar = ({
+  isDefault,
+  onOpenDataset,
+  onOpenTemplate,
+  onOpenTestSetup,
+  onOpenName,
+  onExport,
+  onReset,
+  onDelete
+}) => (
+  <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm overflow-x-auto">
+    <div className="flex flex-col gap-3">
+      <p className="text-xs uppercase tracking-wide text-gray-500">Project configuration</p>
+      <div className="flex items-center gap-0 whitespace-nowrap">
+        <ActionGroup label="Dataset">
+          <IconTooltipButton
+            icon={HardDrive}
+          tooltipText="Pick, replace, or remove the dataset for this project"
+          onClick={onOpenDataset}
+        />
+      </ActionGroup>
+      <ActionGroup label="Experiment">
+        <IconTooltipButton
+          icon={Repeat}
+          tooltipText="Choose how many runs/files belong in each study"
+          onClick={onOpenTemplate}
+        />
+      </ActionGroup>
+      <ActionGroup label="Test setup">
+        <IconTooltipButton
+          icon={FlaskRound}
+          tooltipText="Select or change the test setup for this project"
+          onClick={onOpenTestSetup}
+        />
+      </ActionGroup>
+      <ActionGroup label="Project" wrap={false}>
+        <IconTooltipButton
+          icon={Pencil}
+          tooltipText="Rename project"
+          onClick={onOpenName}
+        />
+        <IconTooltipButton
+          icon={Upload}
+          tooltipText="Export project"
+          onClick={onExport}
+        />
+        {isDefault ? (
+          <IconTooltipButton
+            icon={RefreshCw}
+            tooltipText="Reset project to defaults"
+            onClick={onReset}
+          />
+        ) : (
+          <IconTooltipButton
+            icon={Trash2}
+            tooltipText="Delete project"
+            onClick={onDelete}
+          />
+        )}
+      </ActionGroup>
+    </div>
+    </div>
+  </div>
+);
 
 export default function ProjectSessionsModal({ onClose }) {
   const { projects = [], switchProject, currentProjectId, createProject, deleteProject, resetProject, DEFAULT_PROJECT_ID, setTestSetups } = useGlobalDataContext();
@@ -273,7 +357,7 @@ export default function ProjectSessionsModal({ onClose }) {
         // Create new test setup with new UUID for imported version
         const newSetup = {
           ...conflict.imported.setup,
-          id: uuidv4(),
+          id: generateId(),
           name: `${conflict.imported.setup.name} (imported)`
         };
         setups.push(newSetup);
@@ -411,61 +495,56 @@ export default function ProjectSessionsModal({ onClose }) {
 
               <div className="flex-1 flex flex-col">
                 {selectedProject ? (
-                  <ProjectCard
-                    project={selectedProject}
-                    isSelected
-                    isActive={selectedProject.id === currentProjectId}
-                    isDefault={selectedProject.id === DEFAULT_PROJECT_ID}
-                    refreshToken={resetTriggers[selectedProject.id]}
-                    onSelect={setSelectedCardId}
-                    onOpenName={(id) => setSectionDialog({ type: 'name', projectId: id })}
-                    onOpenDataset={(id) => setSectionDialog({ type: 'dataset', projectId: id })}
-                    onOpenTestSetup={(id) => setSectionDialog({ type: 'test', projectId: id })}
-                    onOpenTemplate={(id) => setSectionDialog({ type: 'template', projectId: id })}
-                    onExport={(id) => handleExportProject(id)}
-                    onReset={(id) => {
-                      if (id !== DEFAULT_PROJECT_ID) return;
-                      showDialog({
-                        tone: 'warning',
-                        title: 'Reset default project?',
-                        message: "This will overwrite the default project's local settings and dataset with the starter data.",
-                        confirmLabel: 'Reset project',
-                        confirmTooltip: 'Restore the default project to its initial state',
-                        cancelLabel: 'Cancel',
-                        cancelTooltip: 'Keep current project data',
-                        onConfirm: async () => {
-                          await resetProject(id);
-                          setResetTriggers((prev) => ({ ...prev, [id]: Date.now() }));
-                          setTimeout(() => {
-                            showDialog({
-                              tone: 'success',
-                              title: 'Default project reset',
-                              message: 'The default project has been restored to its initial configuration.',
-                              confirmLabel: 'OK',
-                              confirmTooltip: 'Close dialog',
-                              showCancel: false,
-                            });
-                          }, 0);
-                        },
-                      });
-                    }}
-                    onDelete={(id) => handleDelete(id)}
-                    className="max-w-3xl w-full mx-auto"
-                  />
+                  <>
+                    <ProjectCard
+                      project={selectedProject}
+                      isSelected
+                      isActive={selectedProject.id === currentProjectId}
+                      refreshToken={resetTriggers[selectedProject.id]}
+                      onSelect={setSelectedCardId}
+                      className="max-w-3xl w-full mx-auto"
+                    />
+                    <ProjectActionToolbar
+                      isDefault={selectedProject.id === DEFAULT_PROJECT_ID}
+                      onOpenDataset={() => setSectionDialog({ type: 'dataset', projectId: selectedProject.id })}
+                      onOpenTemplate={() => setSectionDialog({ type: 'template', projectId: selectedProject.id })}
+                      onOpenTestSetup={() => setSectionDialog({ type: 'test', projectId: selectedProject.id })}
+                      onOpenName={() => setSectionDialog({ type: 'name', projectId: selectedProject.id })}
+                      onExport={() => handleExportProject(selectedProject.id)}
+                      onReset={() => {
+                        showDialog({
+                          tone: 'warning',
+                          title: 'Reset default project?',
+                          message: "This will overwrite the default project's local settings and dataset with the starter data.",
+                          confirmLabel: 'Reset project',
+                          confirmTooltip: 'Restore the default project to its initial state',
+                          cancelLabel: 'Cancel',
+                          cancelTooltip: 'Keep current project data',
+                          onConfirm: async () => {
+                            await resetProject(selectedProject.id);
+                            setResetTriggers((prev) => ({ ...prev, [selectedProject.id]: Date.now() }));
+                            setTimeout(() => {
+                              showDialog({
+                                tone: 'success',
+                                title: 'Default project reset',
+                                message: 'The default project has been restored to its initial configuration.',
+                                confirmLabel: 'OK',
+                                confirmTooltip: 'Close dialog',
+                                showCancel: false,
+                              });
+                            }, 0);
+                          },
+                        });
+                      }}
+                      onDelete={() => handleDelete(selectedProject.id)}
+                    />
+                  </>
                 ) : (
                   <div className="flex flex-col items-center justify-center flex-1 border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-500">
                     Select a project from the list to view its details.
                   </div>
                 )}
-                <div className="flex flex-wrap justify-end gap-2 mt-4">
-                  <TooltipButton
-                    tooltipText={selectedProject ? 'Open the full configuration wizard' : 'Select a project to configure'}
-                    onClick={() => selectedProject && openWizardForProject(selectedProject.id, 0)}
-                    disabled={!selectedProject}
-                    className={selectedProject ? '' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}
-                  >
-                    Configure project
-                  </TooltipButton>
+                <div className="flex justify-end mt-4">
                   <TooltipButton
                     tooltipText={selectedProject ? 'Select project and continue' : 'Select a project to continue'}
                     onClick={() => selectedProject && handleSelect(selectedProject.id)}

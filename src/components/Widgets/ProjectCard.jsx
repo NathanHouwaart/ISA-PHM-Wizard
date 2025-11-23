@@ -10,18 +10,22 @@ import {
   Layers3,
   FlaskConical,
   Users,
-  BookOpenCheck
+  BookOpenCheck,
+  FileText,
+  Folder,
+  ListChecks,
+  Cpu
 } from 'lucide-react';
 
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import IconTooltipButton from './IconTooltipButton';
 import { DEFAULT_EXPERIMENT_TYPE_ID, getExperimentTypeConfig } from '../../constants/experimentTypes';
 import {
   getProjectDatasetName,
   getProjectExperimentTypeId,
   getProjectLastEdited,
   getProjectTestSetupId,
-  getProjectCollectionStats
+  getProjectCollectionStats,
+  getProjectDatasetStats
 } from '../../utils/projectMetadata';
 
 const SummaryBadge = ({ icon: Icon, label, value, accent }) => (
@@ -55,15 +59,7 @@ const ProjectCard = ({
   project,
   isSelected = false,
   isActive = false,
-  isDefault = false,
   onSelect,
-  onOpenName,
-  onOpenDataset,
-  onOpenTestSetup,
-  onOpenTemplate,
-  onExport,
-  onReset,
-  onDelete,
   refreshToken = 0,
   className = ''
 }) => {
@@ -94,11 +90,37 @@ const ProjectCard = ({
     () => getProjectCollectionStats(project.id),
     [project.id, refreshToken]
   );
+  const datasetStats = useMemo(
+    () => getProjectDatasetStats(project.id),
+    [project.id, refreshToken]
+  );
 
-  const handleAction = (event, handler) => {
-    event?.stopPropagation();
-    handler?.(project.id);
-  };
+  const sensorCount = useMemo(() => {
+    if (!testSetup || !Array.isArray(testSetup.sensors)) {
+      return 0;
+    }
+    return testSetup.sensors.filter(Boolean).length;
+  }, [testSetup]);
+
+  const characteristicCount = useMemo(() => {
+    if (!testSetup || !Array.isArray(testSetup.characteristics)) {
+      return 0;
+    }
+    return testSetup.characteristics.filter(Boolean).length;
+  }, [testSetup]);
+
+  const studiesCount = projectStats.studies || 0;
+  const assaysCount = sensorCount > 0 ? sensorCount * studiesCount : (projectStats.assays || 0);
+  const datasetFiles = Number(datasetStats?.files || 0);
+  const datasetFolders = Number(datasetStats?.folders || 0);
+
+  const formatCount = (value) => Number(value || 0).toLocaleString();
+  const datasetSummaryHelper = datasetName
+    ? 'Counts include all nested files and folders.'
+    : 'Index a dataset to see file and folder counts.';
+  const testSetupSummaryHelper = testSetup
+    ? 'Derived from the selected test setup.'
+    : 'Select a test setup to populate sensor metadata.';
 
   return (
     <div
@@ -162,7 +184,7 @@ const ProjectCard = ({
           <SummaryBadge
             icon={FlaskConical}
             label="Assays"
-            value={projectStats.assays || 0}
+            value={assaysCount}
             accent="bg-purple-50 text-purple-600"
           />
           <SummaryBadge
@@ -180,71 +202,46 @@ const ProjectCard = ({
         </div>
       </div>
 
-      <div
-        className="border-t border-dashed border-gray-200 pt-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex flex-wrap gap-6 text-xs text-gray-600">
-          <div className="flex flex-col items-center gap-2 pr-6 border-r border-gray-200 min-w-[90px]">
-            <span className="uppercase tracking-wide font-semibold text-center">Dataset</span>
-            <div className="flex gap-2 justify-center">
-              <IconTooltipButton
-                icon={HardDrive}
-                tooltipText="Pick, replace, or remove the dataset for this project"
-                onClick={(event) => handleAction(event, onOpenDataset)}
+      <div className="border-t border-dashed border-gray-200 pt-4">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Dataset summary</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SummaryBadge
+                icon={FileText}
+                label="Files"
+                value={formatCount(datasetFiles)}
+                accent="bg-blue-50 text-blue-600"
+              />
+              <SummaryBadge
+                icon={Folder}
+                label="Folders"
+                value={formatCount(datasetFolders)}
+                accent="bg-indigo-50 text-indigo-600"
               />
             </div>
           </div>
-          <div className="flex flex-col items-center gap-2 pr-6 border-r border-gray-200 min-w-[90px]">
-            <span className="uppercase tracking-wide font-semibold text-center">Experiment</span>
-            <div className="flex gap-2 justify-center">
-              <IconTooltipButton
-                icon={Repeat}
-                tooltipText="Choose how many runs/files belong in each study"
-                onClick={(event) => handleAction(event, onOpenTemplate)}
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Test setup summary</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SummaryBadge
+                icon={ListChecks}
+                label="Characteristics"
+                value={formatCount(characteristicCount)}
+                accent="bg-emerald-50 text-emerald-600"
               />
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2 pr-6 border-r border-gray-200 min-w-[110px]">
-            <span className="uppercase tracking-wide font-semibold text-center">Test setup</span>
-            <div className="flex gap-2 justify-center">
-              <IconTooltipButton
-                icon={FlaskRound}
-                tooltipText="Select or change the test setup for this project"
-                onClick={(event) => handleAction(event, onOpenTestSetup)}
+              <SummaryBadge
+                icon={Cpu}
+                label="Sensors"
+                value={formatCount(sensorCount)}
+                accent="bg-green-50 text-green-600"
               />
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2 min-w-[140px]">
-            <span className="uppercase tracking-wide font-semibold text-center">Project</span>
-            <div className="flex gap-2 flex-wrap justify-center">
-              <IconTooltipButton
-                icon={Pencil}
-                tooltipText="Rename project"
-                onClick={(event) => handleAction(event, onOpenName)}
-              />
-              <IconTooltipButton
-                icon={Upload}
-                tooltipText="Export project"
-                onClick={(event) => handleAction(event, onExport)}
-              />
-              {isDefault ? (
-                <IconTooltipButton
-                  icon={RefreshCw}
-                  tooltipText="Reset project to defaults"
-                  onClick={(event) => handleAction(event, onReset)}
-                />
-              ) : (
-                <IconTooltipButton
-                  icon={Trash2}
-                  tooltipText="Delete project"
-                  onClick={(event) => handleAction(event, onDelete)}
-                />
-              )}
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 };

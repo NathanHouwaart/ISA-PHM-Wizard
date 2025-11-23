@@ -3,7 +3,26 @@ import React from 'react';
 import { HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip';
 import { cn } from '../../utils/utils';
+import { TOOLTIP_DELAY_MS } from '../../constants/ui';
 
+/**
+ * IconToolTipButton Component
+ * 
+ * A flexible icon-only button with integrated tooltip.
+ * Supports multiple sizes and custom icons.
+ * 
+ * @component
+ * @param {Object} props
+ * @param {React.ComponentType} [props.icon] - Lucide icon component (defaults to HelpCircle)
+ * @param {() => void} [props.onClick] - Click handler
+ * @param {string} props.tooltipText - Tooltip text (required for accessibility)
+ * @param {string} [props.className] - Additional CSS classes
+ * @param {boolean} [props.disabled=false] - Whether button is disabled
+ * @param {'button'|'submit'|'reset'} [props.type='button'] - Button type
+ * @param {'md'|'sm'} [props.size='md'] - Size variant
+ * @param {string} [props['data-testid']] - Test ID for testing
+ * @returns {JSX.Element} Icon button with tooltip
+ */
 export const IconToolTipButton = ({
     icon,
     onClick,
@@ -34,7 +53,7 @@ export const IconToolTipButton = ({
     return (
         <div>
             <TooltipProvider>
-                <Tooltip delayDuration={300}>
+                <Tooltip delayDuration={TOOLTIP_DELAY_MS}>
                     <TooltipTrigger asChild>
                         <button
                             type={type}

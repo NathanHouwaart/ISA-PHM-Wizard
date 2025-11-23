@@ -22,10 +22,12 @@ import { PatternCellTemplate } from '../DataGrid/CellTemplates';
 import usePageTab from '../../hooks/usePageWidth';
 import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
-import EntityMappingPanel from '../EntityMappingPanel';
-import useMeasurements from '../../hooks/useMeasurements';
+import DualSidebarStudyRunPanel from '../Study/DualSidebarStudyRunPanel';
+import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import useStudyRuns from '../../hooks/useStudyRuns';
+import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
+import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellProperties } from '../../utils/gridCellTemplates';
 
 
 export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -65,7 +67,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     // Grid configuration for mapping studies to processing protocols output
     const assayOutputGridConfig = {
         title: 'Mappings for assay output',
-        rowData: studyRuns,
+        rowData: buildStudyRunRowData(studies, studyRuns),
         columnData: selectedTestSetup?.sensors || [],
         mappings: mappingsController.mappings,
         fieldMappings: {
@@ -79,29 +81,26 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             mappingValue: 'value'
         },
         customActions: [],
-        staticColumns: useMemo(() => ([{
-            prop: 'id',
-            name: 'Identifier',
-            size: 150,
-            pin: 'colPinStart',
-            readonly: true,
-            cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
-        },
-        {
-            prop: 'name',
-            name: 'Study Name',
-            size: 200,
-            pin: 'colPinStart',
-            readonly: true,
-            cellProperties: () => {
-                return {
-                    style: {
-                        "border-right": "3px solid "
-                    }
-                }
+        staticColumns: useMemo(() => ([
+            {
+                prop: 'studyDisplayName',
+                name: 'Study',
+                size: 220,
+                readonly: true,
+                pin: 'colPinStart',
+                cellTemplate: studyCellTemplate,
+                cellProperties: studyCellProperties
+            },
+            {
+                prop: 'runLabel',
+                name: 'Run',
+                size: 140,
+                readonly: true,
+                pin: 'colPinStart',
+                cellTemplate: runCellTemplate,
+                cellProperties: runCellProperties
             }
-        }
-        ]), [])
+        ]), [studies, studyRuns])
     };
 
     return (
@@ -139,18 +138,17 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    
-                    <EntityMappingPanel
-                        name={`Processing Protocol Mapping`}
-                        tileNamePrefix="Study S"
-                        items={studies}
-                        itemHook={useMeasurements}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                        disableAdd
-                    />
-
+                    <div className="h-[45vh]">
+                            <DualSidebarStudyRunPanel
+                                title="Assay Output Mapping"
+                                studies={studies}
+                                studyRuns={studyRuns}
+                                mappings={mappingsController.mappings}
+                                handleInputChange={mappingsController.updateMappingValue}
+                                minHeight={WINDOW_HEIGHT}
+                                MappingCardComponent={StudyMeasurementMappingCard}
+                            />
+                    </div>
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
@@ -159,7 +157,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
-                        height={WINDOW_HEIGHT}
+                        height="45vh"
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                         
                     />

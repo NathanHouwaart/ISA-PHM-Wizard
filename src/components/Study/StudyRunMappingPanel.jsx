@@ -1,19 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import { buildStudyRunGroups } from '../../utils/studyRunLayouts';
 import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
+import TabSwitcher, { TabPanel } from '../TabSwitcher';
 
-const EMPTY_FN = () => {};
 
 const StudyRunMappingPanel = ({
   title = 'Study mapping',
   studies = [],
   studyRuns = [],
   mappings = [],
-  handleInputChange = EMPTY_FN,
+  handleInputChange = () => {},
   minHeight,
   MappingCardComponent = StudyMeasurementMappingCard,
 }) => {
@@ -25,8 +25,13 @@ const StudyRunMappingPanel = ({
   const [selectedStudyId, setSelectedStudyId] = useState(
     groupedStudies[0]?.studyId || null
   );
+  const getRunId = (run) => {
+    if (!run) return null;
+    return String(run.id || run.runId || '');
+  };
+
   const [selectedRunId, setSelectedRunId] = useState(
-    groupedStudies[0]?.runs?.[0]?.id || groupedStudies[0]?.runs?.[0]?.runId || null
+    getRunId(groupedStudies[0]?.runs?.[0]) || null
   );
 
   useEffect(() => {
@@ -38,7 +43,7 @@ const StudyRunMappingPanel = ({
     if (!selectedStudyId || !groupedStudies.some((group) => group.studyId === selectedStudyId)) {
       const fallbackGroup = groupedStudies[0];
       setSelectedStudyId(fallbackGroup.studyId);
-      setSelectedRunId(fallbackGroup.runs?.[0]?.id || fallbackGroup.runs?.[0]?.runId || null);
+      setSelectedRunId(getRunId(fallbackGroup.runs?.[0]) || null);
     }
   }, [groupedStudies, selectedStudyId]);
 
@@ -54,24 +59,19 @@ const StudyRunMappingPanel = ({
     }
     if (
       !selectedRunId ||
-      !selectedStudyGroup.runs.some((run) => (run.id || run.runId) === selectedRunId)
+      !selectedStudyGroup.runs.some((run) => getRunId(run) === selectedRunId)
     ) {
       const fallbackRun = selectedStudyGroup.runs[0];
-      setSelectedRunId(fallbackRun ? (fallbackRun.id || fallbackRun.runId) : null);
+      setSelectedRunId(fallbackRun ? getRunId(fallbackRun) : null);
     }
   }, [selectedStudyGroup, selectedRunId]);
-
-  const selectedRun =
-    selectedStudyGroup?.runs.find((run) => (run.id || run.runId) === selectedRunId) ||
-    selectedStudyGroup?.runs[0] ||
-    null;
 
   return (
     <div
       className="flex flex-col md:flex-row gap-6"
       style={minHeight ? { minHeight } : undefined}
     >
-      <div className="w-full md:w-1/3 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+      <div className="w-full md:w-1/4 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col flex-shrink-0">
         <Heading3 className="text-lg text-gray-900">{title}</Heading3>
         <Paragraph className="text-sm text-gray-500 mb-3">
           Select a study to view its runs.
@@ -105,46 +105,25 @@ const StudyRunMappingPanel = ({
         </div>
       </div>
 
-      <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4">
-        {selectedStudyGroup && selectedRun ? (
+      <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 min-w-0">
+        {selectedStudyGroup ? (
           <>
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-col mb-4">
               <Heading3 className="text-xl text-gray-900">
                 {selectedStudyGroup.study?.name || 'Unnamed study'}
               </Heading3>
-              <Paragraph className="text-sm text-gray-500">
-                Select a run to edit the file mappings.
-              </Paragraph>
-              <div className="flex flex-wrap gap-2">
-                {selectedStudyGroup.runs.map((run) => {
-                  const runId = run.id || run.runId;
-                  const isActive = runId === selectedRunId;
-                  return (
-                    <TooltipButton
-                      key={runId}
-                      tooltipText={run.shortLabel || `Run ${run.runNumber}`}
-                      onClick={() => setSelectedRunId(runId)}
-                      className={`text-sm px-4 py-1 rounded-full ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow'
-                          : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                      }`}
-                    >
-                      {run.shortLabel || `Run ${run.runNumber}`}
-                    </TooltipButton>
-                  );
-                })}
-              </div>
             </div>
-            <MappingCardComponent
-              item={selectedRun}
-              itemIndex={selectedStudyGroup.runs.findIndex(
-                (run) => (run.id || run.runId) === selectedRunId
-              )}
-              mappings={mappings}
-              handleInputChange={handleInputChange}
-              removeParameter={EMPTY_FN}
-            />
+            {selectedStudyGroup.runs.map((run, index) => (
+              <TabPanel key={getRunId(run)} isActive={getRunId(run) === selectedRunId}>
+                <MappingCardComponent
+                  item={run}
+                  itemIndex={index}
+                  mappings={mappings}
+                  handleInputChange={handleInputChange}
+                  removeParameter={EMPTY_FN}
+                />
+              </TabPanel>
+            ))}
           </>
         ) : (
           <Paragraph className="text-sm text-gray-500">

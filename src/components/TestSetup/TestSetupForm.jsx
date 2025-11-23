@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Trash, Trash2, HelpCircle, ChevronDown, ChevronRight, Bold, Heading, Plus, Icon, Circle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Save, Trash2, HelpCircle, ChevronDown, ChevronRight, Plus, } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import { cn } from '../../utils/utils';
 import FormField from '../Form/FormField';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
-import { Form, set } from 'react-hook-form';
 import { v4 as uuid4 } from 'uuid';
 
 
 import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
-import { TooltipButton } from '../Widgets/TooltipButton';
-import { TableTooltip } from '../Widgets/TableTooltip';
+import TooltipButton from '../Widgets/TooltipButton';
+import TableTooltip from '../Widgets/TableTooltip';
 import Paragraph, { SlidePageSubtitle } from '../Typography/Paragraph';
 
 // Comment Component
@@ -24,22 +23,22 @@ const CommentEditor = ({ comments = [], onCommentsChange }) => {
     }
   }, [comments, onCommentsChange]);
 
-  const addComment = () => {
+  const addComment = useCallback(() => {
     const newComments = [...comments, { id: uuid4(), name: '', value: '' }];
     onCommentsChange(newComments);
-  };
+  }, [comments, onCommentsChange]);
 
-  const updateComment = (id, field, value) => {
+  const updateComment = useCallback((id, field, value) => {
     const updatedComments = comments.map((comment) =>
       comment.id === id ? { ...comment, [field]: value } : comment
     );
     onCommentsChange(updatedComments);
-  };
+  }, [comments, onCommentsChange]);
 
-  const removeComment = (id) => {
+  const removeComment = useCallback((id) => {
     const filteredComments = comments.filter((comment) => comment.id !== id);
     onCommentsChange(filteredComments);
-  };
+  }, [comments, onCommentsChange]);
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 mt-4">

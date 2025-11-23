@@ -1,25 +1,11 @@
 import React from 'react';
 import { Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle } from 'lucide-react';
-import TestSetupForm from './TestSetupForm';
 import TooltipButton from '../Widgets/TooltipButton';
+import AvatarInitials from '../Widgets/AvatarInitials';
+import Heading3 from '../Typography/Heading3';
+import Paragraph from '../Typography/Paragraph';
 
 const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
-  // Create abbreviation from item name
-  const getAbbreviation = (name) => {
-    const words = name.split(' ');
-    if (words.length === 1) {
-      // If only one word, take first two letters
-      return name.substring(0, 2).toUpperCase();
-    } else {
-      // If multiple words, take first letter of first two words
-      return words
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-    }
-  };
-
   // Get unique measurement types from sensors
   const getMeasurementTypes = (sensors) => {
     if (!sensors || sensors.length === 0) return [];
@@ -44,21 +30,24 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            {getAbbreviation(item.name)}
-          </div>
+          <AvatarInitials 
+            name={item.name} 
+            size="md"
+            gradientFrom="from-green-500"
+            gradientTo="to-blue-600"
+          />
           <div className="flex-1 space-y-2">
-            <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
-            <p className="text-gray-600 flex items-center">
+            <Heading3 className="text-gray-900">{item.name}</Heading3>
+            <Paragraph className="text-gray-600 flex items-center">
               <MapPin className="w-4 h-4 mr-1" />
               {item.location}
-            </p>
+            </Paragraph>
 
             {/* Description area */}
             <div className="mt-2 mb-3">
-              <p className="text-gray-700 text-sm italic line-clamp-2">
+              <Paragraph className="text-gray-700 text-sm italic line-clamp-2">
                 {item.description || "No description available"}
-              </p>
+              </Paragraph>
             </div>
 
             <div className="flex items-center space-x-4 text-sm text-gray-500">

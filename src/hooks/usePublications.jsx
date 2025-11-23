@@ -2,8 +2,8 @@ import React from 'react';
 
 
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import { PublicationCard } from '../components/Publication/PublicationCard';
-import { PublicationForm } from '../components/Publication/PublicationForm';
+import PublicationCard from '../components/Publication/PublicationCard';
+import PublicationForm from '../components/Publication/PublicationForm';
 
 export const usePublications = () => {
     

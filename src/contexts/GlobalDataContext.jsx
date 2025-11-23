@@ -4,9 +4,15 @@ import isaProjectExample from "../data/isa-project-example.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
-import { v4 as uuidv4 } from 'uuid';
+import generateId from '../utils/generateId';
 import { expandStudiesIntoRuns, createStudyRunId, normalizeRunCount } from '../utils/studyRuns';
 import { DEFAULT_EXPERIMENT_TYPE_ID, getExperimentTypeConfig } from '../constants/experimentTypes';
+import {
+    setProjectDatasetName,
+    clearProjectDatasetName,
+    setProjectDatasetStats,
+    clearProjectDatasetStats
+} from '../utils/projectMetadata';
 
 const GlobalDataContext = createContext();
 
@@ -182,7 +188,7 @@ export const GlobalDataProvider = ({ children }) => {
 
     // Project management helpers
     function createProject(name = 'Untitled Project', initialExperimentType = DEFAULT_EXPERIMENT_TYPE_ID) {
-        const id = uuidv4();
+        const id = generateId();
         const p = { id, name };
         setProjects((prev) => {
             const next = [...prev, p];
@@ -279,6 +285,8 @@ export const GlobalDataProvider = ({ children }) => {
 
             // Clear IndexedDB tree for this project
             try { await clearTree(id); } catch (e) { console.warn('[GlobalDataContext] resetProject: clearTree failed', e); }
+            clearProjectDatasetName(id);
+            clearProjectDatasetStats(id);
 
             // If this is the example project, re-import the compressed nodes into IndexedDB
             if (isExampleProject) {
@@ -291,6 +299,13 @@ export const GlobalDataProvider = ({ children }) => {
                     // Load the tree and set in-memory dataset
                     try {
                         const root = await loadTree(id);
+                        if (root) {
+                            setProjectDatasetName(id, root.rootName || root.name || null);
+                            setProjectDatasetStats(id, root);
+                        } else {
+                            clearProjectDatasetName(id);
+                            clearProjectDatasetStats(id);
+                        }
                         if (currentProjectId === id) {
                             try { setSelectedDataset(root); } catch (e) { /* ignore */ }
                         }
@@ -490,8 +505,15 @@ export const GlobalDataProvider = ({ children }) => {
                 // Try to load the root from the DB and set it into memory
                 try {
                     const root = await loadTree(DEFAULT_PROJECT_ID);
-                    if (mounted && root) {
-                        setSelectedDataset(root);
+                    if (mounted) {
+                        if (root) {
+                            setProjectDatasetName(DEFAULT_PROJECT_ID, root.rootName || root.name || null);
+                            setProjectDatasetStats(DEFAULT_PROJECT_ID, root);
+                            setSelectedDataset(root);
+                        } else {
+                            clearProjectDatasetName(DEFAULT_PROJECT_ID);
+                            clearProjectDatasetStats(DEFAULT_PROJECT_ID);
+                        }
                     }
                 } catch (e) {
                     console.warn('[GlobalDataContext] loadTree after import failed', e);

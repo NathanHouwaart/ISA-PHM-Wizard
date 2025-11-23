@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMappingCard';
+import generateId from '../utils/generateId';
 
 export const useMeasurementProtocols = () => {
 
@@ -9,7 +10,7 @@ export const useMeasurementProtocols = () => {
 
     const addMeasurementProtocol = () => {
         const newProtocol = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: `New Protocol ${measurementProtocols.length + 1}`,
             type: '',
             unit: '',

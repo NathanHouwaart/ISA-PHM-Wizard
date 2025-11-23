@@ -3,7 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 
 import './Navbar.css'; // Assuming you have a CSS file for styling
 
-function Navbar() {
+const Navbar = () => {
   return (
     <nav className="navbar">
       <Link to={"/"} className="title">ISA-PHM Wizard</Link>
@@ -20,7 +20,7 @@ function Navbar() {
       </ul>
     </nav>
   );
-}
+};
 
 
 export default Navbar;

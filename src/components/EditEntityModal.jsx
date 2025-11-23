@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FormField from './Form/FormField';
 import TooltipButton from './Widgets/TooltipButton';
+import Heading3 from './Typography/Heading3';
+import Paragraph from './Typography/Paragraph';
 
 /**
  * Generic edit modal for entities (variables, processing protocols, ...)
@@ -37,8 +39,8 @@ const EditEntityModal = ({ isOpen, onClose, onSave, initialData = {}, fields = [
         // large content (or tooltips) doesn't push the modal out of view.
         <div className="fixed inset-0 p-0 bg-black/25 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div style={{ scale: 0.98 }} className="bg-white rounded-lg m-0 shadow-xl p-6 w-full max-w-lg transform transition-transform duration-200 ease-out max-h-[calc(100vh-4rem)] overflow-auto">
-                <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">{title}</h3>
-                <p className="text-center text-sm text-gray-600 mb-4">Edit the fields below and press Save Changes.</p>
+                <Heading3 className="text-2xl font-bold text-gray-800 mb-2 text-center">{title}</Heading3>
+                <Paragraph className="text-center text-sm text-gray-600 mb-4">Edit the fields below and press Save Changes.</Paragraph>
 
                 <div className="space-y-4">
                     {fields.map((f) => {

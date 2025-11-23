@@ -1,12 +1,11 @@
 // components/tooltips/InfoTooltip.tsx
 
-import {
-    AnimatedTooltip,
+import AnimatedTooltip, {
     AnimatedTooltipExplanation,
     AnimatedTooltipExample
 } from '../Tooltip/AnimatedTooltipProvider';
 
-export function TableTooltip({ isVisible, explanations = [], examples = [] }) {
+const TableTooltip = ({ isVisible, explanations = [], examples = [] }) => {
     if (!examples || examples.length === 0) {
         return null;
     }
@@ -48,6 +47,6 @@ export function TableTooltip({ isVisible, explanations = [], examples = [] }) {
             </AnimatedTooltipExample>
         </AnimatedTooltip>
     );
-}
+};
 
 export default TableTooltip;

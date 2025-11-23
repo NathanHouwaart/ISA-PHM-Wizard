@@ -22,8 +22,10 @@ import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import useStudyRuns from '../../hooks/useStudyRuns';
 import StudyRunMappingPanel from '../Study/StudyRunMappingPanel';
+import DualSidebarStudyRunPanel from '../Study/DualSidebarStudyRunPanel';
 import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
+import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellProperties } from '../../utils/gridCellTemplates';
 
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
@@ -67,28 +69,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         [studies, studyRuns]
     );
 
-    const studyCellTemplate = useMemo(() => (
-        (createElement, props = {}) => {
-            const model = props?.model;
-            if (!model) return createElement('div', null, '');
-            if (!model.showStudyLabel) {
-                return createElement('div', { class: 'text-xs text-gray-400' }, '');
-            }
-            const label = `Study S${String(model.studyDisplayIndex || 0).padStart(2, '0')}`;
-            return createElement('div', { class: 'flex flex-col gap-0.5' }, [
-                createElement('div', { class: 'text-xs text-gray-500' }, label),
-                createElement('div', { class: 'font-semibold text-gray-900' }, model.studyDisplayName || label),
-            ]);
-        }
-    ), []);
 
-    const runCellTemplate = useMemo(() => (
-        (createElement, props = {}) => {
-            const model = props?.model;
-            if (!model) return createElement('div', null, '');
-            return createElement('div', { class: 'font-medium text-gray-800' }, model.runLabel || `Run ${model.runNumber || ''}`);
-        }
-    ), []);
 
     const measurementOutputGridConfig = {
         title: 'Mappings for measurement output',
@@ -113,15 +94,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             readonly: true,
             pin: 'colPinStart',
             cellTemplate: studyCellTemplate,
-            cellProperties: (props) => {
-                const model = props?.model;
-                if (model?.isLastRunInStudy) {
-                    return {
-                        style: { "border-bottom": "3px solid black" }
-                    };
-                }
-                return {};
-            }
+            cellProperties: studyCellProperties
         },
         {
             prop: 'runLabel',
@@ -130,21 +103,9 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             readonly: true,
             pin: 'colPinStart',
             cellTemplate: runCellTemplate,
-            cellProperties: (props) => {
-                const model = props?.model;
-                const style = {
-                    "border-right": "3px solid black"
-                };
-                
-                // Add bottom border if this is the last run of a study (but not the last study)
-                if (model?.isLastRunInStudy) {
-                    style["border-bottom"] = "3px solid black";
-                }
-                
-                return { style };
-            }
+            cellProperties: runCellProperties
         }
-        ]), [studyCellTemplate, runCellTemplate])
+        ]), [])
     };
 
     return (
@@ -187,15 +148,17 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <StudyRunMappingPanel
-                        title="Sensor Output Mapping"
-                        studies={studies}
-                        studyRuns={studyRuns}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                        MappingCardComponent={StudyMeasurementMappingCard}
-                    />
+                    <div className="h-[45vh]">
+                        <DualSidebarStudyRunPanel
+                            title="Sensor Output Mapping"
+                            studies={studies}
+                            studyRuns={studyRuns}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                            minHeight={WINDOW_HEIGHT}
+                            MappingCardComponent={StudyMeasurementMappingCard}
+                        />
+                    </div>
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
@@ -210,7 +173,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         // Debugging turned off by default
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
-                        height={WINDOW_HEIGHT}
+                        height={"45vh"}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                         actionPlugins={[FilePickerPlugin]}
                     />

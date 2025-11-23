@@ -3,6 +3,16 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import generateId from '../../utils/generateId';
+import useVariables from '../../hooks/useVariables';
+import Collection, {
+    CollectionTitle,
+    CollectionSubtitle,
+    CollectionAddButtonText,
+    CollectionEmptyStateTitle,
+    CollectionEmptyStateSubtitle,
+    CollectionEmptyStateAddButtonText
+} from '../Collection';
 
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
@@ -12,6 +22,8 @@ import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import TabSwitcher, { TabPanel } from '../TabSwitcher';
+import usePageTab from '../../hooks/usePageWidth';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -20,6 +32,9 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
     const combinedRef = useCombinedRefs(ref, resizeRef);
 
     const { studyVariables, setStudyVariables } = useGlobalDataContext();
+    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+
+
 
     const addNewVariable = useCallback(() => {
         setStudyVariables(prev => {
@@ -27,7 +42,7 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
             return [
                 ...prev,
                 {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     name: `New Variable ${nextIndex}`,
                     type: VARIABLE_TYPE_OPTIONS[0] || '',
                     unit: '',
@@ -73,7 +88,7 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
             {
                 prop: 'type',
                 name: 'Type',
-                size: 170,
+                size: 280,
                 readonly: false,
                 columnType: 'select',
                 labelKey: 'label',
@@ -89,7 +104,7 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
             {
                 prop: 'description',
                 name: 'Description',
-                size: 400,
+                size: 750,
                 readonly: false
             }
         ],
@@ -113,16 +128,44 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
                 Define the variables that describe your studies, including their type, units, and descriptive notes. These definitions are shared across all mappings.
             </SlidePageSubtitle>
 
-            <div className="bg-gray-50 p-3 border border-gray-200 rounded-lg">
-                <DataGrid
-                    {...variableGridConfig}
-                    showControls={true}
-                    showDebug={false}
-                    onRowDataChange={handleRowDataChange}
-                    plugins={plugins}
-                    height={WINDOW_HEIGHT}
-                    isActive={currentPage === pageIndex}
+            <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">
+                <TabSwitcher
+                    selectedTab={selectedTab}
+                    onTabChange={setSelectedTab}
+                    tabs={[
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'Card-based view for managing variables' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'Table-based view for bulk editing' }
+                    ]}
                 />
+
+                <TabPanel isActive={selectedTab === 'simple-view'}>
+                    <div className="max-h-[45vh] overflow-y-auto">
+                        <Collection
+                            onHeightChange={() => {}}
+                            itemHook={useVariables}
+                            grid={true}
+                        >
+                            <CollectionTitle>Study Variables ({studyVariables?.length || 0})</CollectionTitle>
+                            <CollectionSubtitle>View, add and edit study variable definitions</CollectionSubtitle>
+                            <CollectionAddButtonText>Add Variable</CollectionAddButtonText>
+                            <CollectionEmptyStateTitle>No Variables Defined</CollectionEmptyStateTitle>
+                            <CollectionEmptyStateSubtitle>Get started by adding your first variable</CollectionEmptyStateSubtitle>
+                            <CollectionEmptyStateAddButtonText>Add Variable Now</CollectionEmptyStateAddButtonText>
+                        </Collection>
+                    </div>
+                </TabPanel>
+
+                <TabPanel isActive={selectedTab === 'grid-view'}>
+                    <DataGrid
+                        {...variableGridConfig}
+                        showControls={true}
+                        showDebug={false}
+                        onRowDataChange={handleRowDataChange}
+                        plugins={plugins}
+                        height={"45vh"}
+                        isActive={currentPage === pageIndex && selectedTab === 'grid-view'}
+                    />
+                </TabPanel>
             </div>
         </div>
     );

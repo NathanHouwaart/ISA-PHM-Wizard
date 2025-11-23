@@ -20,6 +20,7 @@ import EntityMappingPanel from '../EntityMappingPanel';
 import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
+import StudyVariableMappingPanel from '../Study/StudyVariableMappingPanel';
 
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -28,7 +29,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const {
         studies,
         studyVariables,
-        setScreenWidth,
         selectedDataset
     } = useGlobalDataContext();
 
@@ -42,10 +42,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     );
 
     const [activeStudyId, setActiveStudyId] = useState(() => studies?.[0]?.id || null);
-
-    useEffect(() => {
-        setScreenWidth(selectedTab === 'grid-view' ? 'max-w-[100rem]' : 'max-w-5xl');
-    }, [selectedTab, setScreenWidth]);
 
     useEffect(() => {
         if (studies.length === 0) {
@@ -94,7 +90,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const gridHeight = useMemo(() => {
         const rows = Math.max(1, studyVariables.length);
         const rowHeight = 50;
-        const structuralPadding = 60;
+        const structuralPadding = 115;
         const desired = (rows * rowHeight) + structuralPadding;
         const maxHeight = 500;
         return Math.min(maxHeight, desired);
@@ -110,35 +106,38 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 Map each defined variable to the runs that belong to your studies. Variable definitions are read-only in this view to keep the focus on assigning run-specific values.
             </SlidePageSubtitle>
 
-            <TabSwitcher
-                selectedTab={selectedTab}
-                onTabChange={setSelectedTab}
-                tabs={[
-                    { id: 'simple-view', label: 'Simple View', tooltip: 'Work variable by variable with per-run tabs' },
-                    { id: 'grid-view', label: 'Grid View', tooltip: 'See mappings per study/run in stacked grids' }
-                ]}
-                className="mb-4"
-            />
-            <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
-                Each cell can contain either a literal value (e.g. a threshold) or the filename of a run-specific time-series dataset. Pick the approach that best documents the study.
-            </Paragraph>
-
-            <TabPanel isActive={selectedTab === 'simple-view'}>
-                {studyVariables.length === 0 && (
-                    <WarningBanner type="info">
-                        <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.
-                    </WarningBanner>
-                )}
-                <EntityMappingPanel
-                    minHeight={Math.max(400, studyVariables.length * 120)}
-                    name="Variables"
-                    itemHook={useVariables}
-                    mappings={mappingsController.mappings}
-                    handleInputChange={mappingsController.updateMappingValue}
+            <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">
+                <TabSwitcher
+                    selectedTab={selectedTab}
+                    onTabChange={setSelectedTab}
+                    tabs={[
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'Work variable by variable with per-run tabs' },
+                        { id: 'grid-view', label: 'Grid View', tooltip: 'See mappings per study/run in stacked grids' }
+                    ]}
                 />
-            </TabPanel>
+                <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
+                    Each cell can contain either a literal value (e.g. a threshold) or the filename of a run-specific time-series dataset. Pick the approach that best documents the study.
+                </Paragraph>
 
-            <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'}>
+                    {studyVariables.length === 0 && (
+                        <WarningBanner type="info">
+                            <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.
+                        </WarningBanner>
+                    )}
+                    <div className="h-[45vh]">
+                        <StudyVariableMappingPanel
+                            studies={studies}
+                            studyRuns={studyRuns}
+                            studyVariables={studyVariables}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                            minHeight={Math.max(400, studyVariables.length * 120)}
+                        />
+                    </div>
+                </TabPanel>
+
+                <TabPanel isActive={selectedTab === 'grid-view'}>
                 {studies.length === 0 && (
                     <WarningBanner type="warning">
                         <strong>No studies available.</strong> Create studies before mapping variables.
@@ -229,6 +228,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     })}
                 </div>
             </TabPanel>
+            </div>
         </div>
     );
 });

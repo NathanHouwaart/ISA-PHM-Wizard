@@ -25,7 +25,7 @@ import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
-
+import generateId from '../../utils/generateId';
 
 export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -38,17 +38,10 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
     // Access global context
     const {
-        studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
         processingProtocols,
         setProcessingProtocols,
-        sensorToProcessingProtocolMapping,
-        setSensorToProcessingProtocolMapping,
-        setTestSetups,
-        studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
@@ -71,13 +64,6 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         mappingsController.setMappings(newMappings);
     }, [mappingsController]);
 
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
-
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
-
     // Handle input changes in EntityMappingPanel
     const addNewProtocol = () => {
         const newProtocol = {
@@ -90,11 +76,6 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         // if (gridMode === 'sensor-protocols' && callGridMethod('addRow', newProtocol)) return;
         setProcessingProtocols([...processingProtocols, newProtocol]);
     };
-
-    // // Handle cell edits in the grid
-    // const handleDataGridMappingsChange = useCallback((newMappings) => {
-    //     setSensorToProcessingProtocolMapping(newMappings);
-    // }, [setSensorToProcessingProtocolMapping]);
 
     // Handle row data changes
     const handleDataGridRowDataChange = useCallback((newRowData) => {
@@ -195,28 +176,27 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-
-                    <EntityMappingPanel
-                        name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        itemHook={useProcessingProtocols}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                    />
-
+                    <div className="h-[45vh]">
+                        <EntityMappingPanel
+                            name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                            itemHook={useProcessingProtocols}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                            minHeight={WINDOW_HEIGHT}
+                        />
+                    </div>
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     <DataGrid
                         {...processingProtocolsGridConfig}
+                        height="45vh"
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
-
                 </TabPanel>
             </div>
         </div>

@@ -5,6 +5,7 @@ import useCombinedRefs from '../hooks/useCombinedRefs';
 
 import { Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
+import Heading1 from './Typography/Heading1';
 
 import TooltipButton from './Widgets/TooltipButton';
 import AlertDecisionDialog from './Widgets/AlertDecisionDialog';
@@ -158,7 +159,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 {/* Header */}
                 <div className="pl-3 flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+                        <Heading1 className="mb-0 border-b-0 text-left px-0 py-0">{title}</Heading1>
                         <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>
                     </div>
                     <TooltipButton
