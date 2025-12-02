@@ -197,7 +197,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                         </WarningBanner>
                     )}
                     <div className="h-[45vh] flex flex-col overflow-hidden">
-                        <div className="flex-1 min-h-0 overflow-y-auto">
                             <StudyVariableMappingPanel
                                 studies={studies}
                                 studyRuns={studyRuns}
@@ -206,7 +205,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                 handleInputChange={mappingsController.updateMappingValue}
                                 minHeight={WINDOW_HEIGHT}
                             />
-                        </div>
                     </div>
                 </TabPanel>
 

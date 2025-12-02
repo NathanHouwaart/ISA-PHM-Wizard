@@ -82,7 +82,6 @@ const DualSidebarStudyRunPanel = ({
   return (
     <div
       className="flex flex-col md:flex-row gap-6 h-full min-h-0 w-full"
-      style={minHeight ? { minHeight } : undefined}
     >
       <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md overflow-hidden">
         <Heading3 className="text-lg text-gray-900">{title}</Heading3>

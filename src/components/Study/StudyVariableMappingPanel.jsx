@@ -42,8 +42,7 @@ const StudyVariableMappingPanel = ({
 
   return (
     <div
-      className="flex flex-col md:flex-row gap-6 h-full w-full min-h-0 overflow-x-hidden"
-      style={minHeight ? { minHeight } : undefined}
+      className="flex flex-col md:flex-row gap-6 h-full w-full min-h-0 "
     >
       {/* Study Sidebar */}
       <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md h-full min-h-0">

@@ -24,7 +24,7 @@ const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleIn
     const selectedEntity = useMemo(() => items[selectedEntityIndex], [items, selectedEntityIndex]);
 
     return (
-        <div className='flex flex-col md:flex-row gap-6 h-full' style={minHeight ? { minHeight } : undefined}>
+        <div className='flex flex-col md:flex-row gap-6 h-full' >
 
             {/* Sidebar for Variable Navigation */}
             <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md max-h-full">
