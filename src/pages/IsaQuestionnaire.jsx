@@ -293,12 +293,8 @@ export const IsaQuestionnaire = () => {
             onClick={handleSubmit}
             className={cn(
               "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
-              {
-                "bg-gradient-to-r from-gray-500 to-gray-500 cursor-not-allowed pointer-events-none": !isLastPage(currentPage),
-                "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl": isLastPage(currentPage),
-              }
+              "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
             )}
-            disabled={!isLastPage(currentPage) || isSubmitting || isRemountingSlides}
           >
             <span className='w-md'>Convert to ISA-PHM</span>
           </TooltipButton>
