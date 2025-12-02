@@ -42,6 +42,7 @@ const DataGrid = forwardRef(({
 
     // Custom actions for controls
     customActions = [],     // Array of custom action buttons to add to controls
+    hideClearAllMappings = false, // Optional: hide clear-all control (useful for standalone grids)
 
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
@@ -957,21 +958,23 @@ const DataGrid = forwardRef(({
                             </>
                         )}
 
-                        {/* Always show the clear-all mappings button; disable when there are no mappings */}
-                        <>
-                            <div className="border-l border-gray-300 h-6 mx-2"></div>
-                            <TooltipButton
-                                onClick={clearAllMappings}
-                                disabled={!(stats && stats.totalMappings > 0)}
-                                className={`px-3 py-1 text-sm rounded border ${stats && stats.totalMappings > 0
-                                    ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
-                                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                                }`}
-                                tooltipText={stats && stats.totalMappings > 0 ? 'Clear all mappings' : 'No mappings to clear'}
-                            >
-                                🗑️ Clear all mappings
-                            </TooltipButton>
-                        </>
+                        {/* Clear-all mappings button; optionally hidden */}
+                        {!hideClearAllMappings && (
+                            <>
+                                <div className="border-l border-gray-300 h-6 mx-2"></div>
+                                <TooltipButton
+                                    onClick={clearAllMappings}
+                                    disabled={!(stats && stats.totalMappings > 0)}
+                                    className={`px-3 py-1 text-sm rounded border ${stats && stats.totalMappings > 0
+                                        ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                                        : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                    }`}
+                                    tooltipText={stats && stats.totalMappings > 0 ? 'Clear all mappings' : 'No mappings to clear'}
+                                >
+                                    🗑️ Clear all mappings
+                                </TooltipButton>
+                            </>
+                        )}
 
                         {/* File assign / plugin area - only show separator when something follows */}
                         {(DBG || (actionPlugins && actionPlugins.length > 0)) && (

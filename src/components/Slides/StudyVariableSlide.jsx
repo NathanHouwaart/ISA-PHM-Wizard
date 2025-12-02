@@ -14,13 +14,14 @@ import { Template } from '@revolist/react-datagrid';
 import { BoldCell } from '../DataGrid/CellTemplates';
 import useMappingsController from '../../hooks/useMappingsController';
 import useStudyRuns from '../../hooks/useStudyRuns';
-import { groupStudyRuns } from '../../utils/studyRuns';
+import { createStudyRunId, groupStudyRuns } from '../../utils/studyRuns';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import StudyVariableMappingPanel from '../Study/StudyVariableMappingPanel';
+import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -29,11 +30,14 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const {
         studies,
         studyVariables,
-        selectedDataset
+        selectedDataset,
+        experimentType
     } = useGlobalDataContext();
 
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
     const studyRuns = useStudyRuns();
+    const experimentConfig = useMemo(() => getExperimentTypeConfig(experimentType), [experimentType]);
+    const isSingleRunTemplate = !experimentConfig?.supportsMultipleRuns;
     const groupedRuns = useMemo(() => groupStudyRuns(studyRuns), [studyRuns]);
 
     const mappingsController = useMappingsController(
@@ -48,10 +52,16 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
             setActiveStudyId(null);
             return;
         }
+
+        if (isSingleRunTemplate) {
+            setActiveStudyId('all-studies');
+            return;
+        }
+
         if (!activeStudyId || !studies.some(study => study.id === activeStudyId)) {
             setActiveStudyId(studies[0].id);
         }
-    }, [studies, activeStudyId]);
+    }, [studies, activeStudyId, isSingleRunTemplate]);
 
     const staticColumns = useMemo(() => ([
         {
@@ -83,6 +93,37 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         }
     ]), []);
 
+    const singleRunColumns = useMemo(() => {
+        if (!isSingleRunTemplate) {
+            return [];
+        }
+
+        return studies.map((study, studyIndex) => {
+            const runsForStudy = groupedRuns.get(study.id) || [];
+            const firstRun = runsForStudy[0];
+            if (firstRun) {
+                return {
+                    ...firstRun,
+                    runId: firstRun.runId || firstRun.id,
+                    studyName: firstRun.studyName || study.name
+                };
+            }
+
+            const fallbackRunId = createStudyRunId(study.id, 1);
+            const studyName = study?.name || `Study ${studyIndex + 1}`;
+            return {
+                id: fallbackRunId,
+                runId: fallbackRunId,
+                studyId: study?.id,
+                studyName,
+                shortLabel: studyName,
+                name: studyName,
+                runNumber: 1,
+                runCount: 1
+            };
+        });
+    }, [groupedRuns, isSingleRunTemplate, studies]);
+
     const handleGridFocus = useCallback((studyId) => {
         setActiveStudyId(studyId);
     }, []);
@@ -95,6 +136,30 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         const maxHeight = 500;
         return Math.min(maxHeight, desired);
     }, [studyVariables.length]);
+
+    const singleRunGridConfig = useMemo(() => {
+        if (!isSingleRunTemplate) {
+            return null;
+        }
+
+        return {
+            title: null,
+            rowData: studyVariables,
+            columnData: singleRunColumns,
+            mappings: mappingsController.mappings,
+            fieldMappings: {
+                rowId: 'id',
+                rowName: 'name',
+                columnId: 'runId',
+                columnName: 'studyName',
+                mappingRowId: 'studyVariableId',
+                mappingColumnId: 'studyRunId',
+                mappingValue: 'value'
+            },
+            staticColumns,
+            customActions: []
+        };
+    }, [isSingleRunTemplate, mappingsController.mappings, singleRunColumns, staticColumns, studyVariables]);
 
     return (
         <div ref={combinedRef}>
@@ -112,7 +177,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     onTabChange={setSelectedTab}
                     tabs={[
                         { id: 'simple-view', label: 'Simple View', tooltip: 'Work variable by variable with per-run tabs' },
-                        { id: 'grid-view', label: 'Grid View', tooltip: 'See mappings per study/run in stacked grids' }
+                        { id: 'grid-view', label: 'Grid View', tooltip: isSingleRunTemplate ? 'See mappings per study in a single grid' : 'See mappings per study/run in stacked grids' }
                     ]}
                 />
                 <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
@@ -138,96 +203,131 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
-                {studies.length === 0 && (
-                    <WarningBanner type="warning">
-                        <strong>No studies available.</strong> Create studies before mapping variables.
-                    </WarningBanner>
-                )}
+                    {studies.length === 0 && (
+                        <WarningBanner type="warning">
+                            <strong>No studies available.</strong> Create studies before mapping variables.
+                        </WarningBanner>
+                    )}
 
-                {studyVariables.length === 0 && (
-                    <WarningBanner type="info">
-                        <strong>No variables defined.</strong> Add variables first to work in the grid view.
-                    </WarningBanner>
-                )}
-                {!selectedDataset && (
-                    <WarningBanner type="info">
-                        <strong>No dataset indexed.</strong> To use the <strong>�Y"? Assign files</strong> helper, index a dataset via the project settings <Layers className="inline w-4 h-4 mx-1" /> first.
-                    </WarningBanner>
-                )}
+                    {studyVariables.length === 0 && (
+                        <WarningBanner type="info">
+                            <strong>No variables defined.</strong> Add variables first to work in the grid view.
+                        </WarningBanner>
+                    )}
+                    {!selectedDataset && (
+                        <WarningBanner type="info">
+                            <strong>No dataset indexed.</strong> To use the <strong>Assign files</strong> helper, index a dataset via the project settings <Layers className="inline w-4 h-4 mx-1" /> first.
+                        </WarningBanner>
+                    )}
 
-                <div className="space-y-4 mt-4">
-                    {studies.map((study) => {
-                        const runsForStudy = groupedRuns.get(study.id) || [];
-                        const hasRuns = runsForStudy.length > 0;
-
-                        const gridConfig = {
-                            title: null,
-                            rowData: studyVariables,
-                            columnData: runsForStudy,
-                            mappings: mappingsController.mappings,
-                            fieldMappings: {
-                                rowId: 'id',
-                                rowName: 'name',
-                                columnId: 'runId',
-                                columnName: 'shortLabel',
-                                columnParentId: 'studyId',
-                                columnParentName: 'studyName',
-                                columnChildNameFormatter: (run) => run?.shortLabel || `Run ${run?.runNumber}`,
-                                enableColumnGroups: true,
-                                mappingRowId: 'studyVariableId',
-                                mappingColumnId: 'studyRunId',
-                                mappingValue: 'value'
-                            },
-                            staticColumns,
-                            customActions: []
-                        };
-
-                        return (
-                            <section
-                                key={study.id}
-                                className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2"
-                            >
+                    <div className="space-y-4 mt-4">
+                        {isSingleRunTemplate ? (
+                            <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
                                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                     <Heading3 className="text-lg font-semibold text-gray-900">
-                                        Study variable mappings – {study.name}
+                                        Study variable mappings - All studies
                                     </Heading3>
-                                    {hasRuns && (
+                                    {singleRunColumns.length > 0 && (
                                         <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                            {runsForStudy.length} run{runsForStudy.length > 1 ? 's' : ''}
+                                            {singleRunColumns.length} stud{singleRunColumns.length === 1 ? 'y' : 'ies'}
                                         </span>
                                     )}
                                 </div>
-                                {!hasRuns && (
+                                {singleRunColumns.length === 0 ? (
                                     <Paragraph className="text-sm text-gray-500">
-                                        This study has no runs defined yet.
+                                        This project has no studies with runs to map.
                                     </Paragraph>
-                                )}
-
-                                {hasRuns ? (
+                                ) : (
                                     <div
-                                        onPointerDown={() => handleGridFocus(study.id)}
+                                        onPointerDown={() => handleGridFocus('all-studies')}
                                         className="border border-gray-100 rounded-lg"
                                     >
                                         <DataGrid
-                                            {...gridConfig}
+                                            {...singleRunGridConfig}
                                             showControls={true}
                                             showDebug={false}
                                             onDataChange={mappingsController.setMappings}
                                             height={gridHeight}
-                                            isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                            isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
                                             actionPlugins={[FilePickerPlugin]}
                                         />
                                     </div>
-                                ) : (
-                                    <Paragraph className="text-sm text-gray-500 italic">
-                                        Add runs to this study to enable variable mappings.
-                                    </Paragraph>
                                 )}
                             </section>
-                        );
-                    })}
-                </div>
-            </TabPanel>
+                        ) : (
+                            studies.map((study) => {
+                                const runsForStudy = groupedRuns.get(study.id) || [];
+                                const hasRuns = runsForStudy.length > 0;
+
+                                const gridConfig = {
+                                    title: null,
+                                    rowData: studyVariables,
+                                    columnData: runsForStudy,
+                                    mappings: mappingsController.mappings,
+                                    fieldMappings: {
+                                        rowId: 'id',
+                                        rowName: 'name',
+                                        columnId: 'runId',
+                                        columnName: 'shortLabel',
+                                        columnParentId: 'studyId',
+                                        columnParentName: 'studyName',
+                                        columnChildNameFormatter: (run) => run?.shortLabel || `Run ${run?.runNumber}`,
+                                        enableColumnGroups: true,
+                                        mappingRowId: 'studyVariableId',
+                                        mappingColumnId: 'studyRunId',
+                                        mappingValue: 'value'
+                                    },
+                                    staticColumns,
+                                    customActions: []
+                                };
+
+                                return (
+                                    <section
+                                        key={study.id}
+                                        className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2"
+                                    >
+                                        <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                                            <Heading3 className="text-lg font-semibold text-gray-900">
+                                                Study variable mappings - {study.name}
+                                            </Heading3>
+                                            {hasRuns && (
+                                                <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                    {runsForStudy.length} run{runsForStudy.length > 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {!hasRuns && (
+                                            <Paragraph className="text-sm text-gray-500">
+                                                This study has no runs defined yet.
+                                            </Paragraph>
+                                        )}
+
+                                        {hasRuns ? (
+                                            <div
+                                                onPointerDown={() => handleGridFocus(study.id)}
+                                                className="border border-gray-100 rounded-lg"
+                                            >
+                                                <DataGrid
+                                                    {...gridConfig}
+                                                    showControls={true}
+                                                    showDebug={false}
+                                                    onDataChange={mappingsController.setMappings}
+                                                    height={gridHeight}
+                                                    isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                                    actionPlugins={[FilePickerPlugin]}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Paragraph className="text-sm text-gray-500 italic">
+                                                Add runs to this study to enable variable mappings.
+                                            </Paragraph>
+                                        )}
+                                    </section>
+                                );
+                            })
+                        )}
+                    </div>
+                </TabPanel>
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Save, Trash2, HelpCircle, ChevronDown, ChevronRight, Plus, } from 'lucide-react';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
 import { cn } from '../../utils/utils';
@@ -12,6 +12,9 @@ import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButt
 import TooltipButton from '../Widgets/TooltipButton';
 import TableTooltip from '../Widgets/TableTooltip';
 import Paragraph, { SlidePageSubtitle } from '../Typography/Paragraph';
+import DataGrid from '../DataGrid/DataGrid';
+import { Template } from '@revolist/react-datagrid';
+import { DeleteRowCellTemplate, PatternCellTemplate } from '../DataGrid/CellTemplates';
 
 // Comment Component
 const CommentEditor = ({ comments = [], onCommentsChange }) => {
@@ -640,6 +643,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [formError, setFormError] = useState('');
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [activeTooltips, setActiveTooltips] = useState(false);
+  const [characteristicsView, setCharacteristicsView] = useState('simple-view');
+  const [sensorsView, setSensorsView] = useState('simple-view');
 
 
   // Calculate number of sensors from sensors array
@@ -661,6 +666,19 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       setFormData(initialFormState);
     }
   }, [item]);
+
+  useEffect(() => {
+    const needsCharacteristicIds = formData.characteristics.some((c) => !c.id);
+    const needsSensorIds = formData.sensors.some((s) => !s.id);
+
+    if (needsCharacteristicIds || needsSensorIds) {
+      setFormData((prev) => ({
+        ...prev,
+        characteristics: prev.characteristics.map((c) => (c.id ? c : { ...c, id: uuid4() })),
+        sensors: prev.sensors.map((s) => (s.id ? s : { ...s, id: uuid4() })),
+      }));
+    }
+  }, [formData.characteristics, formData.sensors]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -693,6 +711,125 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm";
   const labelClasses = "block text-sm font-medium text-gray-700 mb-2";
+
+  const characteristicRows = useMemo(() => {
+    return formData.characteristics.map((c) => ({
+      ...c,
+      commentsCount: Array.isArray(c?.comments) ? c.comments.length : 0,
+      commentHint: 'Manage comments in Simple View'
+    }));
+  }, [formData.characteristics]);
+  const sensorRows = useMemo(() => formData.sensors, [formData.sensors]);
+
+  const addCharacteristicRow = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      characteristics: [
+        ...prev.characteristics,
+        {
+          id: uuid4(),
+          category: '',
+          value: '',
+          unit: '',
+          comments: [],
+          commentsCount: 0,
+          commentHint: 'Manage comments in Simple View'
+        }
+      ]
+    }));
+  }, []);
+
+  const addSensorRow = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      sensors: [
+        ...prev.sensors,
+        {
+          id: uuid4(),
+          alias: `Sensor SE${String(prev.sensors.length + 1).padStart(2, '0')}`,
+          technologyPlatform: '',
+          technologyType: '',
+          measurementType: '',
+          description: '',
+          additionalInfo: []
+        }
+      ]
+    }));
+  }, []);
+
+  const characteristicGridConfig = useMemo(() => ({
+    title: 'Characteristics',
+    rowData: characteristicRows,
+    columnData: [],
+    mappings: [],
+    staticColumns: [
+      {
+        prop: 'actions',
+        name: '',
+        size: 70,
+        readonly: true,
+        cellTemplate: Template(DeleteRowCellTemplate),
+        cellProperties: () => ({ style: { 'text-align': 'center' } })
+      },
+      {
+        prop: 'pattern',
+        name: 'Identifier',
+        size: 150,
+        readonly: true,
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Characteristic C' })
+      },
+      { prop: 'category', name: 'Category', size: 180, readonly: false },
+      { prop: 'value', name: 'Value', size: 200, readonly: false },
+      { prop: 'unit', name: 'Unit', size: 120, readonly: false },
+      { prop: 'commentsCount', name: 'Comments (#)', size: 140, readonly: true },
+      { prop: 'commentHint', name: 'Comments', size: 200, readonly: true },
+    ],
+    customActions: [
+      {
+        label: '+ Add characteristic',
+        title: 'Add characteristic row',
+        onClick: addCharacteristicRow,
+        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+      }
+    ]
+  }), [characteristicRows]);
+
+  const sensorGridConfig = useMemo(() => ({
+    title: 'Sensors',
+    rowData: sensorRows,
+    columnData: [],
+    mappings: [],
+    staticColumns: [
+      {
+        prop: 'actions',
+        name: '',
+        size: 70,
+        readonly: true,
+        cellTemplate: Template(DeleteRowCellTemplate),
+        cellProperties: () => ({ style: { 'text-align': 'center' } })
+      },
+      {
+        prop: 'pattern',
+        name: 'Identifier',
+        size: 140,
+        readonly: true,
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Sensor S' })
+      },
+      { prop: 'alias', name: 'Alias', size: 160, readonly: false },
+      { prop: 'technologyPlatform', name: 'Sensor Model', size: 200, readonly: false },
+      { prop: 'technologyType', name: 'Sensor Type', size: 180, readonly: false },
+      { prop: 'measurementType', name: 'Measurement Type', size: 180, readonly: false },
+      { prop: 'description', name: 'Description', size: 220, readonly: false },
+    ],
+    customActions: [
+      {
+        label: '+ Add sensor',
+        title: 'Add sensor row',
+        onClick: addSensorRow,
+        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+      }
+    ]
+  }), [sensorRows]);
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
@@ -815,23 +952,87 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         </TabPanel>
 
         <TabPanel isActive={selectedTab === 'characteristics'}>
-          {/* Characteristics Section */}
-          <CharacteristicsEditor
-            characteristics={formData.characteristics}
-            onCharacteristicsChange={(characteristics) =>
-              setFormData(prev => ({ ...prev, characteristics }))
-            }
+          <TabSwitcher
+            selectedTab={characteristicsView}
+            onTabChange={setCharacteristicsView}
+            tabs={[
+              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit characteristics with collapsible cards' },
+              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit characteristics inline in a grid' }
+            ]}
           />
+          <TabPanel isActive={characteristicsView === 'simple-view'}>
+            <CharacteristicsEditor
+              characteristics={formData.characteristics}
+              onCharacteristicsChange={(characteristics) =>
+                setFormData(prev => ({ ...prev, characteristics }))
+              }
+            />
+          </TabPanel>
+          <TabPanel isActive={characteristicsView === 'grid-view'}>
+            <div className="mt-3 border border-gray-200 rounded-lg">
+              <DataGrid
+                {...characteristicGridConfig}
+                showControls={true}
+                showDebug={false}
+                onRowDataChange={(nextRows) => setFormData(prev => ({
+                  ...prev,
+                  characteristics: nextRows.map((row) => {
+                    const existing = prev.characteristics.find((c) => c.id === row.id) || {};
+                    return {
+                      ...existing,
+                      ...row,
+                      comments: existing.comments || row.comments || [],
+                      commentsCount: undefined,
+                      commentHint: undefined
+                    };
+                  })
+                }))}
+                height={"45vh"}
+                hideClearAllMappings={true}
+              />
+            </div>
+          </TabPanel>
         </TabPanel>
 
         <TabPanel isActive={selectedTab === 'sensors'}>
-          {/* Sensors Section */}
-          <SensorsEditor
-            sensors={formData.sensors}
-            onSensorsChange={(sensors) =>
-              setFormData(prev => ({ ...prev, sensors }))
-            }
+          <TabSwitcher
+            selectedTab={sensorsView}
+            onTabChange={setSensorsView}
+            tabs={[
+              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit sensors with collapsible cards' },
+              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit sensors inline in a grid' }
+            ]}
           />
+          <TabPanel isActive={sensorsView === 'simple-view'}>
+            <SensorsEditor
+              sensors={formData.sensors}
+              onSensorsChange={(sensors) =>
+                setFormData(prev => ({ ...prev, sensors }))
+              }
+            />
+          </TabPanel>
+          <TabPanel isActive={sensorsView === 'grid-view'}>
+            <div className="mt-3 border border-gray-200 rounded-lg">
+              <DataGrid
+                {...sensorGridConfig}
+                showControls={true}
+                showDebug={false}
+                onRowDataChange={(nextRows) => setFormData(prev => ({
+                  ...prev,
+                  sensors: nextRows.map((row) => {
+                    const existing = prev.sensors.find((s) => s.id === row.id) || {};
+                    return {
+                      ...existing,
+                      ...row,
+                      additionalInfo: existing.additionalInfo || row.additionalInfo || []
+                    };
+                  })
+                }))}
+                height={"45vh"}
+                hideClearAllMappings={true}
+              />
+            </div>
+          </TabPanel>
         </TabPanel>
       </div>
 
