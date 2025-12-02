@@ -81,13 +81,13 @@ const DualSidebarStudyRunPanel = ({
 
   return (
     <div
-      className="flex flex-col md:flex-row gap-6"
+      className="flex flex-col md:flex-row gap-6 h-full min-h-0 w-full"
       style={minHeight ? { minHeight } : undefined}
     >
-      <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md">
+      <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md overflow-hidden">
         <Heading3 className="text-lg text-gray-900">{title}</Heading3>
         <Paragraph className="text-xs text-gray-500 mb-2">Select a study.</Paragraph>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 overflow-y-auto">
           {groupedStudies.map((group, index) => {
             const label = group.study?.name || `Study ${String(index + 1).padStart(2,'0')}`;
             const isActive = group.studyId === selectedStudyId;
@@ -134,19 +134,21 @@ const DualSidebarStudyRunPanel = ({
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full min-h-0 overflow-y-auto">
         {!selectedStudyGroup && (
           <div className="flex-1 min-w-0 flex items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm min-h-[220px]">
             <Paragraph className="text-gray-500 text-sm">Select a study to begin mapping</Paragraph>
           </div>
         )}
         {selectedStudyGroup && activeRun && (
-          <MappingCardComponent
-            item={activeRun}
-            mappings={mappings}
-            handleInputChange={handleInputChange}
-            singleRunMode
-          />
+          <div className="flex-1 min-h-0">
+            <MappingCardComponent
+              item={activeRun}
+              mappings={mappings}
+              handleInputChange={handleInputChange}
+              singleRunMode
+            />
+          </div>
         )}
       </div>
     </div>

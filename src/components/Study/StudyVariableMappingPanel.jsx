@@ -42,14 +42,16 @@ const StudyVariableMappingPanel = ({
 
   return (
     <div
-      className="flex flex-col md:flex-row gap-6 h-full"
+      className="flex flex-col md:flex-row gap-6 h-full w-full min-h-0 overflow-x-hidden"
       style={minHeight ? { minHeight } : undefined}
     >
       {/* Study Sidebar */}
-      <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md max-h-full">
-        <Heading3 className="text-lg text-gray-900">Studies</Heading3>
-        <Paragraph className="text-xs text-gray-500 mb-2">Select a study.</Paragraph>
-        <div className="overflow-y-auto flex-1 space-y-2">
+      <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md h-full min-h-0">
+        <div className="flex-shrink-0">
+          <Heading3 className="text-lg text-gray-900">Studies</Heading3>
+          <Paragraph className="text-xs text-gray-500 mb-2">Select a study.</Paragraph>
+        </div>
+        <div className="overflow-y-auto flex-1 min-h-0 space-y-2">
           {groupedStudies.map((group, index) => {
             const label = group.study?.name || `Study ${String(index + 1).padStart(2,'0')}`;
             const isActive = group.studyId === selectedStudyId;
@@ -71,21 +73,21 @@ const StudyVariableMappingPanel = ({
       </div>
 
       {/* Main Content: One card per run */}
-      <div className="flex-1 min-w-0 overflow-y-auto max-h-full flex flex-col h-full">
+      <div className="flex-1 min-w-0 flex flex-col w-full h-full min-h-0 overflow-y-auto">
         {!selectedStudyGroup && (
           <div className="flex-1 flex items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm min-h-[220px]">
             <Paragraph className="text-sm text-gray-500">Select a study to begin mapping</Paragraph>
           </div>
         )}
         {selectedStudyGroup && (
-          <div className="flex-1 flex flex-col bg-white border border-gray-300 rounded-2xl p-6 shadow-sm min-h-0">
+          <div className="w-full bg-white border border-gray-300 rounded-2xl p-6 shadow-sm">
             <div className="mb-4 pb-3 border-b border-gray-200">
               <Heading3 className="text-xl font-semibold text-gray-900">
                 {selectedStudyGroup.study?.name || 'Study'}
               </Heading3>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-1">
+            <div className="flex-1 pr-1 w-full overflow-x-auto">
               {studyVariables.map((variable) => (
               <div key={variable.id} className="mb-6 last:mb-0">
                 <Heading3 className="text-lg font-semibold text-gray-800 mb-3">{variable.name}</Heading3>

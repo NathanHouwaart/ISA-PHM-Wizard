@@ -19,6 +19,7 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
 import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
+import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import StudyVariableMappingPanel from '../Study/StudyVariableMappingPanel';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
@@ -195,15 +196,17 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                             <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.
                         </WarningBanner>
                     )}
-                    <div className="h-[45vh]">
-                        <StudyVariableMappingPanel
-                            studies={studies}
-                            studyRuns={studyRuns}
-                            studyVariables={studyVariables}
-                            mappings={mappingsController.mappings}
-                            handleInputChange={mappingsController.updateMappingValue}
-                            minHeight={Math.max(400, studyVariables.length * 120)}
-                        />
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <StudyVariableMappingPanel
+                                studies={studies}
+                                studyRuns={studyRuns}
+                                studyVariables={studyVariables}
+                                mappings={mappingsController.mappings}
+                                handleInputChange={mappingsController.updateMappingValue}
+                                minHeight={WINDOW_HEIGHT}
+                            />
+                        </div>
                     </div>
                 </TabPanel>
 
