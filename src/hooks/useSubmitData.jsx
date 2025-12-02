@@ -16,6 +16,7 @@ export default function useSubmitData() {
     studies,
     testSetups,
     selectedTestSetupId,
+    experimentType,
     studyToStudyVariableMapping,
     sensorToMeasurementProtocolMapping,
     studyToSensorMeasurementMapping,
@@ -71,6 +72,38 @@ export default function useSubmitData() {
     }) || null;
   };
 
+  const buildAssayDetails = (studyRuns, sensors) => {
+    const safeSensors = Array.isArray(sensors) ? sensors : [];
+
+    return safeSensors.map((sensor) => {
+      const used_sensor = Object.fromEntries(
+        Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
+      );
+
+      const runs = (studyRuns || []).map((run) => {
+        const rawMapping = resolveRunMapping(studyToSensorMeasurementMapping, sensor.id, run);
+        const processingMapping = resolveRunMapping(studyToSensorProcessingMapping, sensor.id, run);
+        const assayMapping = resolveRunMapping(studyToAssayMapping, sensor.id, run);
+
+        return {
+          run_number: run.runNumber,
+          study_run_id: run.runId,
+          study_id: run.studyId,
+          raw_file_name: rawMapping?.value || '',
+          processed_file_name: processingMapping?.value || '',
+          assay_file_name: assayMapping?.value || '',
+        };
+      });
+
+      return {
+        used_sensor,
+        measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
+        processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
+        runs,
+      };
+    });
+  };
+
   const submitData = async () => {
     // create a fresh AbortController for this submit
     const ac = new AbortController();
@@ -89,6 +122,7 @@ export default function useSubmitData() {
         license: investigations?.license,
         submission_date: investigations?.submissionDate,
         public_release_date: investigations?.publicReleaseDate,
+        experiment_type: experimentType,
         publications: publications,
         contacts: contacts,
         study_variables: studyVariables,
@@ -96,8 +130,11 @@ export default function useSubmitData() {
         processing_protocols: processingProtocols,
         studies: (studies || []).map((study) => {
           const studyRuns = getRunsForStudy(study);
+          const totalRuns = Array.isArray(studyRuns) ? studyRuns.length : 0;
+          const sensors = (testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || [];
           return {
             ...study,
+            total_runs: totalRuns,
             publications,
             contacts,
             used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
@@ -121,30 +158,7 @@ export default function useSubmitData() {
                   };
                 })
             )),
-            assay_details: studyRuns.flatMap((run) => {
-              const sensors = ((testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || []);
-              return sensors.map((sensor) => {
-                const used_sensor = Object.fromEntries(
-                  Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-                );
-
-                const rawMapping = resolveRunMapping(studyToSensorMeasurementMapping, sensor.id, run);
-                const processingMapping = resolveRunMapping(studyToSensorProcessingMapping, sensor.id, run);
-                const assayMapping = resolveRunMapping(studyToAssayMapping, sensor.id, run);
-
-                return {
-                  used_sensor,
-                  run_number: run.runNumber,
-                  study_run_id: run.runId,
-                  study_id: run.studyId,
-                  measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
-                  processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
-                  raw_file_name: rawMapping?.value || '',
-                  processed_file_name: processingMapping?.value || '',
-                  assay_file_name: assayMapping?.value || '',
-                };
-              });
-            }),
+            assay_details: buildAssayDetails(studyRuns, sensors),
           };
         }),
       };
