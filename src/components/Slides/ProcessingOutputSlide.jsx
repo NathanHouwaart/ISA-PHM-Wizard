@@ -143,18 +143,25 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map processing outputs. Add sensors to your test setup or select a different one.
                     </WarningBanner>
                 )}
+                {studies.length === 0 && (
+                    <WarningBanner type="warning">
+                        <strong>No studies available.</strong> There are no studies in the workspace. Create or import studies first so you can map processing outputs to them.
+                    </WarningBanner>
+                )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <div className="h-[45vh]">
-                        <DualSidebarStudyRunPanel
-                            title="Studies"
-                            studies={studies}
-                            studyRuns={studyRuns}
-                            mappings={mappingsController.mappings}
-                            handleInputChange={mappingsController.updateMappingValue}
-                            minHeight={WINDOW_HEIGHT}
-                            MappingCardComponent={StudyMeasurementMappingCard}
-                        />
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <DualSidebarStudyRunPanel
+                                title="Studies"
+                                studies={studies}
+                                studyRuns={studyRuns}
+                                mappings={mappingsController.mappings}
+                                handleInputChange={mappingsController.updateMappingValue}
+                                minHeight={WINDOW_HEIGHT}
+                                MappingCardComponent={StudyMeasurementMappingCard}
+                            />
+                        </div>
                     </div>
                 </TabPanel>
 

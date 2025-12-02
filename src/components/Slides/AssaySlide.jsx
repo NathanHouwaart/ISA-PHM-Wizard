@@ -138,7 +138,8 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <div className="h-[45vh]">
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
                             <DualSidebarStudyRunPanel
                                 title="Assay Output Mapping"
                                 studies={studies}
@@ -148,6 +149,7 @@ export const AssaySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                                 minHeight={WINDOW_HEIGHT}
                                 MappingCardComponent={StudyMeasurementMappingCard}
                             />
+                        </div>
                     </div>
                 </TabPanel>
 

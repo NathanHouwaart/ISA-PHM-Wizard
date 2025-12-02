@@ -176,7 +176,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <div className="h-[45vh]">
+                    <div className="h-[45vh] overflow-y-auto">
                         <EntityMappingPanel
                             name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
                             itemHook={useMeasurementProtocols}

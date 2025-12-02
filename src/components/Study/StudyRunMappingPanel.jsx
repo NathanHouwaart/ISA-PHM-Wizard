@@ -105,7 +105,7 @@ const StudyRunMappingPanel = ({
         </div>
       </div>
 
-      <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 min-w-0">
+      <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 min-w-0 flex flex-col">
         {selectedStudyGroup ? (
           <>
             <div className="flex flex-col mb-4">
@@ -126,9 +126,11 @@ const StudyRunMappingPanel = ({
             ))}
           </>
         ) : (
-          <Paragraph className="text-sm text-gray-500">
-            Select a study to begin mapping.
-          </Paragraph>
+          <div className="flex-1 flex items-center justify-center min-h-[220px]">
+            <Paragraph className="text-sm text-gray-500">
+              Select a study to begin mapping
+            </Paragraph>
+          </div>
         )}
       </div>
     </div>

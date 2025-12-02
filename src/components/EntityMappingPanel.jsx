@@ -87,7 +87,7 @@ const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleIn
                 </div>
             ) : (
                 <div className="flex-1 min-w-0 flex items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm min-h-[220px]">
-                    <Paragraph className="text-gray-400 text-sm">Select an item from the list</Paragraph>
+                    <Paragraph className="text-gray-500 text-sm">Select an item from the list</Paragraph>
                 </div>
             )}
         </div>

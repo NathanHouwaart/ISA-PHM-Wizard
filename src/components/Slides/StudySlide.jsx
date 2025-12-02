@@ -149,10 +149,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             <SlidePageSubtitle>
                 The studies describe the experiments performed within the research project. For example, each test with a different tested component (e.g. bearing) or run-to-failure trajectory is described in a new study. The relevant study parameters can be described on the following page.
             </SlidePageSubtitle>
-            <Paragraph className="text-sm text-gray-600 mt-2">
-                Selected template: <span className="font-semibold">{experimentConfig.title}</span> · {runCountReadOnly ? 'Each study produces a single file, so run counts are fixed to 1.' : 'Manage how many files/runs each study contains.'}
-            </Paragraph>
-
+          
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
                <TabSwitcher
                     selectedTab={selectedTab}

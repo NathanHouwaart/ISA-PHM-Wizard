@@ -185,6 +185,11 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 </Paragraph>
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
+                    {studies.length === 0 && (
+                        <WarningBanner type="warning">
+                            <strong>No studies available.</strong> Create studies before mapping variables.
+                        </WarningBanner>
+                    )}
                     {studyVariables.length === 0 && (
                         <WarningBanner type="info">
                             <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.

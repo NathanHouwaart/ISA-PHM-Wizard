@@ -148,16 +148,18 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                 )}
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <div className="h-[45vh]">
-                        <DualSidebarStudyRunPanel
-                            title="Sensor Output Mapping"
-                            studies={studies}
-                            studyRuns={studyRuns}
-                            mappings={mappingsController.mappings}
-                            handleInputChange={mappingsController.updateMappingValue}
-                            minHeight={WINDOW_HEIGHT}
-                            MappingCardComponent={StudyMeasurementMappingCard}
-                        />
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <DualSidebarStudyRunPanel
+                                title="Sensor Output Mapping"
+                                studies={studies}
+                                studyRuns={studyRuns}
+                                mappings={mappingsController.mappings}
+                                handleInputChange={mappingsController.updateMappingValue}
+                                minHeight={WINDOW_HEIGHT}
+                                MappingCardComponent={StudyMeasurementMappingCard}
+                            />
+                        </div>
                     </div>
                 </TabPanel>
 

@@ -41,7 +41,10 @@ const StudyVariableMappingPanel = ({
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-full">
+    <div
+      className="flex flex-col md:flex-row gap-6 h-full"
+      style={minHeight ? { minHeight } : undefined}
+    >
       {/* Study Sidebar */}
       <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md max-h-full">
         <Heading3 className="text-lg text-gray-900">Studies</Heading3>
@@ -68,19 +71,22 @@ const StudyVariableMappingPanel = ({
       </div>
 
       {/* Main Content: One card per run */}
-      <div className="flex-1 min-w-0 overflow-y-auto max-h-full">
+      <div className="flex-1 min-w-0 overflow-y-auto max-h-full flex flex-col h-full">
         {!selectedStudyGroup && (
-          <Paragraph className="text-sm text-gray-500">Select a study to begin mapping.</Paragraph>
+          <div className="flex-1 flex items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm min-h-[220px]">
+            <Paragraph className="text-sm text-gray-500">Select a study to begin mapping</Paragraph>
+          </div>
         )}
         {selectedStudyGroup && (
-          <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-sm">
+          <div className="flex-1 flex flex-col bg-white border border-gray-300 rounded-2xl p-6 shadow-sm min-h-0">
             <div className="mb-4 pb-3 border-b border-gray-200">
               <Heading3 className="text-xl font-semibold text-gray-900">
                 {selectedStudyGroup.study?.name || 'Study'}
               </Heading3>
             </div>
 
-            {studyVariables.map((variable) => (
+            <div className="flex-1 overflow-y-auto pr-1">
+              {studyVariables.map((variable) => (
               <div key={variable.id} className="mb-6 last:mb-0">
                 <Heading3 className="text-lg font-semibold text-gray-800 mb-3">{variable.name}</Heading3>
                 
@@ -128,7 +134,8 @@ const StudyVariableMappingPanel = ({
                   })}
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
