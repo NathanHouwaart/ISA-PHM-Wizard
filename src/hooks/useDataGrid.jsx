@@ -23,6 +23,18 @@ export const useDataGrid = ({
   maxHistorySize = 50,
   onRowDataChange // Add this to support external row data updates
 }) => {
+
+  const sanitizeValue = useCallback((value) => {
+    if (value === undefined || value === null) return '';
+    const stringValue = String(value);
+    if (!/[\u0000-\u001F\u007F]/.test(stringValue)) {
+      return stringValue;
+    }
+    return stringValue
+      .replace(/[\u0000-\u001F\u007F]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }, []);
   
   // Default field mappings with fallbacks
   const fields = {
@@ -469,6 +481,7 @@ export const useDataGrid = ({
 
   // Update a single cell mapping
   const updateMapping = useCallback((rowId, columnId, value) => {
+    const cleanedValue = sanitizeValue(value);
     // Handle child columns
     const isChildColumn = columnId.includes('_spec') || columnId.includes('_unit');
     let actualColumnId = columnId;
@@ -513,9 +526,9 @@ export const useDataGrid = ({
             
             // Update the appropriate part
             if (childType === 'specification') {
-              specValue = value;
+              specValue = cleanedValue;
             } else if (childType === 'unit') {
-              unitValue = value;
+              unitValue = cleanedValue;
             }
             
             // Store as array format for simplicity
@@ -527,7 +540,7 @@ export const useDataGrid = ({
             // Regular mapping update
             return {
               ...mapping,
-              [fields.mappingValue]: value
+              [fields.mappingValue]: cleanedValue
             };
           }
         }
@@ -539,9 +552,9 @@ export const useDataGrid = ({
       if (isChildColumn && fields.hasChildColumns) {
         // Create new mapping with appropriate structure
         if (childType === 'specification') {
-          mappingValue = [value, ''];
+          mappingValue = [cleanedValue, ''];
         } else if (childType === 'unit') {
-          mappingValue = ['', value];
+          mappingValue = ['', cleanedValue];
         }
       }
       
@@ -554,7 +567,7 @@ export const useDataGrid = ({
     }
     
     addToHistory(newMappings);
-  }, [currentMappings, mappingLookup, fields, addToHistory]);
+  }, [currentMappings, mappingLookup, fields, addToHistory, sanitizeValue]);
 
   // Update multiple mappings in batch
   const updateMappingsBatch = useCallback((updates) => {
@@ -564,6 +577,7 @@ export const useDataGrid = ({
     let newMappings = [...currentMappings];
     
     updates.forEach(({ rowId, columnId, value }) => {
+      const cleanedValue = sanitizeValue(value);
       // Handle child columns
       const isChildColumn = columnId.includes('_spec') || columnId.includes('_unit');
       let actualColumnId = columnId;
@@ -605,9 +619,9 @@ export const useDataGrid = ({
           
           // Update the appropriate part
           if (childType === 'specification') {
-            specValue = value;
+            specValue = cleanedValue;
           } else if (childType === 'unit') {
-            unitValue = value;
+            unitValue = cleanedValue;
           }
           
           newMappings[existingIndex] = {
@@ -618,7 +632,7 @@ export const useDataGrid = ({
           // Regular batch update
           newMappings[existingIndex] = {
             ...newMappings[existingIndex],
-            [fields.mappingValue]: value
+            [fields.mappingValue]: cleanedValue
           };
         }
       } else {
@@ -626,9 +640,9 @@ export const useDataGrid = ({
         let mappingValue = value;
         if (isChildColumn && fields.hasChildColumns) {
           if (childType === 'specification') {
-            mappingValue = [value, ''];
+            mappingValue = [cleanedValue, ''];
           } else if (childType === 'unit') {
-            mappingValue = ['', value];
+            mappingValue = ['', cleanedValue];
           }
         }
         
@@ -641,13 +655,14 @@ export const useDataGrid = ({
     });
     
     addToHistory(newMappings);
-  }, [currentMappings, fields, addToHistory]);
+  }, [currentMappings, fields, addToHistory, sanitizeValue]);
 
   // Update row data for all grids
   const updateRowData = useCallback((rowId, columnProp, value) => {
+    const cleanedValue = sanitizeValue(value);
     const newRowData = activeRowData.map(row => 
       row[fields.rowId] === rowId 
-        ? { ...row, [columnProp]: value }
+        ? { ...row, [columnProp]: cleanedValue }
         : row
     );
     addToRowDataHistory(newRowData);
@@ -656,7 +671,7 @@ export const useDataGrid = ({
       isUpdatingExternally.current = true;
       onRowDataChange(newRowData);
     }
-  }, [activeRowData, fields, addToRowDataHistory, onRowDataChange]);
+  }, [activeRowData, fields, addToRowDataHistory, onRowDataChange, sanitizeValue]);
 
   // Batch update row data for all grids (used for range edits)
   const updateRowDataBatch = useCallback((newRowData) => {

@@ -5,7 +5,7 @@ import isaProjectExample from "../data/isa-project-example.json";
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import generateId from '../utils/generateId';
-import { expandStudiesIntoRuns, createStudyRunId, normalizeRunCount } from '../utils/studyRuns';
+import { normalizeRunCount } from '../utils/studyRuns';
 import { DEFAULT_EXPERIMENT_TYPE_ID, getExperimentTypeConfig } from '../constants/experimentTypes';
 import {
     setProjectDatasetName,
@@ -105,7 +105,6 @@ export const GlobalDataProvider = ({ children }) => {
     const [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping] = useState(() => loadFromLocalStorage(projectKey('studyToSensorMeasurementMapping'), getDefaultValue('studyToSensorMeasurementMapping', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping] = useState(() => loadFromLocalStorage(projectKey('sensorToProcessingProtocolMapping'), getDefaultValue('sensorToProcessingProtocolMapping', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping] = useState(() => loadFromLocalStorage(projectKey('studyToSensorProcessingMapping'), getDefaultValue('studyToSensorProcessingMapping', currentProjectId !== DEFAULT_PROJECT_ID)));
-    const [studyToAssayMapping, setStudyToAssayMapping] = useState(() => loadFromLocalStorage(projectKey('studyToAssayMapping'), getDefaultValue('studyToAssayMapping', currentProjectId !== DEFAULT_PROJECT_ID)));
 
     const [screenWidth, setScreenWidth] = useState("max-w-5xl");
     const [pageTabStates, setPageTabStates] = useState(() => loadFromLocalStorage(projectKey('pageTabStates'), {}));
@@ -281,7 +280,6 @@ export const GlobalDataProvider = ({ children }) => {
             saveToLocalStorage(`globalAppData_${id}_studyToSensorMeasurementMapping`, getResetValue('studyToSensorMeasurementMapping'));
             saveToLocalStorage(`globalAppData_${id}_sensorToProcessingProtocolMapping`, getResetValue('sensorToProcessingProtocolMapping'));
             saveToLocalStorage(`globalAppData_${id}_studyToSensorProcessingMapping`, getResetValue('studyToSensorProcessingMapping'));
-            saveToLocalStorage(`globalAppData_${id}_studyToAssayMapping`, getResetValue('studyToAssayMapping'));
 
             // Clear IndexedDB tree for this project
             try { await clearTree(id); } catch (e) { console.warn('[GlobalDataContext] resetProject: clearTree failed', e); }
@@ -335,7 +333,6 @@ export const GlobalDataProvider = ({ children }) => {
                 setStudyToSensorMeasurementMapping(getResetValue('studyToSensorMeasurementMapping'));
                 setSensorToProcessingProtocolMapping(getResetValue('sensorToProcessingProtocolMapping'));
                 setStudyToSensorProcessingMapping(getResetValue('studyToSensorProcessingMapping'));
-                setStudyToAssayMapping(getResetValue('studyToAssayMapping'));
 
                 // If not already set by import above, ensure dataset is cleared to reflect DB state
                 if (!isExampleProject) {
@@ -384,7 +381,6 @@ export const GlobalDataProvider = ({ children }) => {
             setStudyToSensorMeasurementMapping(loadFromLocalStorage(`globalAppData_${id}_studyToSensorMeasurementMapping`, getSwitchDefault('studyToSensorMeasurementMapping')));
             setSensorToProcessingProtocolMapping(loadFromLocalStorage(`globalAppData_${id}_sensorToProcessingProtocolMapping`, getSwitchDefault('sensorToProcessingProtocolMapping')));
             setStudyToSensorProcessingMapping(loadFromLocalStorage(`globalAppData_${id}_studyToSensorProcessingMapping`, getSwitchDefault('studyToSensorProcessingMapping')));
-            setStudyToAssayMapping(loadFromLocalStorage(`globalAppData_${id}_studyToAssayMapping`, getSwitchDefault('studyToAssayMapping')));
 
             setPageTabStates(loadFromLocalStorage(`globalAppData_${id}_pageTabStates`, {}));
         } catch (err) {
@@ -460,10 +456,6 @@ export const GlobalDataProvider = ({ children }) => {
     }, [studyToSensorProcessingMapping, currentProjectId]);
 
     useEffect(() => {
-        saveToLocalStorage(projectKey('studyToAssayMapping', currentProjectId), studyToAssayMapping);
-    }, [studyToAssayMapping, currentProjectId]);
-
-    useEffect(() => {
         saveToLocalStorage(projectKey('pageTabStates', currentProjectId), pageTabStates);
     }, [pageTabStates, currentProjectId]);
 
@@ -528,72 +520,6 @@ export const GlobalDataProvider = ({ children }) => {
         return () => { mounted = false; };
     }, [currentProjectId, initHydrated, selectedDataset]);
 
-    // Auto-generate default studyToAssayMapping entries when missing.
-    // Preserve any existing mappings (including user-edited filenames) and only append
-    // defaults for studyId/sensorId combinations that are not yet present.
-    useEffect(() => {
-        try {
-            if (!Array.isArray(testSetups) || testSetups.length === 0) {
-                return;
-            }
-
-            const pad = (n) => String(n + 1).padStart(2, '0');
-            const padRun = (n) => String(n).padStart(2, '0');
-            const studyRuns = expandStudiesIntoRuns(studies);
-            if (studyRuns.length === 0) {
-                return;
-            }
-
-            const existing = new Set();
-            if (Array.isArray(studyToAssayMapping)) {
-                studyToAssayMapping.forEach((m) => {
-                    if (!m || !m.sensorId) return;
-                    const runKey = m.studyRunId || createStudyRunId(m.studyId, 1);
-                    existing.add(`${runKey}|${m.sensorId}`);
-                });
-            }
-
-            const newEntries = [];
-
-            studyRuns.forEach((run) => {
-                testSetups.forEach((setup) => {
-                    if (!Array.isArray(setup.sensors)) {
-                        return;
-                    }
-                    setup.sensors.forEach((sensor, sensorIndex) => {
-                        const key = `${run.runId}|${sensor.id}`;
-                        if (existing.has(key)) {
-                            return;
-                        }
-
-                        const studyCode = pad(run.studyIndex ?? 0);
-                        const sensorCode = pad(sensorIndex);
-                        const runSuffix = run.runCount > 1 ? `_RUN${padRun(run.runNumber)}` : '';
-                        const value = `ST${studyCode}${runSuffix}_SE${sensorCode}_ASSO.csv`;
-
-                        newEntries.push({
-                            studyId: run.studyId,
-                            studyRunId: run.runId,
-                            sensorId: sensor.id,
-                            value
-                        });
-                        existing.add(key);
-                    });
-                });
-            });
-
-            if (newEntries.length > 0) {
-                setStudyToAssayMapping((prev) => {
-                    const base = Array.isArray(prev) ? prev : [];
-                    return [...base, ...newEntries];
-                });
-            }
-        } catch (err) {
-            console.error('[GlobalDataContext] error generating default studyToAssayMapping', err);
-        }
-    }, [studies, testSetups, studyToAssayMapping, setStudyToAssayMapping]);
-
-
     // submission logic intentionally removed from context; use `useSubmitData` hook instead
 
     const dataMap = {
@@ -611,7 +537,6 @@ export const GlobalDataProvider = ({ children }) => {
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
         sensorToProcessingProtocolMapping: [sensorToProcessingProtocolMapping, setSensorToProcessingProtocolMapping],
         studyToSensorProcessingMapping: [studyToSensorProcessingMapping, setStudyToSensorProcessingMapping],
-        studyToAssayMapping: [studyToAssayMapping, setStudyToAssayMapping],
         screenWidth: [screenWidth, setScreenWidth],
         pageTabStates: [pageTabStates, setPageTabStates],
         experimentType: [experimentType, setExperimentType]
@@ -647,8 +572,6 @@ export const GlobalDataProvider = ({ children }) => {
         setSensorToProcessingProtocolMapping,
         studyToSensorProcessingMapping,
         setStudyToSensorProcessingMapping,
-        studyToAssayMapping,
-        setStudyToAssayMapping,
         screenWidth,
         setScreenWidth,
         experimentType,

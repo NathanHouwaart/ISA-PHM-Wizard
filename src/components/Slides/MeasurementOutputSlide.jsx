@@ -149,7 +149,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                     <div className="h-[45vh] flex flex-col overflow-hidden">
-                      
                             <DualSidebarStudyRunPanel
                                 title="Sensor Output Mapping"
                                 studies={studies}

@@ -86,6 +86,19 @@ const DataGrid = forwardRef(({
     // Debug flag helper - when false all debug logging in this component is suppressed
     const DBG = !!showDebug;
 
+    // Clean clipboard/paste artifacts (Excel adds control chars) before storing values
+    const normalizeCellValue = useCallback((value) => {
+        if (value === undefined || value === null) return '';
+        const stringValue = String(value);
+        if (!/[\u0000-\u001F\u007F]/.test(stringValue)) {
+            return stringValue;
+        }
+        return stringValue
+            .replace(/[\u0000-\u001F\u007F]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }, []);
+
     // (removed) currentMappingsCount — was only used by debug UI which we removed
 
     // Expose functions to parent components through ref
@@ -503,7 +516,7 @@ const DataGrid = forwardRef(({
                         continue;
                     }
 
-                    const stringValue = String(newValue);
+                    const stringValue = normalizeCellValue(newValue);
 
                     if (isStaticColumn) {
                         // Static columns represent row-data properties (e.g., type, unit, description)
@@ -580,7 +593,7 @@ const DataGrid = forwardRef(({
             return;
         }
 
-        const stringValue = (newValue === undefined || newValue === null || newValue === '') ? '' : String(newValue);
+        const stringValue = normalizeCellValue(newValue);
 
         // Check if this is a static column (row data) edit or a dynamic column (mapping) edit
         const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
@@ -593,7 +606,7 @@ const DataGrid = forwardRef(({
             // Handle mapping edit (existing functionality)
             updateMapping(row[fields.rowId], columnProp, stringValue);
         }
-    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
+    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, rowData, fields, normalizeCellValue]);
 
     const handleBeforeRangeEdit = useCallback((event) => {
         const detail = event.detail;
@@ -823,7 +836,7 @@ const DataGrid = forwardRef(({
                 
                 // Iterate through all column props in this row's data
                 for (const [columnProp, value] of Object.entries(rowDataObj)) {
-                    const stringValue = (value === undefined || value === null) ? '' : String(value);
+                    const stringValue = normalizeCellValue(value);
                     const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
                     const staticColumn = staticColumns.find(col => col.prop === columnProp);
                     
@@ -880,7 +893,7 @@ const DataGrid = forwardRef(({
         } catch (error) {
             if (DBG) console.error('[DataGrid] Error in clipboard paste operation:', error);
         }
-    }, [staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields]);
+    }, [staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields, normalizeCellValue]);
 
     // Handle clear region event - let the existing handleClearCell handle the logic
     const handleClearRegion = useCallback((event) => {
@@ -1036,29 +1049,35 @@ const DataGrid = forwardRef(({
                 onBeforerangeedit={handleBeforeRangeEdit}
                 onAfterangeedit={handleAfterRangeEdit}
                 // Handle copy/paste/clear/autofill events with coordinate translation
-                onBeforecopy={(e) => console.log('[DataGrid] beforecopy:', e.detail)}
+                onBeforecopy={(e) => { if (DBG) console.log('[DataGrid] beforecopy:', e.detail); }}
                 onBeforepaste={(e) => {
-                    console.log('[DataGrid] beforepaste:', e.detail);
+                    if (DBG) console.log('[DataGrid] beforepaste:', e.detail);
                     // Note: beforepaste doesn't seem to have range info, actual paste is in pasteregion
                 }}
-                onBeforecut={(e) => console.log('[DataGrid] beforecut:', e.detail)}
-                onCopyregion={(e) => console.log('[DataGrid] copyregion:', e.detail)}
+                onBeforecut={(e) => { if (DBG) console.log('[DataGrid] beforecut:', e.detail); }}
+                onCopyregion={(e) => { if (DBG) console.log('[DataGrid] copyregion:', e.detail); }}
                 onPasteregion={(e) => {
-                    console.log('[DataGrid] pasteregion:', e.detail);
+                    if (DBG) console.log('[DataGrid] pasteregion:', e.detail);
                     handlePasteRegion(e);
                 }}
                 onClearregion={(e) => {
-                    console.log('[DataGrid] clearregion:', e.detail);
+                    if (DBG) console.log('[DataGrid] clearregion:', e.detail);
                     handleClearRegion(e);
                 }}
                 onClipboardrangepaste={(e) => {
-                    console.log('[DataGrid] clipboardrangepaste:', e.detail);
+                    if (DBG) {
+                        const detail = e.detail || {};
+                        const sample = detail?.data ? Object.entries(detail.data)[0] : undefined;
+                        console.log('[DataGrid] clipboardrangepaste (raw sample):', sample);
+                    }
                     handleClipboardRangePaste(e);
                 }}
                 onBeforeautofill={(e) => {
-                    // Log for debugging - RevoGrid will handle autofill internally
-                    // Our handleAfterEdit will catch the resulting range edit
-                    console.log('[DataGrid] beforeautofill (letting RevoGrid handle):', e.detail);
+                    if (DBG) {
+                        // Log for debugging - RevoGrid will handle autofill internally
+                        // Our handleAfterEdit will catch the resulting range edit
+                        console.log('[DataGrid] beforeautofill (letting RevoGrid handle):', e.detail);
+                    }
                 }}
                 readonly={false}
                 resize={true}
