@@ -16,7 +16,7 @@ The app's core concept is **entity mappings** - relationships between different 
 - `studyToStudyVariableMapping`: Links studies to variables they measure
 - `studyToSensorMeasurementMapping`: Links studies to sensor measurements  
 - `sensorToProcessingProtocolMapping`: Links sensors to processing protocols
-- `studyToAssayMapping`: Auto-generated assay filenames (pattern: `ST{xx}_SE{yy}_ASSO.csv`)
+- `studyToAssayMapping`: Auto-generated assay filenames (pattern: `a_st{xx}_st{yy}`)
 
 ### Hook-Based Controllers
 - **`useMappingsController`**: Generic mapping CRUD operations, configurable for different mapping types

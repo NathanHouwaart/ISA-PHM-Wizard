@@ -1,6 +1,7 @@
 // src/context/GlobalDataContext.js
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import isaProjectExample from "../data/isa-project-example.json";
+import exampleSingleRunSietse from "../data/example-single-run-sietse.json";
+import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
@@ -13,6 +14,12 @@ import {
     setProjectDatasetStats,
     clearProjectDatasetStats
 } from '../utils/projectMetadata';
+
+// Map of available example projects
+const EXAMPLE_PROJECTS = {
+    'example-single-run': exampleSingleRunSietse,
+    'example-multi-run': exampleMultiRunMilling,
+};
 
 const GlobalDataContext = createContext();
 
@@ -51,9 +58,12 @@ const saveToLocalStorage = (key, value) => {
 export const GlobalDataProvider = ({ children }) => {
 
     // Projects list and currentProjectId (global across the app)
-    const DEFAULT_PROJECT_ID = 'example-project';
-    const DEFAULT_PROJECT_NAME = 'Example Project';
-    const initialProjects = loadFromLocalStorage('globalAppData_projects', [{ id: DEFAULT_PROJECT_ID, name: DEFAULT_PROJECT_NAME }]);
+    const DEFAULT_PROJECT_ID = 'example-single-run';
+    const DEFAULT_PROJECT_NAME = 'Single Run Sietse';
+    const initialProjects = loadFromLocalStorage('globalAppData_projects', [
+        { id: DEFAULT_PROJECT_ID, name: DEFAULT_PROJECT_NAME },
+        { id: 'example-multi-run', name: 'Multi Run Milling' }
+    ]);
     const [projects, setProjects] = useState(() => initialProjects);
     const initialCurrentProjectId = loadFromLocalStorage('globalAppData_currentProjectId', (initialProjects[0] && initialProjects[0].id) || DEFAULT_PROJECT_ID);
     const [currentProjectId, setCurrentProjectId] = useState(() => initialCurrentProjectId);
@@ -78,7 +88,9 @@ export const GlobalDataProvider = ({ children }) => {
     const getDefaultValue = (key, isEmpty = false) => {
         const fallback = getKeyFallback(key);
         if (isEmpty) return fallback;
-        const ls = isaProjectExample.localStorage;
+        const exampleProjectData = EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
+        if (!exampleProjectData) return fallback;
+        const ls = exampleProjectData.localStorage;
         const lsKey = `globalAppData_default_${key}`;
         if (ls[lsKey]) {
             try { return JSON.parse(ls[lsKey]); } catch (e) { return fallback; }
@@ -245,9 +257,10 @@ export const GlobalDataProvider = ({ children }) => {
     async function resetProject(id) {
         if (!id) return;
         try {
-            // For example project, use isa-project-example.json baseline; for others, use empty defaults
+            // For example project, use example project baseline; for others, use empty defaults
             const isExampleProject = id === DEFAULT_PROJECT_ID;
-            const baselineLS = isaProjectExample.localStorage;
+            const exampleProjectData = EXAMPLE_PROJECTS[id] || EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
+            const baselineLS = exampleProjectData ? exampleProjectData.localStorage : {};
             
             const getResetValue = (key) => {
                 const fallback = getKeyFallback(key);
@@ -291,7 +304,10 @@ export const GlobalDataProvider = ({ children }) => {
                 const seedFlagKey = `globalAppData_${DEFAULT_PROJECT_ID}_seeded_v1`;
                 try {
                     // Import the example package into the DB under the example project id
-                    await importProject(isaProjectExample, id);
+                    const exampleData = EXAMPLE_PROJECTS[id] || EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
+                    if (exampleData) {
+                        await importProject(exampleData, id);
+                    }
                     // Mark seeded so other effects won't re-import unnecessarily
                     try { localStorage.setItem(seedFlagKey, '1'); } catch (e) { /* ignore */ }
                     // Load the tree and set in-memory dataset
@@ -351,6 +367,39 @@ export const GlobalDataProvider = ({ children }) => {
             return next;
         });
     }
+
+    // Initialize all example projects on app start (seeds IndexedDB and localStorage)
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                for (const projectId of Object.keys(EXAMPLE_PROJECTS)) {
+                    const seedFlagKey = `globalAppData_${projectId}_seeded_v1`;
+                    if (!localStorage.getItem(seedFlagKey)) {
+                        const exampleData = EXAMPLE_PROJECTS[projectId];
+                        if (exampleData) {
+                            console.debug(`[GlobalDataContext] initializing example project ${projectId}`);
+                            try {
+                                await importProject(exampleData, projectId);
+                                localStorage.setItem(seedFlagKey, '1');
+                            } catch (e) {
+                                console.warn(`[GlobalDataContext] failed to initialize ${projectId}`, e);
+                            }
+                        }
+                    }
+                }
+                // After importing all example projects, reload testSetups from localStorage to ensure
+                // any selectedTestSetup objects from the imported projects are loaded into React state
+                if (mounted) {
+                    const updatedTestSetups = loadFromLocalStorage('globalAppData_testSetups', []);
+                    setTestSetups(updatedTestSetups);
+                }
+            } catch (err) {
+                console.error('[GlobalDataContext] initialize example projects error', err);
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
 
     // Switch active project and reload per-project state from storage
     function switchProject(id) {
@@ -469,13 +518,16 @@ export const GlobalDataProvider = ({ children }) => {
 
     // The dataset store handles persistence and lazy-loading; expose its helpers via context below.
 
-    // If we are running for the example project and the IndexedDB has no tree yet (fresh incognito)
-    // import the compressed nodes and localStorage snapshot from `isa-project-example.json` once.
+    // If we are running for an example project and the IndexedDB has no tree yet (fresh incognito)
+    // import the compressed nodes and localStorage snapshot from the example project file once.
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                if (currentProjectId !== DEFAULT_PROJECT_ID) return;
+                // Check if we're in an example project
+                const exampleProjectIds = Object.keys(EXAMPLE_PROJECTS);
+                if (!exampleProjectIds.includes(currentProjectId)) return;
+                
                 // only act after dataset hydration attempt finished
                 if (!initHydrated) return;
 
@@ -483,28 +535,31 @@ export const GlobalDataProvider = ({ children }) => {
                 if (selectedDataset) return;
 
                 // Use a small localStorage flag to avoid double-imports across reloads
-                const seedFlagKey = `globalAppData_${DEFAULT_PROJECT_ID}_seeded_v1`;
+                const seedFlagKey = `globalAppData_${currentProjectId}_seeded_v1`;
                 if (!localStorage.getItem(seedFlagKey)) {
-                    console.debug('[GlobalDataContext] seeding example project from isa-project-example.json');
-                    try {
-                        await importProject(isaProjectExample, DEFAULT_PROJECT_ID);
-                        localStorage.setItem(seedFlagKey, '1');
-                    } catch (e) {
-                        console.warn('[GlobalDataContext] example project import failed', e);
+                    const exampleData = EXAMPLE_PROJECTS[currentProjectId];
+                    if (exampleData) {
+                        console.debug(`[GlobalDataContext] seeding example project from ${exampleData.projectId}`);
+                        try {
+                            await importProject(exampleData, currentProjectId);
+                            localStorage.setItem(seedFlagKey, '1');
+                        } catch (e) {
+                            console.warn('[GlobalDataContext] example project import failed', e);
+                        }
                     }
                 }
 
                 // Try to load the root from the DB and set it into memory
                 try {
-                    const root = await loadTree(DEFAULT_PROJECT_ID);
+                    const root = await loadTree(currentProjectId);
                     if (mounted) {
                         if (root) {
-                            setProjectDatasetName(DEFAULT_PROJECT_ID, root.rootName || root.name || null);
-                            setProjectDatasetStats(DEFAULT_PROJECT_ID, root);
+                            setProjectDatasetName(currentProjectId, root.rootName || root.name || null);
+                            setProjectDatasetStats(currentProjectId, root);
                             setSelectedDataset(root);
                         } else {
-                            clearProjectDatasetName(DEFAULT_PROJECT_ID);
-                            clearProjectDatasetStats(DEFAULT_PROJECT_ID);
+                            clearProjectDatasetName(currentProjectId);
+                            clearProjectDatasetStats(currentProjectId);
                         }
                     }
                 } catch (e) {
@@ -512,7 +567,7 @@ export const GlobalDataProvider = ({ children }) => {
                 }
 
                 // Refresh in-memory app state from the newly written localStorage keys
-                try { switchProject(DEFAULT_PROJECT_ID); } catch (e) { /* ignore */ }
+                try { switchProject(currentProjectId); } catch (e) { /* ignore */ }
             } catch (err) {
                 console.error('[GlobalDataContext] seed example project error', err);
             }
