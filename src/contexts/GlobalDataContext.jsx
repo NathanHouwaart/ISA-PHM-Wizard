@@ -1,7 +1,5 @@
 // src/context/GlobalDataContext.js
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import exampleSingleRunSietse from "../data/example-single-run-sietse.json";
-import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
@@ -14,12 +12,13 @@ import {
     setProjectDatasetStats,
     clearProjectDatasetStats
 } from '../utils/projectMetadata';
-
-// Map of available example projects
-const EXAMPLE_PROJECTS = {
-    'example-single-run': exampleSingleRunSietse,
-    'example-multi-run': exampleMultiRunMilling,
-};
+import { 
+    useExampleProjects, 
+    isExampleProject, 
+    getExampleProjectData,
+    resetExampleProject,
+    seedExampleProject
+} from '../hooks/useExampleProjects';
 
 const GlobalDataContext = createContext();
 
@@ -60,9 +59,11 @@ export const GlobalDataProvider = ({ children }) => {
     // Projects list and currentProjectId (global across the app)
     const DEFAULT_PROJECT_ID = 'example-single-run';
     const DEFAULT_PROJECT_NAME = 'Single Run Sietse';
+    const MULTI_RUN_EXAMPLE_PROJECT_ID = 'example-multi-run';
+    const MULTI_RUN_EXAMPLE_PROJECT_NAME = 'Multi Run Milling';
     const initialProjects = loadFromLocalStorage('globalAppData_projects', [
         { id: DEFAULT_PROJECT_ID, name: DEFAULT_PROJECT_NAME },
-        { id: 'example-multi-run', name: 'Multi Run Milling' }
+        { id: MULTI_RUN_EXAMPLE_PROJECT_ID, name: MULTI_RUN_EXAMPLE_PROJECT_NAME }
     ]);
     const [projects, setProjects] = useState(() => initialProjects);
     const initialCurrentProjectId = loadFromLocalStorage('globalAppData_currentProjectId', (initialProjects[0] && initialProjects[0].id) || DEFAULT_PROJECT_ID);
@@ -88,7 +89,7 @@ export const GlobalDataProvider = ({ children }) => {
     const getDefaultValue = (key, isEmpty = false) => {
         const fallback = getKeyFallback(key);
         if (isEmpty) return fallback;
-        const exampleProjectData = EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
+        const exampleProjectData = getExampleProjectData(DEFAULT_PROJECT_ID);
         if (!exampleProjectData) return fallback;
         const ls = exampleProjectData.localStorage;
         const lsKey = `globalAppData_default_${key}`;
@@ -100,7 +101,7 @@ export const GlobalDataProvider = ({ children }) => {
 
     // Lazy initialization for all state variables from per-project localStorage
     const [studies, setStudies] = useState(() => loadFromLocalStorage(projectKey('studies'), getDefaultValue('studies', currentProjectId !== DEFAULT_PROJECT_ID)));
-    const [investigations, setInvestigations] = useState(() => loadFromLocalStorage(projectKey('investigations'), getDefaultValue('investigations', currentProjectId !== DEFAULT_PROJECT_ID)));
+    const [investigation, setInvestigation] = useState(() => loadFromLocalStorage(projectKey('investigation'), getDefaultValue('investigation', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [contacts, setContacts] = useState(() => loadFromLocalStorage(projectKey('contacts'), getDefaultValue('contacts', currentProjectId !== DEFAULT_PROJECT_ID)));
     // Test setups are global and shared across all projects (not per-project)
     const [testSetups, setTestSetups] = useState(() => loadFromLocalStorage('globalAppData_testSetups', getDefaultValue('testSetups', false)));
@@ -159,6 +160,9 @@ export const GlobalDataProvider = ({ children }) => {
     // Ref that indicates the initial IndexedDB hydration has completed (success or not).
     const initLoadedRef = useRef(false);
     
+    // Initialize example projects using hook
+    useExampleProjects(setTestSetups, loadFromLocalStorage);
+
     // Migration: Add version and lastModified fields to existing test setups (runs once on mount)
     useEffect(() => {
         let migrated = false;
@@ -230,9 +234,9 @@ export const GlobalDataProvider = ({ children }) => {
     };
 
     function deleteProject(id) {
-        // Protect the default/example project from deletion
-        if (id === DEFAULT_PROJECT_ID) {
-            console.warn('The default example project cannot be deleted. You can reset it to its original state instead.');
+        // Protect the example projects from deletion
+        if (isExampleProject(id)) {
+            console.warn('Example projects cannot be deleted. You can reset them to their original state instead.');
             return false;
         }
         setProjects((prev) => {
@@ -253,105 +257,81 @@ export const GlobalDataProvider = ({ children }) => {
         return true;
     }
 
-    // Reset a project's stored state back to the initial defaults (useful for the built-in example project)
+    // Reset a project's stored state back to the initial defaults
     async function resetProject(id) {
         if (!id) return;
         try {
-            // For example project, use example project baseline; for others, use empty defaults
-            const isExampleProject = id === DEFAULT_PROJECT_ID;
-            const exampleProjectData = EXAMPLE_PROJECTS[id] || EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
-            const baselineLS = exampleProjectData ? exampleProjectData.localStorage : {};
-            
-            const getResetValue = (key) => {
-                const fallback = getKeyFallback(key);
-                if (!isExampleProject) return fallback;
-                const lsKey = `globalAppData_default_${key}`;
-                if (baselineLS[lsKey]) {
-                    try { return JSON.parse(baselineLS[lsKey]); } catch (e) { return fallback; }
-                }
-                return fallback;
-            };
+            const isExample = isExampleProject(id);
 
-            // Write the baseline data into per-project localStorage keys
-            saveToLocalStorage(`globalAppData_${id}_studies`, getResetValue('studies'));
-            saveToLocalStorage(`globalAppData_${id}_investigations`, getResetValue('investigations'));
-            saveToLocalStorage(`globalAppData_${id}_contacts`, getResetValue('contacts'));
-            // Do NOT write per-project testSetups. Test setups are global across projects.
-            // If resetting the example project, seed the global testSetups from the example baseline.
-            if (isExampleProject) {
-                try { saveToLocalStorage('globalAppData_testSetups', getResetValue('testSetups')); } catch (e) { /* ignore */ }
-            }
-            saveToLocalStorage(`globalAppData_${id}_publications`, getResetValue('publications'));
-            saveToLocalStorage(`globalAppData_${id}_selectedTestSetupId`, getResetValue('selectedTestSetupId'));
-            saveToLocalStorage(`globalAppData_${id}_studyVariables`, getResetValue('studyVariables'));
-            saveToLocalStorage(`globalAppData_${id}_measurementProtocols`, getResetValue('measurementProtocols'));
-            saveToLocalStorage(`globalAppData_${id}_processingProtocols`, getResetValue('processingProtocols'));
-            saveToLocalStorage(`globalAppData_${id}_experimentType`, getResetValue('experimentType'));
-
-            saveToLocalStorage(`globalAppData_${id}_studyToStudyVariableMapping`, getResetValue('studyToStudyVariableMapping'));
-            saveToLocalStorage(`globalAppData_${id}_sensorToMeasurementProtocolMapping`, getResetValue('sensorToMeasurementProtocolMapping'));
-            saveToLocalStorage(`globalAppData_${id}_studyToSensorMeasurementMapping`, getResetValue('studyToSensorMeasurementMapping'));
-            saveToLocalStorage(`globalAppData_${id}_sensorToProcessingProtocolMapping`, getResetValue('sensorToProcessingProtocolMapping'));
-            saveToLocalStorage(`globalAppData_${id}_studyToSensorProcessingMapping`, getResetValue('studyToSensorProcessingMapping'));
-
-            // Clear IndexedDB tree for this project
-            try { await clearTree(id); } catch (e) { console.warn('[GlobalDataContext] resetProject: clearTree failed', e); }
-            clearProjectDatasetName(id);
-            clearProjectDatasetStats(id);
-
-            // If this is the example project, re-import the compressed nodes into IndexedDB
-            if (isExampleProject) {
-                const seedFlagKey = `globalAppData_${DEFAULT_PROJECT_ID}_seeded_v1`;
-                try {
-                    // Import the example package into the DB under the example project id
-                    const exampleData = EXAMPLE_PROJECTS[id] || EXAMPLE_PROJECTS[DEFAULT_PROJECT_ID];
-                    if (exampleData) {
-                        await importProject(exampleData, id);
+            if (isExample) {
+                // Use the example projects hook for example project reset
+                await resetExampleProject(id, {
+                    getKeyFallback,
+                    setTestSetups,
+                    saveToLocalStorage,
+                    currentProjectId,
+                    setSelectedDataset,
+                    stateSetter: {
+                        studies: setStudies,
+                        investigation: setInvestigation,
+                        contacts: setContacts,
+                        publications: setPublications,
+                        selectedTestSetupId: setSelectedTestSetupId,
+                        studyVariables: setStudyVariables,
+                        measurementProtocols: setMeasurementProtocols,
+                        processingProtocols: setProcessingProtocols,
+                        experimentType: setExperimentType,
+                        studyToStudyVariableMapping: setStudyToStudyVariableMapping,
+                        sensorToMeasurementProtocolMapping: setSensorToMeasurementProtocolMapping,
+                        studyToSensorMeasurementMapping: setStudyToSensorMeasurementMapping,
+                        sensorToProcessingProtocolMapping: setSensorToProcessingProtocolMapping,
+                        studyToSensorProcessingMapping: setStudyToSensorProcessingMapping
                     }
-                    // Mark seeded so other effects won't re-import unnecessarily
-                    try { localStorage.setItem(seedFlagKey, '1'); } catch (e) { /* ignore */ }
-                    // Load the tree and set in-memory dataset
-                    try {
-                        const root = await loadTree(id);
-                        if (root) {
-                            setProjectDatasetName(id, root.rootName || root.name || null);
-                            setProjectDatasetStats(id, root);
-                        } else {
-                            clearProjectDatasetName(id);
-                            clearProjectDatasetStats(id);
-                        }
-                        if (currentProjectId === id) {
-                            try { setSelectedDataset(root); } catch (e) { /* ignore */ }
-                        }
-                    } catch (e) {
-                        console.warn('[GlobalDataContext] resetProject: loadTree after import failed', e);
-                    }
-                } catch (e) {
-                    console.warn('[GlobalDataContext] resetProject: importProject failed', e);
-                }
-            }
+                });
+            } else {
+                // For non-example projects, reset to empty defaults
+                const getResetValue = (key) => getKeyFallback(key);
 
-            // If the reset project is currently active, reload the in-memory state to match the baseline
-            if (currentProjectId === id) {
-                setStudies(getResetValue('studies'));
-                setInvestigations(getResetValue('investigations'));
-                setContacts(getResetValue('contacts'));
-                setTestSetups(getResetValue('testSetups'));
-                setPublications(getResetValue('publications'));
-                setSelectedTestSetupId(getResetValue('selectedTestSetupId'));
-                setStudyVariables(getResetValue('studyVariables'));
-                setMeasurementProtocols(getResetValue('measurementProtocols'));
-                setProcessingProtocols(getResetValue('processingProtocols'));
-                setExperimentType(getResetValue('experimentType'));
+                // Write empty baseline data into per-project localStorage keys
+                saveToLocalStorage(`globalAppData_${id}_studies`, getResetValue('studies'));
+                saveToLocalStorage(`globalAppData_${id}_investigation`, getResetValue('investigation'));
+                saveToLocalStorage(`globalAppData_${id}_contacts`, getResetValue('contacts'));
+                saveToLocalStorage(`globalAppData_${id}_publications`, getResetValue('publications'));
+                saveToLocalStorage(`globalAppData_${id}_selectedTestSetupId`, getResetValue('selectedTestSetupId'));
+                saveToLocalStorage(`globalAppData_${id}_studyVariables`, getResetValue('studyVariables'));
+                saveToLocalStorage(`globalAppData_${id}_measurementProtocols`, getResetValue('measurementProtocols'));
+                saveToLocalStorage(`globalAppData_${id}_processingProtocols`, getResetValue('processingProtocols'));
+                saveToLocalStorage(`globalAppData_${id}_experimentType`, getResetValue('experimentType'));
 
-                setStudyToStudyVariableMapping(getResetValue('studyToStudyVariableMapping'));
-                setSensorToMeasurementProtocolMapping(getResetValue('sensorToMeasurementProtocolMapping'));
-                setStudyToSensorMeasurementMapping(getResetValue('studyToSensorMeasurementMapping'));
-                setSensorToProcessingProtocolMapping(getResetValue('sensorToProcessingProtocolMapping'));
-                setStudyToSensorProcessingMapping(getResetValue('studyToSensorProcessingMapping'));
+                saveToLocalStorage(`globalAppData_${id}_studyToStudyVariableMapping`, getResetValue('studyToStudyVariableMapping'));
+                saveToLocalStorage(`globalAppData_${id}_sensorToMeasurementProtocolMapping`, getResetValue('sensorToMeasurementProtocolMapping'));
+                saveToLocalStorage(`globalAppData_${id}_studyToSensorMeasurementMapping`, getResetValue('studyToSensorMeasurementMapping'));
+                saveToLocalStorage(`globalAppData_${id}_sensorToProcessingProtocolMapping`, getResetValue('sensorToProcessingProtocolMapping'));
+                saveToLocalStorage(`globalAppData_${id}_studyToSensorProcessingMapping`, getResetValue('studyToSensorProcessingMapping'));
 
-                // If not already set by import above, ensure dataset is cleared to reflect DB state
-                if (!isExampleProject) {
+                // Clear IndexedDB tree for this project
+                try { await clearTree(id); } catch (e) { console.warn('[GlobalDataContext] resetProject: clearTree failed', e); }
+                clearProjectDatasetName(id);
+                clearProjectDatasetStats(id);
+
+                // If the reset project is currently active, reload the in-memory state
+                if (currentProjectId === id) {
+                    setStudies(getResetValue('studies'));
+                    setInvestigation(getResetValue('investigation'));
+                    setContacts(getResetValue('contacts'));
+                    setPublications(getResetValue('publications'));
+                    setSelectedTestSetupId(getResetValue('selectedTestSetupId'));
+                    setStudyVariables(getResetValue('studyVariables'));
+                    setMeasurementProtocols(getResetValue('measurementProtocols'));
+                    setProcessingProtocols(getResetValue('processingProtocols'));
+                    setExperimentType(getResetValue('experimentType'));
+
+                    setStudyToStudyVariableMapping(getResetValue('studyToStudyVariableMapping'));
+                    setSensorToMeasurementProtocolMapping(getResetValue('sensorToMeasurementProtocolMapping'));
+                    setStudyToSensorMeasurementMapping(getResetValue('studyToSensorMeasurementMapping'));
+                    setSensorToProcessingProtocolMapping(getResetValue('sensorToProcessingProtocolMapping'));
+                    setStudyToSensorProcessingMapping(getResetValue('studyToSensorProcessingMapping'));
+
                     try { setSelectedDataset(null); } catch (e) { /* ignore */ }
                 }
             }
@@ -368,39 +348,6 @@ export const GlobalDataProvider = ({ children }) => {
         });
     }
 
-    // Initialize all example projects on app start (seeds IndexedDB and localStorage)
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                for (const projectId of Object.keys(EXAMPLE_PROJECTS)) {
-                    const seedFlagKey = `globalAppData_${projectId}_seeded_v1`;
-                    if (!localStorage.getItem(seedFlagKey)) {
-                        const exampleData = EXAMPLE_PROJECTS[projectId];
-                        if (exampleData) {
-                            console.debug(`[GlobalDataContext] initializing example project ${projectId}`);
-                            try {
-                                await importProject(exampleData, projectId);
-                                localStorage.setItem(seedFlagKey, '1');
-                            } catch (e) {
-                                console.warn(`[GlobalDataContext] failed to initialize ${projectId}`, e);
-                            }
-                        }
-                    }
-                }
-                // After importing all example projects, reload testSetups from localStorage to ensure
-                // any selectedTestSetup objects from the imported projects are loaded into React state
-                if (mounted) {
-                    const updatedTestSetups = loadFromLocalStorage('globalAppData_testSetups', []);
-                    setTestSetups(updatedTestSetups);
-                }
-            } catch (err) {
-                console.error('[GlobalDataContext] initialize example projects error', err);
-            }
-        })();
-        return () => { mounted = false; };
-    }, []);
-
     // Switch active project and reload per-project state from storage
     function switchProject(id) {
         if (!id) return;
@@ -410,11 +357,11 @@ export const GlobalDataProvider = ({ children }) => {
 
         // Load each piece of state from the new project's keys and replace local state
         try {
-            const isExampleProject = id === DEFAULT_PROJECT_ID;
-            const getSwitchDefault = (key) => getDefaultValue(key, !isExampleProject);
+            const isExample = isExampleProject(id);
+            const getSwitchDefault = (key) => getDefaultValue(key, !isExample);
             
             setStudies(loadFromLocalStorage(`globalAppData_${id}_studies`, getSwitchDefault('studies')));
-            setInvestigations(loadFromLocalStorage(`globalAppData_${id}_investigations`, getSwitchDefault('investigations')));
+            setInvestigation(loadFromLocalStorage(`globalAppData_${id}_investigation`, getSwitchDefault('investigation')));
             setContacts(loadFromLocalStorage(`globalAppData_${id}_contacts`, getSwitchDefault('contacts')));
                 // testSetups are global; do not replace them when switching projects.
                 // keep existing testSetups in memory
@@ -449,8 +396,8 @@ export const GlobalDataProvider = ({ children }) => {
     }, [studies, currentProjectId]);
 
     useEffect(() => {
-        saveToLocalStorage(projectKey('investigations', currentProjectId), investigations);
-    }, [investigations, currentProjectId]);
+        saveToLocalStorage(projectKey('investigation', currentProjectId), investigation);
+    }, [investigation, currentProjectId]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('contacts', currentProjectId), contacts);
@@ -518,15 +465,13 @@ export const GlobalDataProvider = ({ children }) => {
 
     // The dataset store handles persistence and lazy-loading; expose its helpers via context below.
 
-    // If we are running for an example project and the IndexedDB has no tree yet (fresh incognito)
-    // import the compressed nodes and localStorage snapshot from the example project file once.
+    // Lazy-load example project dataset if needed
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
                 // Check if we're in an example project
-                const exampleProjectIds = Object.keys(EXAMPLE_PROJECTS);
-                if (!exampleProjectIds.includes(currentProjectId)) return;
+                if (!isExampleProject(currentProjectId)) return;
                 
                 // only act after dataset hydration attempt finished
                 if (!initHydrated) return;
@@ -534,40 +479,19 @@ export const GlobalDataProvider = ({ children }) => {
                 // If an in-memory dataset already exists, no seeding needed
                 if (selectedDataset) return;
 
-                // Use a small localStorage flag to avoid double-imports across reloads
-                const seedFlagKey = `globalAppData_${currentProjectId}_seeded_v1`;
-                if (!localStorage.getItem(seedFlagKey)) {
-                    const exampleData = EXAMPLE_PROJECTS[currentProjectId];
-                    if (exampleData) {
-                        console.debug(`[GlobalDataContext] seeding example project from ${exampleData.projectId}`);
-                        try {
-                            await importProject(exampleData, currentProjectId);
-                            localStorage.setItem(seedFlagKey, '1');
-                        } catch (e) {
-                            console.warn('[GlobalDataContext] example project import failed', e);
-                        }
-                    }
-                }
-
-                // Try to load the root from the DB and set it into memory
-                try {
-                    const root = await loadTree(currentProjectId);
-                    if (mounted) {
-                        if (root) {
-                            setProjectDatasetName(currentProjectId, root.rootName || root.name || null);
-                            setProjectDatasetStats(currentProjectId, root);
-                            setSelectedDataset(root);
-                        } else {
-                            clearProjectDatasetName(currentProjectId);
-                            clearProjectDatasetStats(currentProjectId);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[GlobalDataContext] loadTree after import failed', e);
-                }
+                // Use the hook's seedExampleProject function
+                await seedExampleProject(currentProjectId, {
+                    setSelectedDataset,
+                    setProjectDatasetName,
+                    setProjectDatasetStats,
+                    clearProjectDatasetName,
+                    clearProjectDatasetStats
+                });
 
                 // Refresh in-memory app state from the newly written localStorage keys
-                try { switchProject(currentProjectId); } catch (e) { /* ignore */ }
+                if (mounted) {
+                    try { switchProject(currentProjectId); } catch (e) { /* ignore */ }
+                }
             } catch (err) {
                 console.error('[GlobalDataContext] seed example project error', err);
             }
@@ -581,7 +505,7 @@ export const GlobalDataProvider = ({ children }) => {
         studies: [studies, setStudies],
         contacts: [contacts, setContacts],
         testSetups: [testSetups, setTestSetups],
-        investigations: [investigations, setInvestigations],
+        investigation: [investigation, setInvestigation],
         publications: [publications, setPublications],
         selectedTestSetupId: [selectedTestSetupId, setSelectedTestSetupId],
         studyVariables: [studyVariables, setStudyVariables],
@@ -603,8 +527,8 @@ export const GlobalDataProvider = ({ children }) => {
         setStudies,
         testSetups,
         setTestSetups,
-        investigations,
-        setInvestigations,
+        investigation,
+        setInvestigation,
         contacts,
         setContacts,
         publications,
@@ -647,6 +571,8 @@ export const GlobalDataProvider = ({ children }) => {
     // add project helpers and list
     value.projects = projects;
     value.currentProjectId = currentProjectId;
+    value.DEFAULT_PROJECT_ID = DEFAULT_PROJECT_ID;
+    value.MULTI_RUN_EXAMPLE_PROJECT_ID = MULTI_RUN_EXAMPLE_PROJECT_ID;
     value.createProject = createProject;
     value.deleteProject = deleteProject;
     value.renameProject = renameProject;

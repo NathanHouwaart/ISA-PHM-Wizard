@@ -98,6 +98,11 @@ export const IsaQuestionnaire = () => {
         setScreenWidth('max-w-5xl');
       }
     }
+    
+    // Reset to default width when component unmounts
+    return () => {
+      setScreenWidth('max-w-5xl');
+    };
   }, [currentPage, pageTabStates, setScreenWidth]);
 
   useEffect(() => {

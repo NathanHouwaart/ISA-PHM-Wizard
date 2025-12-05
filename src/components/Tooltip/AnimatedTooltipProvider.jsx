@@ -48,7 +48,7 @@ const AnimatedTooltip = ({ isVisible, children, className = '' }) => {
             </Heading4>
             <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
               {explanations.map((exp, i) => (
-                <Paragraph key={i}>{exp}</Paragraph>
+                <div key={i}>{exp}</div>
               ))}
             </div>
           </div>

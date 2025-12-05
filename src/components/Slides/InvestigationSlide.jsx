@@ -18,7 +18,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     const { dataMap } = useGlobalDataContext();
-    const [investigation, setInvestigation] = dataMap['investigations']
+    const [investigation, setInvestigation] = dataMap['investigation']
 
 
     function handleChange(e) {
@@ -40,16 +40,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
                 </SlidePageSubtitle>
                 
                 <div className='bg-gray-50 p-4 space-y-3 pl-10 border-gray-300 border rounded-lg'>
-                    <FormField
-                        name={"investigationIdentifier"}
-                        label={"Investigation Identifier"}
-                        type={"text"}
-                        placeholder={"i1"}
-                        explanation={"Identifier of the investigation."}
-                        example={"i1"}
-                        onChange={handleChange}
-                        value={investigation.investigationIdentifier}
-                    />
 
                     <FormField
                         name={"investigationTitle"}

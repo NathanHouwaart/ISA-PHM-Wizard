@@ -102,7 +102,7 @@ const ProjectActionToolbar = ({
 );
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, resetProject, DEFAULT_PROJECT_ID, setTestSetups } = useGlobalDataContext();
+  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, resetProject, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID, setTestSetups } = useGlobalDataContext();
   
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
@@ -505,7 +505,7 @@ export default function ProjectSessionsModal({ onClose }) {
                       className="max-w-3xl w-full mx-auto"
                     />
                     <ProjectActionToolbar
-                      isDefault={selectedProject.id === DEFAULT_PROJECT_ID}
+                      isDefault={selectedProject.id === DEFAULT_PROJECT_ID || selectedProject.id === MULTI_RUN_EXAMPLE_PROJECT_ID}
                       onOpenDataset={() => setSectionDialog({ type: 'dataset', projectId: selectedProject.id })}
                       onOpenTemplate={() => setSectionDialog({ type: 'template', projectId: selectedProject.id })}
                       onOpenTestSetup={() => setSectionDialog({ type: 'test', projectId: selectedProject.id })}
@@ -514,10 +514,10 @@ export default function ProjectSessionsModal({ onClose }) {
                       onReset={() => {
                         showDialog({
                           tone: 'warning',
-                          title: 'Reset default project?',
-                          message: "This will overwrite the default project's local settings and dataset with the starter data.",
+                          title: 'Reset example project?',
+                          message: "This will overwrite the project's local settings and dataset with the starter data.",
                           confirmLabel: 'Reset project',
-                          confirmTooltip: 'Restore the default project to its initial state',
+                          confirmTooltip: 'Restore the example project to its initial state',
                           cancelLabel: 'Cancel',
                           cancelTooltip: 'Keep current project data',
                           onConfirm: async () => {
@@ -526,8 +526,8 @@ export default function ProjectSessionsModal({ onClose }) {
                             setTimeout(() => {
                               showDialog({
                                 tone: 'success',
-                                title: 'Default project reset',
-                                message: 'The default project has been restored to its initial configuration.',
+                                title: 'Example project reset',
+                                message: 'The example project has been restored to its initial configuration.',
                                 confirmLabel: 'OK',
                                 confirmTooltip: 'Close dialog',
                                 showCancel: false,

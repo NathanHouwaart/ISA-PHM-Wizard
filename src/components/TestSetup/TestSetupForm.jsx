@@ -6,6 +6,7 @@ import FormField from '../Form/FormField';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { v4 as uuid4 } from 'uuid';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
 
 import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
@@ -631,6 +632,8 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
+  const { setScreenWidth } = useGlobalDataContext();
+  
   const initialFormState = {
     name: '',
     location: '',
@@ -650,6 +653,19 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
   const numberOfCharacteristics = formData.characteristics.length
+
+  // Update screen width based on active view
+  useEffect(() => {
+    const isGridActive = 
+      (selectedTab === 'characteristics' && characteristicsView === 'grid-view') ||
+      (selectedTab === 'sensors' && sensorsView === 'grid-view');
+    setScreenWidth(isGridActive ? 'max-w-[100rem]' : 'max-w-5xl');
+    
+    // Reset to default width when component unmounts
+    return () => {
+      setScreenWidth('max-w-5xl');
+    };
+  }, [selectedTab, characteristicsView, sensorsView, setScreenWidth]);
 
   useEffect(() => {
     if (item) {
