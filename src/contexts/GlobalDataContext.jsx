@@ -61,13 +61,41 @@ export const GlobalDataProvider = ({ children }) => {
     const DEFAULT_PROJECT_NAME = 'Single Run Sietse';
     const MULTI_RUN_EXAMPLE_PROJECT_ID = 'example-multi-run';
     const MULTI_RUN_EXAMPLE_PROJECT_NAME = 'Multi Run Milling';
-    const initialProjects = loadFromLocalStorage('globalAppData_projects', [
-        { id: DEFAULT_PROJECT_ID, name: DEFAULT_PROJECT_NAME },
-        { id: MULTI_RUN_EXAMPLE_PROJECT_ID, name: MULTI_RUN_EXAMPLE_PROJECT_NAME }
-    ]);
+
+    // Always merge example projects into the list, deduplicating by id
+    const getMergedProjects = () => {
+        const loaded = loadFromLocalStorage('globalAppData_projects', []);
+        // Example projects from useExampleProjects
+        const exampleProjects = [
+            { id: DEFAULT_PROJECT_ID, name: DEFAULT_PROJECT_NAME },
+            { id: MULTI_RUN_EXAMPLE_PROJECT_ID, name: MULTI_RUN_EXAMPLE_PROJECT_NAME }
+        ];
+        // Merge and deduplicate by id
+        const all = [...loaded, ...exampleProjects];
+        const deduped = [];
+        const seen = new Set();
+        for (const proj of all) {
+            if (proj && proj.id && !seen.has(proj.id)) {
+                deduped.push(proj);
+                seen.add(proj.id);
+            }
+        }
+        // Always put example projects at the top
+        const isExample = (p) => exampleProjects.some(e => e.id === p.id);
+        return [
+            ...deduped.filter(isExample),
+            ...deduped.filter(p => !isExample(p))
+        ];
+    };
+
+    const initialProjects = getMergedProjects();
     const [projects, setProjects] = useState(() => initialProjects);
     const initialCurrentProjectId = loadFromLocalStorage('globalAppData_currentProjectId', (initialProjects[0] && initialProjects[0].id) || DEFAULT_PROJECT_ID);
     const [currentProjectId, setCurrentProjectId] = useState(() => initialCurrentProjectId);
+    // Ensure projects list always contains example projects, even if localStorage changes
+    useEffect(() => {
+        setProjects(getMergedProjects());
+    }, []);
 
     // helper to construct per-project storage keys
     const projectKey = (k, projectId = currentProjectId) => `globalAppData_${projectId}_${k}`;
