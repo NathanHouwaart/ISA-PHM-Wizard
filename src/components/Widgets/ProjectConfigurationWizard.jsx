@@ -22,7 +22,7 @@ import ProjectTestSetupSection from '../ProjectConfiguration/sections/ProjectTes
 
 const steps = [
   { id: 'name', title: 'Project name', description: 'Give this project a recognizable name.' },
-  { id: 'template', title: 'Experiment template', description: 'Choose how many runs/files each study should contain.' },
+  { id: 'template', title: 'Experiment template', description: 'Select the type of experiment to be processed.' },
   { id: 'dataset', title: 'Dataset configuration', description: 'Index or remove the dataset associated with this project.' },
   { id: 'test', title: 'Test setup', description: 'Assign the applicable test setup.' },
 ];

@@ -53,11 +53,21 @@ export default function useSubmitData() {
     if (!mappings || mappings.length === 0) return [];
     return (mappings || [])
       .filter((m) => String(m.sourceId) === String(sensorId) || String(m.sensorId) === String(sensorId))
-      .map((m) => ({
-        sourceId: m.sourceId ?? m.sensorId ?? null,
-        targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
-        value: m.value ?? [],
-      }));
+      .map((m) => {
+        // Normalize value to array format [specification, unit]
+        let normalizedValue = [];
+        if (Array.isArray(m.value)) {
+          normalizedValue = m.value;
+        } else if (typeof m.value === 'object' && m.value !== null) {
+          // Convert object format { specification, unit } to array [specification, unit]
+          normalizedValue = [m.value.specification ?? '', m.value.unit ?? ''];
+        }
+        return {
+          sourceId: m.sourceId ?? m.sensorId ?? null,
+          targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
+          value: normalizedValue,
+        };
+      });
   };
 
   const resolveRunMapping = (mappings = [], sensorId, run) => {

@@ -630,6 +630,268 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
   );
 };
 
+// Configurations Component
+const ConfigurationsEditor = ({ configurations, onConfigurationsChange }) => {
+  const [expandedItems, setExpandedItems] = useState(new Set());
+  const [activeTooltip, setActiveTooltip] = useState(false);
+
+  const addConfiguration = () => {
+    const newConfiguration = {
+      id: uuid4(),
+      name: '',
+      replaceableComponentId: '',
+      details: []
+    };
+    const newConfigurations = [...configurations, newConfiguration];
+    onConfigurationsChange(newConfigurations);
+
+    // Auto-expand the new item
+    setExpandedItems(prev => new Set([...prev, newConfigurations.length - 1]));
+  };
+
+  const updateConfiguration = (index, field, value) => {
+    const updated = configurations.map((config, i) =>
+      i === index ? { ...config, [field]: value } : config
+    );
+    onConfigurationsChange(updated);
+  };
+
+  const removeConfiguration = (index) => {
+    const filtered = configurations.filter((_, i) => i !== index);
+    onConfigurationsChange(filtered);
+
+    setExpandedItems(prev => {
+      const newSet = new Set();
+      Array.from(prev).forEach(i => {
+        if (i < index) newSet.add(i);
+        else if (i > index) newSet.add(i - 1);
+      });
+      return newSet;
+    });
+  };
+
+  const toggleExpanded = (index) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const addDetail = (configIndex) => {
+    const newEntry = { id: uuid4(), name: '', value: '' };
+    const updated = configurations.map((config, i) => {
+      if (i !== configIndex) return config;
+      return { ...config, details: [...(config.details || []), newEntry] };
+    });
+    onConfigurationsChange(updated);
+  };
+
+  const updateDetail = (configIndex, detailIndex, field, value) => {
+    const updated = configurations.map((config, i) => {
+      if (i !== configIndex) return config;
+      const newDetails = [...(config.details || [])];
+      newDetails[detailIndex] = { ...newDetails[detailIndex], [field]: value };
+      return { ...config, details: newDetails };
+    });
+    onConfigurationsChange(updated);
+  };
+
+  const removeDetail = (configIndex, detailIndex) => {
+    const updated = configurations.map((config, i) => {
+      if (i !== configIndex) return config;
+      const newDetails = [...(config.details || [])];
+      newDetails.splice(detailIndex, 1);
+      return { ...config, details: newDetails };
+    });
+    onConfigurationsChange(updated);
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
+        <Heading3>
+          Configurations
+          <span className="text-sm font-normal text-gray-500 ml-2">
+            ({configurations.length} items)
+          </span>
+        </Heading3>
+
+        <div className='flex items-center space-x-2'>
+          <IconTooltipButton
+            icon={Plus}
+            onClick={addConfiguration}
+            tooltipText={"Add Configuration"}
+          />
+
+          <IconTooltipButton
+            icon={HelpCircle}
+            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
+            tooltipText={"Help"}
+          />
+        </div>
+      </div>
+
+      <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
+        Define configurations for this test setup. Each configuration represents a specific setup variant (e.g. a particular replaceable component used during a study).
+      </Paragraph>
+
+      <div>
+        <TableTooltip isVisible={activeTooltip}
+          explanations={[
+            <><b>Name:</b> Name of the configuration (e.g. "Healthy Bearing", "Faulty Bearing BPFO")</>,
+            <><b>Replaceable Component ID:</b> Identifier for the specific component used in this configuration</>,
+            <><b>Details:</b> Additional key-value pairs describing the configuration (optional)</>
+          ]}
+          examples={[
+            { name: "Healthy Bearing", "RC ID": "RC-001" },
+            { name: "Faulty Bearing BPFO", "RC ID": "RC-002" }
+          ]}
+        />
+      </div>
+
+      <div className="space-y-1">
+        {configurations.map((config, index) => {
+          const isExpanded = expandedItems.has(index);
+          const detailsCount = config.details?.length || 0;
+
+          return (
+            <div key={config.id ?? `config-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleExpanded(index)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    <span className="font-medium text-gray-900">
+                      c{index + 1}:
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600 truncate max-w-md">
+                    <span className='font-bold'>{config.name || 'Unnamed Configuration'}: </span>
+                    {config.replaceableComponentId ? `RC ID: ${config.replaceableComponentId}` : 'No RC ID'}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <IconTooltipButton
+                    icon={Trash2}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeConfiguration(index);
+                    }}
+                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                    tooltipText={"Remove configuration"}
+                  />
+                  <span className="text-gray-400">
+                    {isExpanded ?
+                      <ChevronDown className="w-4 h-4 text-gray-500" /> :
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="border-t border-gray-200 p-4 bg-white space-y-4">
+                  <FormField
+                    name={`config-${index}-name`}
+                    value={config.name}
+                    onChange={(e) => updateConfiguration(index, 'name', e.target.value)}
+                    label="Configuration Name"
+                    type="text"
+                    placeholder="Enter configuration name"
+                  />
+
+                  <FormField
+                    name={`config-${index}-replaceableComponentId`}
+                    value={config.replaceableComponentId || ''}
+                    onChange={(e) => updateConfiguration(index, 'replaceableComponentId', e.target.value)}
+                    label="Replaceable Component ID"
+                    type="text"
+                    placeholder="e.g. RC-001"
+                    explanation="Identifier for the replaceable component used in this configuration"
+                  />
+
+                  {/* Details (key-value pairs) */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading3 className="text-sm font-semibold text-gray-700">
+                        Details ({detailsCount})
+                      </Heading3>
+                      <TooltipButton
+                        tooltipText="Add detail"
+                        onClick={() => addDetail(index)}
+                        className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                      >
+                        <span>Add Detail</span>
+                      </TooltipButton>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(config.details || []).map((detail, detailIdx) => (
+                        <div key={detail.id ?? `detail-${detailIdx}`} className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <Paragraph className="text-sm font-medium text-gray-700">
+                              Detail {detailIdx + 1}
+                            </Paragraph>
+                            <IconToolTipButton
+                              icon={X}
+                              onClick={() => removeDetail(index, detailIdx)}
+                              tooltipText="Remove detail"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              name={`config-${index}-detail-${detailIdx}-name`}
+                              value={detail.name}
+                              onChange={(e) => updateDetail(index, detailIdx, 'name', e.target.value)}
+                              label="Name"
+                              type="text"
+                              placeholder="e.g. Replaceable Component ID"
+                            />
+
+                            <FormField
+                              name={`config-${index}-detail-${detailIdx}-value`}
+                              value={detail.value}
+                              onChange={(e) => updateDetail(index, detailIdx, 'value', e.target.value)}
+                              label="Value"
+                              type="text"
+                              placeholder="e.g. RC-001"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      {detailsCount === 0 && (
+                        <Paragraph className="text-sm text-gray-500 text-center py-6">
+                          No details added yet. Click "Add Detail" to get started.
+                        </Paragraph>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {configurations.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="mb-2">No configurations added yet.</p>
+            <p className="text-sm">Click "Add Configuration" to get started.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const { setScreenWidth } = useGlobalDataContext();
@@ -639,7 +901,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     location: '',
     description: '',
     characteristics: [],
-    sensors: []
+    sensors: [],
+    configurations: []
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -648,24 +911,27 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [activeTooltips, setActiveTooltips] = useState(false);
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
   const [sensorsView, setSensorsView] = useState('simple-view');
+  const [configurationsView, setConfigurationsView] = useState('simple-view');
 
 
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
-  const numberOfCharacteristics = formData.characteristics.length
+  const numberOfCharacteristics = formData.characteristics.length;
+  const numberOfConfigurations = formData.configurations.length;
 
   // Update screen width based on active view
   useEffect(() => {
     const isGridActive = 
       (selectedTab === 'characteristics' && characteristicsView === 'grid-view') ||
-      (selectedTab === 'sensors' && sensorsView === 'grid-view');
+      (selectedTab === 'sensors' && sensorsView === 'grid-view') ||
+      (selectedTab === 'configurations' && configurationsView === 'grid-view');
     setScreenWidth(isGridActive ? 'max-w-[100rem]' : 'max-w-5xl');
     
     // Reset to default width when component unmounts
     return () => {
       setScreenWidth('max-w-5xl');
     };
-  }, [selectedTab, characteristicsView, sensorsView, setScreenWidth]);
+  }, [selectedTab, characteristicsView, sensorsView, configurationsView, setScreenWidth]);
 
   useEffect(() => {
     if (item) {
@@ -676,7 +942,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         testSpecimenName: item.testSpecimenName || '',
         description: item.description || '',
         characteristics: item.characteristics || [],
-        sensors: item.sensors || []
+        sensors: item.sensors || [],
+        configurations: item.configurations || []
       });
     } else {
       setFormData(initialFormState);
@@ -686,15 +953,17 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   useEffect(() => {
     const needsCharacteristicIds = formData.characteristics.some((c) => !c.id);
     const needsSensorIds = formData.sensors.some((s) => !s.id);
+    const needsConfigurationIds = formData.configurations.some((c) => !c.id);
 
-    if (needsCharacteristicIds || needsSensorIds) {
+    if (needsCharacteristicIds || needsSensorIds || needsConfigurationIds) {
       setFormData((prev) => ({
         ...prev,
         characteristics: prev.characteristics.map((c) => (c.id ? c : { ...c, id: uuid4() })),
         sensors: prev.sensors.map((s) => (s.id ? s : { ...s, id: uuid4() })),
+        configurations: prev.configurations.map((c) => (c.id ? c : { ...c, id: uuid4() })),
       }));
     }
-  }, [formData.characteristics, formData.sensors]);
+  }, [formData.characteristics, formData.sensors, formData.configurations]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -847,6 +1116,69 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     ]
   }), [sensorRows]);
 
+  const configurationRows = useMemo(() => {
+    return formData.configurations.map((c) => ({
+      ...c,
+      detailsCount: Array.isArray(c?.details) ? c.details.length : 0,
+      detailsHint: Array.isArray(c?.details) && c.details.length > 0
+        ? c.details.map((d) => `${d.name}: ${d.value}`).join(', ')
+        : 'No details'
+    }));
+  }, [formData.configurations]);
+
+  const addConfigurationRow = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      configurations: [
+        ...prev.configurations,
+        {
+          id: uuid4(),
+          name: '',
+          replaceableComponentId: '',
+          details: [],
+          detailsCount: 0,
+          detailsHint: 'No details'
+        }
+      ]
+    }));
+  }, []);
+
+  const configurationGridConfig = useMemo(() => ({
+    title: 'Configurations',
+    rowData: configurationRows,
+    columnData: [],
+    mappings: [],
+    staticColumns: [
+      {
+        prop: 'actions',
+        name: '',
+        size: 70,
+        readonly: true,
+        cellTemplate: Template(DeleteRowCellTemplate),
+        cellProperties: () => ({ style: { 'text-align': 'center' } })
+      },
+      {
+        prop: 'pattern',
+        name: 'Identifier',
+        size: 150,
+        readonly: true,
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Config C' })
+      },
+      { prop: 'name', name: 'Name', size: 200, readonly: false },
+      { prop: 'replaceableComponentId', name: 'Replaceable Component ID', size: 200, readonly: false },
+      { prop: 'detailsCount', name: 'Details (#)', size: 140, readonly: true },
+      { prop: 'detailsHint', name: 'Details', size: 300, readonly: true },
+    ],
+    customActions: [
+      {
+        label: '+ Add configuration',
+        title: 'Add configuration row',
+        onClick: addConfigurationRow,
+        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+      }
+    ]
+  }), [configurationRows]);
+
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
@@ -877,6 +1209,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             { id: 'basic-info', label: 'Basic Information', tooltip: 'Basic Information about the test setup' },
             { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
             { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
+            { id: 'configurations', label: `Configurations (${numberOfConfigurations})`, tooltip: 'Manage test setup configurations' },
           ]}
         />
 
@@ -1041,6 +1374,49 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                       ...existing,
                       ...row,
                       additionalInfo: existing.additionalInfo || row.additionalInfo || []
+                    };
+                  })
+                }))}
+                height={"45vh"}
+                hideClearAllMappings={true}
+              />
+            </div>
+          </TabPanel>
+        </TabPanel>
+
+        <TabPanel isActive={selectedTab === 'configurations'}>
+          <TabSwitcher
+            selectedTab={configurationsView}
+            onTabChange={setConfigurationsView}
+            tabs={[
+              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit configurations with collapsible cards' },
+              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit configurations inline in a grid' }
+            ]}
+          />
+          <TabPanel isActive={configurationsView === 'simple-view'}>
+            <ConfigurationsEditor
+              configurations={formData.configurations}
+              onConfigurationsChange={(configurations) =>
+                setFormData(prev => ({ ...prev, configurations }))
+              }
+            />
+          </TabPanel>
+          <TabPanel isActive={configurationsView === 'grid-view'}>
+            <div className="mt-3 border border-gray-200 rounded-lg">
+              <DataGrid
+                {...configurationGridConfig}
+                showControls={true}
+                showDebug={false}
+                onRowDataChange={(nextRows) => setFormData(prev => ({
+                  ...prev,
+                  configurations: nextRows.map((row) => {
+                    const existing = prev.configurations.find((c) => c.id === row.id) || {};
+                    return {
+                      ...existing,
+                      ...row,
+                      details: existing.details || row.details || [],
+                      detailsCount: undefined,
+                      detailsHint: undefined
                     };
                   })
                 }))}

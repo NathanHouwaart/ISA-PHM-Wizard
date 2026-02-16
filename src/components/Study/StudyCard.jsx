@@ -27,10 +27,15 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 const StudyCard = ({ item, onEdit, onRemove }) => {
 
   const study = item;
-  const { experimentType } = useGlobalDataContext();
+  const { experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
   const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;
+
+  // Get configuration name
+  const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
+  const configuration = selectedSetup?.configurations?.find(c => c.id === study.configurationId);
+  const configurationName = configuration?.name || 'Not selected';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -53,11 +58,11 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
             </div>
             <div className="flex-row items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
-                <p className='font-bold'>Submission Date - </p>
+                <p className='font-bold'>Study Date - </p>
                 <span>{
                   study.submissionDate ? (
                     <p className="flex">
-                      <CalendarDays className="w-4 h-4 mr-1 mt-0.25" />
+                      <CalendarDays className="w-3 h-3 mr-1 mt-0.25" />
                       <span>{new Date(study.submissionDate).toLocaleDateString()}</span>
                     </p>) :
                     "not provided"}
@@ -68,16 +73,22 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
                 <span>{
                   study.publicationDate ? (
                     <p className="flex">
-                      <CalendarDays className="w-4 h-4 mr-1 mt-0.25" />
+                      <CalendarDays className="w-3 h-3 mr-1 mt-0.25" />
                       <span>{new Date(study.publicationDate).toLocaleDateString()}</span>
                     </p>) :
                     "not provided"}
                 </span>
               </div>
               <div className="flex items-center space-x-1">
-                <p className='font-bold'>{runsLabel} - </p>
-                <span>{normalizedRunCount}</span>
+                <p className='font-bold'>Configuration - </p>
+                <span>{configurationName}</span>
               </div>
+              {experimentConfig.supportsMultipleRuns && (
+                <div className="flex items-center space-x-1">
+                  <p className='font-bold'>{runsLabel} - </p>
+                  <span>{normalizedRunCount}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

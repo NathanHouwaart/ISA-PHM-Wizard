@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle } from 'lucide-react';
+import { Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle, Layers } from 'lucide-react';
 import TooltipButton from '../Widgets/TooltipButton';
 import AvatarInitials from '../Widgets/AvatarInitials';
 import Heading3 from '../Typography/Heading3';
@@ -15,6 +15,7 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
 
   const measurementTypes = getMeasurementTypes(item.sensors);
   const characteristicsCount = item.characteristics?.length || 0;
+  const configurationsCount = item.configurations?.length || 0;
 
   // Count total comments across all characteristics
   const getTotalComments = (characteristics) => {
@@ -58,6 +59,10 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
               <div className="flex items-center space-x-1">
                 <Settings className="w-4 h-4" />
                 <span>{characteristicsCount} characteristic{characteristicsCount !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Layers className="w-4 h-4" />
+                <span>{configurationsCount} configuration{configurationsCount !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MessageCircle className="w-4 h-4" />

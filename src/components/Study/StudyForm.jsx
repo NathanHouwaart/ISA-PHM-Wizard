@@ -11,7 +11,7 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { studies, experimentType } = useGlobalDataContext();
+  const { studies, experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 
@@ -23,6 +23,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     submissionDate: item?.submissionDate || '',
     publicationDate: item?.publicationDate || '',
     runCount: item?.runCount ?? 1,
+    configurationId: item?.configurationId || '',
   });
   const [formError, setFormError] = useState('');
 
@@ -139,17 +140,34 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             example="10-12-2024"
           />
 
+          {experimentConfig.supportsMultipleRuns && (
+            <FormField
+              name={"runCount"}
+              onChange={handleChange}
+              value={formData.runCount}
+              label="Number of runs"
+              type='number'
+              min={1}
+              explanation={runCountExplanation}
+              example="3"
+              required
+            />
+          )}
+
           <FormField
-            name={"runCount"}
+            name={"configurationId"}
             onChange={handleChange}
-            value={runCountDisabled ? 1 : formData.runCount}
-            label="Number of runs"
-            type='number'
-            min={1}
-            explanation={runCountExplanation}
-            example={runCountDisabled ? undefined : "3"}
-            required
-            disabled={runCountDisabled}
+            value={formData.configurationId}
+            label="Test Setup Configuration"
+            type='select'
+            placeholder='No configuration selected'
+            tags={(() => {
+              const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
+              const configs = selectedSetup?.configurations || [];
+              return configs.map(c => ({ value: c.id, label: c.name || 'Unnamed' }));
+            })()}
+            explanation="Select which configuration of the test setup was used for this study"
+            disabled={!selectedTestSetupId}
           />
 
         </div>

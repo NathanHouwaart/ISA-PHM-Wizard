@@ -430,7 +430,7 @@ export default function ProjectSessionsModal({ onClose }) {
             <div>
               <Heading3 className="text-2xl">Project sessions</Heading3>
               <Paragraph className="text-gray-500 mt-1 max-w-2xl">
-                Manage your projects, inspect their metadata, and launch focused editors for datasets, templates, and test setups.
+                Manage your projects, inspect their metadata, and launch focused editors for datasets, experiment templates, and test setups.
               </Paragraph>
             </div>
             <div className="flex items-center gap-2">

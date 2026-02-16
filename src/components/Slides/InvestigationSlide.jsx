@@ -32,7 +32,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
         <div ref={combinedRef} >
                 
                 <SlidePageTitle>
-                  Investigation Information
+                  Project Information
                 </SlidePageTitle>
                 
                 <SlidePageSubtitle>
@@ -76,9 +76,9 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <FormField
                         name={"submissionDate"}
-                        label={"Submission Date"}
+                        label={"Date Created"}
                         type={"date"}
-                        explanation={"The date when the investigation data was submitted to the database. If not applicable, please leave empty."}
+                        explanation={"The date when you are creating this investigation metadata. This represents when you entered the information in this wizard."}
                         example={"01-10-2023"}
                         onChange={handleChange}
                         value={investigation.submissionDate}

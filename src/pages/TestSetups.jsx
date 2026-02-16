@@ -33,7 +33,7 @@ export const TestSetups = () => {
               itemHook={useTestSetups}
             >
               <CollectionTitle>Test Setups</CollectionTitle>
-              <CollectionSubtitle>View, add and edit test-setups used in the investigations, by specifying relevant components and sensors.</CollectionSubtitle>
+              <CollectionSubtitle>View, add and edit test-setups used in the projects, by specifying relevant components and sensors.</CollectionSubtitle>
               <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
               <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
               <CollectionEmptyStateSubtitle>Get started by adding your first Test Setup</CollectionEmptyStateSubtitle>

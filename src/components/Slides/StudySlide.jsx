@@ -26,9 +26,12 @@ import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 import DataGrid from '../DataGrid/DataGrid'; // Import the new DataGrid
 import { HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../DataGrid/CellTemplates'; // Import cell templates
 import { Template } from '@revolist/react-datagrid';
+import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
+
+const plugins = { select: new SelectTypePlugin() };
 
 export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -43,7 +46,9 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const { 
         studies, 
         setStudies,
-        experimentType
+        experimentType,
+        testSetups,
+        selectedTestSetupId
     } = useGlobalDataContext();
 
     const experimentConfig = getExperimentTypeConfig(experimentType);
@@ -59,6 +64,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             description: 'Enter description...',
             submissionDate: "",
             publicationDate: "",
+            configurationId: '',
             runCount: 1
         };
         setStudies([...studies, newStudy]);
@@ -68,6 +74,13 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const handleStudyDataChange = (newStudyData) => {
         setStudies(newStudyData);
     };
+
+    // Get configurations from selected test setup for dropdown
+    const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
+    const configurationOptions = (selectedSetup?.configurations || []).map(c => ({
+        value: c.id,
+        label: c.name || 'Unnamed'
+    }));
 
     // Grid configuration for studies
     const studiesGridConfig = {
@@ -118,24 +131,34 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             },
             {
                 prop: 'submissionDate',
-                name: 'Submission Date',
-                size: 250,
+                name: 'Study Date',
+                size: 180,
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
             },
             {
                 prop: 'publicationDate',
                 name: 'Publication Date',
-                size: 250,
+                size: 180,
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
             },
             {
+                prop: 'configurationId',
+                name: 'Configuration',
+                size: 220,
+                readonly: false,
+                columnType: 'select',
+                labelKey: 'label',
+                valueKey: 'value',
+                source: configurationOptions
+            },
+            ...(experimentConfig.supportsMultipleRuns ? [{
                 prop: 'runCount',
-                name: runCountReadOnly ? 'Runs (fixed to 1)' : 'Number of runs',
+                name: 'Number of runs',
                 size: 160,
-                readonly: runCountReadOnly,
-            }
+                readonly: false,
+            }] : [])
         ]
     };
     
@@ -183,6 +206,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         showControls={true}
                         showDebug={false}
                         onRowDataChange={handleStudyDataChange}
+                        plugins={plugins}
                         height={"45vh"}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
