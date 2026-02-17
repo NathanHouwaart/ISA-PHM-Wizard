@@ -37,7 +37,8 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.0",
     "react-router-dom": "^7.6.2",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
