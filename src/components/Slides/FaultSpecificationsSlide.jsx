@@ -3,8 +3,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-import generateId from '../../utils/generateId';
-import useVariables from '../../hooks/useVariables';
+import { useFaultSpecifications } from '../../hooks/useVariables';
 import Collection, {
     CollectionTitle,
     CollectionSubtitle,
@@ -20,50 +19,36 @@ import DataGrid from '../DataGrid/DataGrid';
 import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
-import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
-import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
+import { FAULT_SPEC_TYPES, isOperatingCondition } from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import usePageTab from '../../hooks/usePageWidth';
 
 const plugins = { select: new SelectTypePlugin() };
 
-const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeRef);
 
-    const { studyVariables, setStudyVariables } = useGlobalDataContext();
+    const { items: faultSpecs, setItems: setStudyVariables, addItem } = useFaultSpecifications();
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
 
-
-
-    const addNewVariable = useCallback(() => {
-        setStudyVariables(prev => {
-            const nextIndex = prev.length + 1;
-            return [
-                ...prev,
-                {
-                    id: generateId(),
-                    name: `New Variable ${nextIndex}`,
-                    type: VARIABLE_TYPE_OPTIONS[0] || '',
-                    unit: '',
-                    description: ''
-                }
-            ];
+    const handleRowDataChange = useCallback((newRows) => {
+        setStudyVariables(prevAll => {
+            // Keep items that are NOT in this view (Operating conditions)
+            const otherItems = prevAll.filter(item => isOperatingCondition(item));
+            // Combine with the new state of items in this view
+            return [...otherItems, ...newRows];
         });
     }, [setStudyVariables]);
 
-    const handleRowDataChange = useCallback((newRows) => {
-        setStudyVariables(newRows);
-    }, [setStudyVariables]);
-
     const typeOptions = useMemo(
-        () => VARIABLE_TYPE_OPTIONS.map((type) => ({ label: type, value: type })),
+        () => FAULT_SPEC_TYPES.map((type) => ({ label: type, value: type })),
         []
     );
 
     const variableGridConfig = useMemo(() => ({
-        title: 'Study Variable Definitions',
-        rowData: studyVariables,
+        title: 'Fault Specifications',
+        rowData: faultSpecs,
         columnData: [],
         mappings: [],
         staticColumns: [
@@ -110,22 +95,22 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
         ],
         customActions: [
             {
-                label: '+ Add Variable',
-                onClick: addNewVariable,
+                label: '+ Add Fault Spec',
+                onClick: () => addItem(), // Helper already sets default type
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
-                title: 'Add a new study variable'
+                title: 'Add a new fault specification'
             }
         ]
-    }), [studyVariables, addNewVariable, typeOptions]);
+    }), [faultSpecs, addItem, typeOptions]);
 
     return (
         <div ref={combinedRef}>
             <SlidePageTitle>
-                Study Variable Definitions
+                Fault Specifications
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Define the variables that describe your studies, including their type, units, and descriptive notes. These definitions are shared across all mappings.
+                Define the fault specifications for your studies. These variables describe the faults or conditions being tested, excluding operating conditions.
             </SlidePageSubtitle>
 
             <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">
@@ -133,7 +118,7 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
                     selectedTab={selectedTab}
                     onTabChange={setSelectedTab}
                     tabs={[
-                        { id: 'simple-view', label: 'Simple View', tooltip: 'Card-based view for managing variables' },
+                        { id: 'simple-view', label: 'Simple View', tooltip: 'Card-based view for managing fault specs' },
                         { id: 'grid-view', label: 'Grid View', tooltip: 'Table-based view for bulk editing' }
                     ]}
                 />
@@ -142,15 +127,15 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
                     <div className="max-h-[45vh] overflow-y-auto">
                         <Collection
                             onHeightChange={() => {}}
-                            itemHook={useVariables}
+                            itemHook={useFaultSpecifications}
                             grid={true}
                         >
-                            <CollectionTitle>Study Variables ({studyVariables?.length || 0})</CollectionTitle>
-                            <CollectionSubtitle>View, add and edit study variable definitions</CollectionSubtitle>
-                            <CollectionAddButtonText>Add Variable</CollectionAddButtonText>
-                            <CollectionEmptyStateTitle>No Variables Defined</CollectionEmptyStateTitle>
-                            <CollectionEmptyStateSubtitle>Get started by adding your first variable</CollectionEmptyStateSubtitle>
-                            <CollectionEmptyStateAddButtonText>Add Variable Now</CollectionEmptyStateAddButtonText>
+                            <CollectionTitle>Fault Specifications ({faultSpecs?.length || 0})</CollectionTitle>
+                            <CollectionSubtitle>View, add and edit fault specifications</CollectionSubtitle>
+                            <CollectionAddButtonText>Add Fault Spec</CollectionAddButtonText>
+                            <CollectionEmptyStateTitle>No Fault Specs Defined</CollectionEmptyStateTitle>
+                            <CollectionEmptyStateSubtitle>Get started by adding your first fault specification</CollectionEmptyStateSubtitle>
+                            <CollectionEmptyStateAddButtonText>Add Fault Spec Now</CollectionEmptyStateAddButtonText>
                         </Collection>
                     </div>
                 </TabPanel>
@@ -171,6 +156,6 @@ const StudyVariableDefinitionSlide = forwardRef(({ onHeightChange, currentPage, 
     );
 });
 
-StudyVariableDefinitionSlide.displayName = 'Study Variable Definitions';
+FaultSpecificationsSlide.displayName = 'Fault Specifications';
 
-export default StudyVariableDefinitionSlide;
+export default FaultSpecificationsSlide;

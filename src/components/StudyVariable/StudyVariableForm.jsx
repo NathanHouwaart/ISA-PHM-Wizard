@@ -20,17 +20,21 @@ import generateId from '../../utils/generateId';
  * @param {(data: Object) => void} props.onSave - Save handler
  * @param {() => void} props.onCancel - Cancel handler
  * @param {boolean} props.isEditing - Whether editing existing item
+ * @param {string} [props.lockedType] - If provided, type is fixed to this value and field is hidden/readonly
+ * @param {string[]} [props.allowedTypes] - If provided, limits the type dropdown options
  * @returns {JSX.Element} Variable edit form
  */
-const StudyVariableForm = ({ item, onSave, onCancel, isEditing = false }) => {
+const StudyVariableForm = ({ item, onSave, onCancel, isEditing = false, allowedTypes, lockedType }) => {
   const [formData, setFormData] = useState({
     id: item?.id || '',
     name: item?.name || 'New Variable',
-    type: item?.type || VARIABLE_TYPE_OPTIONS[0],
+    type: item?.type || lockedType || (allowedTypes ? allowedTypes[0] : VARIABLE_TYPE_OPTIONS[0]),
     unit: item?.unit || '',
     description: item?.description || ''
   });
   const [formError, setFormError] = useState('');
+
+  const typeOptions = allowedTypes || VARIABLE_TYPE_OPTIONS;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -95,18 +99,24 @@ const StudyVariableForm = ({ item, onSave, onCancel, isEditing = false }) => {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Type
         </label>
-        <select
-          name="type"
-          value={formData.type || VARIABLE_TYPE_OPTIONS[0]}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {VARIABLE_TYPE_OPTIONS.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        {lockedType ? (
+          <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-500">
+             {lockedType}
+          </div>
+        ) : (
+          <select
+            name="type"
+            value={formData.type || typeOptions[0]}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {typeOptions.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <FormField

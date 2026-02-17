@@ -24,6 +24,8 @@ import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import StudyVariableMappingPanel from '../Study/StudyVariableMappingPanel';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
+import { isFaultSpecification, isOperatingCondition } from '../../constants/variableTypes';
+
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeRef);
@@ -40,6 +42,9 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const experimentConfig = useMemo(() => getExperimentTypeConfig(experimentType), [experimentType]);
     const isSingleRunTemplate = !experimentConfig?.supportsMultipleRuns;
     const groupedRuns = useMemo(() => groupStudyRuns(studyRuns), [studyRuns]);
+
+    const faultSpecs = useMemo(() => studyVariables.filter(isFaultSpecification), [studyVariables]);
+    const opConds = useMemo(() => studyVariables.filter(isOperatingCondition), [studyVariables]);
 
     const mappingsController = useMappingsController(
         'studyToStudyVariableMapping',
@@ -165,11 +170,11 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     return (
         <div ref={combinedRef}>
             <SlidePageTitle>
-                Study Variable Mappings
+                Test Matrix
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Map each defined variable to the runs that belong to your studies. Variable definitions are read-only in this view to keep the focus on assigning run-specific values.
+                Assign values to fault specifications and operating conditions for each study run to complete your experiment&#39;s test matrix.
             </SlidePageSubtitle>
 
             <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">
@@ -204,6 +209,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                 mappings={mappingsController.mappings}
                                 handleInputChange={mappingsController.updateMappingValue}
                                 minHeight={WINDOW_HEIGHT}
+                                isSingleRunTemplate={isSingleRunTemplate}
                             />
                     </div>
                 </TabPanel>
@@ -228,7 +234,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
 
                     <div className="space-y-4 mt-4">
                         {isSingleRunTemplate ? (
-                            <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2">
+                            <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-6">
                                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                     <Heading3 className="text-lg font-semibold text-gray-900">
                                         Study variable mappings - All studies
@@ -244,20 +250,59 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                         This project has no studies with runs to map.
                                     </Paragraph>
                                 ) : (
-                                    <div
-                                        onPointerDown={() => handleGridFocus('all-studies')}
-                                        className="border border-gray-100 rounded-lg"
-                                    >
-                                        <DataGrid
-                                            {...singleRunGridConfig}
-                                            showControls={true}
-                                            showDebug={false}
-                                            onDataChange={mappingsController.setMappings}
-                                            height={gridHeight}
-                                            isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
-                                            actionPlugins={[FilePickerPlugin]}
-                                        />
-                                    </div>
+                                    <>
+                                    {/* Fault Specs Grid */}
+                                    {faultSpecs.length > 0 && (
+                                        <div 
+                                            onPointerDown={() => handleGridFocus('all-studies')}
+                                            className="border border-orange-100 rounded-lg"
+                                        >
+                                            <div className="bg-orange-50 px-3 py-2 border-b border-orange-100 rounded-t-lg">
+                                                <span className="text-xs font-bold text-orange-800 uppercase">Fault Specifications</span>
+                                            </div>
+                                            <DataGrid
+                                                {...{
+                                                    ...singleRunGridConfig,
+                                                    rowData: faultSpecs
+                                                }}
+                                                showControls={true}
+                                                showDebug={false}
+                                                onDataChange={mappingsController.setMappings}
+                                                height={Math.min(500, (faultSpecs.length * 50) + 115)}
+                                                isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
+                                                actionPlugins={[FilePickerPlugin]}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Op Conds Grid */}
+                                    {opConds.length > 0 && (
+                                        <div 
+                                            onPointerDown={() => handleGridFocus('all-studies')}
+                                            className="border border-green-100 rounded-lg"
+                                        >
+                                            <div className="bg-green-50 px-3 py-2 border-b border-green-100 rounded-t-lg">
+                                                <span className="text-xs font-bold text-green-800 uppercase">Operating Conditions</span>
+                                            </div>
+                                            <DataGrid
+                                                {...{
+                                                    ...singleRunGridConfig,
+                                                    rowData: opConds
+                                                }}
+                                                showControls={true}
+                                                showDebug={false}
+                                                onDataChange={mappingsController.setMappings}
+                                                height={Math.min(500, (opConds.length * 50) + 115)}
+                                                isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
+                                                actionPlugins={[FilePickerPlugin]}
+                                            />
+                                        </div>
+                                    )}
+                                    
+                                    {faultSpecs.length === 0 && opConds.length === 0 && (
+                                        <Paragraph className="text-sm text-gray-500 italic">No variables defined.</Paragraph>
+                                    )}
+                                    </>
                                 )}
                             </section>
                         ) : (
@@ -265,9 +310,8 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                 const runsForStudy = groupedRuns.get(study.id) || [];
                                 const hasRuns = runsForStudy.length > 0;
 
-                                const gridConfig = {
+                                const baseGridConfig = {
                                     title: null,
-                                    rowData: studyVariables,
                                     columnData: runsForStudy,
                                     mappings: mappingsController.mappings,
                                     fieldMappings: {
@@ -290,7 +334,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                 return (
                                     <section
                                         key={study.id}
-                                        className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2"
+                                        className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-6"
                                     >
                                         <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                             <Heading3 className="text-lg font-semibold text-gray-900">
@@ -309,20 +353,53 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                         )}
 
                                         {hasRuns ? (
-                                            <div
-                                                onPointerDown={() => handleGridFocus(study.id)}
-                                                className="border border-gray-100 rounded-lg"
-                                            >
-                                                <DataGrid
-                                                    {...gridConfig}
-                                                    showControls={true}
-                                                    showDebug={false}
-                                                    onDataChange={mappingsController.setMappings}
-                                                    height={gridHeight}
-                                                    isActive={currentPage === pageIndex && activeStudyId === study.id}
-                                                    actionPlugins={[FilePickerPlugin]}
-                                                />
-                                            </div>
+                                            <>
+                                            {/* Fault Specs */}
+                                            {faultSpecs.length > 0 && (
+                                                <div
+                                                    onPointerDown={() => handleGridFocus(study.id)}
+                                                    className="border border-orange-100 rounded-lg"
+                                                >
+                                                     <div className="bg-orange-50 px-3 py-2 border-b border-orange-100 rounded-t-lg">
+                                                        <span className="text-xs font-bold text-orange-800 uppercase">Fault Specifications</span>
+                                                    </div>
+                                                    <DataGrid
+                                                        {...{...baseGridConfig, rowData: faultSpecs}}
+                                                        showControls={true}
+                                                        showDebug={false}
+                                                        onDataChange={mappingsController.setMappings}
+                                                        height={Math.min(500, (faultSpecs.length * 50) + 115)}
+                                                        isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                                        actionPlugins={[FilePickerPlugin]}
+                                                    />
+                                                </div>
+                                            )}
+                                            
+                                            {/* Op Conds */}
+                                            {opConds.length > 0 && (
+                                                <div
+                                                    onPointerDown={() => handleGridFocus(study.id)}
+                                                    className="border border-green-100 rounded-lg"
+                                                >
+                                                     <div className="bg-green-50 px-3 py-2 border-b border-green-100 rounded-t-lg">
+                                                        <span className="text-xs font-bold text-green-800 uppercase">Operating Conditions</span>
+                                                    </div>
+                                                    <DataGrid
+                                                        {...{...baseGridConfig, rowData: opConds}}
+                                                        showControls={true}
+                                                        showDebug={false}
+                                                        onDataChange={mappingsController.setMappings}
+                                                        height={Math.min(500, (opConds.length * 50) + 115)}
+                                                        isActive={currentPage === pageIndex && activeStudyId === study.id}
+                                                        actionPlugins={[FilePickerPlugin]}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {faultSpecs.length === 0 && opConds.length === 0 && (
+                                                <Paragraph className="text-sm text-gray-500 italic">No variables defined.</Paragraph>
+                                            )}
+                                            </>
                                         ) : (
                                             <Paragraph className="text-sm text-gray-500 italic">
                                                 Add runs to this study to enable variable mappings.

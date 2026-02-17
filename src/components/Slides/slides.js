@@ -4,7 +4,8 @@ import IntroductionSlide from './IntroductionSlide.jsx';
 import InvestigationSlide from './InvestigationSlide.jsx';
 import PublicationSlide from './PublicationSlide.jsx';
 import StudySlide from './StudySlide.jsx';
-import StudyVariableDefinitionSlide from './StudyVariableDefinitionSlide.jsx';
+import FaultSpecificationsSlide from './FaultSpecificationsSlide.jsx';
+import OperatingConditionsSlide from './OperatingConditionsSlide.jsx';
 import StudyVariableSlide from './StudyVariableSlide.jsx';
 import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
 import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
@@ -17,7 +18,8 @@ export const slides = [
   ContactSlide,
   PublicationSlide,
   StudySlide,
-  StudyVariableDefinitionSlide,
+  FaultSpecificationsSlide,
+  OperatingConditionsSlide,
   StudyVariableSlide,
   MeasurementProtocolSlide,
   MeasurementOutputSlide,

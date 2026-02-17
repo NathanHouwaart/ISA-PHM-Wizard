@@ -1,20 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import StudyVariableCard from '../components/StudyVariable/StudyVariableCard';
 import StudyVariableForm from '../components/StudyVariable/StudyVariableForm';
-import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
+import { 
+    VARIABLE_TYPE_OPTIONS,
+    OPERATING_CONDITION_TYPE,
+    isFaultSpecification,
+    isOperatingCondition
+} from '../constants/variableTypes';
 import generateId from '../utils/generateId';
 
 export const useVariables = () => {
     const { studyVariables, setStudyVariables } = useGlobalDataContext();
 
-    const addVariable = () => {
+    const addVariable = (overrideData = {}) => {
         const newVariable = {
             id: generateId(),
             name: 'New Variable',
             type: VARIABLE_TYPE_OPTIONS[0],
             unit: '',
-            description: ''
+            description: '',
+            ...overrideData
         };
         setStudyVariables(prev => [...prev, newVariable]);
     };
@@ -46,6 +52,58 @@ export const useVariables = () => {
         getCard,
         getForm,
         getView
+    };
+};
+
+export const useFaultSpecifications = () => {
+    const result = useVariables();
+    const { items, addItem } = result;
+
+    const filteredItems = useMemo(() => items.filter(isFaultSpecification), [items]);
+
+    const addFaultSpecification = () => {
+        addItem({ type: VARIABLE_TYPE_OPTIONS[0] });
+    };
+    
+    // Return a wrapped component that sets allowed types
+    const getForm = () => (props) => (
+        <StudyVariableForm 
+            {...props} 
+            allowedTypes={VARIABLE_TYPE_OPTIONS.filter(t => t !== OPERATING_CONDITION_TYPE)} 
+        />
+    );
+
+    return {
+        ...result,
+        items: filteredItems,
+        addItem: addFaultSpecification,
+        getForm
+    };
+};
+
+export const useOperatingConditions = () => {
+    const result = useVariables();
+    const { items, addItem } = result;
+
+    const filteredItems = useMemo(() => items.filter(isOperatingCondition), [items]);
+
+    const addOperatingCondition = () => {
+        addItem({ type: OPERATING_CONDITION_TYPE });
+    };
+
+    // Return a wrapped component that locks the type
+    const getForm = () => (props) => (
+        <StudyVariableForm 
+            {...props} 
+            lockedType={OPERATING_CONDITION_TYPE}
+        />
+    );
+
+    return {
+        ...result,
+        items: filteredItems,
+        addItem: addOperatingCondition,
+        getForm
     };
 };
 
