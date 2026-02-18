@@ -64,6 +64,7 @@ div.rgCell {
   white-space: normal;
   word-break: break-word;
   overflow-y: auto;
+  overscroll-behavior-y: contain; /* Prevents scroll chaining to parent grid */
   text-overflow: ellipsis;
   border-bottom: 2px solid #e5e7eb; /* gray-200 */
   transition: background-color 0.15s ease;

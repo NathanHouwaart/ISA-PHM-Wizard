@@ -259,6 +259,65 @@ const DataGrid = forwardRef(({
         };
     }, [hookRowData, updateRowDataBatch]);
 
+    // Handle wheel events on scrollable cells to prioritize cell scroll over grid scroll
+    // This fixes the nested scroll issue where grid scroll captures wheel events before cells
+    useEffect(() => {
+        const gridElement = gridRef.current;
+        if (!gridElement) return;
+
+        // Track when we reach a boundary to add a delay before grid scrolling resumes
+        let boundaryReachedTime = 0;
+        const BOUNDARY_DELAY = 200; // milliseconds delay before allowing grid scroll
+
+        const handleCellWheel = (e) => {
+            // Find the closest cell element
+            const cell = e.target.closest('.rgCell');
+            if (!cell) return;
+
+            // Check if the cell has scrollable content
+            const isScrollable = cell.scrollHeight > cell.clientHeight;
+            if (!isScrollable) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = cell;
+            const atTop = scrollTop <= 0;
+            const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+            const scrollingDown = e.deltaY > 0;
+            const scrollingUp = e.deltaY < 0;
+
+            // Check if we're at a boundary
+            const atBoundary = (scrollingDown && atBottom) || (scrollingUp && atTop);
+
+            if (atBoundary) {
+                const now = Date.now();
+                
+                // First time reaching boundary - start the timer
+                if (boundaryReachedTime === 0) {
+                    boundaryReachedTime = now;
+                }
+                
+                const timeSinceBoundary = now - boundaryReachedTime;
+                
+                // Block grid scroll until delay expires
+                if (timeSinceBoundary < BOUNDARY_DELAY) {
+                    e.stopPropagation();
+                }
+                // After delay expires, allow grid scroll (don't stop propagation)
+            } else {
+                // Cell can still scroll - always stop propagation to grid
+                e.stopPropagation();
+                // Reset boundary timer since we're scrolling within the cell
+                boundaryReachedTime = 0;
+            }
+        };
+
+        // Use capture phase to intercept before RevoGrid's handlers
+        gridElement.addEventListener('wheel', handleCellWheel, { capture: true, passive: false });
+
+        return () => {
+            gridElement.removeEventListener('wheel', handleCellWheel, { capture: true });
+        };
+    }, []);
+
     // Enhanced column definitions that preserve user-resized widths
     const enhancedColumnDefs = useMemo(() => {
         // Use the synchronous ref if available to avoid races when a resize event
