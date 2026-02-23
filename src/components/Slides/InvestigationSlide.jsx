@@ -36,17 +36,17 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
                 </SlidePageTitle>
                 
                 <SlidePageSubtitle>
-                    The investigation describes the research project, including all experiments (described by studies) and measurements (described by assays). Please provide the basic information about the investigation.
+                    Please provide the basic information about the project.
                 </SlidePageSubtitle>
                 
                 <div className='bg-gray-50 p-4 space-y-3 pl-10 border-gray-300 border rounded-lg'>
 
                     <FormField
                         name={"investigationTitle"}
-                        label={"Investigation Title"}
+                        label={"Project Title"}
                         type={"text"}
-                        placeholder={"Investigation Title"}
-                        explanation={"A title for the investigation."}
+                        placeholder={"Project Title"}
+                        explanation={"A title for the project."}
                         example={"Diagnostics on a test-bench X"}
                         onChange={handleChange}
                         value={investigation.investigationTitle}
@@ -54,10 +54,10 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <FormField
                         name={"investigationDescription"}
-                        label={"Investigation Description"}
+                        label={"Project Description"}
                         type={"textarea"}
-                        placeholder={"Description of the investigation"}
-                        explanation={"A short text summarising the investigation."}
+                        placeholder={"Description of the project"}
+                        explanation={"A short text summarising the project."}
                         example={"Measuring fault responses of bearings on test bench X using sensor Y and Z to assess sensor effectiveness."}
                         onChange={handleChange}
                         value={investigation.investigationDescription}
@@ -76,7 +76,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <FormField
                         name={"submissionDate"}
-                        label={"Date Created"}
+                        label={"Project execution / data collection date"}
                         type={"date"}
                         explanation={"The date when you are creating this investigation metadata. This represents when you entered the information in this wizard."}
                         example={"01-10-2023"}
