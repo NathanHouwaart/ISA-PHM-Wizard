@@ -4,14 +4,19 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import ExperimentTypePickerDialog from './ExperimentTypePickerDialog';
 import { EXPERIMENT_TYPE_OPTIONS } from '../../constants/experimentTypes';
 
+const getOptionButtonByTitle = (title) => {
+  return screen.getByRole('button', { name: new RegExp(title, 'i') });
+};
+
 describe('ExperimentTypePickerDialog', () => {
   const mockOnClose = vi.fn();
   const mockOnConfirm = vi.fn();
+
   const defaultProps = {
     open: true,
     onClose: mockOnClose,
     onConfirm: mockOnConfirm,
-    currentTypeId: 'diagnostic-single',
+    currentTypeId: 'diagnostic-experiment',
   };
 
   beforeEach(() => {
@@ -37,8 +42,8 @@ describe('ExperimentTypePickerDialog', () => {
     });
 
     test('highlights the currently selected type', () => {
-      render(<ExperimentTypePickerDialog {...defaultProps} currentTypeId="diagnostic-single" />);
-      const selectedOption = screen.getByText('Diagnostic experiment · single run').closest('button');
+      render(<ExperimentTypePickerDialog {...defaultProps} currentTypeId="diagnostic-experiment" />);
+      const selectedOption = getOptionButtonByTitle('Diagnostic Experiment');
       expect(selectedOption).toHaveClass('border-blue-500');
     });
   });
@@ -46,8 +51,7 @@ describe('ExperimentTypePickerDialog', () => {
   describe('Interactions', () => {
     test('closes when cancel button is clicked', () => {
       render(<ExperimentTypePickerDialog {...defaultProps} />);
-      const cancelButton = screen.getByText('Cancel');
-      fireEvent.click(cancelButton);
+      fireEvent.click(screen.getByText('Cancel'));
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
@@ -60,28 +64,22 @@ describe('ExperimentTypePickerDialog', () => {
 
     test('selects a different experiment type when clicked', () => {
       render(<ExperimentTypePickerDialog {...defaultProps} />);
-      const rtfOption = screen.getByText('Run-to-failure experiment · single condition measurement').closest('button');
-      fireEvent.click(rtfOption);
-      
-      const applyButton = screen.getByText('Apply');
-      fireEvent.click(applyButton);
-      
-      expect(mockOnConfirm).toHaveBeenCalledWith('rtf-single');
+      fireEvent.click(getOptionButtonByTitle('Prognostics Experiment'));
+      fireEvent.click(screen.getByText('Apply'));
+      expect(mockOnConfirm).toHaveBeenCalledWith('prognostics-experiment');
     });
 
     test('applies selected type when Apply button is clicked', () => {
       render(<ExperimentTypePickerDialog {...defaultProps} />);
-      const applyButton = screen.getByText('Apply');
-      fireEvent.click(applyButton);
-      expect(mockOnConfirm).toHaveBeenCalledWith('diagnostic-single');
+      fireEvent.click(screen.getByText('Apply'));
+      expect(mockOnConfirm).toHaveBeenCalledWith('diagnostic-experiment');
     });
   });
 
   describe('Edge Cases', () => {
     test('handles missing onConfirm gracefully', () => {
-      const { rerender } = render(<ExperimentTypePickerDialog {...defaultProps} onConfirm={undefined} />);
-      const applyButton = screen.getByText('Apply');
-      expect(() => fireEvent.click(applyButton)).not.toThrow();
+      render(<ExperimentTypePickerDialog {...defaultProps} onConfirm={undefined} />);
+      expect(() => fireEvent.click(screen.getByText('Apply'))).not.toThrow();
     });
 
     test('handles missing onClose gracefully', () => {
@@ -91,24 +89,26 @@ describe('ExperimentTypePickerDialog', () => {
     });
 
     test('maintains selection when re-rendered with same currentTypeId', () => {
-      const { rerender } = render(<ExperimentTypePickerDialog {...defaultProps} currentTypeId="diagnostic-multi" />);
-      expect(screen.getByText('Diagnostic experiment · multiple tests').closest('button')).toHaveClass('border-blue-500');
-      
-      rerender(<ExperimentTypePickerDialog {...defaultProps} currentTypeId="diagnostic-multi" />);
-      expect(screen.getByText('Diagnostic experiment · multiple tests').closest('button')).toHaveClass('border-blue-500');
+      const { rerender } = render(
+        <ExperimentTypePickerDialog {...defaultProps} currentTypeId="prognostics-experiment" />
+      );
+      expect(getOptionButtonByTitle('Prognostics Experiment')).toHaveClass('border-blue-500');
+
+      rerender(<ExperimentTypePickerDialog {...defaultProps} currentTypeId="prognostics-experiment" />);
+      expect(getOptionButtonByTitle('Prognostics Experiment')).toHaveClass('border-blue-500');
     });
   });
 
   describe('Accessibility', () => {
     test('has proper focus management for keyboard navigation', () => {
       render(<ExperimentTypePickerDialog {...defaultProps} />);
-      const firstOption = screen.getByText('Diagnostic experiment · single run').closest('button');
+      const firstOption = getOptionButtonByTitle('Diagnostic Experiment');
       expect(firstOption).toHaveAttribute('type', 'button');
     });
 
     test('option buttons have visible focus styles', () => {
       render(<ExperimentTypePickerDialog {...defaultProps} />);
-      const option = screen.getByText('Diagnostic experiment · single run').closest('button');
+      const option = getOptionButtonByTitle('Diagnostic Experiment');
       expect(option).toHaveClass('focus-visible:ring-2');
     });
   });

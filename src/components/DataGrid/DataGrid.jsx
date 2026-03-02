@@ -35,6 +35,7 @@ const DataGrid = forwardRef(({
     showDebug = false,      // Show debug information
     rowsize = 50,           // Row height in pixels
     isActive = true,        // Whether this grid is active (should respond to global undo/redo)
+    historyScopeKey,        // Optional history context key (resets undo/redo when key changes)
 
     // Event handlers
     onDataChange,           // Callback when mapping data changes
@@ -61,14 +62,9 @@ const DataGrid = forwardRef(({
         canRedo,
         undo,
         redo,
-        updateMapping,
-        updateMappingsBatch,
-        updateRowData, // New function for standalone grids
-        updateRowDataBatch, // New function for batch row data updates
-        clearAllMappings,
+        applyTransaction,
         isEditableColumn,
         getRowByIndex,
-        getColumnByProp,
     stats,
     mappings: currentMappings,
     isStandaloneGrid,
@@ -80,16 +76,45 @@ const DataGrid = forwardRef(({
         mappings,
         fieldMappings,
         staticColumns,
-        onRowDataChange // Pass the callback to the hook
+        onRowDataChange, // Pass the callback to the hook
+        historyScopeKey
     });
 
     // Debug flag helper - when false all debug logging in this component is suppressed
     const DBG = !!showDebug;
 
+    const extractCellValue = useCallback((value) => {
+        if (!value || typeof value !== 'object') return value;
+
+        if (Object.prototype.hasOwnProperty.call(value, 'value')) {
+            const candidate = value.value;
+            if (candidate === null || candidate === undefined) return '';
+            if (['string', 'number', 'boolean'].includes(typeof candidate)) return candidate;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, 'id')) {
+            const candidate = value.id;
+            if (candidate === null || candidate === undefined) return '';
+            if (['string', 'number', 'boolean'].includes(typeof candidate)) return candidate;
+        }
+
+        return value;
+    }, []);
+
     // Clean clipboard/paste artifacts (Excel adds control chars) before storing values
     const normalizeCellValue = useCallback((value) => {
-        if (value === undefined || value === null) return '';
-        const stringValue = String(value);
+        const extractedValue = extractCellValue(value);
+        if (extractedValue === undefined || extractedValue === null) return '';
+
+        if (
+            typeof extractedValue !== 'string' &&
+            typeof extractedValue !== 'number' &&
+            typeof extractedValue !== 'boolean'
+        ) {
+            return '';
+        }
+
+        const stringValue = String(extractedValue);
         if (!/[\u0000-\u001F\u007F]/.test(stringValue)) {
             return stringValue;
         }
@@ -97,7 +122,267 @@ const DataGrid = forwardRef(({
             .replace(/[\u0000-\u001F\u007F]+/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
+    }, [extractCellValue]);
+
+    const parseChildMappingValue = useCallback((rawValue) => {
+        if (Array.isArray(rawValue)) {
+            return {
+                specification: rawValue[0] ?? '',
+                unit: rawValue[1] ?? ''
+            };
+        }
+        if (typeof rawValue === 'string') {
+            const [specification = '', unit = ''] = rawValue.split(';');
+            return { specification, unit };
+        }
+        if (rawValue && typeof rawValue === 'object') {
+            return {
+                specification: rawValue.specification ?? '',
+                unit: rawValue.unit ?? ''
+            };
+        }
+        return { specification: '', unit: '' };
     }, []);
+
+    const resolveEditValue = useCallback((detail, columnProp) => {
+        if (!detail) return undefined;
+        if (detail.val !== undefined) return detail.val;
+        if (columnProp && detail.model && detail.model[columnProp] !== undefined) {
+            // Select editors often write directly to model[prop]
+            return detail.model[columnProp];
+        }
+        return detail.value;
+    }, []);
+
+    const applyRowUpdates = useCallback((baseRows, rowDataUpdates) => {
+        if (!rowDataUpdates || rowDataUpdates.length === 0) return baseRows;
+
+        const updatesByRowId = new Map();
+        rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
+            if (!updatesByRowId.has(rowId)) {
+                updatesByRowId.set(rowId, {});
+            }
+            updatesByRowId.get(rowId)[columnProp] = normalizeCellValue(value);
+        });
+
+        return (baseRows || []).map((row) => {
+            const rowId = row[fields.rowId];
+            const updates = updatesByRowId.get(rowId);
+            if (!updates) return row;
+            return { ...row, ...updates };
+        });
+    }, [fields.rowId, normalizeCellValue]);
+
+    const applyMappingUpdates = useCallback((baseMappings, mappingUpdates) => {
+        if (!mappingUpdates || mappingUpdates.length === 0) return baseMappings;
+
+        const nextMappings = [...(baseMappings || [])];
+
+        mappingUpdates.forEach(({ rowId, columnId, value }) => {
+            const cleanedValue = normalizeCellValue(value);
+
+            const isChildColumn = columnId.endsWith('_spec') || columnId.endsWith('_unit');
+            const actualColumnId = isChildColumn
+                ? columnId.replace(/_(spec|unit)$/, '')
+                : columnId;
+
+            const existingIndex = nextMappings.findIndex((mapping) =>
+                mapping[fields.mappingRowId] === rowId &&
+                mapping[fields.mappingColumnId] === actualColumnId
+            );
+
+            if (existingIndex >= 0) {
+                const existing = nextMappings[existingIndex];
+
+                if (isChildColumn && fields.hasChildColumns) {
+                    const parsedValue = parseChildMappingValue(existing[fields.mappingValue]);
+                    const nextValue = columnId.endsWith('_spec')
+                        ? [cleanedValue, parsedValue.unit]
+                        : [parsedValue.specification, cleanedValue];
+
+                    nextMappings[existingIndex] = {
+                        ...existing,
+                        [fields.mappingValue]: nextValue
+                    };
+                } else {
+                    nextMappings[existingIndex] = {
+                        ...existing,
+                        [fields.mappingValue]: cleanedValue
+                    };
+                }
+                return;
+            }
+
+            const initialValue = (isChildColumn && fields.hasChildColumns)
+                ? (columnId.endsWith('_spec') ? [cleanedValue, ''] : ['', cleanedValue])
+                : cleanedValue;
+
+            nextMappings.push({
+                [fields.mappingRowId]: rowId,
+                [fields.mappingColumnId]: actualColumnId,
+                [fields.mappingValue]: initialValue
+            });
+        });
+
+        return nextMappings;
+    }, [
+        normalizeCellValue,
+        fields.mappingRowId,
+        fields.mappingColumnId,
+        fields.mappingValue,
+        fields.hasChildColumns,
+        parseChildMappingValue
+    ]);
+
+    const getNormalizedCurrentMappingValue = useCallback((baseMappings, rowId, columnId) => {
+        const isChildColumn = columnId.endsWith('_spec') || columnId.endsWith('_unit');
+        const actualColumnId = isChildColumn
+            ? columnId.replace(/_(spec|unit)$/, '')
+            : columnId;
+
+        const existing = (baseMappings || []).find((mapping) =>
+            mapping?.[fields.mappingRowId] === rowId &&
+            mapping?.[fields.mappingColumnId] === actualColumnId
+        );
+        if (!existing) return '';
+
+        if (isChildColumn && fields.hasChildColumns) {
+            const parsed = parseChildMappingValue(existing[fields.mappingValue]);
+            const rawValue = columnId.endsWith('_spec') ? parsed.specification : parsed.unit;
+            return normalizeCellValue(rawValue);
+        }
+
+        return normalizeCellValue(existing[fields.mappingValue]);
+    }, [
+        fields.mappingRowId,
+        fields.mappingColumnId,
+        fields.mappingValue,
+        fields.hasChildColumns,
+        parseChildMappingValue,
+        normalizeCellValue
+    ]);
+
+    const filterEffectiveRowUpdates = useCallback((updates, baseRows) => {
+        if (!updates || updates.length === 0) return [];
+
+        const rowLookup = new Map(
+            (baseRows || []).map((row) => [row?.[fields.rowId], row])
+        );
+        const deduped = new Map();
+
+        updates.forEach((update) => {
+            if (!update?.rowId || !update?.columnProp) return;
+            const key = `${update.rowId}::${update.columnProp}`;
+            deduped.set(key, {
+                rowId: update.rowId,
+                columnProp: update.columnProp,
+                value: normalizeCellValue(update.value)
+            });
+        });
+
+        return Array.from(deduped.values()).filter((update) => {
+            const row = rowLookup.get(update.rowId);
+            const currentValue = normalizeCellValue(row?.[update.columnProp]);
+            return currentValue !== update.value;
+        });
+    }, [fields.rowId, normalizeCellValue]);
+
+    const filterEffectiveMappingUpdates = useCallback((updates, baseMappings) => {
+        if (!updates || updates.length === 0) return [];
+
+        const deduped = new Map();
+        updates.forEach((update) => {
+            if (!update?.rowId || !update?.columnId) return;
+            const key = `${update.rowId}::${update.columnId}`;
+            deduped.set(key, {
+                rowId: update.rowId,
+                columnId: update.columnId,
+                value: normalizeCellValue(update.value)
+            });
+        });
+
+        return Array.from(deduped.values()).filter((update) => {
+            const currentValue = getNormalizedCurrentMappingValue(
+                baseMappings,
+                update.rowId,
+                update.columnId
+            );
+            return currentValue !== update.value;
+        });
+    }, [getNormalizedCurrentMappingValue, normalizeCellValue]);
+
+    const updateRowDataBatch = useCallback((newRowData, reason = 'row-batch') => {
+        applyTransaction({
+            nextRowData: newRowData || [],
+            nextMappings: currentMappings,
+            reason,
+            notifyRowData: true
+        });
+    }, [applyTransaction, currentMappings]);
+
+    const updateMappingsBatch = useCallback((updates, reason = 'mapping-batch') => {
+        if (!updates || updates.length === 0) return;
+        const nextMappings = applyMappingUpdates(currentMappings, updates);
+        applyTransaction({
+            nextRowData: hookRowData,
+            nextMappings,
+            reason,
+            notifyRowData: false
+        });
+    }, [applyMappingUpdates, applyTransaction, currentMappings, hookRowData]);
+
+    const commitGridChanges = useCallback(({
+        rowDataUpdates = [],
+        mappingUpdates = [],
+        reason = 'grid-edit'
+    }) => {
+        const effectiveRowDataUpdates = filterEffectiveRowUpdates(rowDataUpdates, hookRowData);
+        const effectiveMappingUpdates = filterEffectiveMappingUpdates(mappingUpdates, currentMappings);
+
+        if (effectiveRowDataUpdates.length === 0 && effectiveMappingUpdates.length === 0) {
+            return false;
+        }
+
+        const nextRows = effectiveRowDataUpdates.length > 0
+            ? applyRowUpdates(hookRowData, effectiveRowDataUpdates)
+            : hookRowData;
+
+        const nextMappings = effectiveMappingUpdates.length > 0
+            ? applyMappingUpdates(currentMappings, effectiveMappingUpdates)
+            : currentMappings;
+
+        applyTransaction({
+            nextRowData: nextRows,
+            nextMappings,
+            reason,
+            notifyRowData: effectiveRowDataUpdates.length > 0
+        });
+
+        return true;
+    }, [
+        filterEffectiveRowUpdates,
+        filterEffectiveMappingUpdates,
+        applyRowUpdates,
+        hookRowData,
+        applyMappingUpdates,
+        currentMappings,
+        applyTransaction
+    ]);
+
+    const handleClearAllMappings = useCallback(() => {
+        if (!(stats && stats.totalMappings > 0)) return;
+        const clearedMappings = (currentMappings || []).map((mapping) => ({
+            ...mapping,
+            [fields.mappingValue]: ''
+        }));
+
+        applyTransaction({
+            nextRowData: hookRowData,
+            nextMappings: clearedMappings,
+            reason: 'clear-all-mappings',
+            notifyRowData: false
+        });
+    }, [stats, currentMappings, fields.mappingValue, applyTransaction, hookRowData]);
 
     // (removed) currentMappingsCount — was only used by debug UI which we removed
 
@@ -127,6 +412,7 @@ const DataGrid = forwardRef(({
     // updates and later effects that read the state (which is async).
     const columnSizesRef = useRef(columnSizes);
     const gridRef = useRef();
+    const editSessionRef = useRef(null);
     // callback ref to ensure we store the underlying DOM element (revo-grid)
 
     const setGridRef = (node) => {
@@ -429,14 +715,6 @@ const DataGrid = forwardRef(({
         return translated;
     }, [getFlatColumns]);
 
-    // Helper: get current mapping value for a row/column combination
-    const getCurrentMapping = useCallback((rowId, columnId) => {
-        const mapping = currentMappings.find(m => 
-            m[fields.sourceId] === rowId && m[fields.targetId] === columnId
-        );
-        return mapping ? mapping[fields.value] : '';
-    }, [currentMappings, fields]);
-
     // Force re-render when columns change by using state instead of just ref
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
     
@@ -477,6 +755,47 @@ const DataGrid = forwardRef(({
         }
     }, [currentMappings, onDataChange]);
 
+    const clearEditSession = useCallback(() => {
+        editSessionRef.current = null;
+    }, []);
+
+    const getEditableElementCurrentValue = useCallback((element) => {
+        if (!element) return undefined;
+        if (typeof element.value !== 'undefined') {
+            return normalizeCellValue(element.value);
+        }
+        if (element.isContentEditable === true) {
+            return normalizeCellValue(element.textContent ?? '');
+        }
+        const contentEditableAncestor = element.closest?.('[contenteditable=""], [contenteditable="true"], [contenteditable]');
+        if (contentEditableAncestor) {
+            return normalizeCellValue(contentEditableAncestor.textContent ?? '');
+        }
+        return undefined;
+    }, [normalizeCellValue]);
+
+    const isTextUndoCapableEditor = useCallback((element) => {
+        if (!element) return false;
+
+        if (element.tagName === 'TEXTAREA') return true;
+
+        if (element.tagName === 'INPUT') {
+            const inputType = String(element.getAttribute('type') || 'text').toLowerCase();
+            return [
+                'text',
+                'search',
+                'url',
+                'tel',
+                'email',
+                'password',
+                'number'
+            ].includes(inputType);
+        }
+
+        if (element.isContentEditable === true) return true;
+        return Boolean(element.closest?.('[contenteditable]'));
+    }, []);
+
     // Handle cell editing
     const handleBeforeEdit = useCallback((event) => {
         const detail = event.detail;
@@ -512,7 +831,25 @@ const DataGrid = forwardRef(({
                 detail.column.validator = () => true;
             }
         }
-    }, [stableColumnDefs, isStandaloneGrid, staticColumns, isEditableColumn]);
+
+        const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
+        const row = getRowByIndex(rowIndex);
+        const initialRawValue = resolveEditValue(detail, columnProp) ?? row?.[columnProp] ?? '';
+
+        editSessionRef.current = {
+            rowIndex,
+            columnProp,
+            initialValue: normalizeCellValue(initialRawValue)
+        };
+    }, [
+        stableColumnDefs,
+        isStandaloneGrid,
+        staticColumns,
+        isEditableColumn,
+        getRowByIndex,
+        resolveEditValue,
+        normalizeCellValue
+    ]);
 
     const handleAfterEdit = useCallback((event) => {
         const detail = event.detail;
@@ -530,6 +867,7 @@ const DataGrid = forwardRef(({
 
             if (!data || !newRange) {
                 if (DBG) console.log('[DataGrid] Missing data or newRange, aborting');
+                clearEditSession();
                 return;
             }
 
@@ -596,42 +934,19 @@ const DataGrid = forwardRef(({
                 }
             }
 
-            // Process row data updates (for both standalone and mapping grids)
-            if (rowDataUpdates.length > 0) {
-                // Group updates by row for efficiency
-                const rowUpdatesMap = new Map();
-                rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
-                    if (!rowUpdatesMap.has(rowId)) {
-                        rowUpdatesMap.set(rowId, {});
-                    }
-                    rowUpdatesMap.get(rowId)[columnProp] = value;
-                });
-
-                // Apply all updates to create new row data using the authoritative `rowData` prop
-                const currentData = [...rowData.map(row => ({ ...row }))];
-
-                rowUpdatesMap.forEach((columnUpdates, rowId) => {
-                    const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
-                    if (rowToUpdate) {
-                        Object.assign(rowToUpdate, columnUpdates);
-                    }
-                });
-
-                // Use the hook's internal row data tracking for undo/redo
-                updateRowDataBatch(currentData);
-            }
-
-            // Process mapping updates
-            if (updates.length > 0) {
-                updateMappingsBatch(updates);
-            }
+            commitGridChanges({
+                rowDataUpdates,
+                mappingUpdates: updates,
+                reason: 'range-edit'
+            });
+            clearEditSession();
             return;
         }
 
     // Handle single cell edit
     if (DBG) console.log('[DataGrid] Processing single cell edit');
         const columnProp = detail.prop || detail.model?.prop || detail.column?.prop;
-        let newValue = detail.val !== undefined ? detail.val : detail.value;
+        let newValue = resolveEditValue(detail, columnProp);
         const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
 
         if (DBG) console.log('[DataGrid] Single cell edit details:', {
@@ -649,6 +964,7 @@ const DataGrid = forwardRef(({
         const row = getRowByIndex(rowIndex);
         if (!row) {
             if (DBG) console.log('[DataGrid] Row not found for index:', rowIndex);
+            clearEditSession();
             return;
         }
 
@@ -658,14 +974,36 @@ const DataGrid = forwardRef(({
         const isStaticColumn = staticColumns.some(col => col.prop === columnProp);
 
         if (isStaticColumn) {
-            // Use the hook's updateRowData for both standalone and mapping grids so
-            // the row-data change is recorded in the unified undo/redo history.
-            updateRowData(row[fields.rowId], columnProp, stringValue);
+            commitGridChanges({
+                rowDataUpdates: [{
+                    rowId: row[fields.rowId],
+                    columnProp,
+                    value: stringValue
+                }],
+                reason: 'row-cell-edit'
+            });
         } else if (isEditableColumn(columnProp)) {
-            // Handle mapping edit (existing functionality)
-            updateMapping(row[fields.rowId], columnProp, stringValue);
+            commitGridChanges({
+                mappingUpdates: [{
+                    rowId: row[fields.rowId],
+                    columnId: columnProp,
+                    value: stringValue
+                }],
+                reason: 'mapping-cell-edit'
+            });
         }
-    }, [translateRangeCoordinates, getFlatColumns, staticColumns, isStandaloneGrid, isEditableColumn, getRowByIndex, updateMapping, updateMappingsBatch, updateRowDataBatch, rowData, fields, normalizeCellValue]);
+        clearEditSession();
+    }, [
+        staticColumns,
+        isStandaloneGrid,
+        isEditableColumn,
+        getRowByIndex,
+        fields,
+        normalizeCellValue,
+        commitGridChanges,
+        resolveEditValue,
+        clearEditSession
+    ]);
 
     const handleBeforeRangeEdit = useCallback((event) => {
         const detail = event.detail;
@@ -749,33 +1087,11 @@ const DataGrid = forwardRef(({
                         }
                     }
 
-                    // Apply updates
-                    if (rowDataUpdates.length > 0) {
-                        // Group row updates by row ID
-                        const rowUpdatesMap = new Map();
-                        rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
-                            if (!rowUpdatesMap.has(rowId)) {
-                                rowUpdatesMap.set(rowId, {});
-                            }
-                            rowUpdatesMap.get(rowId)[columnProp] = value;
-                        });
-
-                        // Apply row data updates
-                        const currentData = [...rowData.map(row => ({ ...row }))];
-                        rowUpdatesMap.forEach((columnUpdates, rowId) => {
-                            const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
-                            if (rowToUpdate) {
-                                Object.assign(rowToUpdate, columnUpdates);
-                            }
-                        });
-                        updateRowDataBatch(currentData);
-                    }
-
-                    if (updates.length > 0) {
-                        updateMappingsBatch(updates);
-                    }
-
-                    return true;
+                    return commitGridChanges({
+                        rowDataUpdates,
+                        mappingUpdates: updates,
+                        reason: 'clear-region'
+                    });
                 }
             }
 
@@ -800,11 +1116,23 @@ const DataGrid = forwardRef(({
                 const isStaticColumn = staticColumns.some(col => col.prop === column.prop);
 
                 if (isStaticColumn) {
-                    updateRowData(row[fields.rowId], column.prop, '');
-                    return true;
+                    return commitGridChanges({
+                        rowDataUpdates: [{
+                            rowId: row[fields.rowId],
+                            columnProp: column.prop,
+                            value: ''
+                        }],
+                        reason: 'clear-cell'
+                    });
                 } else if (!isStandaloneGrid && isEditableColumn(column.prop)) {
-                    updateMapping(row[fields.rowId], column.prop, '');
-                    return true;
+                    return commitGridChanges({
+                        mappingUpdates: [{
+                            rowId: row[fields.rowId],
+                            columnId: column.prop,
+                            value: ''
+                        }],
+                        reason: 'clear-cell'
+                    });
                 }
             }
         } catch (error) {
@@ -812,49 +1140,160 @@ const DataGrid = forwardRef(({
         }
 
         return false;
-    }, [gridRef, translateRangeCoordinates, getFlatColumns, getRowByIndex, staticColumns, isStandaloneGrid, isEditableColumn, fields, rowData, updateRowDataBatch, updateMappingsBatch, updateRowData, updateMapping]);
+    }, [gridRef, translateRangeCoordinates, getFlatColumns, getRowByIndex, staticColumns, isStandaloneGrid, isEditableColumn, fields, commitGridChanges]);
+
+    const isEditableInputElement = useCallback((element) => {
+        if (!element) return false;
+        return (
+            element.tagName === 'INPUT' ||
+            element.tagName === 'SELECT' ||
+            element.tagName === 'TEXTAREA' ||
+            element.isContentEditable === true ||
+            element.closest?.('[contenteditable]') ||
+            element.hasAttribute?.('contenteditable')
+        );
+    }, []);
+
+    const isEventFromThisGrid = useCallback((event) => {
+        const gridElement = gridRef.current;
+        if (!gridElement) return false;
+
+        if (typeof event.composedPath === 'function') {
+            const path = event.composedPath();
+            if (Array.isArray(path) && path.includes(gridElement)) {
+                return true;
+            }
+        }
+
+        const target = event.target;
+        return target instanceof Node ? gridElement.contains(target) : false;
+    }, []);
+
+    const isGridCurrentlyFocused = useCallback(() => {
+        const gridElement = gridRef.current;
+        if (!gridElement) return false;
+
+        const activeElement = document.activeElement;
+        if (activeElement && gridElement.contains(activeElement)) {
+            return true;
+        }
+
+        return Boolean(
+            gridElement.querySelector(
+                '[data-rgrow][data-rgcol].focused, [data-rgrow][data-rgcol].selected, [data-rgrow][data-rgcol][tabindex="0"]'
+            )
+        );
+    }, []);
 
     useEffect(() => {
-        if (!isActive) return; // Only handle global keys when this grid is active
-        const handleKeyDown = (event) => {
-            const activeElement = document.activeElement;
-            const isEditingCell = activeElement && (
-                activeElement.tagName === 'INPUT' ||
-                activeElement.tagName === 'TEXTAREA' ||
-                activeElement.contentEditable === 'true' ||
-                activeElement.closest('[contenteditable]') ||
-                activeElement.hasAttribute('contenteditable')
-            );
+        if (!isActive) return;
 
-            if ((event.key === 'Delete' || event.key === 'Backspace') && !isEditingCell) {
-                if (handleClearCell()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
+        const handleKeyDown = (event) => {
+            if (!isEventFromThisGrid(event) && !isGridCurrentlyFocused()) {
+                return;
+            }
+
+            const activeElement = document.activeElement;
+            const isEditingCell = isEditableInputElement(activeElement);
+
+            const hasModifier = event.ctrlKey || event.metaKey;
+            const key = String(event.key || '').toLowerCase();
+            const isUndo = hasModifier && key === 'z' && !event.shiftKey;
+            const isRedo = hasModifier && (key === 'y' || (key === 'z' && event.shiftKey));
+            const isDelete = event.key === 'Delete' || event.key === 'Backspace';
+            const isEscape = event.key === 'Escape';
+
+            if (event.repeat && (isUndo || isRedo)) {
+                // Prevent key-repeat from falling through to RevoGrid handlers.
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                return;
+            }
+
+            if (isEscape) {
+                clearEditSession();
+                return;
+            }
+
+            if (isUndo || isRedo) {
+                if (isEditingCell) {
+                    const initialValue = editSessionRef.current?.initialValue;
+                    const currentValue = getEditableElementCurrentValue(activeElement);
+                    const canUseNativeUndo = isTextUndoCapableEditor(activeElement);
+                    const hasEditorChanges = (
+                        currentValue !== undefined &&
+                        initialValue !== undefined &&
+                        currentValue !== initialValue
+                    );
+
+                    // Let native input/contenteditable undo/redo run first while user is actively editing text.
+                    if (canUseNativeUndo && hasEditorChanges) {
+                        return;
+                    }
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                clearEditSession();
+                if (isUndo) {
+                    undo();
+                } else {
+                    redo();
                 }
                 return;
             }
 
-            if (isEditingCell) return;
-
-            if (event.ctrlKey || event.metaKey) {
-                if (event.key === 'z' && !event.shiftKey) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
-                    undo();
-                } else if ((event.key === 'y') || (event.key === 'z' && event.shiftKey)) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
-                    redo();
-                }
+            if (isDelete && !isEditingCell) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                void handleClearCell();
+                return;
             }
+
+            if (isEditingCell) return;
         };
 
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
-    }, [isActive, undo, redo, handleClearCell]);
+        document.addEventListener('keydown', handleKeyDown, true);
+        return () => document.removeEventListener('keydown', handleKeyDown, true);
+    }, [
+        isActive,
+        handleClearCell,
+        undo,
+        redo,
+        isEventFromThisGrid,
+        isGridCurrentlyFocused,
+        isEditableInputElement,
+        getEditableElementCurrentValue,
+        clearEditSession,
+        isTextUndoCapableEditor
+    ]);
+
+    useEffect(() => {
+        if (!isActive) return;
+
+        const handleFocusOut = (event) => {
+            if (!editSessionRef.current) return;
+            const gridElement = gridRef.current;
+            if (!gridElement) {
+                clearEditSession();
+                return;
+            }
+
+            const target = event.target;
+            if (!(target instanceof Node) || !gridElement.contains(target)) return;
+
+            const nextTarget = event.relatedTarget;
+            if (nextTarget instanceof Node && gridElement.contains(nextTarget)) return;
+
+            clearEditSession();
+        };
+
+        document.addEventListener('focusout', handleFocusOut, true);
+        return () => document.removeEventListener('focusout', handleFocusOut, true);
+    }, [isActive, clearEditSession]);
 
     // Handle paste region event - let RevoGrid handle the paste operation internally
     // We intercept the clipboardrangepaste event which provides proper coordinate information
@@ -921,30 +1360,11 @@ const DataGrid = forwardRef(({
                 }
             }
             
-            // Apply all updates in batch
-            if (rowDataUpdates.length > 0) {
-                const rowUpdatesMap = new Map();
-                rowDataUpdates.forEach(({ rowId, columnProp, value }) => {
-                    if (!rowUpdatesMap.has(rowId)) {
-                        rowUpdatesMap.set(rowId, {});
-                    }
-                    rowUpdatesMap.get(rowId)[columnProp] = value;
-                });
-
-                const currentData = [...rowData.map(row => ({ ...row }))];
-                rowUpdatesMap.forEach((columnUpdates, rowId) => {
-                    const rowToUpdate = currentData.find(r => r[fields.rowId] === rowId);
-                    if (rowToUpdate) {
-                        Object.assign(rowToUpdate, columnUpdates);
-                    }
-                });
-
-                updateRowDataBatch(currentData);
-            }
-            
-            if (updates.length > 0) {
-                updateMappingsBatch(updates);
-            }
+            commitGridChanges({
+                rowDataUpdates,
+                mappingUpdates: updates,
+                reason: 'clipboard-paste'
+            });
             
             if (DBG) console.log('[DataGrid] Clipboard paste operation completed:', {
                 processedRows: Object.keys(data).length,
@@ -955,7 +1375,7 @@ const DataGrid = forwardRef(({
         } catch (error) {
             if (DBG) console.error('[DataGrid] Error in clipboard paste operation:', error);
         }
-    }, [staticColumns, isEditableColumn, getRowByIndex, updateMappingsBatch, updateRowDataBatch, rowData, fields, normalizeCellValue]);
+    }, [staticColumns, isEditableColumn, getRowByIndex, fields, normalizeCellValue, commitGridChanges]);
 
     // Handle clear region event - let the existing handleClearCell handle the logic
     const handleClearRegion = useCallback((event) => {
@@ -1038,7 +1458,7 @@ const DataGrid = forwardRef(({
                             <>
                                 <div className="border-l border-gray-300 h-6 mx-2"></div>
                                 <TooltipButton
-                                    onClick={clearAllMappings}
+                                    onClick={handleClearAllMappings}
                                     disabled={!(stats && stats.totalMappings > 0)}
                                     className={`px-3 py-1 text-sm rounded border ${stats && stats.totalMappings > 0
                                         ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'

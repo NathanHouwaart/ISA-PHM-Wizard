@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import inputDataRaw from '../data/isa-project-example.json';
 import expectedOutput from './isa-phm-out.json';
 import { expandStudiesIntoRuns } from '../utils/studyRuns';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 
 /**
@@ -27,6 +28,29 @@ import { expandStudiesIntoRuns } from '../utils/studyRuns';
 
 const BACKEND_URL = 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
+const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
+const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
+
+async function loadInputFixture() {
+  const candidates = [
+    path.resolve(process.cwd(), 'src/tests/fixtures/isa-project-example.json'),
+    path.resolve(process.cwd(), 'src/data/isa-project-example.json'),
+    path.resolve(process.cwd(), 'data/isa-project-example.json'),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const raw = await fs.readFile(candidate, 'utf8');
+      return JSON.parse(raw);
+    } catch {
+      // Try next path.
+    }
+  }
+
+  throw new Error(
+    `Missing integration fixture "isa-project-example.json". Looked in:\n${candidates.join('\n')}`
+  );
+}
 
 // Helper function to prepare the conversion payload from localStorage data
 function prepareConversionPayload(projectData) {
@@ -201,15 +225,15 @@ async function callConversionAPI(payload) {
   }
 }
 
-describe('ISA-PHM Conversion Integration Tests', () => {
+integrationDescribe('ISA-PHM Conversion Integration Tests', () => {
   let inputData;
   let apiOutput;
   let backendAvailable = false;
   let backendError = null;
 
   beforeAll(async () => {
-    // Load input data
-    inputData = JSON.parse(JSON.stringify(inputDataRaw));
+    // Load input data fixture.
+    inputData = await loadInputFixture();
 
     // Try to call the conversion API directly (backend may not have a root endpoint)
     try {

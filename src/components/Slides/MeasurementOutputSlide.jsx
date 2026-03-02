@@ -169,21 +169,46 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     };
 
     const handleGridRowDataChange = useCallback((nextRows) => {
-        const protocolByStudy = new Map();
+        const currentProtocolByStudy = new Map(
+            (studies || []).map((study) => [study.id, study.measurementProtocolId || ''])
+        );
+
+        const seenValuesByStudy = new Map();
         (nextRows || []).forEach((row) => {
-            if (!row?.studyId || protocolByStudy.has(row.studyId)) return;
-            protocolByStudy.set(row.studyId, row.measurementProtocolId || '');
+            if (!row?.studyId) return;
+            if (!seenValuesByStudy.has(row.studyId)) {
+                seenValuesByStudy.set(row.studyId, new Set());
+            }
+            seenValuesByStudy.get(row.studyId).add(row.measurementProtocolId || '');
+        });
+
+        const protocolByStudy = new Map();
+        seenValuesByStudy.forEach((valueSet, studyId) => {
+            const values = Array.from(valueSet);
+            const currentValue = currentProtocolByStudy.get(studyId) || '';
+            const changedValue = values.find((value) => value !== currentValue);
+            const nextValue = changedValue ?? (values[0] ?? currentValue);
+            if (nextValue !== currentValue) {
+                protocolByStudy.set(studyId, nextValue);
+            }
         });
 
         if (!protocolByStudy.size) return;
 
-        setStudies((prevStudies) => (prevStudies || []).map((study) => {
-            if (!protocolByStudy.has(study.id)) return study;
-            return {
-                ...study,
-                measurementProtocolId: protocolByStudy.get(study.id) || ''
-            };
-        }));
+        setStudies((prevStudies) => {
+            let changed = false;
+            const nextStudies = (prevStudies || []).map((study) => {
+                if (!protocolByStudy.has(study.id)) return study;
+                const nextProtocolId = protocolByStudy.get(study.id) || '';
+                if ((study.measurementProtocolId || '') === nextProtocolId) return study;
+                changed = true;
+                return {
+                    ...study,
+                    measurementProtocolId: nextProtocolId
+                };
+            });
+            return changed ? nextStudies : prevStudies;
+        });
 
         setStudyToMeasurementProtocolSelection((prev) => {
             const safePrev = Array.isArray(prev) ? prev : [];
@@ -192,9 +217,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             protocolByStudy.forEach((protocolId, studyId) => {
                 nextSelections.push({ studyId, protocolId: protocolId || '' });
             });
+            const unchanged = safePrev.length === nextSelections.length && safePrev.every((entry, index) => (
+                entry?.studyId === nextSelections[index]?.studyId &&
+                (entry?.protocolId || '') === (nextSelections[index]?.protocolId || '')
+            ));
+            if (unchanged) return safePrev;
             return nextSelections;
         });
-    }, [setStudies, setStudyToMeasurementProtocolSelection]);
+    }, [studies, setStudies, setStudyToMeasurementProtocolSelection]);
 
     return (
         <div ref={combinedRef} >

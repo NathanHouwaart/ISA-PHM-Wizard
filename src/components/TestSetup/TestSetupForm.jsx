@@ -934,7 +934,28 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     sensorToProcessingProtocolMapping: []
   };
 
-  const [formData, setFormData] = useState(initialFormState);
+  const buildFormState = (sourceItem) => {
+    if (!sourceItem) return initialFormState;
+    return {
+      name: sourceItem.name || '',
+      location: sourceItem.location || '',
+      experimentPreparationProtocolName: sourceItem.experimentPreparationProtocolName || '',
+      testSpecimenName: sourceItem.testSpecimenName || '',
+      description: sourceItem.description || '',
+      characteristics: sourceItem.characteristics || [],
+      sensors: sourceItem.sensors || [],
+      configurations: sourceItem.configurations || [],
+      measurementProtocols: sourceItem.measurementProtocols || [],
+      processingProtocols: sourceItem.processingProtocols || [],
+      sensorToMeasurementProtocolMapping: sourceItem.sensorToMeasurementProtocolMapping || [],
+      sensorToProcessingProtocolMapping: sourceItem.sensorToProcessingProtocolMapping || []
+    };
+  };
+
+  const [newFormHistoryScope] = useState(() => `new:${uuid4()}`);
+  const formHistoryScope = item?.id ? `testsetup:${item.id}` : `testsetup:${newFormHistoryScope}`;
+
+  const [formData, setFormData] = useState(() => buildFormState(item));
   const [formError, setFormError] = useState('');
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [activeTooltips, setActiveTooltips] = useState(false);
@@ -942,7 +963,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [sensorsView, setSensorsView] = useState('simple-view');
   const [configurationsView, setConfigurationsView] = useState('simple-view');
   const [showCloseWarning, setShowCloseWarning] = useState(false);
-  const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(initialFormState));
+  const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(buildFormState(item)));
   const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
   const [activeProcessingProtocolId, setActiveProcessingProtocolId] = useState(null);
 
@@ -977,27 +998,9 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   ]);
 
   useEffect(() => {
-    if (item) {
-      const nextFormData = {
-        name: item.name || '',
-        location: item.location || '',
-        experimentPreparationProtocolName: item.experimentPreparationProtocolName || '',
-        testSpecimenName: item.testSpecimenName || '',
-        description: item.description || '',
-        characteristics: item.characteristics || [],
-        sensors: item.sensors || [],
-        configurations: item.configurations || [],
-        measurementProtocols: item.measurementProtocols || [],
-        processingProtocols: item.processingProtocols || [],
-        sensorToMeasurementProtocolMapping: item.sensorToMeasurementProtocolMapping || [],
-        sensorToProcessingProtocolMapping: item.sensorToProcessingProtocolMapping || []
-      };
-      setFormData(nextFormData);
-      setInitialFingerprint(getDirtyFingerprint(nextFormData));
-    } else {
-      setFormData(initialFormState);
-      setInitialFingerprint(getDirtyFingerprint(initialFormState));
-    }
+    const nextFormData = buildFormState(item);
+    setFormData(nextFormData);
+    setInitialFingerprint(getDirtyFingerprint(nextFormData));
   }, [item]);
 
   useEffect(() => {
@@ -1049,6 +1052,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   const currentFingerprint = useMemo(() => getDirtyFingerprint(formData), [formData]);
   const hasUnsavedChanges = currentFingerprint !== initialFingerprint;
+  const historyScopeBase = `${formHistoryScope}:${initialFingerprint}`;
 
   const saveForm = useCallback(() => {
     if (
@@ -1769,6 +1773,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...characteristicGridConfig}
                 showControls={true}
                 showDebug={false}
+                historyScopeKey={`${historyScopeBase}:characteristics`}
                 isActive={selectedTab === 'characteristics' && characteristicsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
@@ -1813,6 +1818,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...sensorGridConfig}
                 showControls={true}
                 showDebug={false}
+                historyScopeKey={`${historyScopeBase}:sensors`}
                 isActive={selectedTab === 'sensors' && sensorsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
@@ -1855,6 +1861,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...configurationGridConfig}
                 showControls={true}
                 showDebug={false}
+                historyScopeKey={`${historyScopeBase}:configurations`}
                 isActive={selectedTab === 'configurations' && configurationsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
@@ -1973,6 +1980,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                               {...measurementProtocolGridConfig}
                               showControls={true}
                               showDebug={false}
+                              historyScopeKey={`${historyScopeBase}:measurement-protocol:${activeMeasurementProtocolId || 'none'}`}
                               isActive={selectedTab === 'measurement-protocols' && activeMeasurementProtocolId === protocol.id}
                               onDataChange={handleMeasurementProtocolMappingsChange}
                               onRowDataChange={(nextRows) => setFormData((prev) => ({
@@ -2105,6 +2113,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                               {...processingProtocolGridConfig}
                               showControls={true}
                               showDebug={false}
+                              historyScopeKey={`${historyScopeBase}:processing-protocol:${activeProcessingProtocolId || 'none'}`}
                               isActive={selectedTab === 'processing-protocols' && activeProcessingProtocolId === protocol.id}
                               onDataChange={handleProcessingProtocolMappingsChange}
                               onRowDataChange={(nextRows) => setFormData((prev) => ({

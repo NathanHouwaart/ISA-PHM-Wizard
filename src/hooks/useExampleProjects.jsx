@@ -100,9 +100,14 @@ export const resetExampleProject = async (projectId, options = {}) => {
 
         const getResetValue = (key) => {
             const fallback = getKeyFallback(key);
-            const lsKey = `globalAppData_${projectId}_${key}`;
-            if (baselineLS[lsKey]) {
-                try { return JSON.parse(baselineLS[lsKey]); } catch (e) { return fallback; }
+            const canonicalKey = `globalAppData_${projectId}_${key}`;
+            const legacyInvestigationKey = `globalAppData_${projectId}_investigations`;
+            const rawValue = key === 'investigation'
+                ? (baselineLS[canonicalKey] ?? baselineLS[legacyInvestigationKey])
+                : baselineLS[canonicalKey];
+
+            if (rawValue) {
+                try { return JSON.parse(rawValue); } catch (e) { return fallback; }
             }
             return fallback;
         };
@@ -131,11 +136,12 @@ export const resetExampleProject = async (projectId, options = {}) => {
 
         // Write the baseline data into per-project localStorage keys
         const keysToReset = [
-            'studies', 'investigations', 'contacts', 'publications', 'selectedTestSetupId',
+            'studies', 'investigation', 'contacts', 'publications', 'selectedTestSetupId',
             'studyVariables', 'measurementProtocols', 'processingProtocols', 'experimentType',
+            'studyToMeasurementProtocolSelection', 'studyToProcessingProtocolSelection',
             'studyToStudyVariableMapping', 'sensorToMeasurementProtocolMapping',
-            'studyToSensorMeasurementMapping', 'sensorToProcessingProtocolMapping',
-            'studyToSensorProcessingMapping'
+            'studyToSensorMeasurementMapping', 'sensorToProcessingProtocolMapping', 'studyToSensorProcessingMapping',
+            'pageTabStates'
         ];
 
         keysToReset.forEach(key => {

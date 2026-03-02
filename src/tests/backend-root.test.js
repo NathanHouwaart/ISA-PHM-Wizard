@@ -1,9 +1,12 @@
-// Simple integration test for backend root endpoint
-// This test attempts to GET http://localhost:8080/ and verifies the JSON payload.
-// It uses a short timeout to avoid hanging when the backend is not running.
+// Simple integration test for backend root endpoint.
+// Disabled by default to keep local/unit test runs hermetic.
+// Enable with: RUN_BACKEND_INTEGRATION=1 npm test
+
+const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
+const integrationTest = RUN_BACKEND_INTEGRATION ? test : test.skip;
 
 describe('Backend root endpoint', () => {
-  test('GET / returns API is running', async () => {
+  integrationTest('GET / returns API is running', async () => {
     const url = 'http://localhost:8080/';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
@@ -13,8 +16,7 @@ describe('Backend root endpoint', () => {
       res = await fetch(url, { signal: controller.signal });
     } catch (err) {
       clearTimeout(timeout);
-      // Provide a helpful error message when backend isn't reachable
-      throw new Error(`Failed to reach backend at ${url}: ${err.message}`);
+      throw new Error(`Failed to reach backend at ${url}: ${err.message}. Start backend or disable integration tests.`);
     }
 
     clearTimeout(timeout);
