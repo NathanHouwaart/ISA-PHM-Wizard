@@ -37,7 +37,7 @@ export const useDataGrid = ({
   }, []);
   
   // Default field mappings with fallbacks
-  const fields = {
+  const fields = useMemo(() => ({
     rowId: 'id',
     rowName: 'name', 
     columnId: 'id',
@@ -47,7 +47,21 @@ export const useDataGrid = ({
     mappingColumnId: 'studyVariableId', // or targetId, etc.
     mappingValue: 'value',
     ...fieldMappings
-  };
+  }), [fieldMappings]);
+
+  const normalizeMappingsForComparison = useCallback((list = []) => {
+    return (list || [])
+      .map((mapping) => ({
+        row: String(mapping?.[fields.mappingRowId] ?? ''),
+        col: String(mapping?.[fields.mappingColumnId] ?? ''),
+        value: JSON.stringify(mapping?.[fields.mappingValue] ?? '')
+      }))
+      .sort((a, b) => {
+        if (a.row !== b.row) return a.row.localeCompare(b.row);
+        if (a.col !== b.col) return a.col.localeCompare(b.col);
+        return a.value.localeCompare(b.value);
+      });
+  }, [fields.mappingRowId, fields.mappingColumnId, fields.mappingValue]);
 
   // Determine if this is a standalone grid (no dynamic columns/mappings)
   const isStandaloneGrid = columnData.length === 0;
@@ -157,46 +171,27 @@ export const useDataGrid = ({
       const incoming = mappings || [];
       const current = currentMappingsRef.current || [];
 
-      // If incoming mappings are deeply equal to current internal mappings, it's likely
-      // the change originated from this hook and was echoed back by the parent — ignore.
-      if (JSON.stringify(incoming) === JSON.stringify(current)) {
+      // Compare only row/column/value semantics so parent-added metadata
+      // (for example protocolId) does not create false "changes".
+      const normalizedIncoming = normalizeMappingsForComparison(incoming);
+      const normalizedCurrent = normalizeMappingsForComparison(current);
+
+      // If incoming mappings are semantically equal to current internal mappings,
+      // the change likely originated from this hook and was echoed back by the parent.
+      if (JSON.stringify(normalizedIncoming) === JSON.stringify(normalizedCurrent)) {
         prevMappingsRef.current = incoming;
         return;
       }
 
-      // Adopt external mappings into internal state
+      // Adopt external mappings into internal state.
+      // Do not push a history entry here; history is recorded by explicit grid edits.
       prevMappingsRef.current = incoming;
       setCurrentMappings(incoming);
-
-      // Record the external change into history (paired snapshot)
-      setMappingHistory(prev => {
-        const copy = prev.slice(0);
-        copy.push(JSON.parse(JSON.stringify(incoming)));
-        // Trim if needed
-        if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
-        mappingHistoryRef.current = copy;
-        return copy;
-      });
-
-      setRowDataHistory(prev => {
-        const copy = prev.slice(0);
-        copy.push(JSON.parse(JSON.stringify(currentRowDataRef.current || rowData)));
-        if (copy.length > maxHistorySize) copy.splice(0, copy.length - maxHistorySize);
-        rowDataHistoryRef.current = copy;
-        return copy;
-      });
-
-      // Update history index to newest
-      setHistoryIndex(() => {
-        const idx = mappingHistoryRef.current.length - 1;
-        historyIndexRef.current = idx;
-        return idx;
-      });
     } catch (err) {
       console.error('[useDataGrid] error syncing external mappings prop', err);
     }
-  // Only depend on external mapping prop and a few stable inputs
-  }, [mappings, isStandaloneGrid, maxHistorySize, rowData, fields]);
+  // Only depend on external mapping prop and semantic comparator
+  }, [mappings, isStandaloneGrid, normalizeMappingsForComparison]);
 
   // Track structural changes to columns (e.g. variables added/removed) and record them in history
   useEffect(() => {
@@ -261,49 +256,64 @@ export const useDataGrid = ({
   const canRedo = historyIndex < mappingHistory.length - 1;
 
   const undo = useCallback(() => {
-    if (canUndo) {
-      console.log('[useDataGrid] undo', { historyIndex });
-      const newIndex = Math.max(0, historyIndex - 1);
-      setHistoryIndex(newIndex);
-      const newRowData = rowDataHistory[newIndex] || [];
-      setCurrentRowData(newRowData);
-      if (onRowDataChange) {
-        isUpdatingExternally.current = true;
-        onRowDataChange(newRowData);
-      }
-      const newMappings = mappingHistory[newIndex] || [];
-      setCurrentMappings(newMappings);
+    const index = historyIndexRef.current;
+    if (index <= 0) return;
+
+    const newIndex = index - 1;
+    const nextRowData = rowDataHistoryRef.current[newIndex] || [];
+    const nextMappings = mappingHistoryRef.current[newIndex] || [];
+
+    historyIndexRef.current = newIndex;
+    setHistoryIndex(newIndex);
+
+    currentRowDataRef.current = nextRowData;
+    setCurrentRowData(nextRowData);
+
+    currentMappingsRef.current = nextMappings;
+    setCurrentMappings(nextMappings);
+
+    if (onRowDataChange) {
+      isUpdatingExternally.current = true;
+      onRowDataChange(nextRowData);
     }
-  }, [canUndo, historyIndex, rowDataHistory, mappingHistory, onRowDataChange]);
+  }, [onRowDataChange]);
 
   const redo = useCallback(() => {
-    if (canRedo) {
-      console.log('[useDataGrid] redo', { historyIndex });
-      const newIndex = Math.min(Math.max(rowDataHistory.length, mappingHistory.length) - 1, historyIndex + 1);
-      setHistoryIndex(newIndex);
-      const newRowData = rowDataHistory[newIndex] || [];
-      setCurrentRowData(newRowData);
-      if (onRowDataChange) {
-        isUpdatingExternally.current = true;
-        onRowDataChange(newRowData);
-      }
-      const newMappings = mappingHistory[newIndex] || [];
-      setCurrentMappings(newMappings);
+    const maxIndex = Math.max(rowDataHistoryRef.current.length, mappingHistoryRef.current.length) - 1;
+    const index = historyIndexRef.current;
+    if (index >= maxIndex) return;
+
+    const newIndex = index + 1;
+    const nextRowData = rowDataHistoryRef.current[newIndex] || [];
+    const nextMappings = mappingHistoryRef.current[newIndex] || [];
+
+    historyIndexRef.current = newIndex;
+    setHistoryIndex(newIndex);
+
+    currentRowDataRef.current = nextRowData;
+    setCurrentRowData(nextRowData);
+
+    currentMappingsRef.current = nextMappings;
+    setCurrentMappings(nextMappings);
+
+    if (onRowDataChange) {
+      isUpdatingExternally.current = true;
+      onRowDataChange(nextRowData);
     }
-  }, [canRedo, historyIndex, rowDataHistory, mappingHistory, onRowDataChange]);
+  }, [onRowDataChange]);
 
   const addToHistory = useCallback((newMappings) => {
-    // Debug: show mappings being added to history
-    // eslint-disable-next-line no-console
-    console.debug('[useDataGrid] addToHistory called, mappingsCount=', (newMappings || []).length);
     // Push mapping snapshot and current rowData snapshot together to keep histories aligned
-    console.log('[useDataGrid] addToHistory', { newMappings, historyIndex });
-    const newMappingHistory = mappingHistory.slice(0, historyIndex + 1);
+    const currentIndex = historyIndexRef.current;
+    const baseMappingHistory = mappingHistoryRef.current || [];
+    const baseRowHistory = rowDataHistoryRef.current || [];
+
+    const newMappingHistory = baseMappingHistory.slice(0, currentIndex + 1);
     newMappingHistory.push(JSON.parse(JSON.stringify(newMappings)));
 
-    const newRowHistory = rowDataHistory.slice(0, historyIndex + 1);
+    const newRowHistory = baseRowHistory.slice(0, currentIndex + 1);
     // Use currentRowData if available, else fallback to provided rowData
-    newRowHistory.push(JSON.parse(JSON.stringify(currentRowData || rowData)));
+    newRowHistory.push(JSON.parse(JSON.stringify(currentRowDataRef.current || rowData)));
 
     // Trim histories if needed
     if (newMappingHistory.length > maxHistorySize) {
@@ -313,26 +323,33 @@ export const useDataGrid = ({
     }
 
     const newIndex = newMappingHistory.length - 1;
+    historyIndexRef.current = newIndex;
     setHistoryIndex(newIndex);
+    mappingHistoryRef.current = newMappingHistory;
     setMappingHistory(newMappingHistory);
+    rowDataHistoryRef.current = newRowHistory;
     setRowDataHistory(newRowHistory);
+    currentMappingsRef.current = newMappings;
     setCurrentMappings(newMappings);
-    setCurrentRowData(newRowHistory[newRowHistory.length - 1]);
-  }, [mappingHistory, rowDataHistory, historyIndex, maxHistorySize, currentRowData, rowData]);
+    currentRowDataRef.current = newRowHistory[newRowHistory.length - 1];
+    setCurrentRowData(currentRowDataRef.current);
+  }, [maxHistorySize, rowData]);
 
   // Add to row data history for all grids
   const addToRowDataHistory = useCallback((newRowData) => {
     // Push rowData snapshot and current mappings snapshot together to keep histories aligned
-    console.log('[useDataGrid] addToRowDataHistory', { newRowData, historyIndex });
-    const last = rowDataHistory[historyIndex];
+    const currentIndex = historyIndexRef.current;
+    const baseRowHistory = rowDataHistoryRef.current || [];
+    const baseMappingHistory = mappingHistoryRef.current || [];
+    const last = baseRowHistory[currentIndex];
     const isDifferent = JSON.stringify(last) !== JSON.stringify(newRowData);
     if (!isDifferent) return;
 
-    const newRowHistory = rowDataHistory.slice(0, historyIndex + 1);
+    const newRowHistory = baseRowHistory.slice(0, currentIndex + 1);
     newRowHistory.push(JSON.parse(JSON.stringify(newRowData)));
 
-    const newMappingHistory = mappingHistory.slice(0, historyIndex + 1);
-    newMappingHistory.push(JSON.parse(JSON.stringify(currentMappings || mappings)));
+    const newMappingHistory = baseMappingHistory.slice(0, currentIndex + 1);
+    newMappingHistory.push(JSON.parse(JSON.stringify(currentMappingsRef.current || mappings)));
 
     // Trim histories if needed
     if (newRowHistory.length > maxHistorySize) {
@@ -342,19 +359,23 @@ export const useDataGrid = ({
     }
 
     const newIndex = newRowHistory.length - 1;
+    historyIndexRef.current = newIndex;
     setHistoryIndex(newIndex);
+    rowDataHistoryRef.current = newRowHistory;
     setRowDataHistory(newRowHistory);
+    mappingHistoryRef.current = newMappingHistory;
     setMappingHistory(newMappingHistory);
-    setCurrentRowData(newRowHistory[newRowHistory.length - 1]);
-    setCurrentMappings(newMappingHistory[newMappingHistory.length - 1]);
+    currentRowDataRef.current = newRowHistory[newRowHistory.length - 1];
+    setCurrentRowData(currentRowDataRef.current);
+    currentMappingsRef.current = newMappingHistory[newMappingHistory.length - 1];
+    setCurrentMappings(currentMappingsRef.current);
 
     // Notify parent once
     if (onRowDataChange && !isUpdatingExternally.current) {
       isUpdatingExternally.current = true;
       onRowDataChange(newRowData);
-      isUpdatingExternally.current = false;
     }
-  }, [rowDataHistory, mappingHistory, historyIndex, maxHistorySize, onRowDataChange, currentMappings, mappings]);
+  }, [maxHistorySize, onRowDataChange, mappings]);
 
   // Create optimized mapping lookup for O(1) access
   const mappingLookup = useMemo(() => {
@@ -571,9 +592,6 @@ export const useDataGrid = ({
 
   // Update multiple mappings in batch
   const updateMappingsBatch = useCallback((updates) => {
-    // Debug: show incoming batch updates
-    // eslint-disable-next-line no-console
-    console.log('[useDataGrid] updateMappingsBatch called with updates=', updates && updates.slice ? updates.slice(0,50) : updates);
     let newMappings = [...currentMappings];
     
     updates.forEach(({ rowId, columnId, value }) => {
@@ -666,12 +684,7 @@ export const useDataGrid = ({
         : row
     );
     addToRowDataHistory(newRowData);
-    // Notify parent component
-    if (onRowDataChange) {
-      isUpdatingExternally.current = true;
-      onRowDataChange(newRowData);
-    }
-  }, [activeRowData, fields, addToRowDataHistory, onRowDataChange, sanitizeValue]);
+  }, [activeRowData, fields, addToRowDataHistory, sanitizeValue]);
 
   // Batch update row data for all grids (used for range edits)
   const updateRowDataBatch = useCallback((newRowData) => {
@@ -688,14 +701,7 @@ export const useDataGrid = ({
 
     // Push the paired snapshot (rows + mappings) into history
     addToRowDataHistory(newRowData);
-
-    // Prevent recursion: only call onRowDataChange if not already updating externally
-    if (onRowDataChange && !isUpdatingExternally.current) {
-      isUpdatingExternally.current = true;
-      onRowDataChange(newRowData);
-      isUpdatingExternally.current = false;
-    }
-  }, [addToRowDataHistory, onRowDataChange]);
+  }, [addToRowDataHistory, currentMappings, fields]);
 
   // Clear a specific cell
   const clearCell = useCallback((rowId, columnId) => {
@@ -806,3 +812,4 @@ export const useDataGrid = ({
     mappingLookup
   };
 };
+

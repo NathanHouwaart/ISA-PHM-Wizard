@@ -696,7 +696,7 @@ const DataGrid = forwardRef(({
         if (DBG) console.log('[DataGrid] handleClearCell called');
         const gridElement = gridRef.current;
         if (!gridElement) {
-            console.log('[DataGrid] No grid element found');
+            if (DBG) console.log('[DataGrid] No grid element found');
             return false;
         }
 
@@ -704,7 +704,7 @@ const DataGrid = forwardRef(({
             // Use the grid's getSelectedRange API instead of DOM parsing
             if (typeof gridElement.getSelectedRange === 'function') {
                 const selectedRange = await gridElement.getSelectedRange();
-                console.log('[DataGrid] Selected range for clear:', selectedRange);
+                if (DBG) console.log('[DataGrid] Selected range for clear:', selectedRange);
                 
                 if (selectedRange) {
                     // Translate coordinates if we have colType
@@ -830,6 +830,7 @@ const DataGrid = forwardRef(({
                 if (handleClearCell()) {
                     event.preventDefault();
                     event.stopPropagation();
+                    event.stopImmediatePropagation();
                 }
                 return;
             }
@@ -840,10 +841,12 @@ const DataGrid = forwardRef(({
                 if (event.key === 'z' && !event.shiftKey) {
                     event.preventDefault();
                     event.stopPropagation();
+                    event.stopImmediatePropagation();
                     undo();
                 } else if ((event.key === 'y') || (event.key === 'z' && event.shiftKey)) {
                     event.preventDefault();
                     event.stopPropagation();
+                    event.stopImmediatePropagation();
                     redo();
                 }
             }
@@ -851,7 +854,7 @@ const DataGrid = forwardRef(({
 
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-    }, [undo, redo, handleClearCell]);
+    }, [isActive, undo, redo, handleClearCell]);
 
     // Handle paste region event - let RevoGrid handle the paste operation internally
     // We intercept the clipboardrangepaste event which provides proper coordinate information
@@ -867,7 +870,7 @@ const DataGrid = forwardRef(({
         
         const { data, range, models } = event.detail;
         if (!data || !range) {
-            console.log('[DataGrid] No valid clipboard paste data');
+            if (DBG) console.log('[DataGrid] No valid clipboard paste data');
             return;
         }
         
@@ -889,7 +892,7 @@ const DataGrid = forwardRef(({
                 const rowIndex = parseInt(rowIndexStr, 10);
                 const row = getRowByIndex(rowIndex);
                 if (!row) {
-                    console.log('[DataGrid] Row not found for index:', rowIndex);
+                    if (DBG) console.log('[DataGrid] Row not found for index:', rowIndex);
                     continue;
                 }
                 
@@ -956,7 +959,7 @@ const DataGrid = forwardRef(({
 
     // Handle clear region event - let the existing handleClearCell handle the logic
     const handleClearRegion = useCallback((event) => {
-        console.log('[DataGrid] handleClearRegion - delegating to handleClearCell:', event.detail);
+        if (DBG) console.log('[DataGrid] handleClearRegion - delegating to handleClearCell:', event.detail);
         // RevoGrid's clear region works by calling clearCell on selected ranges
         // Our existing handleClearCell already handles this with proper coordinate translation
         handleClearCell(event);

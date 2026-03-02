@@ -9,14 +9,16 @@ const TabSwitcher = ({ selectedTab, onTabChange, tabs, className = '' }) => {
             {tabs.map((tab) => (
                  <TooltipButton 
                     key={tab.id}
-                    className={`bg-transparent cursor-pointer w-full justify-around py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
+                    className={`bg-transparent cursor-pointer flex-1 min-w-0 justify-center py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
                         ? 'bg-white text-blue-600 shadow-md'
                         : 'text-gray-600 hover:bg-gray-200'
                         }`}
                     onClick={() => onTabChange(tab.id)}
                     tooltipText={tab.tooltip}
                 >
-                    {tab.label}
+                    <span className="block w-full text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                        {tab.label}
+                    </span>
                 </TooltipButton>
             ))}
         </div>

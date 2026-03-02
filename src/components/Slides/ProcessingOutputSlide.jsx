@@ -44,6 +44,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
         setStudies,
         testSetups,
         selectedTestSetupId,
+        selectedDataset,
         studyToProcessingProtocolSelection,
         setStudyToProcessingProtocolSelection
     } = useGlobalDataContext();
@@ -225,7 +226,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                     </WarningBanner>
                 )}
                 {selectedTestSetupId && sensors.length === 0 && (
-                    <WarningBanner type="info">
+                    <WarningBanner type="warning">
                         <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map processing outputs. Add sensors to your test setup or select a different one.
                     </WarningBanner>
                 )}
@@ -264,13 +265,18 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                 </TabPanel>
 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
+                    {!selectedDataset && (
+                        <WarningBanner type="info">
+                            <strong>No dataset indexed.</strong> To use the file assignment feature (<strong>📁 Assign files</strong> button), you need to index a dataset first. Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and index a folder containing your processed data files.
+                        </WarningBanner>
+                    )}
                     <DataGrid
                         {...processingOutputGridConfig}
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleGridRowDataChange}
-                        height={WINDOW_HEIGHT}
+                        height={"45vh"}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                         actionPlugins={[FilePickerPlugin]}
                         plugins={plugins}

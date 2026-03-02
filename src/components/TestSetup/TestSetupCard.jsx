@@ -53,28 +53,28 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
               </Paragraph>
             </div>
 
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <div className="flex items-center space-x-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Gauge className="w-4 h-4" />
-                <span>{item.number_of_sensors} sensor{item.number_of_sensors !== 1 ? 's' : ''}</span>
+                <span>{item.number_of_sensors ?? item.sensors?.length ?? 0} sensor{(item.number_of_sensors ?? item.sensors?.length ?? 0) !== 1 ? 's' : ''}</span>
               </div>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Settings className="w-4 h-4" />
                 <span>{characteristicsCount} characteristic{characteristicsCount !== 1 ? 's' : ''}</span>
               </div>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Layers className="w-4 h-4" />
                 <span>{configurationsCount} configuration{configurationsCount !== 1 ? 's' : ''}</span>
               </div>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Layers className="w-4 h-4" />
                 <span>{measurementProtocolCount} measurement protocol{measurementProtocolCount !== 1 ? 's' : ''}</span>
               </div>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Layers className="w-4 h-4" />
                 <span>{processingProtocolCount} processing protocol{processingProtocolCount !== 1 ? 's' : ''}</span>
               </div>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <MessageCircle className="w-4 h-4" />
                 <span>{totalComments} comment{totalComments !== 1 ? 's' : ''}</span>
               </div>
