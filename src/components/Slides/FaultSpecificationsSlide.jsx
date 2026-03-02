@@ -110,7 +110,7 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Define the fault specifications for your studies. These variables describe the faults or conditions being tested, excluding operating conditions.
+                Define the fault specifications for your experiments. These variables describe the faults or conditions being tested, excluding operating conditions.
             </SlidePageSubtitle>
 
             <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">

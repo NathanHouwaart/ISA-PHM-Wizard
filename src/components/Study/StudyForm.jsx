@@ -76,7 +76,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
       <div className="sticky top-0 bg-white border-b border-gray-300 px-6 py-4 z-10">
         <div className="flex items-center justify-between">
           <Heading3 className="text-xl font-semibold text-gray-900">
-            {isEditing ? 'Edit Study' : 'Add new Study'}
+            {isEditing ? 'Edit Experiment' : 'Add new Experiment'}
           </Heading3>
           <TooltipButton
             className="p-2 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -101,11 +101,11 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             name={"name"}
             onChange={handleChange}
             value={formData.name}
-            label="Study Name"
+            label="Experiment Name"
             type='text'
-            placeholder="Study Name"
-            explanation="Name of the study"
-            example="BPFO Fault Severty 1 100%"
+            placeholder="Experiment Name"
+            explanation="Name of the experiment"
+            example="BPFO Fault Severity 1 100%"
             required
           />
 
@@ -113,10 +113,10 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             name={"description"}
             onChange={handleChange}
             value={formData.description}
-            label="Study Description"
+            label="Description"
             type='textarea'
-            placeholder="Study Description"
-            explanation="Description of the study"
+            placeholder="Description"
+            explanation="Description of the experiment"
             example="A bearing with a BPFO fault of severity 1 at 100% speed"
           />
 
@@ -124,9 +124,9 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             name={"submissionDate"}
             onChange={handleChange}
             value={formData.submissionDate}
-            label="Submission Date"
+            label="Experiment execution date"
             type='date'
-            explanation="The date when the study data was submitted to the database. If not applicable, please leave empty." 
+            explanation="The date when the experiment data was executed." 
             example="10-12-2024"
           />
 

@@ -13,7 +13,7 @@ export const EXPERIMENT_TYPE_OPTIONS = [
     },
     {
         id: 'prognostics-experiment',
-        title: 'Run-to-failure experiment · condition trending',
+        title: 'Prognostics Experiment',
         subtitle: '',
         description: 'Degradation or Run-to-Failure tests – select this when you captured the response of the system during (long term) degradation, in one or multiple runs or trajectories.',
         examples: ['Milling tool wear with periodic inspection', 'Bearing trending with intermediate checks'],

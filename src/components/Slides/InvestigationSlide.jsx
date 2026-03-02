@@ -99,6 +99,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     );
 });
 
-InvestigationSlide.displayName = "Investigation"; // Set display name for better debugging
+InvestigationSlide.displayName = "Project Information"; // Set display name for better debugging
 
 export default InvestigationSlide;

@@ -4,6 +4,7 @@ export const VARIABLE_TYPE_OPTIONS = [
     'Operating condition',
     'Time',
     'Damage',
+    'RUL',
     'Other'
 ];
 

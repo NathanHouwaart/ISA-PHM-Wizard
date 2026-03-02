@@ -30,7 +30,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Manage the contributors to the investigation, and assign their roles.
+                Manage the publications related to the project.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-2'>

@@ -30,7 +30,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
             </SlidePageTitle>
             
             <SlidePageSubtitle>
-                Manage the contributors to the investigation, and assign their roles.
+                Manage the contributors to the project, and assign their roles.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-4'>

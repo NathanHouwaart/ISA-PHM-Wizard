@@ -113,7 +113,7 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Define the operating conditions for your studies (e.g., speed, load, temperature). These are distinct from fault specifications.
+                Define the operating conditions for your experiments (e.g., speed, load, temperature). These are distinct from fault specifications.
             </SlidePageSubtitle>
 
             <div className="bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative">

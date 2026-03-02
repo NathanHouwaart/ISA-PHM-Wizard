@@ -194,12 +194,12 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 <TabPanel isActive={selectedTab === 'simple-view'}>
                     {studies.length === 0 && (
                         <WarningBanner type="warning">
-                            <strong>No studies available.</strong> Create studies before mapping variables.
+                            <strong>No experiments available.</strong> Create experiments before mapping variables.
                         </WarningBanner>
                     )}
                     {studyVariables.length === 0 && (
                         <WarningBanner type="info">
-                            <strong>No variables defined.</strong> Add variables in the Study Variable Definitions slide to start mapping them.
+                            <strong>No operating conditions or fault specifications defined.</strong> Add them in the previous slides to start mapping them.
                         </WarningBanner>
                     )}
                     <div className="h-[45vh] flex flex-col overflow-hidden">
@@ -218,13 +218,13 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 <TabPanel isActive={selectedTab === 'grid-view'}>
                     {studies.length === 0 && (
                         <WarningBanner type="warning">
-                            <strong>No studies available.</strong> Create studies before mapping variables.
+                            <strong>No experiments available.</strong> Create experiments before mapping variables.
                         </WarningBanner>
                     )}
 
                     {studyVariables.length === 0 && (
                         <WarningBanner type="info">
-                            <strong>No variables defined.</strong> Add variables first to work in the grid view.
+                            <strong>No operating conditions or fault specifications defined.</strong> Add them in the previous slides to work in the grid view.
                         </WarningBanner>
                     )}
                     {!selectedDataset && (
@@ -238,17 +238,17 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                             <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-6">
                                 <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                     <Heading3 className="text-lg font-semibold text-gray-900">
-                                        Study variable mappings - All studies
+                                        Test Matrix - All Experiments
                                     </Heading3>
                                     {singleRunColumns.length > 0 && (
                                         <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                            {singleRunColumns.length} stud{singleRunColumns.length === 1 ? 'y' : 'ies'}
+                                            {singleRunColumns.length} experiment{singleRunColumns.length === 1 ? '' : 's'}
                                         </span>
                                     )}
                                 </div>
                                 {singleRunColumns.length === 0 ? (
                                     <Paragraph className="text-sm text-gray-500">
-                                        This project has no studies with runs to map.
+                                        This project has no experiments with runs to map.
                                     </Paragraph>
                                 ) : (
                                     <>
@@ -312,7 +312,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                     >
                                         <div className="flex items-baseline justify-between gap-3 flex-wrap">
                                             <Heading3 className="text-lg font-semibold text-gray-900">
-                                                Study variable mappings - {study.name}
+                                                Test Matrix - {study.name}
                                             </Heading3>
                                             {hasRuns && (
                                                 <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -322,7 +322,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                         </div>
                                         {!hasRuns && (
                                             <Paragraph className="text-sm text-gray-500">
-                                                This study has no runs defined yet.
+                                                This experiment has no runs defined yet.
                                             </Paragraph>
                                         )}
 
@@ -352,7 +352,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                             </>
                                         ) : (
                                             <Paragraph className="text-sm text-gray-500 italic">
-                                                Add runs to this study to enable variable mappings.
+                                                Add runs to this experiment to enable variable mappings.
                                             </Paragraph>
                                         )}
                                     </section>
@@ -366,6 +366,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     );
 });
 
-StudyVariableSlide.displayName = 'Study Variable Mappings';
+StudyVariableSlide.displayName = 'Experiment Variable Mappings';
 
 export default StudyVariableSlide;

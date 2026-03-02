@@ -60,10 +60,10 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const addNewStudy = () => {
         const newStudy = {
             id: generateId(),
-            name: `New Study ${studies.length + 1}`,
+            name: `New Experiment ${studies.length + 1}`,
             description: 'Enter description...',
             submissionDate: "",
-            publicationDate: "",
+            publicationDate: "", 
             configurationId: '',
             runCount: 1
         };
@@ -84,16 +84,16 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
 
     // Grid configuration for studies
     const studiesGridConfig = {
-        title: 'Studies Data',
+        title: 'Experiment Grid',
         rowData: studies,
         columnData: [], // No dynamic columns for standalone grid
         mappings: [], // No mappings for standalone grid
         customActions: [
             {
-                label: '+ Add Study',
+                label: '+ Add Experiment',
                 onClick: addNewStudy,
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
-                title: 'Add a new study'
+                title: 'Add a new experiment'
             }
         ],
             staticColumns: [
@@ -110,7 +110,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 name: 'Identifier',
                 size: 150,
                 readonly: true,
-                cellTemplate: Template(PatternCellTemplate, { prefix: 'Study S' }),
+                cellTemplate: Template(PatternCellTemplate, { prefix: 'Experiment S' }),
                 cellProperties: () => ({
                     style: {
                         "border-right": "3px solid "
@@ -119,7 +119,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             },
             {
                 prop: 'name',
-                name: 'Study Name',
+                name: 'Experiment Name',
                 size: 200,
                 readonly: false
             },
@@ -131,7 +131,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             },
             {
                 prop: 'submissionDate',
-                name: 'Study Date',
+                name: 'Experiment Date',
                 size: 180,
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
@@ -166,11 +166,11 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         <div ref={combinedRef}>
 
             <SlidePageTitle>
-                Studies
+                Experiment descriptions
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                The studies describe the experiments performed within the research project. For example, each test with a different tested component (e.g. bearing) or run-to-failure trajectory is described in a new study. The relevant study parameters can be described on the following page.
+                Describe the experiments performed within the research project. For example, each test with a different tested component (e.g. bearing) is described in a new experiment. The associated faults and operating conditions can be described on the following page.
             </SlidePageSubtitle>
           
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
@@ -190,12 +190,12 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                             itemHook={useStudies} // This hook will need to pull 'studies' from the global context
                             grid={true}
                         >
-                            <CollectionTitle>Studies ({studies?.length || 0})</CollectionTitle>
-                            <CollectionSubtitle>View, add and edit Studies</CollectionSubtitle>
-                            <CollectionAddButtonText>Add Study</CollectionAddButtonText>
-                            <CollectionEmptyStateTitle>No Studies Found</CollectionEmptyStateTitle>
-                            <CollectionEmptyStateSubtitle>Get started by adding your first Study</CollectionEmptyStateSubtitle>
-                            <CollectionEmptyStateAddButtonText>Add Study Now</CollectionEmptyStateAddButtonText>
+                            <CollectionTitle>Experiments ({studies?.length || 0})</CollectionTitle>
+                            <CollectionSubtitle>View, add and edit Experiments</CollectionSubtitle>
+                            <CollectionAddButtonText>Add Experiment</CollectionAddButtonText>
+                            <CollectionEmptyStateTitle>No Experiments Found</CollectionEmptyStateTitle>
+                            <CollectionEmptyStateSubtitle>Get started by adding your first Experiment</CollectionEmptyStateSubtitle>
+                            <CollectionEmptyStateAddButtonText>Add Experiment Now</CollectionEmptyStateAddButtonText>
                         </Collection>
                     </div>
                 </TabPanel>
@@ -216,6 +216,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     );
 });
 
-StudySlide.displayName = "Studies"; // Set display name for better debugging
+StudySlide.displayName = "Experiments"; // Set display name for better debugging
 
 export default StudySlide;
