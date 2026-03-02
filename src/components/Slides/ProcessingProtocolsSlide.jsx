@@ -133,7 +133,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         ],
         customActions: [
             {
-                label: '+ Add Protocol',
+                label: '+ Add Protocol parameter',
                 onClick: addNewProtocol,
                 className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
                 title: 'Add a new protocol'

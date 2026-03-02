@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useMemo } from 'react'
 import { Layers } from 'lucide-react';
 
 // Import hooks
@@ -21,12 +21,13 @@ import useMappingsController from '../../hooks/useMappingsController';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import useStudyRuns from '../../hooks/useStudyRuns';
-import StudyRunMappingPanel from '../Study/StudyRunMappingPanel';
 import DualSidebarStudyRunPanel from '../Study/DualSidebarStudyRunPanel';
 import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
 import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellProperties } from '../../utils/gridCellTemplates';
+import SelectTypePlugin from '@revolist/revogrid-column-select';
 
+const plugins = { select: new SelectTypePlugin() };
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -40,9 +41,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     // Access global context
     const {
         studies,
+        setStudies,
         testSetups,
         selectedTestSetupId,
         selectedDataset,
+        studyToMeasurementProtocolSelection,
+        setStudyToMeasurementProtocolSelection
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
@@ -51,6 +55,41 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
         : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
+
+    const measurementProtocolOptions = useMemo(
+        () => (selectedTestSetup?.measurementProtocols || []).map((protocol) => ({
+            value: protocol.id,
+            label: protocol.name || 'Unnamed protocol'
+        })),
+        [selectedTestSetup]
+    );
+
+    const selectedMeasurementProtocolByStudy = useMemo(() => {
+        const byStudy = {};
+        (studyToMeasurementProtocolSelection || []).forEach((entry) => {
+            if (!entry?.studyId) return;
+            byStudy[entry.studyId] = entry.protocolId || '';
+        });
+        studies.forEach((study) => {
+            if (!study?.id) return;
+            if (study.measurementProtocolId && !byStudy[study.id]) {
+                byStudy[study.id] = study.measurementProtocolId;
+            }
+        });
+        return byStudy;
+    }, [studyToMeasurementProtocolSelection, studies]);
+
+    const updateStudyMeasurementProtocol = useCallback((studyId, protocolId) => {
+        if (!studyId) return;
+        setStudies((prevStudies) => (prevStudies || []).map((study) => (
+            study.id === studyId ? { ...study, measurementProtocolId: protocolId || '' } : study
+        )));
+        setStudyToMeasurementProtocolSelection((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const withoutStudy = safePrev.filter((entry) => entry?.studyId !== studyId);
+            return [...withoutStudy, { studyId, protocolId: protocolId || '' }];
+        });
+    }, [setStudies, setStudyToMeasurementProtocolSelection]);
 
     // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
     const mappingsController = useMappingsController(
@@ -104,9 +143,58 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
             pin: 'colPinStart',
             cellTemplate: runCellTemplate,
             cellProperties: runCellProperties
+        },
+        {
+            prop: 'measurementProtocolId',
+            name: 'Measurement Protocol',
+            size: 260,
+            readonly: false,
+            pin: 'colPinStart',
+            columnType: 'select',
+            labelKey: 'label',
+            valueKey: 'value',
+            source: measurementProtocolOptions,
+            cellProperties: (props) => {
+                const model = props?.model;
+                const style = {
+                    "border-right": "3px solid black"
+                };
+                if (model?.isLastRunInStudy) {
+                    style["border-bottom"] = "3px solid black";
+                }
+                return { style };
+            }
         }
-        ]), [])
+        ]), [measurementProtocolOptions])
     };
+
+    const handleGridRowDataChange = useCallback((nextRows) => {
+        const protocolByStudy = new Map();
+        (nextRows || []).forEach((row) => {
+            if (!row?.studyId || protocolByStudy.has(row.studyId)) return;
+            protocolByStudy.set(row.studyId, row.measurementProtocolId || '');
+        });
+
+        if (!protocolByStudy.size) return;
+
+        setStudies((prevStudies) => (prevStudies || []).map((study) => {
+            if (!protocolByStudy.has(study.id)) return study;
+            return {
+                ...study,
+                measurementProtocolId: protocolByStudy.get(study.id) || ''
+            };
+        }));
+
+        setStudyToMeasurementProtocolSelection((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const filtered = safePrev.filter((entry) => !protocolByStudy.has(entry?.studyId));
+            const nextSelections = [...filtered];
+            protocolByStudy.forEach((protocolId, studyId) => {
+                nextSelections.push({ studyId, protocolId: protocolId || '' });
+            });
+            return nextSelections;
+        });
+    }, [setStudies, setStudyToMeasurementProtocolSelection]);
 
     return (
         <div ref={combinedRef} >
@@ -141,6 +229,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map measurement outputs. Add sensors to your test setup or select a different one.
                     </WarningBanner>
                 )}
+                {selectedTestSetupId && measurementProtocolOptions.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No measurement protocols in test setup.</strong> Define one or more measurement protocol variants in the Test Setup page to select them per study.
+                    </WarningBanner>
+                )}
                 {studies.length === 0 && (
                     <WarningBanner type="warning">
                         <strong>No studies available.</strong> There are no studies in the workspace. Create or import studies first so you can map measurement outputs to them.
@@ -157,6 +250,13 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                                 handleInputChange={mappingsController.updateMappingValue}
                                 minHeight={WINDOW_HEIGHT}
                                 MappingCardComponent={StudyMeasurementMappingCard}
+                                mappingCardProps={{
+                                    protocolLabel: 'Measurement Protocol',
+                                    protocolOptions: measurementProtocolOptions,
+                                    selectedProtocolByStudy: selectedMeasurementProtocolByStudy,
+                                    onStudyProtocolChange: updateStudyMeasurementProtocol,
+                                    fileFieldLabel: 'Raw Measurement File'
+                                }}
                             />
                     </div>
                 </TabPanel>
@@ -173,9 +273,11 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
                         // Debugging turned off by default
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
+                        onRowDataChange={handleGridRowDataChange}
                         height={"45vh"}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                         actionPlugins={[FilePickerPlugin]}
+                        plugins={plugins}
                     />
                 </TabPanel>
             </div>

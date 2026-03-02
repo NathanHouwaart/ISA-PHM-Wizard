@@ -79,7 +79,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
     const configurationOptions = (selectedSetup?.configurations || []).map(c => ({
         value: c.id,
-        label: c.name || 'Unnamed'
+        label: c.name + ' - ' + c.replaceableComponentId || 'Unnamed'
     }));
 
     // Grid configuration for studies

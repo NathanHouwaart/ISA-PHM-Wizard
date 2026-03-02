@@ -8,9 +8,7 @@ import FaultSpecificationsSlide from './FaultSpecificationsSlide.jsx';
 import OperatingConditionsSlide from './OperatingConditionsSlide.jsx';
 import StudyVariableSlide from './StudyVariableSlide.jsx';
 import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
-import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
 import ProcessingOutputSlide from './ProcessingOutputSlide.jsx';
-import MeasurementProtocolSlide from './MesurementProtocolsSlide.jsx';
 
 export const slides = [
   IntroductionSlide,
@@ -21,8 +19,6 @@ export const slides = [
   FaultSpecificationsSlide,
   OperatingConditionsSlide,
   StudyVariableSlide,
-  MeasurementProtocolSlide,
   MeasurementOutputSlide,
-  ProcessingProtocolsSlide,
   ProcessingOutputSlide
 ];

@@ -16,6 +16,8 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
   const measurementTypes = getMeasurementTypes(item.sensors);
   const characteristicsCount = item.characteristics?.length || 0;
   const configurationsCount = item.configurations?.length || 0;
+  const measurementProtocolCount = item.measurementProtocols?.length || 0;
+  const processingProtocolCount = item.processingProtocols?.length || 0;
 
   // Count total comments across all characteristics
   const getTotalComments = (characteristics) => {
@@ -63,6 +65,14 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
               <div className="flex items-center space-x-1">
                 <Layers className="w-4 h-4" />
                 <span>{configurationsCount} configuration{configurationsCount !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Layers className="w-4 h-4" />
+                <span>{measurementProtocolCount} measurement protocol{measurementProtocolCount !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Layers className="w-4 h-4" />
+                <span>{processingProtocolCount} processing protocol{processingProtocolCount !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MessageCircle className="w-4 h-4" />

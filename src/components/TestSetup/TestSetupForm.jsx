@@ -774,7 +774,7 @@ const ConfigurationsEditor = ({ configurations, onConfigurationsChange }) => {
                   </div>
                   <span className="text-sm text-gray-600 truncate max-w-md">
                     <span className='font-bold'>{config.name || 'Unnamed Configuration'}: </span>
-                    {config.replaceableComponentId ? `RC ID: ${config.replaceableComponentId}` : 'No RC ID'}
+                    {config.replaceableComponentId ? `: ${config.replaceableComponentId}` : 'No RC ID'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -892,6 +892,294 @@ const ConfigurationsEditor = ({ configurations, onConfigurationsChange }) => {
   );
 };
 
+const ProtocolDefinitionsEditor = ({
+  title,
+  description,
+  protocolLabel,
+  parameterLabel,
+  protocols,
+  onProtocolsChange
+}) => {
+  const [expandedItems, setExpandedItems] = useState(new Set());
+  const [activeTooltip, setActiveTooltip] = useState(false);
+
+  const addProtocol = useCallback(() => {
+    const newProtocol = {
+      id: uuid4(),
+      name: `${protocolLabel} ${protocols.length + 1}`,
+      description: '',
+      parameters: []
+    };
+    const nextProtocols = [...protocols, newProtocol];
+    onProtocolsChange(nextProtocols);
+    setExpandedItems((prev) => new Set([...prev, nextProtocols.length - 1]));
+  }, [onProtocolsChange, protocolLabel, protocols]);
+
+  const updateProtocol = useCallback((index, field, value) => {
+    onProtocolsChange(
+      protocols.map((protocol, i) => (i === index ? { ...protocol, [field]: value } : protocol))
+    );
+  }, [onProtocolsChange, protocols]);
+
+  const removeProtocol = useCallback((index) => {
+    onProtocolsChange(protocols.filter((_, i) => i !== index));
+    setExpandedItems((prev) => {
+      const next = new Set();
+      Array.from(prev).forEach((i) => {
+        if (i < index) next.add(i);
+        if (i > index) next.add(i - 1);
+      });
+      return next;
+    });
+  }, [onProtocolsChange, protocols]);
+
+  const toggleExpanded = useCallback((index) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  const addParameter = useCallback((protocolIndex) => {
+    const newParameter = {
+      id: uuid4(),
+      name: `${parameterLabel} ${(protocols[protocolIndex]?.parameters?.length || 0) + 1}`,
+      description: '',
+      unit: ''
+    };
+    onProtocolsChange(
+      protocols.map((protocol, index) => {
+        if (index !== protocolIndex) return protocol;
+        return {
+          ...protocol,
+          parameters: [...(protocol.parameters || []), newParameter]
+        };
+      })
+    );
+  }, [onProtocolsChange, parameterLabel, protocols]);
+
+  const updateParameter = useCallback((protocolIndex, parameterIndex, field, value) => {
+    onProtocolsChange(
+      protocols.map((protocol, index) => {
+        if (index !== protocolIndex) return protocol;
+        const nextParameters = [...(protocol.parameters || [])];
+        nextParameters[parameterIndex] = {
+          ...nextParameters[parameterIndex],
+          [field]: value
+        };
+        return {
+          ...protocol,
+          parameters: nextParameters
+        };
+      })
+    );
+  }, [onProtocolsChange, protocols]);
+
+  const removeParameter = useCallback((protocolIndex, parameterIndex) => {
+    onProtocolsChange(
+      protocols.map((protocol, index) => {
+        if (index !== protocolIndex) return protocol;
+        const nextParameters = [...(protocol.parameters || [])];
+        nextParameters.splice(parameterIndex, 1);
+        return {
+          ...protocol,
+          parameters: nextParameters
+        };
+      })
+    );
+  }, [onProtocolsChange, protocols]);
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
+        <Heading3>
+          {title}
+          <span className="text-sm font-normal text-gray-500 ml-2">
+            ({protocols.length} items)
+          </span>
+        </Heading3>
+        <div className='flex items-center space-x-2'>
+          <IconTooltipButton
+            icon={Plus}
+            onClick={addProtocol}
+            tooltipText={`Add ${protocolLabel.toLowerCase()}`}
+          />
+          <IconTooltipButton
+            icon={HelpCircle}
+            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip); }}
+            tooltipText={"Help"}
+          />
+        </div>
+      </div>
+
+      <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
+        {description}
+      </Paragraph>
+
+      <TableTooltip
+        isVisible={activeTooltip}
+        explanations={[
+          <><b>Protocol Name:</b> Name of a complete protocol variant</>,
+          <><b>Description:</b> Context and notes for this protocol variant</>,
+          <><b>Parameters:</b> The individual settings/steps that belong to this protocol</>
+        ]}
+        examples={[
+          { protocol: "DAQ setup A", parameter: "Sampling rate = 20 kHz" },
+          { protocol: "DAQ setup B", parameter: "Sampling rate = 10 kHz" }
+        ]}
+      />
+
+      <div className="space-y-1">
+        {protocols.map((protocol, index) => {
+          const isExpanded = expandedItems.has(index);
+          const parameterCount = protocol.parameters?.length || 0;
+          return (
+            <div key={protocol.id ?? `protocol-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleExpanded(index)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                    <span className="font-medium text-gray-900">
+                      p{index + 1}:
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600 truncate max-w-md">
+                    <span className='font-bold'>{protocol.name || `Unnamed ${protocolLabel}`}</span>
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500">
+                    {parameterCount} {parameterLabel.toLowerCase()}{parameterCount !== 1 ? 's' : ''}
+                  </span>
+                  <IconTooltipButton
+                    icon={Trash2}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeProtocol(index);
+                    }}
+                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
+                    tooltipText={`Remove ${protocolLabel.toLowerCase()}`}
+                  />
+                  <span className="text-gray-400">
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="border-t border-gray-200 p-4 bg-white space-y-4">
+                  <FormField
+                    name={`${protocolLabel}-${index}-name`}
+                    value={protocol.name || ''}
+                    onChange={(e) => updateProtocol(index, 'name', e.target.value)}
+                    label={`${protocolLabel} Name`}
+                    type="text"
+                    placeholder={`Enter ${protocolLabel.toLowerCase()} name`}
+                  />
+
+                  <FormField
+                    name={`${protocolLabel}-${index}-description`}
+                    value={protocol.description || ''}
+                    onChange={(e) => updateProtocol(index, 'description', e.target.value)}
+                    label="Description"
+                    type="textarea"
+                    placeholder={`Describe this ${protocolLabel.toLowerCase()}`}
+                    className="min-h-20"
+                  />
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading3 className="text-sm font-semibold text-gray-700">
+                        {parameterLabel}s ({parameterCount})
+                      </Heading3>
+                      <TooltipButton
+                        tooltipText={`Add ${parameterLabel.toLowerCase()}`}
+                        onClick={() => addParameter(index)}
+                        className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                      >
+                        <span>Add {parameterLabel}</span>
+                      </TooltipButton>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(protocol.parameters || []).map((parameter, parameterIndex) => (
+                        <div key={parameter.id ?? `parameter-${parameterIndex}`} className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <Paragraph className="text-sm font-medium text-gray-700">
+                              {parameterLabel} {parameterIndex + 1}
+                            </Paragraph>
+                            <IconToolTipButton
+                              icon={X}
+                              onClick={() => removeParameter(index, parameterIndex)}
+                              tooltipText={`Remove ${parameterLabel.toLowerCase()}`}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              name={`${protocolLabel}-${index}-${parameterLabel}-${parameterIndex}-name`}
+                              value={parameter.name || ''}
+                              onChange={(e) => updateParameter(index, parameterIndex, 'name', e.target.value)}
+                              label="Name"
+                              type="text"
+                              placeholder={`Enter ${parameterLabel.toLowerCase()} name`}
+                            />
+                            <FormField
+                              name={`${protocolLabel}-${index}-${parameterLabel}-${parameterIndex}-unit`}
+                              value={parameter.unit || ''}
+                              onChange={(e) => updateParameter(index, parameterIndex, 'unit', e.target.value)}
+                              label="Unit"
+                              type="text"
+                              placeholder="Optional unit"
+                            />
+                          </div>
+                          <div className="mt-4">
+                            <FormField
+                              name={`${protocolLabel}-${index}-${parameterLabel}-${parameterIndex}-description`}
+                              value={parameter.description || ''}
+                              onChange={(e) => updateParameter(index, parameterIndex, 'description', e.target.value)}
+                              label="Description"
+                              type="textarea"
+                              placeholder={`Describe this ${parameterLabel.toLowerCase()}`}
+                              className="min-h-16"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      {parameterCount === 0 && (
+                        <Paragraph className="text-sm text-gray-500 text-center py-6">
+                          No {parameterLabel.toLowerCase()}s added yet. Click "Add {parameterLabel}" to get started.
+                        </Paragraph>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {protocols.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="mb-2">No {protocolLabel.toLowerCase()}s added yet.</p>
+            <p className="text-sm">Click "Add {protocolLabel}" to get started.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const { setScreenWidth } = useGlobalDataContext();
@@ -902,7 +1190,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     description: '',
     characteristics: [],
     sensors: [],
-    configurations: []
+    configurations: [],
+    measurementProtocols: [],
+    processingProtocols: [],
+    sensorToMeasurementProtocolMapping: [],
+    sensorToProcessingProtocolMapping: []
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -912,26 +1204,42 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
   const [sensorsView, setSensorsView] = useState('simple-view');
   const [configurationsView, setConfigurationsView] = useState('simple-view');
+  const [measurementProtocolsView, setMeasurementProtocolsView] = useState('simple-view');
+  const [processingProtocolsView, setProcessingProtocolsView] = useState('simple-view');
+  const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
+  const [activeProcessingProtocolId, setActiveProcessingProtocolId] = useState(null);
 
 
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
   const numberOfCharacteristics = formData.characteristics.length;
   const numberOfConfigurations = formData.configurations.length;
+  const numberOfMeasurementProtocols = formData.measurementProtocols.length;
+  const numberOfProcessingProtocols = formData.processingProtocols.length;
 
   // Update screen width based on active view
   useEffect(() => {
     const isGridActive = 
       (selectedTab === 'characteristics' && characteristicsView === 'grid-view') ||
       (selectedTab === 'sensors' && sensorsView === 'grid-view') ||
-      (selectedTab === 'configurations' && configurationsView === 'grid-view');
+      (selectedTab === 'configurations' && configurationsView === 'grid-view') ||
+      (selectedTab === 'measurement-protocols' && measurementProtocolsView === 'grid-view') ||
+      (selectedTab === 'processing-protocols' && processingProtocolsView === 'grid-view');
     setScreenWidth(isGridActive ? 'max-w-[100rem]' : 'max-w-5xl');
     
     // Reset to default width when component unmounts
     return () => {
       setScreenWidth('max-w-5xl');
     };
-  }, [selectedTab, characteristicsView, sensorsView, configurationsView, setScreenWidth]);
+  }, [
+    selectedTab,
+    characteristicsView,
+    sensorsView,
+    configurationsView,
+    measurementProtocolsView,
+    processingProtocolsView,
+    setScreenWidth
+  ]);
 
   useEffect(() => {
     if (item) {
@@ -943,7 +1251,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         description: item.description || '',
         characteristics: item.characteristics || [],
         sensors: item.sensors || [],
-        configurations: item.configurations || []
+        configurations: item.configurations || [],
+        measurementProtocols: item.measurementProtocols || [],
+        processingProtocols: item.processingProtocols || [],
+        sensorToMeasurementProtocolMapping: item.sensorToMeasurementProtocolMapping || [],
+        sensorToProcessingProtocolMapping: item.sensorToProcessingProtocolMapping || []
       });
     } else {
       setFormData(initialFormState);
@@ -954,16 +1266,48 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const needsCharacteristicIds = formData.characteristics.some((c) => !c.id);
     const needsSensorIds = formData.sensors.some((s) => !s.id);
     const needsConfigurationIds = formData.configurations.some((c) => !c.id);
+    const needsMeasurementProtocolIds = formData.measurementProtocols.some(
+      (protocol) => !protocol.id || (protocol.parameters || []).some((parameter) => !parameter.id)
+    );
+    const needsProcessingProtocolIds = formData.processingProtocols.some(
+      (protocol) => !protocol.id || (protocol.parameters || []).some((parameter) => !parameter.id)
+    );
 
-    if (needsCharacteristicIds || needsSensorIds || needsConfigurationIds) {
+    if (
+      needsCharacteristicIds ||
+      needsSensorIds ||
+      needsConfigurationIds ||
+      needsMeasurementProtocolIds ||
+      needsProcessingProtocolIds
+    ) {
       setFormData((prev) => ({
         ...prev,
         characteristics: prev.characteristics.map((c) => (c.id ? c : { ...c, id: uuid4() })),
         sensors: prev.sensors.map((s) => (s.id ? s : { ...s, id: uuid4() })),
         configurations: prev.configurations.map((c) => (c.id ? c : { ...c, id: uuid4() })),
+        measurementProtocols: (prev.measurementProtocols || []).map((protocol) => ({
+          ...protocol,
+          id: protocol.id || uuid4(),
+          parameters: (protocol.parameters || []).map((parameter) =>
+            parameter.id ? parameter : { ...parameter, id: uuid4() }
+          )
+        })),
+        processingProtocols: (prev.processingProtocols || []).map((protocol) => ({
+          ...protocol,
+          id: protocol.id || uuid4(),
+          parameters: (protocol.parameters || []).map((parameter) =>
+            parameter.id ? parameter : { ...parameter, id: uuid4() }
+          )
+        })),
       }));
     }
-  }, [formData.characteristics, formData.sensors, formData.configurations]);
+  }, [
+    formData.characteristics,
+    formData.sensors,
+    formData.configurations,
+    formData.measurementProtocols,
+    formData.processingProtocols
+  ]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1179,6 +1523,286 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     ]
   }), [configurationRows]);
 
+  useEffect(() => {
+    if (!formData.measurementProtocols.length) {
+      setActiveMeasurementProtocolId(null);
+      return;
+    }
+    const hasActive = formData.measurementProtocols.some((protocol) => protocol.id === activeMeasurementProtocolId);
+    if (!activeMeasurementProtocolId || !hasActive) {
+      setActiveMeasurementProtocolId(formData.measurementProtocols[0].id);
+    }
+  }, [formData.measurementProtocols, activeMeasurementProtocolId]);
+
+  useEffect(() => {
+    if (!formData.processingProtocols.length) {
+      setActiveProcessingProtocolId(null);
+      return;
+    }
+    const hasActive = formData.processingProtocols.some((protocol) => protocol.id === activeProcessingProtocolId);
+    if (!activeProcessingProtocolId || !hasActive) {
+      setActiveProcessingProtocolId(formData.processingProtocols[0].id);
+    }
+  }, [formData.processingProtocols, activeProcessingProtocolId]);
+
+  const activeMeasurementProtocol = useMemo(
+    () => formData.measurementProtocols.find((protocol) => protocol.id === activeMeasurementProtocolId) || null,
+    [formData.measurementProtocols, activeMeasurementProtocolId]
+  );
+
+  const activeProcessingProtocol = useMemo(
+    () => formData.processingProtocols.find((protocol) => protocol.id === activeProcessingProtocolId) || null,
+    [formData.processingProtocols, activeProcessingProtocolId]
+  );
+
+  const activeMeasurementProtocolRows = useMemo(
+    () => activeMeasurementProtocol?.parameters || [],
+    [activeMeasurementProtocol]
+  );
+
+  const activeProcessingProtocolRows = useMemo(
+    () => activeProcessingProtocol?.parameters || [],
+    [activeProcessingProtocol]
+  );
+
+  const activeMeasurementProtocolMappings = useMemo(
+    () => (formData.sensorToMeasurementProtocolMapping || [])
+      .filter((mapping) => mapping.protocolId === activeMeasurementProtocolId),
+    [formData.sensorToMeasurementProtocolMapping, activeMeasurementProtocolId]
+  );
+
+  const activeProcessingProtocolMappings = useMemo(
+    () => (formData.sensorToProcessingProtocolMapping || [])
+      .filter((mapping) => mapping.protocolId === activeProcessingProtocolId),
+    [formData.sensorToProcessingProtocolMapping, activeProcessingProtocolId]
+  );
+
+  const addMeasurementProtocol = useCallback(() => {
+    const newProtocolId = uuid4();
+    setFormData((prev) => ({
+      ...prev,
+      measurementProtocols: [
+        ...(prev.measurementProtocols || []),
+        {
+          id: newProtocolId,
+          name: `Measurement Protocol ${prev.measurementProtocols.length + 1}`,
+          description: '',
+          parameters: []
+        }
+      ]
+    }));
+    setActiveMeasurementProtocolId(newProtocolId);
+  }, []);
+
+  const addProcessingProtocol = useCallback(() => {
+    const newProtocolId = uuid4();
+    setFormData((prev) => ({
+      ...prev,
+      processingProtocols: [
+        ...(prev.processingProtocols || []),
+        {
+          id: newProtocolId,
+          name: `Processing Protocol ${prev.processingProtocols.length + 1}`,
+          description: '',
+          parameters: []
+        }
+      ]
+    }));
+    setActiveProcessingProtocolId(newProtocolId);
+  }, []);
+
+  const addMeasurementProtocolParameter = useCallback(() => {
+    if (!activeMeasurementProtocolId) return;
+    setFormData((prev) => ({
+      ...prev,
+      measurementProtocols: (prev.measurementProtocols || []).map((protocol) => {
+        if (protocol.id !== activeMeasurementProtocolId) return protocol;
+        return {
+          ...protocol,
+          parameters: [
+            ...(protocol.parameters || []),
+            {
+              id: uuid4(),
+              name: `Parameter ${(protocol.parameters || []).length + 1}`,
+              description: '',
+              unit: ''
+            }
+          ]
+        };
+      })
+    }));
+  }, [activeMeasurementProtocolId]);
+
+  const addProcessingProtocolParameter = useCallback(() => {
+    if (!activeProcessingProtocolId) return;
+    setFormData((prev) => ({
+      ...prev,
+      processingProtocols: (prev.processingProtocols || []).map((protocol) => {
+        if (protocol.id !== activeProcessingProtocolId) return protocol;
+        return {
+          ...protocol,
+          parameters: [
+            ...(protocol.parameters || []),
+            {
+              id: uuid4(),
+              name: `Parameter ${(protocol.parameters || []).length + 1}`,
+              description: '',
+              unit: ''
+            }
+          ]
+        };
+      })
+    }));
+  }, [activeProcessingProtocolId]);
+
+  const handleMeasurementProtocolMappingsChange = useCallback((newMappings) => {
+    if (!activeMeasurementProtocolId) return;
+    setFormData((prev) => ({
+      ...prev,
+      sensorToMeasurementProtocolMapping: [
+        ...(prev.sensorToMeasurementProtocolMapping || []).filter((mapping) => mapping.protocolId !== activeMeasurementProtocolId),
+        ...newMappings.map((mapping) => ({ ...mapping, protocolId: activeMeasurementProtocolId }))
+      ]
+    }));
+  }, [activeMeasurementProtocolId]);
+
+  const handleProcessingProtocolMappingsChange = useCallback((newMappings) => {
+    if (!activeProcessingProtocolId) return;
+    setFormData((prev) => ({
+      ...prev,
+      sensorToProcessingProtocolMapping: [
+        ...(prev.sensorToProcessingProtocolMapping || []).filter((mapping) => mapping.protocolId !== activeProcessingProtocolId),
+        ...newMappings.map((mapping) => ({ ...mapping, protocolId: activeProcessingProtocolId }))
+      ]
+    }));
+  }, [activeProcessingProtocolId]);
+
+  const measurementProtocolGridConfig = useMemo(() => ({
+    title: activeMeasurementProtocol
+      ? `${activeMeasurementProtocol.name} - Sensor parameter mapping`
+      : 'Measurement Protocol parameter mapping',
+    rowData: activeMeasurementProtocolRows,
+    columnData: formData.sensors,
+    mappings: activeMeasurementProtocolMappings,
+    fieldMappings: {
+      rowId: 'id',
+      rowName: 'name',
+      columnId: 'id',
+      columnName: 'alias',
+      columnUnit: 'measurementUnit',
+      mappingRowId: 'targetId',
+      mappingColumnId: 'sourceId',
+      mappingValue: 'value',
+      hasChildColumns: true
+    },
+    staticColumns: [
+      {
+        prop: 'actions',
+        name: '',
+        size: 70,
+        readonly: true,
+        cellTemplate: Template(DeleteRowCellTemplate),
+        cellProperties: () => ({ style: { 'text-align': 'center' } })
+      },
+      {
+        prop: 'pattern',
+        name: 'Identifier',
+        size: 150,
+        readonly: true,
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
+      },
+      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      {
+        prop: 'description',
+        name: 'Description',
+        size: 260,
+        readonly: false,
+        cellProperties: () => ({
+          style: {
+            "border-right": "3px solid "
+          }
+        })
+      }
+    ],
+    customActions: [
+      {
+        label: '+ Add parameter',
+        title: 'Add parameter row',
+        onClick: addMeasurementProtocolParameter,
+        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+      }
+    ]
+  }), [
+    activeMeasurementProtocol,
+    activeMeasurementProtocolRows,
+    activeMeasurementProtocolMappings,
+    formData.sensors,
+    addMeasurementProtocolParameter
+  ]);
+
+  const processingProtocolGridConfig = useMemo(() => ({
+    title: activeProcessingProtocol
+      ? `${activeProcessingProtocol.name} - Sensor parameter mapping`
+      : 'Processing Protocol parameter mapping',
+    rowData: activeProcessingProtocolRows,
+    columnData: formData.sensors,
+    mappings: activeProcessingProtocolMappings,
+    fieldMappings: {
+      rowId: 'id',
+      rowName: 'name',
+      columnId: 'id',
+      columnName: 'alias',
+      columnUnit: 'measurementUnit',
+      mappingRowId: 'targetId',
+      mappingColumnId: 'sourceId',
+      mappingValue: 'value',
+      hasChildColumns: true
+    },
+    staticColumns: [
+      {
+        prop: 'actions',
+        name: '',
+        size: 70,
+        readonly: true,
+        cellTemplate: Template(DeleteRowCellTemplate),
+        cellProperties: () => ({ style: { 'text-align': 'center' } })
+      },
+      {
+        prop: 'pattern',
+        name: 'Identifier',
+        size: 150,
+        readonly: true,
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
+      },
+      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      {
+        prop: 'description',
+        name: 'Description',
+        size: 260,
+        readonly: false,
+        cellProperties: () => ({
+          style: {
+            "border-right": "3px solid "
+          }
+        })
+      }
+    ],
+    customActions: [
+      {
+        label: '+ Add parameter',
+        title: 'Add parameter row',
+        onClick: addProcessingProtocolParameter,
+        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+      }
+    ]
+  }), [
+    activeProcessingProtocol,
+    activeProcessingProtocolRows,
+    activeProcessingProtocolMappings,
+    formData.sensors,
+    addProcessingProtocolParameter
+  ]);
+
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
@@ -1210,6 +1834,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
             { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
             { id: 'configurations', label: `Configurations (${numberOfConfigurations})`, tooltip: 'Manage test setup configurations' },
+            { id: 'measurement-protocols', label: `Measurement Protocols (${numberOfMeasurementProtocols})`, tooltip: 'Define raw data acquisition protocol variants and parameter values' },
+            { id: 'processing-protocols', label: `Processing Protocols (${numberOfProcessingProtocols})`, tooltip: 'Define processing protocol variants and parameter values' },
           ]}
         />
 
@@ -1323,6 +1949,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...characteristicGridConfig}
                 showControls={true}
                 showDebug={false}
+                isActive={selectedTab === 'characteristics' && characteristicsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
                   characteristics: nextRows.map((row) => {
@@ -1366,6 +1993,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...sensorGridConfig}
                 showControls={true}
                 showDebug={false}
+                isActive={selectedTab === 'sensors' && sensorsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
                   sensors: nextRows.map((row) => {
@@ -1407,6 +2035,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 {...configurationGridConfig}
                 showControls={true}
                 showDebug={false}
+                isActive={selectedTab === 'configurations' && configurationsView === 'grid-view'}
                 onRowDataChange={(nextRows) => setFormData(prev => ({
                   ...prev,
                   configurations: nextRows.map((row) => {
@@ -1423,6 +2052,184 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 height={"45vh"}
                 hideClearAllMappings={true}
               />
+            </div>
+          </TabPanel>
+        </TabPanel>
+
+        <TabPanel isActive={selectedTab === 'measurement-protocols'}>
+          <TabSwitcher
+            selectedTab={measurementProtocolsView}
+            onTabChange={setMeasurementProtocolsView}
+            tabs={[
+              { id: 'simple-view', label: 'Simple View', tooltip: 'Manage protocol variants and parameters with collapsible cards' },
+              { id: 'grid-view', label: 'Grid View', tooltip: 'Map parameter values per sensor in a grid' }
+            ]}
+          />
+
+          <TabPanel isActive={measurementProtocolsView === 'simple-view'}>
+            <ProtocolDefinitionsEditor
+              title="Measurement Protocol Variants"
+              description="Define one or more measurement protocol variants (for example DAQ setup A/B). Add all parameters for each variant here."
+              protocolLabel="Measurement Protocol"
+              parameterLabel="Parameter"
+              protocols={formData.measurementProtocols}
+              onProtocolsChange={(measurementProtocols) =>
+                setFormData((prev) => ({ ...prev, measurementProtocols }))
+              }
+            />
+          </TabPanel>
+
+          <TabPanel isActive={measurementProtocolsView === 'grid-view'}>
+            <div className="mt-3 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {(formData.measurementProtocols || []).map((protocol) => (
+                  <TooltipButton
+                    key={protocol.id}
+                    onClick={() => setActiveMeasurementProtocolId(protocol.id)}
+                    tooltipText={protocol.description || protocol.name}
+                    className={`px-3 py-1 text-sm rounded border ${activeMeasurementProtocolId === protocol.id
+                      ? 'bg-blue-600 text-white border-blue-700'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                      }`}
+                  >
+                    {protocol.name || 'Unnamed protocol'}
+                  </TooltipButton>
+                ))}
+                <TooltipButton
+                  onClick={addMeasurementProtocol}
+                  tooltipText="Add a new measurement protocol variant"
+                  className="px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                >
+                  + Add protocol variant
+                </TooltipButton>
+              </div>
+
+              {(formData.measurementProtocols || []).length === 0 && (
+                <Paragraph className="text-sm text-gray-500 bg-white border border-gray-200 rounded-lg p-3">
+                  Add at least one measurement protocol variant in Simple View before using the mapping grid.
+                </Paragraph>
+              )}
+
+              {(formData.sensors || []).length === 0 && (
+                <Paragraph className="text-sm text-gray-500 bg-white border border-gray-200 rounded-lg p-3">
+                  Add sensors first to map parameter values per sensor.
+                </Paragraph>
+              )}
+
+              {activeMeasurementProtocol && (
+                <div className="border border-gray-200 rounded-lg">
+                  <DataGrid
+                    {...measurementProtocolGridConfig}
+                    showControls={true}
+                    showDebug={false}
+                    isActive={selectedTab === 'measurement-protocols' && measurementProtocolsView === 'grid-view'}
+                    onDataChange={handleMeasurementProtocolMappingsChange}
+                    onRowDataChange={(nextRows) => setFormData((prev) => ({
+                      ...prev,
+                      measurementProtocols: (prev.measurementProtocols || []).map((protocol) => {
+                        if (protocol.id !== activeMeasurementProtocolId) return protocol;
+                        return {
+                          ...protocol,
+                          parameters: nextRows.map((row) => {
+                            const existing = (protocol.parameters || []).find((parameter) => parameter.id === row.id) || {};
+                            return { ...existing, ...row };
+                          })
+                        };
+                      })
+                    }))}
+                    height={"45vh"}
+                  />
+                </div>
+              )}
+            </div>
+          </TabPanel>
+        </TabPanel>
+
+        <TabPanel isActive={selectedTab === 'processing-protocols'}>
+          <TabSwitcher
+            selectedTab={processingProtocolsView}
+            onTabChange={setProcessingProtocolsView}
+            tabs={[
+              { id: 'simple-view', label: 'Simple View', tooltip: 'Manage protocol variants and parameters with collapsible cards' },
+              { id: 'grid-view', label: 'Grid View', tooltip: 'Map parameter values per sensor in a grid' }
+            ]}
+          />
+
+          <TabPanel isActive={processingProtocolsView === 'simple-view'}>
+            <ProtocolDefinitionsEditor
+              title="Processing Protocol Variants"
+              description="Define one or more processing protocol variants. Add all parameter definitions for each variant here."
+              protocolLabel="Processing Protocol"
+              parameterLabel="Parameter"
+              protocols={formData.processingProtocols}
+              onProtocolsChange={(processingProtocols) =>
+                setFormData((prev) => ({ ...prev, processingProtocols }))
+              }
+            />
+          </TabPanel>
+
+          <TabPanel isActive={processingProtocolsView === 'grid-view'}>
+            <div className="mt-3 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {(formData.processingProtocols || []).map((protocol) => (
+                  <TooltipButton
+                    key={protocol.id}
+                    onClick={() => setActiveProcessingProtocolId(protocol.id)}
+                    tooltipText={protocol.description || protocol.name}
+                    className={`px-3 py-1 text-sm rounded border ${activeProcessingProtocolId === protocol.id
+                      ? 'bg-blue-600 text-white border-blue-700'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
+                      }`}
+                  >
+                    {protocol.name || 'Unnamed protocol'}
+                  </TooltipButton>
+                ))}
+                <TooltipButton
+                  onClick={addProcessingProtocol}
+                  tooltipText="Add a new processing protocol variant"
+                  className="px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                >
+                  + Add protocol variant
+                </TooltipButton>
+              </div>
+
+              {(formData.processingProtocols || []).length === 0 && (
+                <Paragraph className="text-sm text-gray-500 bg-white border border-gray-200 rounded-lg p-3">
+                  Add at least one processing protocol variant in Simple View before using the mapping grid.
+                </Paragraph>
+              )}
+
+              {(formData.sensors || []).length === 0 && (
+                <Paragraph className="text-sm text-gray-500 bg-white border border-gray-200 rounded-lg p-3">
+                  Add sensors first to map parameter values per sensor.
+                </Paragraph>
+              )}
+
+              {activeProcessingProtocol && (
+                <div className="border border-gray-200 rounded-lg">
+                  <DataGrid
+                    {...processingProtocolGridConfig}
+                    showControls={true}
+                    showDebug={false}
+                    isActive={selectedTab === 'processing-protocols' && processingProtocolsView === 'grid-view'}
+                    onDataChange={handleProcessingProtocolMappingsChange}
+                    onRowDataChange={(nextRows) => setFormData((prev) => ({
+                      ...prev,
+                      processingProtocols: (prev.processingProtocols || []).map((protocol) => {
+                        if (protocol.id !== activeProcessingProtocolId) return protocol;
+                        return {
+                          ...protocol,
+                          parameters: nextRows.map((row) => {
+                            const existing = (protocol.parameters || []).find((parameter) => parameter.id === row.id) || {};
+                            return { ...existing, ...row };
+                          })
+                        };
+                      })
+                    }))}
+                    height={"45vh"}
+                  />
+                </div>
+              )}
             </div>
           </TabPanel>
         </TabPanel>

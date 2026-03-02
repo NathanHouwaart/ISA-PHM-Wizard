@@ -15,6 +15,7 @@ const DualSidebarStudyRunPanel = ({
   handleInputChange = () => {},
   minHeight,
   MappingCardComponent,
+  mappingCardProps = {},
 }) => {
   const { experimentType } = useGlobalDataContext();
   const experimentConfig = getExperimentTypeConfig(experimentType);
@@ -146,6 +147,7 @@ const DualSidebarStudyRunPanel = ({
               mappings={mappings}
               handleInputChange={handleInputChange}
               singleRunMode
+              {...mappingCardProps}
             />
           </div>
         )}

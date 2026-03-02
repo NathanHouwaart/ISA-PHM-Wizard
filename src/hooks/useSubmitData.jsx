@@ -11,17 +11,15 @@ export default function useSubmitData() {
     publications,
     contacts,
     studyVariables,
-    measurementProtocols,
-    processingProtocols,
     studies,
     testSetups,
     selectedTestSetupId,
     experimentType,
     studyToStudyVariableMapping,
-    sensorToMeasurementProtocolMapping,
     studyToSensorMeasurementMapping,
-    sensorToProcessingProtocolMapping,
     studyToSensorProcessingMapping,
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
   } = useGlobalDataContext();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,11 +46,21 @@ export default function useSubmitData() {
     return expandStudiesIntoRuns([study]);
   };
 
-  // Helper: normalize protocol mappings for a given sensor id
-  const mapProtocolsForSensor = (mappings = [], sensorId) => {
+  const selectedSetup = useMemo(
+    () => (testSetups || []).find((setup) => setup.id === selectedTestSetupId) || null,
+    [testSetups, selectedTestSetupId]
+  );
+
+  // Helper: normalize protocol mappings for a given sensor id and selected protocol variant
+  const mapProtocolsForSensor = (mappings = [], sensorId, selectedProtocolId = '') => {
     if (!mappings || mappings.length === 0) return [];
     return (mappings || [])
-      .filter((m) => String(m.sourceId) === String(sensorId) || String(m.sensorId) === String(sensorId))
+      .filter((m) => {
+        const sensorMatches = String(m.sourceId) === String(sensorId) || String(m.sensorId) === String(sensorId);
+        if (!sensorMatches) return false;
+        if (!selectedProtocolId) return true;
+        return String(m.protocolId || '') === String(selectedProtocolId);
+      })
       .map((m) => {
         // Normalize value to array format [specification, unit]
         let normalizedValue = [];
@@ -65,10 +73,27 @@ export default function useSubmitData() {
         return {
           sourceId: m.sourceId ?? m.sensorId ?? null,
           targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
+          protocolId: m.protocolId ?? '',
           value: normalizedValue,
         };
       });
   };
+
+  const selectionLookup = useMemo(() => {
+    const measurement = {};
+    const processing = {};
+    (studyToMeasurementProtocolSelection || []).forEach((entry) => {
+      if (entry?.studyId) {
+        measurement[entry.studyId] = entry.protocolId || '';
+      }
+    });
+    (studyToProcessingProtocolSelection || []).forEach((entry) => {
+      if (entry?.studyId) {
+        processing[entry.studyId] = entry.protocolId || '';
+      }
+    });
+    return { measurement, processing };
+  }, [studyToMeasurementProtocolSelection, studyToProcessingProtocolSelection]);
 
   const resolveRunMapping = (mappings = [], sensorId, run) => {
     if (!Array.isArray(mappings)) return null;
@@ -87,8 +112,10 @@ export default function useSubmitData() {
     return `a_st${studyCode}_se${sensorCode}`;
   };
 
-  const buildAssayDetails = (studyRuns, sensors, studyIndex) => {
+  const buildAssayDetails = (studyRuns, sensors, studyIndex, selectedMeasurementProtocolId, selectedProcessingProtocolId) => {
     const safeSensors = Array.isArray(sensors) ? sensors : [];
+    const measurementMappings = selectedSetup?.sensorToMeasurementProtocolMapping || [];
+    const processingMappings = selectedSetup?.sensorToProcessingProtocolMapping || [];
 
     return safeSensors.map((sensor, sensorIndex) => {
       const used_sensor = Object.fromEntries(
@@ -111,8 +138,10 @@ export default function useSubmitData() {
       return {
         assay_file_name: generateAssayFileName(studyIndex, sensorIndex),
         used_sensor,
-        measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
-        processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
+        measurement_protocol_id: selectedMeasurementProtocolId || '',
+        processing_protocol_id: selectedProcessingProtocolId || '',
+        measurement_protocols: mapProtocolsForSensor(measurementMappings, sensor.id, selectedMeasurementProtocolId),
+        processing_protocols: mapProtocolsForSensor(processingMappings, sensor.id, selectedProcessingProtocolId),
         runs,
       };
     });
@@ -129,6 +158,9 @@ export default function useSubmitData() {
     setError(null);
 
     try {
+      const selectedMeasurementProtocols = selectedSetup?.measurementProtocols || [];
+      const selectedProcessingProtocols = selectedSetup?.processingProtocols || [];
+
       const jsonData = {
         identifier: investigations?.investigationIdentifier,
         title: investigations?.investigationTitle,
@@ -140,18 +172,22 @@ export default function useSubmitData() {
         publications: publications,
         contacts: contacts,
         study_variables: studyVariables,
-        measurement_protocols: measurementProtocols,
-        processing_protocols: processingProtocols,
+        measurement_protocols: selectedMeasurementProtocols,
+        processing_protocols: selectedProcessingProtocols,
         studies: (studies || []).map((study, studyIndex) => {
           const studyRuns = getRunsForStudy(study);
           const totalRuns = Array.isArray(studyRuns) ? studyRuns.length : 0;
-          const sensors = (testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || [];
+          const sensors = selectedSetup?.sensors || [];
+          const selectedMeasurementProtocolId = study?.measurementProtocolId || selectionLookup.measurement[study.id] || '';
+          const selectedProcessingProtocolId = study?.processingProtocolId || selectionLookup.processing[study.id] || '';
           return {
             ...study,
             total_runs: totalRuns,
             publications,
             contacts,
-            used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
+            selectedMeasurementProtocolId,
+            selectedProcessingProtocolId,
+            used_setup: selectedSetup,
             study_to_study_variable_mapping: studyRuns.flatMap((run) => (
               (studyToStudyVariableMapping || [])
                 .filter((mapping) => {
@@ -172,7 +208,13 @@ export default function useSubmitData() {
                   };
                 })
             )),
-            assay_details: buildAssayDetails(studyRuns, sensors, studyIndex),
+            assay_details: buildAssayDetails(
+              studyRuns,
+              sensors,
+              studyIndex,
+              selectedMeasurementProtocolId,
+              selectedProcessingProtocolId
+            ),
           };
         }),
       };

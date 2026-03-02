@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useMemo } from 'react'
 import { Layers } from 'lucide-react';
 
 // Import hooks
@@ -21,12 +21,13 @@ import useMappingsController from '../../hooks/useMappingsController';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import useStudyRuns from '../../hooks/useStudyRuns';
-import StudyRunMappingPanel from '../Study/StudyRunMappingPanel';
 import DualSidebarStudyRunPanel from '../Study/DualSidebarStudyRunPanel';
 import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
 import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellProperties } from '../../utils/gridCellTemplates';
+import SelectTypePlugin from '@revolist/revogrid-column-select';
 
+const plugins = { select: new SelectTypePlugin() };
 
 export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -40,10 +41,11 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     // Access global context
     const {
         studies,
+        setStudies,
         testSetups,
         selectedTestSetupId,
-        studyToSensorProcessingMapping,
-        setStudyToSensorProcessingMapping,
+        studyToProcessingProtocolSelection,
+        setStudyToProcessingProtocolSelection
     } = useGlobalDataContext();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
@@ -52,6 +54,41 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     const sensors = Array.isArray(selectedTestSetup?.sensors)
         ? selectedTestSetup.sensors
         : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
+
+    const processingProtocolOptions = useMemo(
+        () => (selectedTestSetup?.processingProtocols || []).map((protocol) => ({
+            value: protocol.id,
+            label: protocol.name || 'Unnamed protocol'
+        })),
+        [selectedTestSetup]
+    );
+
+    const selectedProcessingProtocolByStudy = useMemo(() => {
+        const byStudy = {};
+        (studyToProcessingProtocolSelection || []).forEach((entry) => {
+            if (!entry?.studyId) return;
+            byStudy[entry.studyId] = entry.protocolId || '';
+        });
+        studies.forEach((study) => {
+            if (!study?.id) return;
+            if (study.processingProtocolId && !byStudy[study.id]) {
+                byStudy[study.id] = study.processingProtocolId;
+            }
+        });
+        return byStudy;
+    }, [studyToProcessingProtocolSelection, studies]);
+
+    const updateStudyProcessingProtocol = useCallback((studyId, protocolId) => {
+        if (!studyId) return;
+        setStudies((prevStudies) => (prevStudies || []).map((study) => (
+            study.id === studyId ? { ...study, processingProtocolId: protocolId || '' } : study
+        )));
+        setStudyToProcessingProtocolSelection((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const withoutStudy = safePrev.filter((entry) => entry?.studyId !== studyId);
+            return [...withoutStudy, { studyId, protocolId: protocolId || '' }];
+        });
+    }, [setStudies, setStudyToProcessingProtocolSelection]);
 
     const mappingsController = useMappingsController(
         'studyToSensorProcessingMapping',
@@ -63,7 +100,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     // Handle data grid changes
     const handleDataGridMappingsChange = useCallback((newMappings) => {
         mappingsController.setMappings(newMappings);
-    }, [setStudyToSensorProcessingMapping]);
+    }, [mappingsController]);
 
     // Grid configuration for mapping studies to processing protocols output
     const hierarchicalRows = useMemo(
@@ -106,9 +143,58 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             pin: 'colPinStart',
             cellTemplate: runCellTemplate,
             cellProperties: runCellProperties
+        },
+        {
+            prop: 'processingProtocolId',
+            name: 'Processing Protocol',
+            size: 260,
+            readonly: false,
+            pin: 'colPinStart',
+            columnType: 'select',
+            labelKey: 'label',
+            valueKey: 'value',
+            source: processingProtocolOptions,
+            cellProperties: (props) => {
+                const model = props?.model;
+                const style = {
+                    "border-right": "3px solid black"
+                };
+                if (model?.isLastRunInStudy) {
+                    style["border-bottom"] = "3px solid black";
+                }
+                return { style };
+            }
         }
-        ]), [])
+        ]), [processingProtocolOptions])
     };
+
+    const handleGridRowDataChange = useCallback((nextRows) => {
+        const protocolByStudy = new Map();
+        (nextRows || []).forEach((row) => {
+            if (!row?.studyId || protocolByStudy.has(row.studyId)) return;
+            protocolByStudy.set(row.studyId, row.processingProtocolId || '');
+        });
+
+        if (!protocolByStudy.size) return;
+
+        setStudies((prevStudies) => (prevStudies || []).map((study) => {
+            if (!protocolByStudy.has(study.id)) return study;
+            return {
+                ...study,
+                processingProtocolId: protocolByStudy.get(study.id) || ''
+            };
+        }));
+
+        setStudyToProcessingProtocolSelection((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const filtered = safePrev.filter((entry) => !protocolByStudy.has(entry?.studyId));
+            const nextSelections = [...filtered];
+            protocolByStudy.forEach((protocolId, studyId) => {
+                nextSelections.push({ studyId, protocolId: protocolId || '' });
+            });
+            return nextSelections;
+        });
+    }, [setStudies, setStudyToProcessingProtocolSelection]);
 
     return (
         <div ref={combinedRef} >
@@ -143,6 +229,11 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map processing outputs. Add sensors to your test setup or select a different one.
                     </WarningBanner>
                 )}
+                {selectedTestSetupId && processingProtocolOptions.length === 0 && (
+                    <WarningBanner type="info">
+                        <strong>No processing protocols in test setup.</strong> Define one or more processing protocol variants in the Test Setup page to select them per study.
+                    </WarningBanner>
+                )}
                 {studies.length === 0 && (
                     <WarningBanner type="warning">
                         <strong>No studies available.</strong> There are no studies in the workspace. Create or import studies first so you can map processing outputs to them.
@@ -160,6 +251,13 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                                 handleInputChange={mappingsController.updateMappingValue}
                                 minHeight={WINDOW_HEIGHT}
                                 MappingCardComponent={StudyMeasurementMappingCard}
+                                mappingCardProps={{
+                                    protocolLabel: 'Processing Protocol',
+                                    protocolOptions: processingProtocolOptions,
+                                    selectedProtocolByStudy: selectedProcessingProtocolByStudy,
+                                    onStudyProtocolChange: updateStudyProcessingProtocol,
+                                    fileFieldLabel: 'Processed Data File'
+                                }}
                             />
                         </div>
                     </div>
@@ -171,9 +269,11 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
+                        onRowDataChange={handleGridRowDataChange}
                         height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                         actionPlugins={[FilePickerPlugin]}
+                        plugins={plugins}
                     />
                 </TabPanel>
             </div>

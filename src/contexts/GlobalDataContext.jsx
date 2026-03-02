@@ -138,6 +138,8 @@ export const GlobalDataProvider = ({ children }) => {
     const [studyVariables, setStudyVariables] = useState(() => loadFromLocalStorage(projectKey('studyVariables'), getDefaultValue('studyVariables', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [measurementProtocols, setMeasurementProtocols] = useState(() => loadFromLocalStorage(projectKey('measurementProtocols'), getDefaultValue('measurementProtocols', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [processingProtocols, setProcessingProtocols] = useState(() => loadFromLocalStorage(projectKey('processingProtocols'), getDefaultValue('processingProtocols', currentProjectId !== DEFAULT_PROJECT_ID)));
+    const [studyToMeasurementProtocolSelection, setStudyToMeasurementProtocolSelection] = useState(() => loadFromLocalStorage(projectKey('studyToMeasurementProtocolSelection'), getDefaultValue('studyToMeasurementProtocolSelection', currentProjectId !== DEFAULT_PROJECT_ID)));
+    const [studyToProcessingProtocolSelection, setStudyToProcessingProtocolSelection] = useState(() => loadFromLocalStorage(projectKey('studyToProcessingProtocolSelection'), getDefaultValue('studyToProcessingProtocolSelection', currentProjectId !== DEFAULT_PROJECT_ID)));
     const [experimentType, setExperimentType] = useState(() => loadFromLocalStorage(projectKey('experimentType'), DEFAULT_EXPERIMENT_TYPE_ID));
 
     // Mappings
@@ -308,6 +310,8 @@ export const GlobalDataProvider = ({ children }) => {
                         studyVariables: setStudyVariables,
                         measurementProtocols: setMeasurementProtocols,
                         processingProtocols: setProcessingProtocols,
+                        studyToMeasurementProtocolSelection: setStudyToMeasurementProtocolSelection,
+                        studyToProcessingProtocolSelection: setStudyToProcessingProtocolSelection,
                         experimentType: setExperimentType,
                         studyToStudyVariableMapping: setStudyToStudyVariableMapping,
                         sensorToMeasurementProtocolMapping: setSensorToMeasurementProtocolMapping,
@@ -330,6 +334,8 @@ export const GlobalDataProvider = ({ children }) => {
                 saveToLocalStorage(`globalAppData_${id}_measurementProtocols`, getResetValue('measurementProtocols'));
                 saveToLocalStorage(`globalAppData_${id}_processingProtocols`, getResetValue('processingProtocols'));
                 saveToLocalStorage(`globalAppData_${id}_experimentType`, getResetValue('experimentType'));
+                saveToLocalStorage(`globalAppData_${id}_studyToMeasurementProtocolSelection`, getResetValue('studyToMeasurementProtocolSelection'));
+                saveToLocalStorage(`globalAppData_${id}_studyToProcessingProtocolSelection`, getResetValue('studyToProcessingProtocolSelection'));
 
                 saveToLocalStorage(`globalAppData_${id}_studyToStudyVariableMapping`, getResetValue('studyToStudyVariableMapping'));
                 saveToLocalStorage(`globalAppData_${id}_sensorToMeasurementProtocolMapping`, getResetValue('sensorToMeasurementProtocolMapping'));
@@ -353,6 +359,8 @@ export const GlobalDataProvider = ({ children }) => {
                     setMeasurementProtocols(getResetValue('measurementProtocols'));
                     setProcessingProtocols(getResetValue('processingProtocols'));
                     setExperimentType(getResetValue('experimentType'));
+                    setStudyToMeasurementProtocolSelection(getResetValue('studyToMeasurementProtocolSelection'));
+                    setStudyToProcessingProtocolSelection(getResetValue('studyToProcessingProtocolSelection'));
 
                     setStudyToStudyVariableMapping(getResetValue('studyToStudyVariableMapping'));
                     setSensorToMeasurementProtocolMapping(getResetValue('sensorToMeasurementProtocolMapping'));
@@ -399,6 +407,8 @@ export const GlobalDataProvider = ({ children }) => {
             setMeasurementProtocols(loadFromLocalStorage(`globalAppData_${id}_measurementProtocols`, getSwitchDefault('measurementProtocols')));
             setProcessingProtocols(loadFromLocalStorage(`globalAppData_${id}_processingProtocols`, getSwitchDefault('processingProtocols')));
             setExperimentType(loadFromLocalStorage(`globalAppData_${id}_experimentType`, getSwitchDefault('experimentType')));
+            setStudyToMeasurementProtocolSelection(loadFromLocalStorage(`globalAppData_${id}_studyToMeasurementProtocolSelection`, getSwitchDefault('studyToMeasurementProtocolSelection')));
+            setStudyToProcessingProtocolSelection(loadFromLocalStorage(`globalAppData_${id}_studyToProcessingProtocolSelection`, getSwitchDefault('studyToProcessingProtocolSelection')));
 
             setStudyToStudyVariableMapping(loadFromLocalStorage(`globalAppData_${id}_studyToStudyVariableMapping`, getSwitchDefault('studyToStudyVariableMapping')));
             setSensorToMeasurementProtocolMapping(loadFromLocalStorage(`globalAppData_${id}_sensorToMeasurementProtocolMapping`, getSwitchDefault('sensorToMeasurementProtocolMapping')));
@@ -458,6 +468,14 @@ export const GlobalDataProvider = ({ children }) => {
     useEffect(() => {
         saveToLocalStorage(projectKey('experimentType', currentProjectId), experimentType);
     }, [experimentType, currentProjectId]);
+
+    useEffect(() => {
+        saveToLocalStorage(projectKey('studyToMeasurementProtocolSelection', currentProjectId), studyToMeasurementProtocolSelection);
+    }, [studyToMeasurementProtocolSelection, currentProjectId]);
+
+    useEffect(() => {
+        saveToLocalStorage(projectKey('studyToProcessingProtocolSelection', currentProjectId), studyToProcessingProtocolSelection);
+    }, [studyToProcessingProtocolSelection, currentProjectId]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToStudyVariableMapping', currentProjectId), studyToStudyVariableMapping);
@@ -539,6 +557,8 @@ export const GlobalDataProvider = ({ children }) => {
         studyVariables: [studyVariables, setStudyVariables],
         measurementProtocols: [measurementProtocols, setMeasurementProtocols],
         processingProtocols: [processingProtocols, setProcessingProtocols],
+        studyToMeasurementProtocolSelection: [studyToMeasurementProtocolSelection, setStudyToMeasurementProtocolSelection],
+        studyToProcessingProtocolSelection: [studyToProcessingProtocolSelection, setStudyToProcessingProtocolSelection],
         studyToStudyVariableMapping: [studyToStudyVariableMapping, setStudyToStudyVariableMapping],
         sensorToMeasurementProtocolMapping: [sensorToMeasurementProtocolMapping, setSensorToMeasurementProtocolMapping],
         studyToSensorMeasurementMapping: [studyToSensorMeasurementMapping, setStudyToSensorMeasurementMapping],
@@ -569,6 +589,10 @@ export const GlobalDataProvider = ({ children }) => {
         setMeasurementProtocols,
         processingProtocols,
         setProcessingProtocols,
+        studyToMeasurementProtocolSelection,
+        setStudyToMeasurementProtocolSelection,
+        studyToProcessingProtocolSelection,
+        setStudyToProcessingProtocolSelection,
         studyToStudyVariableMapping,
         setStudyToStudyVariableMapping,
         sensorToMeasurementProtocolMapping,

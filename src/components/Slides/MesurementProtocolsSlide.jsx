@@ -133,7 +133,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
         ],
         customActions: [
             {
-                label: '+ Add Protocol',
+                label: '+ Add Protocol parameter',
                 onClick: addNewProtocol,
                 className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
                 title: 'Add a new protocol'
@@ -145,11 +145,11 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Measurement Protocols
+                Measurement Protocol
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Measurement protocols describe how raw measurement data is acquired. Use this slide to view and manage per-sensor measurement protocol records and acquisition metadata such as sampling rate, phase, data acquisition unit, orientation, calibration parameters, and other sensor-specific settings.
+                Measurement protocol describe how raw measurement data is acquired. Use this slide to view and manage per-sensor measurement protocol records and acquisition metadata such as sampling rate, phase, data acquisition unit, orientation, calibration parameters, and other sensor-specific settings.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>

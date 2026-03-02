@@ -7,13 +7,25 @@ import Heading3 from './Typography/Heading3';
 import Paragraph from './Typography/Paragraph';
 import useStudyRuns from '../hooks/useStudyRuns';
 
-const StudyMeasurementMappingCard = ({ item, mappings, handleInputChange, singleRunMode = false }) => {
+const StudyMeasurementMappingCard = ({
+  item,
+  mappings,
+  handleInputChange,
+  singleRunMode = false,
+  protocolLabel = '',
+  protocolOptions = [],
+  selectedProtocolByStudy = {},
+  onStudyProtocolChange,
+  fileFieldLabel = 'Measurement File'
+}) => {
   const { selectedTestSetupId, testSetups } = useGlobalDataContext();
   const allRuns = useStudyRuns();
   const [activeRunId, setActiveRunId] = useState(item?.runId || item?.id);
   const activeRun = singleRunMode ? item : (allRuns.find(r => r.runId === activeRunId) || item);
 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
+  const activeStudyId = activeRun?.studyId || item?.studyId || item?.id;
+  const selectedProtocolId = selectedProtocolByStudy?.[activeStudyId] || '';
 
   if (!selectedTestSetupId) {
     return (
@@ -43,6 +55,19 @@ const StudyMeasurementMappingCard = ({ item, mappings, handleInputChange, single
         <Paragraph className="text-sm text-gray-700 mt-1 italic">
           {activeRun?.description || 'No run description provided.'}
         </Paragraph>
+        {protocolLabel && Array.isArray(protocolOptions) && protocolOptions.length > 0 && onStudyProtocolChange && (
+          <div className="mt-3 max-w-sm">
+            <FormField
+              type="select"
+              label={protocolLabel}
+              name={`study-${activeStudyId}-protocol`}
+              value={selectedProtocolId}
+              tags={protocolOptions}
+              placeholder={`Select ${protocolLabel.toLowerCase()}`}
+              onChange={(e) => onStudyProtocolChange(activeStudyId, e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -70,7 +95,7 @@ const StudyMeasurementMappingCard = ({ item, mappings, handleInputChange, single
             >
               <div className="mb-2 font-semibold text-gray-700">{sensorLabel}</div>
               <FormField
-                label="Measurement File"
+                label={fileFieldLabel}
                 name={`sensor-${sensor.id}`}
                 value={mapping.value}
                 commitOnBlur

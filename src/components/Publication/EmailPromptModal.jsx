@@ -14,10 +14,11 @@ import { useState } from 'react';
 import { Mail, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { isValidEmail } from '../../utils/validation';
-import FormField from '../Form/FormField';
 import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
+import { cn } from '../../utils/utils';
+import { BASE_INPUT_CLASSNAME } from '../Form/fields/constants';
 
 const EmailPromptModal = ({ isOpen, authorName, onSave, onCancel }) => {
   const [email, setEmail] = useState('');
@@ -76,18 +77,23 @@ const EmailPromptModal = ({ isOpen, authorName, onSave, onCancel }) => {
           <Paragraph className="text-sm text-gray-600">
             Please enter an email address to proceed:
           </Paragraph>
-          <FormField
-            name="email"
-            label="Email Address"
-            type="text"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError(''); // Clear error on input
-            }}
-            placeholder="author@example.com"
-            required
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(''); // Clear error on input
+              }}
+              placeholder="author@example.com"
+              required
+              className={cn(BASE_INPUT_CLASSNAME)}
+            />
+          </div>
           {error && (
             <Paragraph className="text-sm text-red-600">
               {error}
