@@ -4,10 +4,11 @@
 
 const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
 const integrationTest = RUN_BACKEND_INTEGRATION ? test : test.skip;
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 describe('Backend root endpoint', () => {
   integrationTest('GET / returns API is running', async () => {
-    const url = 'http://localhost:8080/';
+    const url = `${BACKEND_URL.replace(/\/$/, '')}/`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
 

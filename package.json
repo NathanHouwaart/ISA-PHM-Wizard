@@ -11,6 +11,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest",
+    "test:run": "vitest --run",
+    "test:unit": "vitest --run --exclude src/tests/backend-*.test.js --exclude src/tests/conversion-payload.contract.test.js",
+    "test:contract": "vitest --run src/tests/conversion-payload.contract.test.js",
+    "test:integration": "vitest --run src/tests/backend-conversion.test.js src/tests/backend-root.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
