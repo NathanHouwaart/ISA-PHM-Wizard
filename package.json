@@ -15,7 +15,7 @@
     "test:run": "vitest --run",
     "test:unit": "vitest --run --exclude src/tests/backend-*.test.js --exclude src/tests/conversion-payload.contract.test.js",
     "test:contract": "vitest --run src/tests/conversion-payload.contract.test.js",
-    "test:integration": "vitest --run src/tests/backend-conversion.test.js src/tests/backend-root.test.js src/tests/backend-project-sietze-new.test.js",
+    "test:integration": "vitest --run src/tests/backend-conversion.test.js src/tests/backend-root.test.js src/tests/backend-project-sietze-new.test.js src/tests/backend-example-goldens.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
