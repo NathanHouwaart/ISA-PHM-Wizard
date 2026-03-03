@@ -51,7 +51,7 @@ jobs:
         if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.9'
       - name: Start local backend
         if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         shell: bash
