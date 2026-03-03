@@ -66,7 +66,7 @@ export const GlobalDataProvider = ({ children }) => {
 
     // Projects list and currentProjectId (global across the app)
     const DEFAULT_PROJECT_ID = 'example-single-run';
-    const DEFAULT_PROJECT_NAME = 'Single Run Sietse';
+    const DEFAULT_PROJECT_NAME = 'Single Run Sietze';
     const MULTI_RUN_EXAMPLE_PROJECT_ID = 'example-multi-run';
     const MULTI_RUN_EXAMPLE_PROJECT_NAME = 'Multi Run Milling';
 

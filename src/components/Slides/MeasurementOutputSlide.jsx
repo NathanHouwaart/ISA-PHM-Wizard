@@ -1,320 +1,172 @@
-import React, { forwardRef, useCallback, useMemo } from 'react'
-import { Layers } from 'lucide-react';
-
-// Import hooks
+import React, { forwardRef, useCallback, useMemo } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-
-// Import the single global provider
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
-
-// Import components
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
-import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import WarningBanner from '../Widgets/WarningBanner';
-
-// Data Grid Imports
 import usePageTab from '../../hooks/usePageWidth';
-import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
-import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
-import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import useStudyRuns from '../../hooks/useStudyRuns';
-import DualSidebarStudyRunPanel from '../Study/DualSidebarStudyRunPanel';
-import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import { buildStudyRunRowData } from '../../utils/studyRunLayouts';
 import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellProperties } from '../../utils/gridCellTemplates';
-import SelectTypePlugin from '@revolist/revogrid-column-select';
-
-const plugins = { select: new SelectTypePlugin() };
+import useStudyProtocolSelection from '../../hooks/useStudyProtocolSelection';
+import ProtocolOutputPanel from './ProtocolOutputPanel';
 
 export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
+  const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+  const elementToObserveRef = useResizeObserver(onHeightChange);
+  const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    // Use persistent tab state that remembers across page navigation
-    const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+  const {
+    studies,
+    setStudies,
+    testSetups,
+    selectedTestSetupId,
+    selectedDataset,
+    studyToMeasurementProtocolSelection,
+    setStudyToMeasurementProtocolSelection
+  } = useGlobalDataContext();
 
-    // Observe height changes
-    const elementToObserveRef = useResizeObserver(onHeightChange);
-    const combinedRef = useCombinedRefs(ref, elementToObserveRef);
+  const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
+  const studyRuns = useStudyRuns();
 
-    // Access global context
-    const {
-        studies,
-        setStudies,
-        testSetups,
-        selectedTestSetupId,
-        selectedDataset,
-        studyToMeasurementProtocolSelection,
-        setStudyToMeasurementProtocolSelection
-    } = useGlobalDataContext();
+  const sensors = Array.isArray(selectedTestSetup?.sensors)
+    ? selectedTestSetup.sensors
+    : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, sensor]) => ({ id, ...sensor })) : []);
 
-    const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
-    const studyRuns = useStudyRuns();
+  const measurementProtocolOptions = useMemo(
+    () => (selectedTestSetup?.measurementProtocols || []).map((protocol) => ({
+      value: protocol.id,
+      label: protocol.name || 'Unnamed protocol'
+    })),
+    [selectedTestSetup]
+  );
 
-    const sensors = Array.isArray(selectedTestSetup?.sensors)
-        ? selectedTestSetup.sensors
-        : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, s]) => ({ id, ...s })) : []);
+  const {
+    selectedProtocolByStudy: selectedMeasurementProtocolByStudy,
+    updateStudyProtocol: updateStudyMeasurementProtocol,
+    handleGridRowDataChange
+  } = useStudyProtocolSelection({
+    studies,
+    setStudies,
+    selection: studyToMeasurementProtocolSelection,
+    setSelection: setStudyToMeasurementProtocolSelection,
+    protocolField: 'measurementProtocolId'
+  });
 
-    const measurementProtocolOptions = useMemo(
-        () => (selectedTestSetup?.measurementProtocols || []).map((protocol) => ({
-            value: protocol.id,
-            label: protocol.name || 'Unnamed protocol'
-        })),
-        [selectedTestSetup]
-    );
+  const mappingsController = useMappingsController(
+    'studyToSensorMeasurementMapping',
+    { sourceKey: 'sensorId', targetKey: 'studyRunId' }
+  );
 
-    const selectedMeasurementProtocolByStudy = useMemo(() => {
-        const byStudy = {};
-        (studyToMeasurementProtocolSelection || []).forEach((entry) => {
-            if (!entry?.studyId) return;
-            byStudy[entry.studyId] = entry.protocolId || '';
-        });
-        studies.forEach((study) => {
-            if (!study?.id) return;
-            if (study.measurementProtocolId && !byStudy[study.id]) {
-                byStudy[study.id] = study.measurementProtocolId;
-            }
-        });
-        return byStudy;
-    }, [studyToMeasurementProtocolSelection, studies]);
+  const handleDataGridMappingsChange = useCallback((newMappings) => {
+    mappingsController.setMappings(newMappings);
+  }, [mappingsController]);
 
-    const updateStudyMeasurementProtocol = useCallback((studyId, protocolId) => {
-        if (!studyId) return;
-        setStudies((prevStudies) => (prevStudies || []).map((study) => (
-            study.id === studyId ? { ...study, measurementProtocolId: protocolId || '' } : study
-        )));
-        setStudyToMeasurementProtocolSelection((prev) => {
-            const safePrev = Array.isArray(prev) ? prev : [];
-            const withoutStudy = safePrev.filter((entry) => entry?.studyId !== studyId);
-            return [...withoutStudy, { studyId, protocolId: protocolId || '' }];
-        });
-    }, [setStudies, setStudyToMeasurementProtocolSelection]);
+  const hierarchicalRows = useMemo(
+    () => buildStudyRunRowData(studies, studyRuns),
+    [studies, studyRuns]
+  );
 
-    // Manage the study<->sensor measurement mappings (same interface as StudyVariableSlide)
-    const mappingsController = useMappingsController(
-        'studyToSensorMeasurementMapping',
-        { sourceKey: 'sensorId', targetKey: 'studyRunId' }
-    );
-
-    // Handle data grid changes (use controller to keep canonical mapping)
-    const handleDataGridMappingsChange = useCallback((newMappings) => {
-        mappingsController.setMappings(newMappings);
-    }, [mappingsController]);
-
-    // Grid configuration for mapping studies to sensor measurements
-    const hierarchicalRows = useMemo(
-        () => buildStudyRunRowData(studies, studyRuns),
-        [studies, studyRuns]
-    );
-
-
-
-    const measurementOutputGridConfig = {
-        title: 'Mappings for measurement output',
-        rowData: hierarchicalRows,
-        columnData: selectedTestSetup?.sensors || [],
-        mappings: mappingsController.mappings,
-        fieldMappings: {
-            rowId: 'id',
-            rowName: 'name',
-            columnId: 'id',
-            columnName: 'alias',
-            columnUnit: '',
-            mappingRowId: 'studyRunId',
-            mappingColumnId: 'sensorId',
-            mappingValue: 'value'
-        },
-        customActions: [],
-        staticColumns: useMemo(() => ([{
-            prop: 'studyDisplayName',
-            name: 'Study',
-            size: 220,
-            readonly: true,
-            pin: 'colPinStart',
-            cellTemplate: studyCellTemplate,
-            cellProperties: studyCellProperties
-        },
-        {
-            prop: 'runLabel',
-            name: 'Run',
-            size: 140,
-            readonly: true,
-            pin: 'colPinStart',
-            cellTemplate: runCellTemplate,
-            cellProperties: runCellProperties
-        },
-        {
-            prop: 'measurementProtocolId',
-            name: 'Measurement Protocol',
-            size: 260,
-            readonly: false,
-            pin: 'colPinStart',
-            columnType: 'select',
-            labelKey: 'label',
-            valueKey: 'value',
-            source: measurementProtocolOptions,
-            cellProperties: (props) => {
-                const model = props?.model;
-                const style = {
-                    "border-right": "3px solid black"
-                };
-                if (model?.isLastRunInStudy) {
-                    style["border-bottom"] = "3px solid black";
-                }
-                return { style };
-            }
+  const measurementOutputGridConfig = useMemo(() => ({
+    title: 'Mappings for measurement output',
+    rowData: hierarchicalRows,
+    columnData: selectedTestSetup?.sensors || [],
+    mappings: mappingsController.mappings,
+    fieldMappings: {
+      rowId: 'id',
+      rowName: 'name',
+      columnId: 'id',
+      columnName: 'alias',
+      columnUnit: '',
+      mappingRowId: 'studyRunId',
+      mappingColumnId: 'sensorId',
+      mappingValue: 'value'
+    },
+    customActions: [],
+    staticColumns: [
+      {
+        prop: 'studyDisplayName',
+        name: 'Study',
+        size: 220,
+        readonly: true,
+        pin: 'colPinStart',
+        cellTemplate: studyCellTemplate,
+        cellProperties: studyCellProperties
+      },
+      {
+        prop: 'runLabel',
+        name: 'Run',
+        size: 140,
+        readonly: true,
+        pin: 'colPinStart',
+        cellTemplate: runCellTemplate,
+        cellProperties: runCellProperties
+      },
+      {
+        prop: 'measurementProtocolId',
+        name: 'Measurement Protocol',
+        size: 260,
+        readonly: false,
+        pin: 'colPinStart',
+        columnType: 'select',
+        labelKey: 'label',
+        valueKey: 'value',
+        source: measurementProtocolOptions,
+        cellProperties: (props) => {
+          const model = props?.model;
+          const style = {
+            'border-right': '3px solid black'
+          };
+          if (model?.isLastRunInStudy) {
+            style['border-bottom'] = '3px solid black';
+          }
+          return { style };
         }
-        ]), [measurementProtocolOptions])
-    };
+      }
+    ]
+  }), [hierarchicalRows, selectedTestSetup, mappingsController.mappings, measurementProtocolOptions]);
 
-    const handleGridRowDataChange = useCallback((nextRows) => {
-        const currentProtocolByStudy = new Map(
-            (studies || []).map((study) => [study.id, study.measurementProtocolId || ''])
-        );
+  return (
+    <div ref={combinedRef}>
+      <SlidePageTitle>
+        Raw Measurement Output
+      </SlidePageTitle>
 
-        const seenValuesByStudy = new Map();
-        (nextRows || []).forEach((row) => {
-            if (!row?.studyId) return;
-            if (!seenValuesByStudy.has(row.studyId)) {
-                seenValuesByStudy.set(row.studyId, new Set());
-            }
-            seenValuesByStudy.get(row.studyId).add(row.measurementProtocolId || '');
-        });
+      <SlidePageSubtitle>
+        This slide allows you to view and edit the output of measurements across different studies and sensors of the selected test set-up. You can switch between a simple view and a grid view. Please leave fields empty if no raw measurement data (i.e. if only processed measurement data) are available. Processed measurement data will be implemented in further sheets.
+      </SlidePageSubtitle>
 
-        const protocolByStudy = new Map();
-        seenValuesByStudy.forEach((valueSet, studyId) => {
-            const values = Array.from(valueSet);
-            const currentValue = currentProtocolByStudy.get(studyId) || '';
-            const changedValue = values.find((value) => value !== currentValue);
-            const nextValue = changedValue ?? (values[0] ?? currentValue);
-            if (nextValue !== currentValue) {
-                protocolByStudy.set(studyId, nextValue);
-            }
-        });
-
-        if (!protocolByStudy.size) return;
-
-        setStudies((prevStudies) => {
-            let changed = false;
-            const nextStudies = (prevStudies || []).map((study) => {
-                if (!protocolByStudy.has(study.id)) return study;
-                const nextProtocolId = protocolByStudy.get(study.id) || '';
-                if ((study.measurementProtocolId || '') === nextProtocolId) return study;
-                changed = true;
-                return {
-                    ...study,
-                    measurementProtocolId: nextProtocolId
-                };
-            });
-            return changed ? nextStudies : prevStudies;
-        });
-
-        setStudyToMeasurementProtocolSelection((prev) => {
-            const safePrev = Array.isArray(prev) ? prev : [];
-            const filtered = safePrev.filter((entry) => !protocolByStudy.has(entry?.studyId));
-            const nextSelections = [...filtered];
-            protocolByStudy.forEach((protocolId, studyId) => {
-                nextSelections.push({ studyId, protocolId: protocolId || '' });
-            });
-            const unchanged = safePrev.length === nextSelections.length && safePrev.every((entry, index) => (
-                entry?.studyId === nextSelections[index]?.studyId &&
-                (entry?.protocolId || '') === (nextSelections[index]?.protocolId || '')
-            ));
-            if (unchanged) return safePrev;
-            return nextSelections;
-        });
-    }, [studies, setStudies, setStudyToMeasurementProtocolSelection]);
-
-    return (
-        <div ref={combinedRef} >
-
-            <SlidePageTitle>
-                Raw Measurement Output
-            </SlidePageTitle>
-
-            <SlidePageSubtitle>
-                This slide allows you to view and edit the output of measurements across different studies and sensors of the selected test set-up. You can switch between a simple view and a grid view. Please leave fields empty if no raw measurement data (i.e. if only processed measurement data) are available. Processed measurement data will be implemented in further sheets.
-            </SlidePageSubtitle>
-
-            <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
-
-                <TabSwitcher
-                    selectedTab={selectedTab}
-                    onTabChange={setSelectedTab}
-                    tabs={[
-                        { id: 'simple-view', label: 'Simple View', tooltip: 'View measurements in a simple list format' },
-                        { id: 'grid-view', label: 'Grid View', tooltip: 'View measurements in a grid format for better data management' }
-                    ]}
-                />
-
-                {/* Warning banners */}
-                {!selectedTestSetupId && (
-                    <WarningBanner type="warning" icon={Layers}>
-                        <strong>No test setup selected.</strong> Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and select a test setup for your project.
-                    </WarningBanner>
-                )}
-                {selectedTestSetupId && sensors.length === 0 && (
-                    <WarningBanner type="warning">
-                        <strong>No sensors in test setup.</strong> The selected test setup must contain one or more sensors to map measurement outputs. Add sensors to your test setup or select a different one.
-                    </WarningBanner>
-                )}
-                {selectedTestSetupId && measurementProtocolOptions.length === 0 && (
-                    <WarningBanner type="info">
-                        <strong>No measurement protocols in test setup.</strong> Define one or more measurement protocol variants in the Test Setup page to select them per study.
-                    </WarningBanner>
-                )}
-                {studies.length === 0 && (
-                    <WarningBanner type="warning">
-                        <strong>No studies available.</strong> There are no studies in the workspace. Create or import studies first so you can map measurement outputs to them.
-                    </WarningBanner>
-                )}
-
-                <TabPanel isActive={selectedTab === 'simple-view'}>
-                    <div className="h-[45vh] flex flex-col overflow-hidden">
-                            <DualSidebarStudyRunPanel
-                                title="Sensor Output Mapping"
-                                studies={studies}
-                                studyRuns={studyRuns}
-                                mappings={mappingsController.mappings}
-                                handleInputChange={mappingsController.updateMappingValue}
-                                minHeight={WINDOW_HEIGHT}
-                                MappingCardComponent={StudyMeasurementMappingCard}
-                                mappingCardProps={{
-                                    protocolLabel: 'Measurement Protocol',
-                                    protocolOptions: measurementProtocolOptions,
-                                    selectedProtocolByStudy: selectedMeasurementProtocolByStudy,
-                                    onStudyProtocolChange: updateStudyMeasurementProtocol,
-                                    fileFieldLabel: 'Raw Measurement File'
-                                }}
-                            />
-                    </div>
-                </TabPanel>
-
-                <TabPanel isActive={selectedTab === 'grid-view'}>
-                    {!selectedDataset && (
-                        <WarningBanner type="info">
-                            <strong>No dataset indexed.</strong> To use the file assignment feature (<strong>📁 Assign files</strong> button), you need to index a dataset first. Go to the project settings <Layers className="inline w-4 h-4 mx-1" /> and index a folder containing your measurement files.
-                        </WarningBanner>
-                    )}
-                    <DataGrid
-                        {...measurementOutputGridConfig}
-                        showControls={true}
-                        // Debugging turned off by default
-                        showDebug={false}
-                        onDataChange={handleDataGridMappingsChange}
-                        onRowDataChange={handleGridRowDataChange}
-                        height={"45vh"}
-                        isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
-                        actionPlugins={[FilePickerPlugin]}
-                        plugins={plugins}
-                    />
-                </TabPanel>
-            </div>
-        </div>
-    );
+      <ProtocolOutputPanel
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        selectedTestSetupId={selectedTestSetupId}
+        sensors={sensors}
+        protocolOptions={measurementProtocolOptions}
+        studies={studies}
+        selectedDataset={selectedDataset}
+        protocolMissingMessage="Define one or more measurement protocol variants in the Test Setup page to select them per study."
+        noDatasetMessage={
+          <>To use the file assignment feature (<strong>📁 Assign files</strong> button), you need to index a dataset first. Go to the project settings and index a folder containing your measurement files.</>
+        }
+        simplePanelTitle="Sensor Output Mapping"
+        protocolLabel="Measurement Protocol"
+        selectedProtocolByStudy={selectedMeasurementProtocolByStudy}
+        onStudyProtocolChange={updateStudyMeasurementProtocol}
+        fileFieldLabel="Raw Measurement File"
+        studyRuns={studyRuns}
+        mappings={mappingsController.mappings}
+        onMappingInputChange={mappingsController.updateMappingValue}
+        gridConfig={measurementOutputGridConfig}
+        onDataChange={handleDataGridMappingsChange}
+        onRowDataChange={handleGridRowDataChange}
+        currentPage={currentPage}
+        pageIndex={pageIndex}
+      />
+    </div>
+  );
 });
 
-MeasurementOutputSlide.displayName = "Measurement Output"; // Set display name for better debugging
+MeasurementOutputSlide.displayName = 'Measurement Output';
 
 export default MeasurementOutputSlide;

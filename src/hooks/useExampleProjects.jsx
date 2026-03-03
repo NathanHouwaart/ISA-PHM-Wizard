@@ -1,6 +1,6 @@
 // src/hooks/useExampleProjects.jsx
 import { useEffect } from 'react';
-import exampleSingleRunSietse from "../data/example-single-run-sietse.json";
+import exampleSingleRunSietse from "../data/example-single-run-sietze.json";
 import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';

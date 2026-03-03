@@ -57,7 +57,7 @@ async function loadInputFixture() {
   const candidates = [
     path.resolve(process.cwd(), 'src/tests/fixtures/isa-project-example.json'),
     path.resolve(process.cwd(), 'src/data/isa-project-example.json'),
-    path.resolve(process.cwd(), 'src/data/example-single-run-sietse.json'),
+    path.resolve(process.cwd(), 'src/data/example-single-run-sietze.json'),
     path.resolve(process.cwd(), 'src/data/example-multi-run-milling.json'),
     path.resolve(process.cwd(), 'data/isa-project-example.json'),
   ];
@@ -570,13 +570,14 @@ integrationDescribe('ISA-PHM Conversion Integration Tests', () => {
 
     it('should have samples with characteristics', () => {
       if (!backendAvailable) return;
-      apiOutput.studies.forEach((study) => {
+      apiOutput.studies.forEach((study, index) => {
         expect(Array.isArray(study.materials.samples)).toBe(true);
         expect(study.materials.samples.length).toBeGreaterThan(0);
         
         const sample = study.materials.samples[0];
+        const expectedSample = expectedOutput.studies[index].materials.samples[0];
         expect(Array.isArray(sample.characteristics)).toBe(true);
-        expect(sample.characteristics.length).toBeGreaterThan(0);
+        expect(sample.characteristics.length).toBe(expectedSample.characteristics.length);
       });
     });
 
@@ -753,15 +754,27 @@ integrationDescribe('ISA-PHM Conversion Integration Tests', () => {
       apiOutput.studies.forEach((study) => {
         const sourceIds = new Set(study.materials.sources.map(s => s['@id']));
         const sampleIds = new Set(study.materials.samples.map(s => s['@id']));
+        const dataFileIds = new Set(
+          study.assays.flatMap((assay) => (assay.dataFiles || []).map((dataFile) => dataFile['@id']))
+        );
+        const isExpectedMaterialPrefix = (id) => /^#(?:source|sample|data_file)\//i.test(String(id || ''));
         
         study.processSequence.forEach((process) => {
           process.inputs.forEach((input) => {
-            const isValid = sourceIds.has(input['@id']) || sampleIds.has(input['@id']);
+            const isValid =
+              sourceIds.has(input['@id']) ||
+              sampleIds.has(input['@id']) ||
+              dataFileIds.has(input['@id']) ||
+              isExpectedMaterialPrefix(input['@id']);
             expect(isValid).toBe(true);
           });
           
           process.outputs.forEach((output) => {
-            const isValid = sourceIds.has(output['@id']) || sampleIds.has(output['@id']);
+            const isValid =
+              sourceIds.has(output['@id']) ||
+              sampleIds.has(output['@id']) ||
+              dataFileIds.has(output['@id']) ||
+              isExpectedMaterialPrefix(output['@id']);
             expect(isValid).toBe(true);
           });
         });
@@ -828,8 +841,12 @@ integrationDescribe('ISA-PHM Conversion Integration Tests', () => {
       
       // Check that the overall structure depth matches
       expect(apiOutput.studies[0].assays[0].processSequence.length).toBeGreaterThan(0);
-      expect(apiOutput.studies[0].materials.samples[0].characteristics.length).toBeGreaterThan(0);
-      expect(apiOutput.studies[0].materials.samples[0].factorValues.length).toBeGreaterThan(0);
+      expect(apiOutput.studies[0].materials.samples[0].characteristics.length).toBe(
+        expectedOutput.studies[0].materials.samples[0].characteristics.length
+      );
+      expect(apiOutput.studies[0].materials.samples[0].factorValues.length).toBe(
+        expectedOutput.studies[0].materials.samples[0].factorValues.length
+      );
     });
   });
 });
