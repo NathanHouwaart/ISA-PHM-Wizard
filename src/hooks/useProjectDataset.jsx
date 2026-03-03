@@ -126,7 +126,6 @@ export function useProjectDataset(projectId) {
 
     if (!projectId) {
       setTree(null);
-      setCachedDatasetName(null);
       setLoading(false);
       setProgress(null);
       return () => {

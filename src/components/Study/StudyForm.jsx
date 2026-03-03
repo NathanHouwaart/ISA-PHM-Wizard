@@ -11,7 +11,7 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { studies, experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
+  const { experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 

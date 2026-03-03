@@ -5,7 +5,7 @@ import TooltipButton from '../../Widgets/TooltipButton';
 import TestSetupPickerDialog from '../../TestSetup/TestSetupPickerDialog';
 import { useGlobalDataContext } from '../../../contexts/GlobalDataContext';
 
-const ProjectTestSetupSection = ({ projectId, value, onChange }) => {
+const ProjectTestSetupSection = ({ projectId: _projectId, value, onChange }) => {
   const { testSetups = [] } = useGlobalDataContext();
   const [pickerOpen, setPickerOpen] = useState(false);
 

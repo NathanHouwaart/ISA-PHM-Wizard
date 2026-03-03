@@ -75,11 +75,6 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const handleAdd = (itemData) => {
-        setItems(prevItems => [...prevItems, itemData]);
-        setShowAddForm(false);
-    };
-
     const handleRemove = (itemId) => {
         const itemToRemove = items.find(item => item.id === itemId);
         if (itemToRemove) {
@@ -122,7 +117,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     let addButtonTooltip = 'Add a new item to the collection';
     let emptyStateTitle = 'No Items Yet';
     let emptyStateSubtitle = 'Get started by adding your first item.';
-    let emptyStateAddButtonText = 'Add First Item';
+    let _emptyStateAddButtonText = 'Add First Item';
 
     React.Children.forEach(children, (child) => {
         if (!isValidElement(child)) {
@@ -146,7 +141,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 emptyStateSubtitle = child.props.children;
                 break;
             case CollectionEmptyStateAddButtonText:
-                emptyStateAddButtonText = child.props.children;
+                _emptyStateAddButtonText = child.props.children;
                 break;
             default:
                 break;

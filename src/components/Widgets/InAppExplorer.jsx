@@ -250,7 +250,7 @@ const InAppExplorer = ({ onClose, onSelect }) => {
           </div>
         ) : (
           <div ref={containerRef} onMouseDown={startDrag} onMouseMove={moveDrag} onMouseUp={endDrag} className="flex-1 overflow-y-auto p-2 relative">
-            {nodesToShow.map((node, idx) => (
+            {nodesToShow.map((node, _idx) => (
               <div key={node.relPath} ref={(el) => (fileRefs.current[node.relPath] = el)} onDoubleClick={() => node.isDirectory && enterFolder(node.relPath)} onClick={(e) => toggleNode(node, e)} className={`p-2 my-1 rounded-md flex items-center cursor-pointer select-none ${selectedFiles.includes(node.relPath) ? 'bg-indigo-50 border-2 border-indigo-600' : 'bg-white border border-gray-200'}`}>
                 <span className="mr-2">{node.isDirectory ? '📁' : '📄'}</span>
                 <span className="text-sm">{node.name}</span>

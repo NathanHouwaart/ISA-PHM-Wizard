@@ -7,7 +7,7 @@ import Paragraph from './Typography/Paragraph';
 import Heading3 from './Typography/Heading3';
 import TooltipButton from './Widgets/TooltipButton';
 
-const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight }) => {
+const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight: _minHeight }) => {
 
 
     const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();

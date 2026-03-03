@@ -113,7 +113,8 @@ describe('KeyValueRow', () => {
     });
 
     test('handles conditional rendering in value', () => {
-      const value = <>{true && <span>Shown</span>}</>;
+      const shouldShow = true;
+      const value = <>{shouldShow && <span>Shown</span>}</>;
       render(<KeyValueRow label="Conditional" value={value} />);
       expect(screen.getByText('Shown')).toBeInTheDocument();
     });

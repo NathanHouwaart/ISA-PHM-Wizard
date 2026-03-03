@@ -2,7 +2,6 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import { useFaultSpecifications } from '../../hooks/useVariables';
 import Collection, {
     CollectionTitle,

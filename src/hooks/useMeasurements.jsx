@@ -13,11 +13,11 @@ export const useMeasurements = () => {
         return null;
     }
 
-    const updateVariable = (updatedVariable) => {
+    const updateVariable = (_updatedVariable) => {
         return null;
     }
 
-    const removeVariable = (variableId) => {
+    const removeVariable = (_variableId) => {
         return null;
     }
 

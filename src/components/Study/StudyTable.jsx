@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 import { RevoGrid, Template } from '@revolist/react-datagrid';
 import { Bold, ConstructionIcon, Minus, Plus } from "lucide-react"; // Only need Minus and Plus, Bold isn't used as an icon
 import PageWrapper from "../../layout/PageWrapper";
@@ -45,13 +45,6 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
     const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
 
-
-    // Unused
-    const [rows, setRows] = useState([
-        { id: 's01', title: '', description: '', submissionDate: '', publicationDate: '' },
-        { id: 's02', title: '', description: '', submissionDate: '', publicationDate: '' }
-    ]);
-
     const history = useRef([]);
     const future = useRef([]);
 
@@ -77,8 +70,7 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
                     newData[row] = { ...newData[row], [prop]: val };
                 }
             });
-            setRows(newData);
-            setStudies(newData)
+            setStudies(newData);
         }
     };
 
@@ -98,12 +90,11 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
             const newData = [...studies];
             newData[rowIndex] = { ...newData[rowIndex], [prop]: newValue };
-            setRows(newData);
             setStudies(newData);
         }
     };
 
-    const undo = () => {
+    const undo = useCallback(() => {
         if (history.current.length === 0) return;
 
         // The state we are moving *from* (current `rows`) goes to `future`
@@ -111,12 +102,10 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
         // The state we are moving *to* (previous state from `history`)
         const prevState = JSON.parse(history.current.pop());
-        setRows(prevState);
         setStudies(prevState);
+    }, [studies, setStudies]);
 
-    };
-
-    const redo = () => {
+    const redo = useCallback(() => {
         if (future.current.length === 0) return;
 
         // The state we are moving *from* (current `rows`) goes to `history`
@@ -124,10 +113,8 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
         // The state we are moving *to* (next state from `future`)
         const nextState = JSON.parse(future.current.pop());
-        setRows(nextState);
         setStudies(nextState);
-
-    };
+    }, [studies, setStudies]);
 
     // Add keyboard listeners for undo/redo
     useEffect(() => {
@@ -153,14 +140,13 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
         window.addEventListener('keydown', keyHandler, true); // capture phase
         return () => window.removeEventListener('keydown', keyHandler, true);
-    }, [studies]); // Add `rows` to dependency array to ensure `undo` and `redo` always capture the latest `rows` value when called.
+    }, [studies, undo, redo]); // Add `rows` to dependency array to ensure `undo` and `redo` always capture the latest `rows` value when called.
     // Although useRef values are stable, the `rows` state itself changes.
 
     const addRow = () => {
         // Before changing the state, push the current state to history
         pushToHistory(studies);
 
-        const rowIndex = studies.length + 1;
         const newRow = columns.reduce((acc, col) => {
             if (col.prop === 'id') {
                 acc[col.prop] = generateId();
@@ -170,7 +156,6 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
             return acc;
         }, {});
 
-        setRows((prev) => [...prev, newRow]);
         setStudies((prev) => [...prev, newRow]);
     };
 
@@ -179,7 +164,6 @@ export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
         // Before changing the state, push the current state to history
         pushToHistory(studies);
-        setRows((prev) => prev.slice(0, -1));
         setStudies((prev) => prev.slice(0, -1));
     };
 

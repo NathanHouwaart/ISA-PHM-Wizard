@@ -19,7 +19,6 @@ export default function useFuseSearch(items = [], keys = [], options = {}) {
       return new Fuse(items || [], { keys, threshold });
     } catch (e) {
       // If Fuse can't be created (bad keys), fall back gracefully
-      // eslint-disable-next-line no-console
       console.warn('useFuseSearch: failed to create Fuse instance', e);
       return null;
     }

@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/context/GlobalDataContext.js
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 
-import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
+import { clearTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import generateId from '../utils/generateId';
 import { normalizeRunCount } from '../utils/studyRuns';
@@ -106,7 +107,10 @@ export const GlobalDataProvider = ({ children }) => {
     }, []);
 
     // helper to construct per-project storage keys
-    const projectKey = (k, projectId = currentProjectId) => `globalAppData_${projectId}_${k}`;
+    const projectKey = useCallback(
+        (k, projectId = currentProjectId) => `globalAppData_${projectId}_${k}`,
+        [currentProjectId]
+    );
 
     const KEY_FALLBACKS = {
         selectedTestSetupId: null,
@@ -217,9 +221,6 @@ export const GlobalDataProvider = ({ children }) => {
     // This context only manages the promise resolution for async workflows
     const [explorerOpen, setExplorerOpen] = useState(false);
     const explorerResolveRef = useRef(null);
-    // Ref that indicates the initial IndexedDB hydration has completed (success or not).
-    const initLoadedRef = useRef(false);
-    
     // Initialize example projects using hook
     useExampleProjects(setTestSetups, loadFromLocalStorage);
 
@@ -415,20 +416,22 @@ export const GlobalDataProvider = ({ children }) => {
         // 2. Load the new project's dataset from IndexedDB
         // This ensures each project has its own isolated dataset.
     }
+    const switchProjectRef = useRef(switchProject);
+    switchProjectRef.current = switchProject;
 
     // Effect for saving all data to local storage. Runs when relevant state changes.
     // OPTIMIZED: Split into separate effects to avoid mass writes on every change
     useEffect(() => {
         saveToLocalStorage(projectKey('studies', currentProjectId), studies);
-    }, [studies, currentProjectId]);
+    }, [studies, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('investigation', currentProjectId), investigation);
-    }, [investigation, currentProjectId]);
+    }, [investigation, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('contacts', currentProjectId), contacts);
-    }, [contacts, currentProjectId]);
+    }, [contacts, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage('globalAppData_testSetups', testSetups);
@@ -436,59 +439,59 @@ export const GlobalDataProvider = ({ children }) => {
 
     useEffect(() => {
         saveToLocalStorage(projectKey('publications', currentProjectId), publications);
-    }, [publications, currentProjectId]);
+    }, [publications, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('selectedTestSetupId', currentProjectId), selectedTestSetupId);
-    }, [selectedTestSetupId, currentProjectId]);
+    }, [selectedTestSetupId, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyVariables', currentProjectId), studyVariables);
-    }, [studyVariables, currentProjectId]);
+    }, [studyVariables, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('measurementProtocols', currentProjectId), measurementProtocols);
-    }, [measurementProtocols, currentProjectId]);
+    }, [measurementProtocols, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('processingProtocols', currentProjectId), processingProtocols);
-    }, [processingProtocols, currentProjectId]);
+    }, [processingProtocols, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('experimentType', currentProjectId), experimentType);
-    }, [experimentType, currentProjectId]);
+    }, [experimentType, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToMeasurementProtocolSelection', currentProjectId), studyToMeasurementProtocolSelection);
-    }, [studyToMeasurementProtocolSelection, currentProjectId]);
+    }, [studyToMeasurementProtocolSelection, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToProcessingProtocolSelection', currentProjectId), studyToProcessingProtocolSelection);
-    }, [studyToProcessingProtocolSelection, currentProjectId]);
+    }, [studyToProcessingProtocolSelection, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToStudyVariableMapping', currentProjectId), studyToStudyVariableMapping);
-    }, [studyToStudyVariableMapping, currentProjectId]);
+    }, [studyToStudyVariableMapping, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('sensorToMeasurementProtocolMapping', currentProjectId), sensorToMeasurementProtocolMapping);
-    }, [sensorToMeasurementProtocolMapping, currentProjectId]);
+    }, [sensorToMeasurementProtocolMapping, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToSensorMeasurementMapping', currentProjectId), studyToSensorMeasurementMapping);
-    }, [studyToSensorMeasurementMapping, currentProjectId]);
+    }, [studyToSensorMeasurementMapping, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('sensorToProcessingProtocolMapping', currentProjectId), sensorToProcessingProtocolMapping);
-    }, [sensorToProcessingProtocolMapping, currentProjectId]);
+    }, [sensorToProcessingProtocolMapping, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('studyToSensorProcessingMapping', currentProjectId), studyToSensorProcessingMapping);
-    }, [studyToSensorProcessingMapping, currentProjectId]);
+    }, [studyToSensorProcessingMapping, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage(projectKey('pageTabStates', currentProjectId), pageTabStates);
-    }, [pageTabStates, currentProjectId]);
+    }, [pageTabStates, currentProjectId, projectKey]);
 
     useEffect(() => {
         saveToLocalStorage('globalAppData_projects', projects);
@@ -525,14 +528,14 @@ export const GlobalDataProvider = ({ children }) => {
 
                 // Refresh in-memory app state from the newly written localStorage keys
                 if (mounted) {
-                    try { switchProject(currentProjectId); } catch (e) { /* ignore */ }
+                    try { switchProjectRef.current?.(currentProjectId); } catch (e) { /* ignore */ }
                 }
             } catch (err) {
                 console.error('[GlobalDataContext] seed example project error', err);
             }
         })();
         return () => { mounted = false; };
-    }, [currentProjectId, initHydrated, selectedDataset]);
+    }, [currentProjectId, initHydrated, selectedDataset, setSelectedDataset]);
 
     // submission logic intentionally removed from context; use `useSubmitData` hook instead
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
@@ -7,6 +7,7 @@ import { buildStudyRunGroups } from '../../utils/studyRunLayouts';
 import StudyMeasurementMappingCard from '../StudyMeasurementMappingCard';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 
+const EMPTY_FN = () => {};
 
 const StudyRunMappingPanel = ({
   title = 'Study mapping',
@@ -17,6 +18,7 @@ const StudyRunMappingPanel = ({
   minHeight,
   MappingCardComponent = StudyMeasurementMappingCard,
 }) => {
+  const MappingCard = MappingCardComponent || StudyMeasurementMappingCard;
   const groupedStudies = useMemo(
     () => buildStudyRunGroups(studies, studyRuns),
     [studies, studyRuns]
@@ -115,13 +117,13 @@ const StudyRunMappingPanel = ({
             </div>
             {selectedStudyGroup.runs.map((run, index) => (
               <TabPanel key={getRunId(run)} isActive={getRunId(run) === selectedRunId}>
-                <MappingCardComponent
-                  item={run}
-                  itemIndex={index}
-                  mappings={mappings}
-                  handleInputChange={handleInputChange}
-                  removeParameter={EMPTY_FN}
-                />
+                {React.createElement(MappingCard, {
+                  item: run,
+                  itemIndex: index,
+                  mappings,
+                  handleInputChange,
+                  removeParameter: EMPTY_FN,
+                })}
               </TabPanel>
             ))}
           </>

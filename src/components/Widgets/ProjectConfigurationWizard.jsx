@@ -7,8 +7,7 @@ import TooltipButton from './TooltipButton';
 import Z_INDEX from '../../constants/zIndex';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 import {
-  DEFAULT_EXPERIMENT_TYPE_ID,
-  getExperimentTypeConfig
+  DEFAULT_EXPERIMENT_TYPE_ID
 } from '../../constants/experimentTypes';
 import {
   getProjectExperimentTypeId,
@@ -51,7 +50,7 @@ const ProjectConfigurationWizard = ({
   const [nameDraft, setNameDraft] = useState(targetProject?.name || '');
   const [templateDraft, setTemplateDraft] = useState(() => getProjectExperimentTypeId(projectId, DEFAULT_EXPERIMENT_TYPE_ID));
   const [setupDraft, setSetupDraft] = useState(() => getProjectTestSetupId(projectId));
-  const [datasetVersion, setDatasetVersion] = useState(0);
+  const [_datasetVersion, setDatasetVersion] = useState(0);
 
   useEffect(() => {
     if (open) {
@@ -62,6 +61,8 @@ const ProjectConfigurationWizard = ({
       setDatasetVersion((prev) => prev + 1); // force cached dataset refresh
     }
   }, [open, projectId, targetProject?.name, initialStep]);
+
+  const cachedDatasetName = getProjectDatasetName(projectId);
 
   if (!open || !projectId) {
     return null;
@@ -94,11 +95,6 @@ const ProjectConfigurationWizard = ({
     onProjectMetaChange?.(projectId);
     onComplete?.();
   };
-
-  const cachedDatasetName = useMemo(
-    () => getProjectDatasetName(projectId),
-    [projectId, datasetVersion]
-  );
 
   const renderStepContent = () => {
     const stepId = steps[activeStep].id;

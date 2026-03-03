@@ -50,7 +50,6 @@ const LicenseField = ({
                 setFuse(fuseInstance);
             } catch (error) {
                 if (isMounted) {
-                    // eslint-disable-next-line no-console
                     console.error('Failed to fetch license list', error);
                 }
             }

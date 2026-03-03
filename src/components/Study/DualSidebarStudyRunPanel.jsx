@@ -17,6 +17,7 @@ const DualSidebarStudyRunPanel = ({
   MappingCardComponent,
   mappingCardProps = {},
 }) => {
+  const MappingCard = MappingCardComponent;
   const { experimentType } = useGlobalDataContext();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const supportsMultipleRuns = !!experimentConfig.supportsMultipleRuns;
@@ -83,6 +84,7 @@ const DualSidebarStudyRunPanel = ({
   return (
     <div
       className="flex flex-col md:flex-row gap-6 h-full min-h-0 w-full"
+      style={minHeight ? { minHeight } : undefined}
     >
       <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md overflow-hidden">
         <Heading3 className="text-lg text-gray-900">{title}</Heading3>
@@ -142,13 +144,13 @@ const DualSidebarStudyRunPanel = ({
         )}
         {selectedStudyGroup && activeRun && (
           <div className="flex-1 min-h-0">
-            <MappingCardComponent
-              item={activeRun}
-              mappings={mappings}
-              handleInputChange={handleInputChange}
-              singleRunMode
-              {...mappingCardProps}
-            />
+            {MappingCard && React.createElement(MappingCard, {
+              item: activeRun,
+              mappings,
+              handleInputChange,
+              singleRunMode: true,
+              ...mappingCardProps,
+            })}
           </div>
         )}
       </div>

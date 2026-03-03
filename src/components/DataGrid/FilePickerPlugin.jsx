@@ -19,7 +19,6 @@ export default function FilePickerPlugin({ api = {} }) {
   // future-proof: api = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug }
   const { gridRef, getFlatColumns, hookRowData = [], fields = {}, updateMappingsBatch, showDebug } = api;
 
-  const fileInputRef = useRef(null);
   const selectionSnapshotRef = useRef(null);
   const filesRef = useRef(null);
   const { openExplorer, selectedDataset } = useGlobalDataContext();

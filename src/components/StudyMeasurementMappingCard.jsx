@@ -20,7 +20,7 @@ const StudyMeasurementMappingCard = ({
 }) => {
   const { selectedTestSetupId, testSetups } = useGlobalDataContext();
   const allRuns = useStudyRuns();
-  const [activeRunId, setActiveRunId] = useState(item?.runId || item?.id);
+  const [activeRunId] = useState(item?.runId || item?.id);
   const activeRun = singleRunMode ? item : (allRuns.find(r => r.runId === activeRunId) || item);
 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);

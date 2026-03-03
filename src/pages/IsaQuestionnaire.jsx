@@ -43,7 +43,7 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { setScreenWidth, pageTabStates, explorerOpen, closeExplorer, resolveExplorerSelection, currentProjectId, projects, selectedTestSetupId, testSetups } = useGlobalDataContext();
+  const { setScreenWidth, pageTabStates, explorerOpen, resolveExplorerSelection, currentProjectId, projects, selectedTestSetupId, testSetups } = useGlobalDataContext();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // Overlay state management - all overlays follow the same conditional rendering pattern
@@ -75,7 +75,6 @@ export const IsaQuestionnaire = () => {
   const location = useLocation();
   useEffect(() => {
     setShowSessionsModal(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   // Set screen width based on persisted tab state for the active page and slide index.

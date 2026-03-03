@@ -101,6 +101,30 @@ const DataGrid = forwardRef(({
         return value;
     }, []);
 
+    const scrubControlChars = useCallback((input) => {
+        let hadControlChars = false;
+        let output = '';
+        let previousWasSpace = false;
+
+        for (const ch of input) {
+            const code = ch.charCodeAt(0);
+            const isControl = code <= 31 || code === 127;
+            if (isControl) {
+                hadControlChars = true;
+                if (!previousWasSpace) {
+                    output += ' ';
+                    previousWasSpace = true;
+                }
+                continue;
+            }
+
+            output += ch;
+            previousWasSpace = false;
+        }
+
+        return hadControlChars ? output.replace(/\s+/g, ' ').trim() : input;
+    }, []);
+
     // Clean clipboard/paste artifacts (Excel adds control chars) before storing values
     const normalizeCellValue = useCallback((value) => {
         const extractedValue = extractCellValue(value);
@@ -115,14 +139,8 @@ const DataGrid = forwardRef(({
         }
 
         const stringValue = String(extractedValue);
-        if (!/[\u0000-\u001F\u007F]/.test(stringValue)) {
-            return stringValue;
-        }
-        return stringValue
-            .replace(/[\u0000-\u001F\u007F]+/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-    }, [extractCellValue]);
+        return scrubControlChars(stringValue);
+    }, [extractCellValue, scrubControlChars]);
 
     const parseChildMappingValue = useCallback((rawValue) => {
         if (Array.isArray(rawValue)) {
@@ -434,7 +452,7 @@ const DataGrid = forwardRef(({
     };
     // Refs for file plugin (managed inside plugin)
     // Key to force RevoGrid remount when necessary
-    const [gridKey, setGridKey] = useState(0);
+    const [gridKey] = useState(0);
 
     // Listen for column resize events to preserve user adjustments
     useEffect(() => {
@@ -713,7 +731,7 @@ const DataGrid = forwardRef(({
         });
         
         return translated;
-    }, [getFlatColumns]);
+    }, [getFlatColumns, DBG]);
 
     // Force re-render when columns change by using state instead of just ref
     const [appliedColumns, setAppliedColumns] = useState(enhancedColumnDefs);
@@ -734,7 +752,7 @@ const DataGrid = forwardRef(({
         if (columnsChanged) {
             // Merge in any user-saved sizes from the synchronous ref so we don't
             // overwrite a user's recent resize when columns are recalculated.
-            const sizesMap = columnSizesRef.current || columnSizes;
+            const sizesMap = columnSizesRef.current || new Map();
             const merged = enhancedColumnDefs.map(col => {
                 const saved = sizesMap.get(col.prop);
                 if (saved && saved !== col.size) {
@@ -825,7 +843,7 @@ const DataGrid = forwardRef(({
         let columnProp = detail.prop || detail.model?.prop || detail.column?.prop;
 
         if (!columnProp && detail.rgCol !== undefined) {
-            const column = appliedColumns[detail.rgCol];
+            const column = stableColumnDefs.current?.[detail.rgCol];
             columnProp = column?.prop;
         }
 
@@ -865,7 +883,6 @@ const DataGrid = forwardRef(({
             initialValue: normalizeCellValue(initialRawValue)
         };
     }, [
-        stableColumnDefs,
         isStandaloneGrid,
         staticColumns,
         isEditableColumn,
@@ -1025,7 +1042,8 @@ const DataGrid = forwardRef(({
         normalizeCellValue,
         commitGridChanges,
         resolveEditValue,
-        clearEditSession
+        clearEditSession,
+        DBG
     ]);
 
     const handleBeforeRangeEdit = useCallback((event) => {
@@ -1045,7 +1063,7 @@ const DataGrid = forwardRef(({
         // 2. Or check which columns are actually present in detail.data (if available)
         // 3. Never use coordinate translation with grouped columns
         
-    }, []);
+    }, [DBG]);
 
     const handleAfterRangeEdit = useCallback((event) => {
         // Range edits are handled in handleAfterEdit
@@ -1163,7 +1181,7 @@ const DataGrid = forwardRef(({
         }
 
         return false;
-    }, [gridRef, translateRangeCoordinates, getFlatColumns, getRowByIndex, staticColumns, isStandaloneGrid, isEditableColumn, fields, commitGridChanges]);
+    }, [gridRef, translateRangeCoordinates, getFlatColumns, getRowByIndex, staticColumns, isStandaloneGrid, isEditableColumn, fields, commitGridChanges, DBG]);
 
     const isEditableInputElement = useCallback((element) => {
         if (!element) return false;
@@ -1324,13 +1342,13 @@ const DataGrid = forwardRef(({
         if (DBG) console.log('[DataGrid] handlePasteRegion - letting RevoGrid handle paste internally:', event.detail);
         // RevoGrid's clipboard system will trigger the clipboardrangepaste event with proper coordinates
         // We don't need to manually handle paste here, just let it flow through RevoGrid's system
-    }, []);
+    }, [DBG]);
 
     // Handle clipboard range paste event - this is the proper RevoGrid paste event with coordinate information
     const handleClipboardRangePaste = useCallback((event) => {
         if (DBG) console.log('[DataGrid] handleClipboardRangePaste:', event.detail);
         
-        const { data, range, models } = event.detail;
+        const { data, range } = event.detail;
         if (!data || !range) {
             if (DBG) console.log('[DataGrid] No valid clipboard paste data');
             return;
@@ -1398,7 +1416,7 @@ const DataGrid = forwardRef(({
         } catch (error) {
             if (DBG) console.error('[DataGrid] Error in clipboard paste operation:', error);
         }
-    }, [staticColumns, isEditableColumn, getRowByIndex, fields, normalizeCellValue, commitGridChanges]);
+    }, [staticColumns, isEditableColumn, getRowByIndex, fields, normalizeCellValue, commitGridChanges, DBG]);
 
     // Handle clear region event - let the existing handleClearCell handle the logic
     const handleClearRegion = useCallback((event) => {
@@ -1406,7 +1424,7 @@ const DataGrid = forwardRef(({
         // RevoGrid's clear region works by calling clearCell on selected ranges
         // Our existing handleClearCell already handles this with proper coordinate translation
         handleClearCell(event);
-    }, [handleClearCell]);
+    }, [handleClearCell, DBG]);
 
     // Note: We don't handle beforeautofill - it fires BEFORE RevoGrid calculates the data
     // The data processing happens in handleAfterEdit which catches range edits from autofill

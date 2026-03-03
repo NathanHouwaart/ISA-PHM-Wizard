@@ -17,7 +17,6 @@ import useStudyRuns from '../../hooks/useStudyRuns';
 import { createStudyRunId, groupStudyRuns } from '../../utils/studyRuns';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import EntityMappingPanel from '../EntityMappingPanel';
-import useVariables from '../../hooks/useVariables';
 import usePageTab from '../../hooks/usePageWidth';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
@@ -189,15 +188,6 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const handleGridFocus = useCallback((studyId) => {
         setActiveStudyId(studyId);
     }, []);
-
-    const gridHeight = useMemo(() => {
-        const rows = Math.max(1, sortedVariables.length);
-        const rowHeight = 50;
-        const structuralPadding = 115;
-        const desired = (rows * rowHeight) + structuralPadding;
-        const maxHeight = 600;
-        return Math.min(maxHeight, desired);
-    }, [sortedVariables.length]);
 
     const singleRunGridConfig = useMemo(() => {
         if (!isSingleRunTemplate) {

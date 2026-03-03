@@ -1,5 +1,4 @@
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'lucide-react';
+import React, { forwardRef } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 

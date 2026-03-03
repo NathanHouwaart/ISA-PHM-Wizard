@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EXPERIMENT_TYPE_OPTIONS, getExperimentTypeConfig } from '../../constants/experimentTypes';
+import { EXPERIMENT_TYPE_OPTIONS } from '../../constants/experimentTypes';
 import { Activity, Repeat, Stethoscope, TrendingUp } from 'lucide-react';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';

@@ -4,7 +4,7 @@ import ProjectDatasetSection from './sections/ProjectDatasetSection';
 import { getProjectDatasetName } from '../../utils/projectMetadata';
 
 const ProjectDatasetDialog = ({ projectId, isOpen, onClose, onDatasetChanged }) => {
-  const cachedName = useMemo(() => getProjectDatasetName(projectId), [projectId, isOpen]);
+  const cachedName = useMemo(() => getProjectDatasetName(projectId), [projectId]);
 
   return (
     <ProjectSectionDialog

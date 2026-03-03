@@ -14,7 +14,7 @@ const StudyVariableMappingPanel = ({
   studyVariables = [],
   mappings = [],
   handleInputChange = () => {},
-  minHeight,
+  minHeight: _minHeight,
   isSingleRunTemplate = false
 }) => {
   const groupedStudies = useMemo(

@@ -1,8 +1,8 @@
 // src/pages/StudyPage.js
-import React, { useEffect, forwardRef, useState } from 'react';
+import React, { forwardRef } from 'react';
 
 // Import the single global provider
-import { GlobalDataProvider, useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
 import useStudies from '../../hooks/useStudies';
 import Collection, {
@@ -21,7 +21,6 @@ import { usePageTab } from '../../hooks/usePageWidth'; // Import the usePageTab 
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle, default as Paragraph } from '../Typography/Paragraph';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import useCarouselNavigation from '../../hooks/useCarouselNavigation';
 
 import DataGrid from '../DataGrid/DataGrid'; // Import the new DataGrid
 import { HTML5DateCellTemplate, PatternCellTemplate, DeleteRowCellTemplate } from '../DataGrid/CellTemplates'; // Import cell templates
@@ -52,8 +51,6 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     } = useGlobalDataContext();
 
     const experimentConfig = getExperimentTypeConfig(experimentType);
-    const runCountReadOnly = !experimentConfig.supportsMultipleRuns;
-
     // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
 
     // Add new study function

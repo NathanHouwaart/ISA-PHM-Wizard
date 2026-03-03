@@ -102,7 +102,7 @@ describe('useFileSystem', () => {
       const progressUpdates = [];
       
       await act(async () => {
-        await result.current.pickAndIndexDirectory((progress) => {
+        await result.current.pickAndIndexDirectory((_progress) => {
           progressUpdates.push({ ...result.current.progress });
         });
       });

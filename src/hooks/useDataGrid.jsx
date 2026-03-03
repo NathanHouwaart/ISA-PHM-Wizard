@@ -13,17 +13,35 @@ export const useDataGrid = ({
   onRowDataChange,
   historyScopeKey
 }) => {
+  const scrubControlChars = useCallback((input) => {
+    let hadControlChars = false;
+    let output = '';
+    let previousWasSpace = false;
+
+    for (const ch of input) {
+      const code = ch.charCodeAt(0);
+      const isControl = code <= 31 || code === 127;
+      if (isControl) {
+        hadControlChars = true;
+        if (!previousWasSpace) {
+          output += ' ';
+          previousWasSpace = true;
+        }
+        continue;
+      }
+
+      output += ch;
+      previousWasSpace = false;
+    }
+
+    return hadControlChars ? output.replace(/\s+/g, ' ').trim() : input;
+  }, []);
+
   const sanitizeValue = useCallback((value) => {
     if (value === undefined || value === null) return '';
     const stringValue = String(value);
-    if (!/[\u0000-\u001F\u007F]/.test(stringValue)) {
-      return stringValue;
-    }
-    return stringValue
-      .replace(/[\u0000-\u001F\u007F]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }, []);
+    return scrubControlChars(stringValue);
+  }, [scrubControlChars]);
 
   const fields = useMemo(() => ({
     rowId: 'id',

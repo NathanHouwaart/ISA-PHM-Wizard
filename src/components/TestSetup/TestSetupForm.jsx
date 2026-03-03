@@ -134,7 +134,6 @@ const CommentEditor = ({ comments = [], onCommentsChange }) => {
 // Characteristics Component
 const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => {
   const [expandedItems, setExpandedItems] = useState(new Set());
-  const [activeTooltips, setActiveTooltips] = useState(new Set());
   const [activeTooltip, setActiveTooltip] = useState(false);
 
 
@@ -171,18 +170,6 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
         if (i < index) newSet.add(i);
         else if (i > index) newSet.add(i - 1);
       });
-      return newSet;
-    });
-  };
-
-  const toggleTooltip = (index) => {
-    setActiveTooltips(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
       return newSet;
     });
   };
@@ -352,7 +339,6 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const [expandedSensors, setExpandedSensors] = useState(new Set());
   const [activeTooltip, setActiveTooltip] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('basic-information');
 
   const addSensor = () => {
     const newSensor = {
@@ -374,69 +360,6 @@ const SensorsEditor = ({ sensors, onSensorsChange }) => {
 
     // Auto-expand the new sensor
     setExpandedSensors(prev => new Set([...prev, newSensors.length - 1]));
-  };
-
-  // Helper: convert legacy fixed fields into additionalInfo entries
-  const convertOldFieldsToAdditional = (sensor) => {
-    const entries = [];
-    const pushIf = (label, value) => {
-      if (value !== undefined && value !== null && String(value).trim() !== '') {
-        entries.push({ id: uuid4(), name: label, value: String(value) });
-      }
-    };
-
-    pushIf('Data Acquisition Unit', sensor.dataAcquisitionUnit);
-  // samplingRate is now a dedicated field on the sensor; don't convert it here
-    pushIf('Sampling Unit', sensor.samplingUnit);
-    pushIf('Phase', sensor.phase);
-    pushIf('Sensor Location', sensor.sensorLocation);
-    pushIf('Location Unit', sensor.locationUnit);
-    pushIf('Sensor Orientation', sensor.sensorOrientation);
-    pushIf('Orientation Unit', sensor.orientationUnit);
-
-    return entries;
-  };
-
-  const addAdditionalInfo = (sensorIndex) => {
-    const newEntry = { id: uuid4(), name: '', value: '' };
-    const updatedSensors = sensors.map((s, i) => {
-      if (i !== sensorIndex) return s;
-      const base = { ...s };
-      const current = base.additionalInfo && base.additionalInfo.length > 0
-        ? [...base.additionalInfo]
-        : convertOldFieldsToAdditional(base);
-      base.additionalInfo = [...current, newEntry];
-      return base;
-    });
-    onSensorsChange(updatedSensors);
-  };
-
-  const updateAdditionalInfo = (sensorIndex, entryIndex, field, value) => {
-    const updatedSensors = sensors.map((s, i) => {
-      if (i !== sensorIndex) return s;
-      const base = { ...s };
-      const current = base.additionalInfo && base.additionalInfo.length > 0
-        ? [...base.additionalInfo]
-        : convertOldFieldsToAdditional(base);
-      current[entryIndex] = { ...current[entryIndex], [field]: value };
-      base.additionalInfo = current;
-      return base;
-    });
-    onSensorsChange(updatedSensors);
-  };
-
-  const removeAdditionalInfo = (sensorIndex, entryIndex) => {
-    const updatedSensors = sensors.map((s, i) => {
-      if (i !== sensorIndex) return s;
-      const base = { ...s };
-      const current = base.additionalInfo && base.additionalInfo.length > 0
-        ? [...base.additionalInfo]
-        : convertOldFieldsToAdditional(base);
-      current.splice(entryIndex, 1);
-      base.additionalInfo = current;
-      return base;
-    });
-    onSensorsChange(updatedSensors);
   };
 
   const removeSensor = (index) => {
@@ -920,7 +843,7 @@ const ConfigurationsEditor = ({ configurations, onConfigurationsChange }) => {
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const { setScreenWidth } = useGlobalDataContext();
   
-  const initialFormState = {
+  const initialFormState = useMemo(() => ({
     name: '',
     location: '',
     experimentPreparationProtocolName: '',
@@ -933,9 +856,9 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     processingProtocols: [],
     sensorToMeasurementProtocolMapping: [],
     sensorToProcessingProtocolMapping: []
-  };
+  }), []);
 
-  const buildFormState = (sourceItem) => {
+  const buildFormState = useCallback((sourceItem) => {
     if (!sourceItem) return initialFormState;
     return {
       name: sourceItem.name || '',
@@ -951,7 +874,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       sensorToMeasurementProtocolMapping: sourceItem.sensorToMeasurementProtocolMapping || [],
       sensorToProcessingProtocolMapping: sourceItem.sensorToProcessingProtocolMapping || []
     };
-  };
+  }, [initialFormState]);
 
   const [newFormHistoryScope] = useState(() => `new:${uuid4()}`);
   const formHistoryScope = item?.id ? `testsetup:${item.id}` : `testsetup:${newFormHistoryScope}`;
@@ -959,7 +882,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [formData, setFormData] = useState(() => buildFormState(item));
   const [formError, setFormError] = useState('');
   const [selectedTab, setSelectedTab] = useState('basic-info');
-  const [activeTooltips, setActiveTooltips] = useState(false);
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
   const [sensorsView, setSensorsView] = useState('simple-view');
   const [configurationsView, setConfigurationsView] = useState('simple-view');
@@ -1002,7 +924,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const nextFormData = buildFormState(item);
     setFormData(nextFormData);
     setInitialFingerprint(getDirtyFingerprint(nextFormData));
-  }, [item]);
+  }, [item, buildFormState]);
 
   useEffect(() => {
     const needsCharacteristicIds = formData.characteristics.some((c) => !c.id);
@@ -1113,13 +1035,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     }));
   };
 
-  const toggleTooltip = () => {
-    setActiveTooltips(prev => !prev)
-  };
-
-  const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-2";
-
   const characteristicRows = useMemo(() => {
     return formData.characteristics.map((c) => ({
       ...c,
@@ -1200,7 +1115,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
     ]
-  }), [characteristicRows]);
+  }), [characteristicRows, addCharacteristicRow]);
 
   const sensorGridConfig = useMemo(() => ({
     title: 'Sensors',
@@ -1237,7 +1152,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
     ]
-  }), [sensorRows]);
+  }), [sensorRows, addSensorRow]);
 
   const configurationRows = useMemo(() => {
     return formData.configurations.map((c) => ({
@@ -1300,7 +1215,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
     ]
-  }), [configurationRows]);
+  }), [configurationRows, addConfigurationRow]);
 
   useEffect(() => {
     if (!formData.measurementProtocols.length) {

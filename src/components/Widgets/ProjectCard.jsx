@@ -31,7 +31,7 @@ import {
 const SummaryBadge = ({ icon: Icon, label, value, accent }) => (
   <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm min-w-[120px]">
     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${accent}`}>
-      <Icon className="w-4 h-4" />
+      {React.createElement(Icon, { className: 'w-4 h-4' })}
     </div>
     <div>
       <p className="text-xs text-gray-500">{label}</p>
@@ -43,7 +43,7 @@ const SummaryBadge = ({ icon: Icon, label, value, accent }) => (
 const InfoRow = ({ icon: Icon, label, value, helper, accent, emphasized = false }) => (
   <div className="flex items-start gap-3">
     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${accent}`}>
-      <Icon className="w-5 h-5" />
+      {React.createElement(Icon, { className: 'w-5 h-5' })}
     </div>
     <div className="flex-1">
       <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
@@ -60,40 +60,22 @@ const ProjectCard = ({
   isSelected = false,
   isActive = false,
   onSelect,
-  refreshToken = 0,
+  _refreshToken = 0,
   className = ''
 }) => {
   const { testSetups = [] } = useGlobalDataContext();
 
-  const datasetName = useMemo(
-    () => getProjectDatasetName(project.id) || 'Not indexed',
-    [project.id, refreshToken]
-  );
-  const lastEdited = useMemo(
-    () => getProjectLastEdited(project.id),
-    [project.id, refreshToken]
-  );
-  const experimentTypeId = useMemo(
-    () => getProjectExperimentTypeId(project.id, DEFAULT_EXPERIMENT_TYPE_ID),
-    [project.id, refreshToken]
-  );
+  const datasetName = getProjectDatasetName(project.id) || 'Not indexed';
+  const lastEdited = getProjectLastEdited(project.id);
+  const experimentTypeId = getProjectExperimentTypeId(project.id, DEFAULT_EXPERIMENT_TYPE_ID);
   const experimentType = getExperimentTypeConfig(experimentTypeId || DEFAULT_EXPERIMENT_TYPE_ID);
 
-  const testSetupId = useMemo(
-    () => getProjectTestSetupId(project.id),
-    [project.id, refreshToken]
-  );
+  const testSetupId = getProjectTestSetupId(project.id);
   const testSetup = Array.isArray(testSetups)
     ? testSetups.find((setup) => setup?.id === testSetupId)
     : null;
-  const projectStats = useMemo(
-    () => getProjectCollectionStats(project.id),
-    [project.id, refreshToken]
-  );
-  const datasetStats = useMemo(
-    () => getProjectDatasetStats(project.id),
-    [project.id, refreshToken]
-  );
+  const projectStats = getProjectCollectionStats(project.id);
+  const datasetStats = getProjectDatasetStats(project.id);
 
   const sensorCount = useMemo(() => {
     if (!testSetup || !Array.isArray(testSetup.sensors)) {
@@ -115,13 +97,6 @@ const ProjectCard = ({
   const datasetFolders = Number(datasetStats?.folders || 0);
 
   const formatCount = (value) => Number(value || 0).toLocaleString();
-  const datasetSummaryHelper = datasetName
-    ? 'Counts include all nested files and folders.'
-    : 'Index a dataset to see file and folder counts.';
-  const testSetupSummaryHelper = testSetup
-    ? 'Derived from the selected test setup.'
-    : 'Select a test setup to populate sensor metadata.';
-
   return (
     <div
       role="button"
