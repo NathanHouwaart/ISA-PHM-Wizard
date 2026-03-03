@@ -721,6 +721,7 @@ const DataGrid = forwardRef(({
     // Keep a ref for internal logic that needs column definitions
     const stableColumnDefs = useRef(enhancedColumnDefs);
     const lastEnhancedColumnsRef = useRef(enhancedColumnDefs);
+    const lastEmittedMappingsSignatureRef = useRef('');
 
     useEffect(() => {
         // Only update if the columns actually changed (deep comparison of structure and sizes)
@@ -748,12 +749,34 @@ const DataGrid = forwardRef(({
         }
     }, [enhancedColumnDefs]);
 
-    // Notify parent of data changes
+    const getMappingsSignature = useCallback((mappingsList) => {
+        return JSON.stringify(
+            (Array.isArray(mappingsList) ? mappingsList : [])
+                .map((mapping) => ({
+                    row: String(mapping?.[fields.mappingRowId] ?? ''),
+                    col: String(mapping?.[fields.mappingColumnId] ?? ''),
+                    value: JSON.stringify(mapping?.[fields.mappingValue] ?? '')
+                }))
+                .sort((a, b) => {
+                    if (a.row !== b.row) return a.row.localeCompare(b.row);
+                    if (a.col !== b.col) return a.col.localeCompare(b.col);
+                    return a.value.localeCompare(b.value);
+                })
+        );
+    }, [fields.mappingRowId, fields.mappingColumnId, fields.mappingValue]);
+
+    // Notify parent of data changes.
+    // Guard with semantic signature to avoid feedback loops when parent re-renders
+    // and passes a new callback identity while mappings content is unchanged.
     useEffect(() => {
-        if (onDataChange) {
-            onDataChange(currentMappings);
+        if (!onDataChange) return;
+        const signature = getMappingsSignature(currentMappings);
+        if (signature === lastEmittedMappingsSignatureRef.current) {
+            return;
         }
-    }, [currentMappings, onDataChange]);
+        lastEmittedMappingsSignatureRef.current = signature;
+        onDataChange(currentMappings);
+    }, [currentMappings, onDataChange, getMappingsSignature]);
 
     const clearEditSession = useCallback(() => {
         editSessionRef.current = null;

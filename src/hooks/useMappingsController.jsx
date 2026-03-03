@@ -1,6 +1,33 @@
 import { useCallback, useRef } from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
+const stableStringify = (value) => {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+
+const normalizeMappingsForComparison = (mappings, keyNames) => {
+  const { sourceKey, targetKey } = keyNames;
+  return (Array.isArray(mappings) ? mappings : [])
+    .map((mapping) => {
+      const source = String(mapping?.[sourceKey] ?? '');
+      const target = String(mapping?.[targetKey] ?? '');
+      return `${source}::${target}::${stableStringify(mapping ?? {})}`;
+    })
+    .sort();
+};
+
+const mappingsEqual = (left, right, keyNames) => {
+  const normalizedLeft = normalizeMappingsForComparison(left, keyNames);
+  const normalizedRight = normalizeMappingsForComparison(right, keyNames);
+  return JSON.stringify(normalizedLeft) === JSON.stringify(normalizedRight);
+};
+
 /**
  * Lightweight mappings controller that provides a stable API for reading and
  * updating study<->variable mappings. Defaults to the global context but can
@@ -18,13 +45,20 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
   const lastRef = useRef(mappingsState || []);
 
   const setMappings = useCallback((next) => {
-    const resolved = typeof next === 'function' ? next(lastRef.current) : next;
-    const a = JSON.stringify(resolved || []);
-    const b = JSON.stringify(lastRef.current || []);
-    if (a === b) return; // no-op when identical
-    lastRef.current = resolved || [];
-    setMappingsState(lastRef.current);
-  }, [setMappingsState]);
+    setMappingsState((prev) => {
+      const base = Array.isArray(prev) ? prev : [];
+      const resolved = typeof next === 'function' ? next(base) : next;
+      const nextValue = Array.isArray(resolved) ? resolved : [];
+
+      if (mappingsEqual(nextValue, base, keyNames)) {
+        lastRef.current = base;
+        return base; // no-op when identical
+      }
+
+      lastRef.current = nextValue;
+      return nextValue;
+    });
+  }, [setMappingsState, keyNames]);
 
   // updateMappingValue supports two signatures for backward compatibility:
   // 1) updateMappingValue(itemIndex, mappingObj, value)  (old)
@@ -60,6 +94,12 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
       } else {
         copy.push(merged);
       }
+
+      if (mappingsEqual(copy, prev, keyNames)) {
+        lastRef.current = prev;
+        return prev;
+      }
+
       lastRef.current = copy;
       return copy;
     });

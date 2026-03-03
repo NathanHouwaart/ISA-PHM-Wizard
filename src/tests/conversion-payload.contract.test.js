@@ -1,6 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { createStudyRunId } from '../utils/studyRuns';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const parseJsonValue = (value, fallback) => {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+
+const readProjectValue = (localStorageState, projectId, key, fallback) => {
+  const candidates = [
+    `globalAppData_${projectId}_${key}`,
+    `globalAppData_default_${key}`,
+    `globalAppData_${key}`,
+  ];
+
+  if (key === 'investigation') {
+    candidates.push(`globalAppData_${projectId}_investigations`);
+    candidates.push('globalAppData_default_investigations');
+  }
+
+  for (const storageKey of candidates) {
+    if (hasOwn(localStorageState, storageKey)) {
+      return parseJsonValue(localStorageState[storageKey], fallback);
+    }
+  }
+
+  return fallback;
+};
 
 describe('conversion payload contract', () => {
   it('builds the expected payload shape with protocol and run-aware mappings', () => {
@@ -186,5 +222,132 @@ describe('conversion payload contract', () => {
     expect(payload.studies[0].used_setup).toBeNull();
     expect(Array.isArray(payload.studies[0].assay_details)).toBe(true);
     expect(payload.studies[0].assay_details).toHaveLength(0);
+  });
+
+  it('builds a valid payload from project-sietze-new fixture', async () => {
+    const fixturePath = path.resolve(process.cwd(), 'src/data/project-sietze-new.json');
+    const fixtureRaw = await fs.readFile(fixturePath, 'utf8');
+    const fixture = JSON.parse(fixtureRaw);
+
+    const projectId = fixture?.projectId || 'default';
+    const localStorageState =
+      fixture?.localStorage && typeof fixture.localStorage === 'object' ? fixture.localStorage : {};
+
+    const studies = readProjectValue(localStorageState, projectId, 'studies', []);
+    const studyVariables = readProjectValue(localStorageState, projectId, 'studyVariables', []);
+    const publications = readProjectValue(localStorageState, projectId, 'publications', []);
+    const contacts = readProjectValue(localStorageState, projectId, 'contacts', []);
+    const investigation = readProjectValue(localStorageState, projectId, 'investigation', {});
+    const experimentType = readProjectValue(localStorageState, projectId, 'experimentType', '');
+    const studyToStudyVariableMapping = readProjectValue(localStorageState, projectId, 'studyToStudyVariableMapping', []);
+    const studyToSensorMeasurementMapping = readProjectValue(localStorageState, projectId, 'studyToSensorMeasurementMapping', []);
+    const studyToSensorProcessingMapping = readProjectValue(localStorageState, projectId, 'studyToSensorProcessingMapping', []);
+    const studyToMeasurementProtocolSelection = readProjectValue(localStorageState, projectId, 'studyToMeasurementProtocolSelection', []);
+    const studyToProcessingProtocolSelection = readProjectValue(localStorageState, projectId, 'studyToProcessingProtocolSelection', []);
+    const selectedTestSetupId = readProjectValue(localStorageState, projectId, 'selectedTestSetupId', fixture?.selectedTestSetup?.id || null);
+
+    const selectedTestSetup = fixture?.selectedTestSetup || {};
+    const testSetups = selectedTestSetupId
+      ? [{ ...selectedTestSetup, id: selectedTestSetup.id || selectedTestSetupId }]
+      : [selectedTestSetup];
+    const setup = testSetups[0] || {};
+
+    const studyIds = new Set((studies || []).map((study) => study?.id).filter(Boolean));
+    const studyRunIds = new Set(
+      (studies || []).flatMap((study) => {
+        const runCount = Number(study?.runCount ?? study?.total_runs ?? 1);
+        return Array.from({ length: Number.isFinite(runCount) && runCount > 0 ? runCount : 1 }, (_, index) => (
+          `${study.id}::run-${String(index + 1).padStart(2, '0')}`
+        ));
+      })
+    );
+    const studyVariableIds = new Set((studyVariables || []).map((item) => item?.id).filter(Boolean));
+    const sensorIds = new Set((setup?.sensors || []).map((sensor) => sensor?.id).filter(Boolean));
+    const measurementProtocolIds = new Set((setup?.measurementProtocols || []).map((protocol) => protocol?.id).filter(Boolean));
+    const processingProtocolIds = new Set((setup?.processingProtocols || []).map((protocol) => protocol?.id).filter(Boolean));
+    const measurementParameterIds = new Set(
+      (setup?.measurementProtocols || []).flatMap((protocol) => (protocol?.parameters || []).map((parameter) => parameter?.id)).filter(Boolean)
+    );
+    const processingParameterIds = new Set(
+      (setup?.processingProtocols || []).flatMap((protocol) => (protocol?.parameters || []).map((parameter) => parameter?.id)).filter(Boolean)
+    );
+
+    studyToStudyVariableMapping.forEach((mapping) => {
+      expect(studyVariableIds.has(mapping.studyVariableId)).toBe(true);
+      if (mapping.studyRunId) expect(studyRunIds.has(mapping.studyRunId)).toBe(true);
+      if (mapping.studyId) expect(studyIds.has(mapping.studyId)).toBe(true);
+    });
+
+    studyToSensorMeasurementMapping.forEach((mapping) => {
+      expect(sensorIds.has(mapping.sensorId)).toBe(true);
+      if (mapping.studyRunId) expect(studyRunIds.has(mapping.studyRunId)).toBe(true);
+      if (mapping.studyId) expect(studyIds.has(mapping.studyId)).toBe(true);
+    });
+
+    studyToSensorProcessingMapping.forEach((mapping) => {
+      expect(sensorIds.has(mapping.sensorId)).toBe(true);
+      if (mapping.studyRunId) expect(studyRunIds.has(mapping.studyRunId)).toBe(true);
+      if (mapping.studyId) expect(studyIds.has(mapping.studyId)).toBe(true);
+    });
+
+    (setup?.sensorToMeasurementProtocolMapping || []).forEach((mapping) => {
+      expect(sensorIds.has(mapping.sourceId || mapping.sensorId)).toBe(true);
+      expect(measurementParameterIds.has(mapping.targetId)).toBe(true);
+      if (mapping.protocolId) expect(measurementProtocolIds.has(mapping.protocolId)).toBe(true);
+    });
+
+    (setup?.sensorToProcessingProtocolMapping || []).forEach((mapping) => {
+      expect(sensorIds.has(mapping.sourceId || mapping.sensorId)).toBe(true);
+      expect(processingParameterIds.has(mapping.targetId)).toBe(true);
+      if (mapping.protocolId) expect(processingProtocolIds.has(mapping.protocolId)).toBe(true);
+    });
+
+    studyToMeasurementProtocolSelection.forEach((mapping) => {
+      expect(studyIds.has(mapping.studyId)).toBe(true);
+      expect(measurementProtocolIds.has(mapping.protocolId)).toBe(true);
+    });
+
+    studyToProcessingProtocolSelection.forEach((mapping) => {
+      expect(studyIds.has(mapping.studyId)).toBe(true);
+      expect(processingProtocolIds.has(mapping.protocolId)).toBe(true);
+    });
+
+    const payload = buildConversionPayload({
+      investigation,
+      publications,
+      contacts,
+      studyVariables,
+      studies,
+      testSetups,
+      selectedTestSetupId,
+      experimentType,
+      studyToStudyVariableMapping,
+      studyToSensorMeasurementMapping,
+      studyToSensorProcessingMapping,
+      studyToMeasurementProtocolSelection,
+      studyToProcessingProtocolSelection,
+    });
+
+    expect(payload.studies).toHaveLength(2);
+    expect(payload.study_variables).toHaveLength(6);
+    expect(payload.processing_protocols).toHaveLength(1);
+    expect(payload.measurement_protocols).toHaveLength(1);
+
+    const setupSensorCount = Array.isArray(testSetups[0]?.sensors) ? testSetups[0].sensors.length : 0;
+    expect(setupSensorCount).toBe(11);
+
+    payload.studies.forEach((study) => {
+      expect(study.total_runs).toBe(1);
+      expect(study.selectedProcessingProtocolId).toBeTruthy();
+      expect(Array.isArray(study.assay_details)).toBe(true);
+      expect(study.assay_details).toHaveLength(setupSensorCount);
+      expect(study.study_to_study_variable_mapping).toHaveLength(6);
+
+      study.assay_details.forEach((assay) => {
+        expect(Array.isArray(assay.runs)).toBe(true);
+        expect(assay.runs).toHaveLength(1);
+        expect(assay.runs[0].processed_file_name).toBeTruthy();
+      });
+    });
   });
 });

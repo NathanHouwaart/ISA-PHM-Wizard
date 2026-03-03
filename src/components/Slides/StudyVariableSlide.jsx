@@ -131,6 +131,61 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         });
     }, [groupedRuns, isSingleRunTemplate, studies]);
 
+    const mergeScopedMappings = useCallback((incomingMappings, scopeRunIds) => {
+        const scopeSet = new Set((scopeRunIds || []).map((id) => String(id)));
+        if (scopeSet.size === 0) {
+            return;
+        }
+
+        mappingsController.setMappings((previousMappings) => {
+            const previous = Array.isArray(previousMappings) ? previousMappings : [];
+            const incoming = Array.isArray(incomingMappings) ? incomingMappings : [];
+
+            const preservedOutsideScope = previous.filter((mapping) => {
+                const runId = String(mapping?.studyRunId ?? '');
+                return !scopeSet.has(runId);
+            });
+
+            const normalizedIncomingScope = incoming.filter((mapping) => {
+                const runId = String(mapping?.studyRunId ?? '');
+                return scopeSet.has(runId);
+            });
+
+            return [...preservedOutsideScope, ...normalizedIncomingScope];
+        });
+    }, [mappingsController]);
+
+    const singleRunScopeRunIds = useMemo(
+        () => singleRunColumns.map((run) => run?.runId || run?.id).filter(Boolean),
+        [singleRunColumns]
+    );
+
+    const handleSingleRunGridMappingsChange = useCallback((incomingMappings) => {
+        mergeScopedMappings(incomingMappings, singleRunScopeRunIds);
+    }, [mergeScopedMappings, singleRunScopeRunIds]);
+
+    const scopeRunIdsByStudyId = useMemo(() => {
+        const lookup = {};
+        studies.forEach((study) => {
+            const runsForStudy = groupedRuns.get(study.id) || [];
+            lookup[study.id] = runsForStudy
+                .map((run) => run?.runId || run?.id)
+                .filter(Boolean);
+        });
+        return lookup;
+    }, [studies, groupedRuns]);
+
+    const onGridMappingsChangeByStudyId = useMemo(() => {
+        const handlers = {};
+        studies.forEach((study) => {
+            const scopeRunIds = scopeRunIdsByStudyId[study.id] || [];
+            handlers[study.id] = (incomingMappings) => {
+                mergeScopedMappings(incomingMappings, scopeRunIds);
+            };
+        });
+        return handlers;
+    }, [studies, scopeRunIdsByStudyId, mergeScopedMappings]);
+
     const handleGridFocus = useCallback((studyId) => {
         setActiveStudyId(studyId);
     }, []);
@@ -265,7 +320,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                 }}
                                                 showControls={true}
                                                 showDebug={false}
-                                                onDataChange={mappingsController.setMappings}
+                                                onDataChange={handleSingleRunGridMappingsChange}
                                                 height={Math.min(600, (sortedVariables.length * 50) + 115)}
                                                 isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
                                                 actionPlugins={[FilePickerPlugin]}
@@ -338,7 +393,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                         {...{...baseGridConfig, rowData: sortedVariables}}
                                                         showControls={true}
                                                         showDebug={false}
-                                                        onDataChange={mappingsController.setMappings}
+                                                        onDataChange={onGridMappingsChangeByStudyId[study.id]}
                                                         height={Math.min(600, (sortedVariables.length * 50) + 115)}
                                                         isActive={currentPage === pageIndex && activeStudyId === study.id}
                                                         actionPlugins={[FilePickerPlugin]}
