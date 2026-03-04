@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { X, Save, Trash2, HelpCircle, ChevronDown, ChevronRight, Plus, } from 'lucide-react';
-import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from '../Tooltip/AnimatedTooltipProvider';
-import FormField from '../Form/FormField';
+import { X, Save } from 'lucide-react';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { v4 as uuid4 } from 'uuid';
 import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
 
-
-import IconTooltipButton, { IconToolTipButton } from '../Widgets/IconTooltipButton';
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
-import TableTooltip from '../Widgets/TableTooltip';
-import Paragraph, { SlidePageSubtitle } from '../Typography/Paragraph';
-import DataGrid from '../DataGrid/DataGrid';
+import Paragraph from '../Typography/Paragraph';
 import { Template } from '@revolist/react-datagrid';
 import { DeleteRowCellTemplate, PatternCellTemplate } from '../DataGrid/CellTemplates';
 import ProtocolEntityGridSection from './ProtocolEntityGridSection';
+import CharacteristicsEditor from './editors/CharacteristicsEditor';
+import SensorsEditor from './editors/SensorsEditor';
+import ConfigurationsEditor from './editors/ConfigurationsEditor';
+import BasicInfoSection from './sections/BasicInfoSection';
+import EntityGridTabPanel from './sections/EntityGridTabPanel';
+import useProtocolSections from './hooks/useProtocolSections';
 
 const normalizeForDirtyCheck = (value) => {
   if (Array.isArray(value)) {
@@ -40,804 +40,6 @@ const normalizeForDirtyCheck = (value) => {
 };
 
 const getDirtyFingerprint = (value) => JSON.stringify(normalizeForDirtyCheck(value));
-
-// Comment Component
-const CommentEditor = ({ comments = [], onCommentsChange }) => {
-  useEffect(() => {
-    if (comments.some((comment) => !comment.id)) {
-      onCommentsChange(
-        comments.map((comment) => (comment.id ? comment : { ...comment, id: uuid4() }))
-      );
-    }
-  }, [comments, onCommentsChange]);
-
-  const addComment = useCallback(() => {
-    const newComments = [...comments, { id: uuid4(), name: '', value: '' }];
-    onCommentsChange(newComments);
-  }, [comments, onCommentsChange]);
-
-  const updateComment = useCallback((id, field, value) => {
-    const updatedComments = comments.map((comment) =>
-      comment.id === id ? { ...comment, [field]: value } : comment
-    );
-    onCommentsChange(updatedComments);
-  }, [comments, onCommentsChange]);
-
-  const removeComment = useCallback((id) => {
-    const filteredComments = comments.filter((comment) => comment.id !== id);
-    onCommentsChange(filteredComments);
-  }, [comments, onCommentsChange]);
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4 mt-4">
-      <div className="flex items-center justify-between mb-4">
-        <Heading3 className="text-sm font-semibold text-gray-700">
-          Comments ({comments.length})
-        </Heading3>
-        <TooltipButton
-          tooltipText="Add comment"
-          onClick={addComment}
-          className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          <span>Add Comment</span>
-        </TooltipButton>
-      </div>
-
-      <div className="space-y-4">
-        {comments.map((comment, index) => (
-          <div key={comment.id} className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <Paragraph className="text-sm font-medium text-gray-700">
-                Comment {index + 1}
-              </Paragraph>
-              <IconToolTipButton
-                icon={X}
-                onClick={() => removeComment(comment.id)}
-                tooltipText="Remove comment"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <FormField
-                name={`comment-${index}-title`}
-                type="text"
-                value={comment.name}
-                label="Comment Title"
-                placeholder="Enter a title for this comment"
-                onChange={(e) => updateComment(comment.id, 'name', e.target.value)}
-                required
-              />
-
-              <FormField
-                name={`comment-${index}-text`}
-                type="textarea"
-                value={comment.value}
-                label="Comment Text"
-                placeholder="Enter your comment text here..."
-                onChange={(e) => updateComment(comment.id, 'value', e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-        ))}
-
-        {comments.length === 0 && (
-          <Paragraph className="text-sm text-gray-500 text-center py-6">
-            No comments added yet. Click "Add Comment" to get started.
-          </Paragraph>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Characteristics Component
-const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => {
-  const [expandedItems, setExpandedItems] = useState(new Set());
-  const [activeTooltip, setActiveTooltip] = useState(false);
-
-
-  const addCharacteristic = () => {
-    const newCharacteristic = {
-      id: uuid4(),
-      category: '',
-      value: '',
-      unit: '',
-      comments: []
-    };
-    const newCharacteristics = [...characteristics, newCharacteristic];
-    onCharacteristicsChange(newCharacteristics);
-
-    // Auto-expand the new item
-    setExpandedItems(prev => new Set([...prev, newCharacteristics.length - 1]));
-  };
-
-  const updateCharacteristic = (index, field, value) => {
-    const updatedCharacteristics = characteristics.map((char, i) =>
-      i === index ? { ...char, [field]: value } : char
-    );
-    onCharacteristicsChange(updatedCharacteristics);
-  };
-
-  const removeCharacteristic = (index) => {
-    const filteredCharacteristics = characteristics.filter((_, i) => i !== index);
-    onCharacteristicsChange(filteredCharacteristics);
-
-    // Update expanded items
-    setExpandedItems(prev => {
-      const newSet = new Set();
-      Array.from(prev).forEach(i => {
-        if (i < index) newSet.add(i);
-        else if (i > index) newSet.add(i - 1);
-      });
-      return newSet;
-    });
-  };
-
-  const toggleExpanded = (index) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
-
-  const updateComments = (charIndex, comments) => {
-    updateCharacteristic(charIndex, 'comments', comments);
-  };
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
-        <Heading3>
-          Characteristics
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            ({characteristics.length} items)
-          </span>
-        </Heading3>
-
-
-        <div className='flex items-center space-x-2'>
-          <IconTooltipButton
-            icon={Plus}
-            onClick={addCharacteristic}
-            tooltipText={"Add characteristic"}
-          />
-
-          <IconTooltipButton
-            icon={HelpCircle}
-            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
-            tooltipText={"Help"}
-          />
-        </div>
-
-      </div>
-
-      <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
-        Specify details about the test set-up. Please also specify sensors and sensor details if they are only used to monitor operational conditions, if not used for fault detection (i.e. measure independent variables rather than dependent variables).
-      </Paragraph>
-
-      <div>
-        <TableTooltip isVisible={activeTooltip}
-          explanations={[
-            <><b>Category:</b> Category of the characteristic you are describing</>,
-            <><b>Value:</b> Value of the characteristic you are describing</>,
-            <><b>Unit:</b> Unit of the characteristic you are describing (may be optional)</>
-          ]}
-          examples={[
-            { category: "Motor", value: "WEG W21", unit: "N/A" },
-            { category: "Motor Power", value: "2.2", unit: "kW" },
-            { category: "Hydraulic Pump", value: "Hydropack", unit: "N/A" }
-          ]}
-        />
-      </div>
-      <div className="space-y-1">
-        {characteristics.map((characteristic, index) => {
-          const isExpanded = expandedItems.has(index);
-          const summary = `${characteristic.value || 'No value'} ${characteristic.unit}`;
-
-          return (
-            <div key={characteristic.id ?? `characteristic-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => toggleExpanded(index)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    <span className="font-medium text-gray-900">
-                      c{index + 1}:
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{characteristic.category || 'No category'}: </span>{summary}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">
-                    {characteristic.comments?.length || 0} comments
-                  </span>
-
-                  <IconTooltipButton
-                    icon={Trash2}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeCharacteristic(index);
-                    }}
-                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
-                    tooltipText={"Remove characteristic"}
-                  />
-                  <span className="text-gray-400">
-                    {isExpanded ?
-                      <ChevronDown className="w-4 h-4 text-gray-500" /> :
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    }
-                  </span>
-                </div>
-              </div>
-
-              {isExpanded && (
-                <div className="border-t border-gray-200 p-4 bg-white">
-                  <div className="flex items-start gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                      <FormField
-                        name={`characteristic-${index}-category`}
-                        value={characteristic.category}
-                        onChange={(e) => updateCharacteristic(index, 'category', e.target.value)}
-                        label="Category"
-                        type="text"
-                        placeholder="Enter category"
-                      />
-
-                      <FormField
-                        name={`characteristic-${index}-value`}
-                        value={characteristic.value}
-                        onChange={(e) => updateCharacteristic(index, 'value', e.target.value)}
-                        label="Value"
-                        type="text"
-                        placeholder="Enter value"
-                      />
-
-                      <FormField
-                        name={`characteristic-${index}-unit`}
-                        value={characteristic.unit}
-                        onChange={(e) => updateCharacteristic(index, 'unit', e.target.value)}
-                        label="Unit"
-                        type="text"
-                        placeholder="Enter unit (optional)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <CommentEditor
-                    comments={characteristic.comments || []}
-                    onCommentsChange={(comments) => updateComments(index, comments)}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {characteristics.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="mb-2">No characteristics added yet.</p>
-            <p className="text-sm">Click "Add Characteristic" to get started.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Sensors Component
-const SensorsEditor = ({ sensors, onSensorsChange }) => {
-  const [expandedSensors, setExpandedSensors] = useState(new Set());
-  const [activeTooltip, setActiveTooltip] = useState(false);
-
-  const addSensor = () => {
-    const newSensor = {
-      id: uuid4(),
-      // Auto-generate alias like 'Sensor SE01', 'Sensor SE02', zero-padded 2 digits
-      alias: `Sensor SE${String(sensors.length + 1).padStart(2, '0')}`,
-      measurementType: '',
-      measurementUnit: '',
-      samplingRate: '',
-      description: '',
-      technologyType: '',
-      technologyPlatform: '',
-      // flexible additional info entries (name/value pairs)
-      additionalInfo: [],
-      phase: ''
-    };
-    const newSensors = [...sensors, newSensor];
-    onSensorsChange(newSensors);
-
-    // Auto-expand the new sensor
-    setExpandedSensors(prev => new Set([...prev, newSensors.length - 1]));
-  };
-
-  const removeSensor = (index) => {
-    const filteredSensors = sensors.filter((_, i) => i !== index);
-    onSensorsChange(filteredSensors);
-
-    // Update expanded sensors
-    setExpandedSensors(prev => {
-      const newSet = new Set();
-      Array.from(prev).forEach(i => {
-        if (i < index) newSet.add(i);
-        else if (i > index) newSet.add(i - 1);
-      });
-      return newSet;
-    });
-  };
-
-  const updateSensor = (index, field, value) => {
-    const updatedSensors = sensors.map((sensor, i) =>
-      i === index ? { ...sensor, [field]: value } : sensor
-    );
-    onSensorsChange(updatedSensors);
-  };
-
-  const toggleSensor = (index) => {
-    setExpandedSensors(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
-
-  const getSensorSummary = (sensor) => {
-    const platform = sensor.technologyPlatform || 'No platform';
-    const measurementType = sensor.measurementType || 'No measurementType';
-
-    return `${platform} - ${measurementType}`;
-  };
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
-        <Heading3>
-          Sensors
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            ({sensors.length} items)
-          </span>
-        </Heading3>
-
-
-        <div className='flex items-center space-x-2'>
-          <IconTooltipButton
-            icon={Plus}
-            onClick={addSensor}
-            tooltipText={"Add Sensor"}
-          />
-
-          <IconTooltipButton
-            icon={HelpCircle}
-            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
-            tooltipText={"Help"}
-          />
-        </div>
-      </div>
-
-       <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
-        Specify the sensors on the test set-up from which fault responses will be extracted.
-      </Paragraph>
-
-
-      <div>
-        <TableTooltip isVisible={activeTooltip}
-          explanations={[
-            <><b>Basic Information:</b> Basic Information about the sensor</>,
-            <><b>- Technology Platform:</b> Platform of the sensor</>,
-            <><b>- Technology Type:</b> Technology Type of the sensor</>,
-            <><b>- Description:</b> Description of the sensor</>
-          ]}
-          examples={[
-            { "technology Platform": "PT5401", "Technology Type": "PT", description: "measures pressure on the radial cylinder" },
-          ]}
-        />
-      </div>
-
-      <div className="space-y-1">
-        {sensors.map((sensor, index) => {
-          const isExpanded = expandedSensors.has(index);
-
-          return (
-            <div key={sensor.id ?? `sensor-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => toggleSensor(index)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-medium text-gray-900">
-                      s{index + 1}:
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{sensor.alias || 'Unnamed Sensor'}: </span>
-                    {getSensorSummary(sensor)}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <IconTooltipButton
-                    icon={Trash2}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSensor(index);
-                    }}
-                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
-                    tooltipText={"Remove sensor"}
-                  />
-                  <span className="text-gray-400">
-                    {isExpanded ?
-                      <ChevronDown className="w-4 h-4 text-gray-500" /> :
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    }
-                  </span>
-                </div>
-              </div>
-
-              {isExpanded && (
-
-                <div>
-
-                  <div className="border-t border-gray-200 p-4 bg-white space-y-6">
-                    {/* Basic Information */}
-                    <div className='space-y-3'>
-                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Basic Information
-                      </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <FormField
-                          name={`sensor-${index}-alias`}
-                          value={sensor.alias}
-                          onChange={(e) => updateSensor(index, 'alias', e.target.value)}
-                          label="Sensor alias"
-                          type="text"
-                          placeholder="Enter a sensor name/alias"
-                          explanation="Provide a name for the sensor. This name will appear in the ISA Questionnaire fields when adding sensor information."
-                          example="vib_ch_1"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-technologyPlatform`}
-                          value={sensor.technologyPlatform}
-                          onChange={(e) => updateSensor(index, 'technologyPlatform', e.target.value)}
-                          label="Sensor Model"
-                          type="text"
-                          placeholder="Enter Sensor model"
-                          explanation="Specify the specific sensor model that is used."
-                          example="Wilcoxon 786B-10"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-technologyType`}
-                          value={sensor.technologyType}
-                          onChange={(e) => updateSensor(index, 'technologyType', e.target.value)}
-                          label="Sensor Type"
-                          type="text"
-                          placeholder="Enter Sensor type"
-                          explanation="Specify the type of sensor used"
-                          example="Accelerometer"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-measurementType`}
-                          value={sensor.measurementType}
-                          onChange={(e) => updateSensor(index, 'measurementType', e.target.value)}
-                          label="Measurement Type"
-                          type="text"
-                          placeholder="Enter measurement type"
-                          explanation="Specify the type of measurement"
-                          example={"Vibration"}
-                        />
-                      </div>
-
-                      <div>
-                        <FormField
-                          name={`sensor-${index}-description`}
-                          value={sensor.description}
-                          onChange={(e) => updateSensor(index, 'description', e.target.value)}
-                          label="Description"
-                          type="textarea"
-                          placeholder="Enter description"
-                          className='min-h-20'
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {sensors.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="mb-2">No sensors added yet.</p>
-            <p className="text-sm">Click "Add Sensor" to get started.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Configurations Component
-const ConfigurationsEditor = ({ configurations, onConfigurationsChange }) => {
-  const [expandedItems, setExpandedItems] = useState(new Set());
-  const [activeTooltip, setActiveTooltip] = useState(false);
-
-  const addConfiguration = () => {
-    const newConfiguration = {
-      id: uuid4(),
-      name: '',
-      replaceableComponentId: '',
-      details: []
-    };
-    const newConfigurations = [...configurations, newConfiguration];
-    onConfigurationsChange(newConfigurations);
-
-    // Auto-expand the new item
-    setExpandedItems(prev => new Set([...prev, newConfigurations.length - 1]));
-  };
-
-  const updateConfiguration = (index, field, value) => {
-    const updated = configurations.map((config, i) =>
-      i === index ? { ...config, [field]: value } : config
-    );
-    onConfigurationsChange(updated);
-  };
-
-  const removeConfiguration = (index) => {
-    const filtered = configurations.filter((_, i) => i !== index);
-    onConfigurationsChange(filtered);
-
-    setExpandedItems(prev => {
-      const newSet = new Set();
-      Array.from(prev).forEach(i => {
-        if (i < index) newSet.add(i);
-        else if (i > index) newSet.add(i - 1);
-      });
-      return newSet;
-    });
-  };
-
-  const toggleExpanded = (index) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
-
-  const addDetail = (configIndex) => {
-    const newEntry = { id: uuid4(), name: '', value: '' };
-    const updated = configurations.map((config, i) => {
-      if (i !== configIndex) return config;
-      return { ...config, details: [...(config.details || []), newEntry] };
-    });
-    onConfigurationsChange(updated);
-  };
-
-  const updateDetail = (configIndex, detailIndex, field, value) => {
-    const updated = configurations.map((config, i) => {
-      if (i !== configIndex) return config;
-      const newDetails = [...(config.details || [])];
-      newDetails[detailIndex] = { ...newDetails[detailIndex], [field]: value };
-      return { ...config, details: newDetails };
-    });
-    onConfigurationsChange(updated);
-  };
-
-  const removeDetail = (configIndex, detailIndex) => {
-    const updated = configurations.map((config, i) => {
-      if (i !== configIndex) return config;
-      const newDetails = [...(config.details || [])];
-      newDetails.splice(detailIndex, 1);
-      return { ...config, details: newDetails };
-    });
-    onConfigurationsChange(updated);
-  };
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
-        <Heading3>
-          Configurations
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            ({configurations.length} items)
-          </span>
-        </Heading3>
-
-        <div className='flex items-center space-x-2'>
-          <IconTooltipButton
-            icon={Plus}
-            onClick={addConfiguration}
-            tooltipText={"Add Configuration"}
-          />
-
-          <IconTooltipButton
-            icon={HelpCircle}
-            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
-            tooltipText={"Help"}
-          />
-        </div>
-      </div>
-
-      <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
-        Define configurations for this test setup. Each configuration represents a specific setup variant (e.g. a particular replaceable component used during a study).
-      </Paragraph>
-
-      <div>
-        <TableTooltip isVisible={activeTooltip}
-          explanations={[
-            <><b>Name:</b> Name of the configuration (e.g. "Healthy Bearing", "Faulty Bearing BPFO")</>,
-            <><b>Replaceable Component ID:</b> Identifier for the specific component used in this configuration</>,
-            <><b>Details:</b> Additional key-value pairs describing the configuration (optional)</>
-          ]}
-          examples={[
-            { name: "Healthy Bearing", "RC ID": "RC-001" },
-            { name: "Faulty Bearing BPFO", "RC ID": "RC-002" }
-          ]}
-        />
-      </div>
-
-      <div className="space-y-1">
-        {configurations.map((config, index) => {
-          const isExpanded = expandedItems.has(index);
-          const detailsCount = config.details?.length || 0;
-
-          return (
-            <div key={config.id ?? `config-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => toggleExpanded(index)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    <span className="font-medium text-gray-900">
-                      c{index + 1}:
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{config.name || 'Unnamed Configuration'}: </span>
-                    {config.replaceableComponentId ? `: ${config.replaceableComponentId}` : 'No RC ID'}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <IconTooltipButton
-                    icon={Trash2}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeConfiguration(index);
-                    }}
-                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
-                    tooltipText={"Remove configuration"}
-                  />
-                  <span className="text-gray-400">
-                    {isExpanded ?
-                      <ChevronDown className="w-4 h-4 text-gray-500" /> :
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    }
-                  </span>
-                </div>
-              </div>
-
-              {isExpanded && (
-                <div className="border-t border-gray-200 p-4 bg-white space-y-4">
-                  <FormField
-                    name={`config-${index}-name`}
-                    value={config.name}
-                    onChange={(e) => updateConfiguration(index, 'name', e.target.value)}
-                    label="Configuration Name"
-                    type="text"
-                    placeholder="Enter configuration name"
-                  />
-
-                  <FormField
-                    name={`config-${index}-replaceableComponentId`}
-                    value={config.replaceableComponentId || ''}
-                    onChange={(e) => updateConfiguration(index, 'replaceableComponentId', e.target.value)}
-                    label="Replaceable Component ID"
-                    type="text"
-                    placeholder="e.g. RC-001"
-                    explanation="Identifier for the replaceable component used in this configuration"
-                  />
-
-                  {/* Details (key-value pairs) */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <Heading3 className="text-sm font-semibold text-gray-700">
-                        Details ({detailsCount})
-                      </Heading3>
-                      <TooltipButton
-                        tooltipText="Add detail"
-                        onClick={() => addDetail(index)}
-                        className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                      >
-                        <span>Add Detail</span>
-                      </TooltipButton>
-                    </div>
-
-                    <div className="space-y-3">
-                      {(config.details || []).map((detail, detailIdx) => (
-                        <div key={detail.id ?? `detail-${detailIdx}`} className="bg-white border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <Paragraph className="text-sm font-medium text-gray-700">
-                              Detail {detailIdx + 1}
-                            </Paragraph>
-                            <IconToolTipButton
-                              icon={X}
-                              onClick={() => removeDetail(index, detailIdx)}
-                              tooltipText="Remove detail"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              name={`config-${index}-detail-${detailIdx}-name`}
-                              value={detail.name}
-                              onChange={(e) => updateDetail(index, detailIdx, 'name', e.target.value)}
-                              label="Name"
-                              type="text"
-                              placeholder="e.g. Replaceable Component ID"
-                            />
-
-                            <FormField
-                              name={`config-${index}-detail-${detailIdx}-value`}
-                              value={detail.value}
-                              onChange={(e) => updateDetail(index, detailIdx, 'value', e.target.value)}
-                              label="Value"
-                              type="text"
-                              placeholder="e.g. RC-001"
-                            />
-                          </div>
-                        </div>
-                      ))}
-
-                      {detailsCount === 0 && (
-                        <Paragraph className="text-sm text-gray-500 text-center py-6">
-                          No details added yet. Click "Add Detail" to get started.
-                        </Paragraph>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {configurations.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="mb-2">No configurations added yet.</p>
-            <p className="text-sm">Click "Add Configuration" to get started.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
@@ -887,8 +89,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [configurationsView, setConfigurationsView] = useState('simple-view');
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(buildFormState(item)));
-  const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
-  const [activeProcessingProtocolId, setActiveProcessingProtocolId] = useState(null);
 
 
   // Calculate number of sensors from sensors array
@@ -1217,364 +417,70 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     ]
   }), [configurationRows, addConfigurationRow]);
 
-  useEffect(() => {
-    if (!formData.measurementProtocols.length) {
-      setActiveMeasurementProtocolId(null);
-      return;
-    }
-    const hasActive = formData.measurementProtocols.some((protocol) => protocol.id === activeMeasurementProtocolId);
-    if (activeMeasurementProtocolId && !hasActive) {
-      setActiveMeasurementProtocolId(formData.measurementProtocols[0].id);
-    }
-  }, [formData.measurementProtocols, activeMeasurementProtocolId]);
-
-  useEffect(() => {
-    if (!formData.processingProtocols.length) {
-      setActiveProcessingProtocolId(null);
-      return;
-    }
-    const hasActive = formData.processingProtocols.some((protocol) => protocol.id === activeProcessingProtocolId);
-    if (activeProcessingProtocolId && !hasActive) {
-      setActiveProcessingProtocolId(formData.processingProtocols[0].id);
-    }
-  }, [formData.processingProtocols, activeProcessingProtocolId]);
-
-  const activeMeasurementProtocol = useMemo(
-    () => formData.measurementProtocols.find((protocol) => protocol.id === activeMeasurementProtocolId) || null,
-    [formData.measurementProtocols, activeMeasurementProtocolId]
-  );
-
-  const activeProcessingProtocol = useMemo(
-    () => formData.processingProtocols.find((protocol) => protocol.id === activeProcessingProtocolId) || null,
-    [formData.processingProtocols, activeProcessingProtocolId]
-  );
-
-  const activeMeasurementProtocolRows = useMemo(
-    () => activeMeasurementProtocol?.parameters || [],
-    [activeMeasurementProtocol]
-  );
-
-  const activeProcessingProtocolRows = useMemo(
-    () => activeProcessingProtocol?.parameters || [],
-    [activeProcessingProtocol]
-  );
-
-  const activeMeasurementProtocolMappings = useMemo(
-    () => (formData.sensorToMeasurementProtocolMapping || [])
-      .filter((mapping) => mapping.protocolId === activeMeasurementProtocolId),
-    [formData.sensorToMeasurementProtocolMapping, activeMeasurementProtocolId]
-  );
-
-  const activeProcessingProtocolMappings = useMemo(
-    () => (formData.sensorToProcessingProtocolMapping || [])
-      .filter((mapping) => mapping.protocolId === activeProcessingProtocolId),
-    [formData.sensorToProcessingProtocolMapping, activeProcessingProtocolId]
-  );
-
-  const addMeasurementProtocol = useCallback(() => {
-    const newProtocolId = uuid4();
+  const handleCharacteristicRowsChange = useCallback((nextRows) => {
     setFormData((prev) => ({
       ...prev,
-      measurementProtocols: [
-        ...(prev.measurementProtocols || []),
-        {
-          id: newProtocolId,
-          name: `Measurement Protocol ${prev.measurementProtocols.length + 1}`,
-          description: '',
-          parameters: []
-        }
-      ]
-    }));
-    setActiveMeasurementProtocolId(newProtocolId);
-  }, []);
-
-  const addProcessingProtocol = useCallback(() => {
-    const newProtocolId = uuid4();
-    setFormData((prev) => ({
-      ...prev,
-      processingProtocols: [
-        ...(prev.processingProtocols || []),
-        {
-          id: newProtocolId,
-          name: `Processing Protocol ${prev.processingProtocols.length + 1}`,
-          description: '',
-          parameters: []
-        }
-      ]
-    }));
-    setActiveProcessingProtocolId(newProtocolId);
-  }, []);
-
-  const updateMeasurementProtocol = useCallback((protocolId, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      measurementProtocols: (prev.measurementProtocols || []).map((protocol) =>
-        protocol.id === protocolId ? { ...protocol, [field]: value } : protocol
-      )
-    }));
-  }, []);
-
-  const updateProcessingProtocol = useCallback((protocolId, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      processingProtocols: (prev.processingProtocols || []).map((protocol) =>
-        protocol.id === protocolId ? { ...protocol, [field]: value } : protocol
-      )
-    }));
-  }, []);
-
-  const removeMeasurementProtocol = useCallback((protocolId) => {
-    setFormData((prev) => ({
-      ...prev,
-      measurementProtocols: (prev.measurementProtocols || []).filter((protocol) => protocol.id !== protocolId),
-      sensorToMeasurementProtocolMapping: (prev.sensorToMeasurementProtocolMapping || [])
-        .filter((mapping) => mapping.protocolId !== protocolId)
-    }));
-    setActiveMeasurementProtocolId((prev) => (prev === protocolId ? null : prev));
-  }, []);
-
-  const removeProcessingProtocol = useCallback((protocolId) => {
-    setFormData((prev) => ({
-      ...prev,
-      processingProtocols: (prev.processingProtocols || []).filter((protocol) => protocol.id !== protocolId),
-      sensorToProcessingProtocolMapping: (prev.sensorToProcessingProtocolMapping || [])
-        .filter((mapping) => mapping.protocolId !== protocolId)
-    }));
-    setActiveProcessingProtocolId((prev) => (prev === protocolId ? null : prev));
-  }, []);
-
-  const toggleMeasurementProtocol = useCallback((protocolId) => {
-    setActiveMeasurementProtocolId((prev) => (prev === protocolId ? null : protocolId));
-  }, []);
-
-  const toggleProcessingProtocol = useCallback((protocolId) => {
-    setActiveProcessingProtocolId((prev) => (prev === protocolId ? null : protocolId));
-  }, []);
-
-  const addMeasurementProtocolParameter = useCallback(() => {
-    if (!activeMeasurementProtocolId) return;
-    setFormData((prev) => ({
-      ...prev,
-      measurementProtocols: (prev.measurementProtocols || []).map((protocol) => {
-        if (protocol.id !== activeMeasurementProtocolId) return protocol;
+      characteristics: nextRows.map((row) => {
+        const existing = prev.characteristics.find((c) => c.id === row.id) || {};
         return {
-          ...protocol,
-          parameters: [
-            ...(protocol.parameters || []),
-            {
-              id: uuid4(),
-              name: `Parameter ${(protocol.parameters || []).length + 1}`,
-              description: '',
-              unit: ''
-            }
-          ]
-        };
-      })
-    }));
-  }, [activeMeasurementProtocolId]);
-
-  const addProcessingProtocolParameter = useCallback(() => {
-    if (!activeProcessingProtocolId) return;
-    setFormData((prev) => ({
-      ...prev,
-      processingProtocols: (prev.processingProtocols || []).map((protocol) => {
-        if (protocol.id !== activeProcessingProtocolId) return protocol;
-        return {
-          ...protocol,
-          parameters: [
-            ...(protocol.parameters || []),
-            {
-              id: uuid4(),
-              name: `Parameter ${(protocol.parameters || []).length + 1}`,
-              description: '',
-              unit: ''
-            }
-          ]
-        };
-      })
-    }));
-  }, [activeProcessingProtocolId]);
-
-  const handleMeasurementProtocolMappingsChange = useCallback((newMappings) => {
-    if (!activeMeasurementProtocolId) return;
-    setFormData((prev) => ({
-      ...prev,
-      sensorToMeasurementProtocolMapping: [
-        ...(prev.sensorToMeasurementProtocolMapping || []).filter((mapping) => mapping.protocolId !== activeMeasurementProtocolId),
-        ...newMappings.map((mapping) => ({ ...mapping, protocolId: activeMeasurementProtocolId }))
-      ]
-    }));
-  }, [activeMeasurementProtocolId]);
-
-  const handleProcessingProtocolMappingsChange = useCallback((newMappings) => {
-    if (!activeProcessingProtocolId) return;
-    setFormData((prev) => ({
-      ...prev,
-      sensorToProcessingProtocolMapping: [
-        ...(prev.sensorToProcessingProtocolMapping || []).filter((mapping) => mapping.protocolId !== activeProcessingProtocolId),
-        ...newMappings.map((mapping) => ({ ...mapping, protocolId: activeProcessingProtocolId }))
-      ]
-    }));
-  }, [activeProcessingProtocolId]);
-
-  const handleMeasurementProtocolRowsChange = useCallback((protocolId, nextRows) => {
-    setFormData((prev) => ({
-      ...prev,
-      measurementProtocols: (prev.measurementProtocols || []).map((targetProtocol) => {
-        if (targetProtocol.id !== protocolId) return targetProtocol;
-        return {
-          ...targetProtocol,
-          parameters: nextRows.map((row) => {
-            const existing = (targetProtocol.parameters || []).find((parameter) => parameter.id === row.id) || {};
-            return { ...existing, ...row };
-          })
+          ...existing,
+          ...row,
+          comments: existing.comments || row.comments || [],
+          commentsCount: undefined,
+          commentHint: undefined
         };
       })
     }));
   }, []);
 
-  const handleProcessingProtocolRowsChange = useCallback((protocolId, nextRows) => {
+  const handleSensorRowsChange = useCallback((nextRows) => {
     setFormData((prev) => ({
       ...prev,
-      processingProtocols: (prev.processingProtocols || []).map((targetProtocol) => {
-        if (targetProtocol.id !== protocolId) return targetProtocol;
+      sensors: nextRows.map((row) => {
+        const existing = prev.sensors.find((s) => s.id === row.id) || {};
         return {
-          ...targetProtocol,
-          parameters: nextRows.map((row) => {
-            const existing = (targetProtocol.parameters || []).find((parameter) => parameter.id === row.id) || {};
-            return { ...existing, ...row };
-          })
+          ...existing,
+          ...row,
+          additionalInfo: existing.additionalInfo || row.additionalInfo || []
         };
       })
     }));
   }, []);
 
-  const measurementProtocolGridConfig = useMemo(() => ({
-    title: activeMeasurementProtocol
-      ? `${activeMeasurementProtocol.name} - Sensor parameter mapping`
-      : 'Measurement Protocol parameter mapping',
-    rowData: activeMeasurementProtocolRows,
-    columnData: formData.sensors,
-    mappings: activeMeasurementProtocolMappings,
-    fieldMappings: {
-      rowId: 'id',
-      rowName: 'name',
-      columnId: 'id',
-      columnName: 'alias',
-      columnUnit: 'measurementUnit',
-      mappingRowId: 'targetId',
-      mappingColumnId: 'sourceId',
-      mappingValue: 'value',
-      hasChildColumns: true
-    },
-    staticColumns: [
-      {
-        prop: 'actions',
-        name: '',
-        size: 70,
-        readonly: true,
-        cellTemplate: Template(DeleteRowCellTemplate),
-        cellProperties: () => ({ style: { 'text-align': 'center' } })
-      },
-      {
-        prop: 'pattern',
-        name: 'Identifier',
-        size: 150,
-        readonly: true,
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
-      },
-      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
-      {
-        prop: 'description',
-        name: 'Description',
-        size: 260,
-        readonly: false,
-        cellProperties: () => ({
-          style: {
-            "border-right": "3px solid "
-          }
-        })
-      }
-    ],
-    customActions: [
-      {
-        label: '+ Add parameter',
-        title: 'Add parameter row',
-        onClick: addMeasurementProtocolParameter,
-        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-      }
-    ]
-  }), [
-    activeMeasurementProtocol,
-    activeMeasurementProtocolRows,
-    activeMeasurementProtocolMappings,
-    formData.sensors,
-    addMeasurementProtocolParameter
-  ]);
+  const handleConfigurationRowsChange = useCallback((nextRows) => {
+    setFormData((prev) => ({
+      ...prev,
+      configurations: nextRows.map((row) => {
+        const existing = prev.configurations.find((c) => c.id === row.id) || {};
+        return {
+          ...existing,
+          ...row,
+          details: existing.details || row.details || [],
+          detailsCount: undefined,
+          detailsHint: undefined
+        };
+      })
+    }));
+  }, []);
 
-  const processingProtocolGridConfig = useMemo(() => ({
-    title: activeProcessingProtocol
-      ? `${activeProcessingProtocol.name} - Sensor parameter mapping`
-      : 'Processing Protocol parameter mapping',
-    rowData: activeProcessingProtocolRows,
-    columnData: formData.sensors,
-    mappings: activeProcessingProtocolMappings,
-    fieldMappings: {
-      rowId: 'id',
-      rowName: 'name',
-      columnId: 'id',
-      columnName: 'alias',
-      columnUnit: 'measurementUnit',
-      mappingRowId: 'targetId',
-      mappingColumnId: 'sourceId',
-      mappingValue: 'value',
-      hasChildColumns: true
-    },
-    staticColumns: [
-      {
-        prop: 'actions',
-        name: '',
-        size: 70,
-        readonly: true,
-        cellTemplate: Template(DeleteRowCellTemplate),
-        cellProperties: () => ({ style: { 'text-align': 'center' } })
-      },
-      {
-        prop: 'pattern',
-        name: 'Identifier',
-        size: 150,
-        readonly: true,
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
-      },
-      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
-      {
-        prop: 'description',
-        name: 'Description',
-        size: 260,
-        readonly: false,
-        cellProperties: () => ({
-          style: {
-            "border-right": "3px solid "
-          }
-        })
-      }
-    ],
-    customActions: [
-      {
-        label: '+ Add parameter',
-        title: 'Add parameter row',
-        onClick: addProcessingProtocolParameter,
-        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-      }
-    ]
-  }), [
-    activeProcessingProtocol,
-    activeProcessingProtocolRows,
-    activeProcessingProtocolMappings,
-    formData.sensors,
-    addProcessingProtocolParameter
-  ]);
-
+  const {
+    activeMeasurementProtocolId,
+    activeProcessingProtocolId,
+    addMeasurementProtocol,
+    addProcessingProtocol,
+    updateMeasurementProtocol,
+    updateProcessingProtocol,
+    removeMeasurementProtocol,
+    removeProcessingProtocol,
+    toggleMeasurementProtocol,
+    toggleProcessingProtocol,
+    handleMeasurementProtocolMappingsChange,
+    handleProcessingProtocolMappingsChange,
+    handleMeasurementProtocolRowsChange,
+    handleProcessingProtocolRowsChange,
+    measurementProtocolGridConfig,
+    processingProtocolGridConfig,
+  } = useProtocolSections({ formData, setFormData });
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-y-auto">
       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
@@ -1612,225 +518,68 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         />
 
         <TabPanel isActive={selectedTab === 'basic-info'}>
-
-          <div className="p-4 bg-gray-50 rounded-lg space-y-4">
-
-            <div>
-              {/* Basic Information */}
-              <div className="p-2 flex justify-between items-center border-b border-b-gray-300">
-                <Heading3>
-                  Basic Information
-                </Heading3>
-
-                {/* <IconTooltipButton icon={HelpCircle} onClick={toggleTooltip} tooltipText={"Help"} /> */}
-              </div>
-
-              {/* <TableTooltip
-                isVisible={activeTooltips}
-                explanations={["This section contains the basic information about the test setup including its name, location, and description",
-                  <><b>- Name:</b> Name of the test setup</>,
-                  <><b>- Location:</b> Location of the test setup</>,
-                  <><b>- Description:</b> A brief description of the test setup</>
-                ]}
-                examples={[
-                  { name: "Test Setup xxx", location: "Utrecht, Hogeschool Utrecht", description: "This is a test setup for testing the performance of the new motor." },
-                  { name: "Test Setup yyy", location: "Amsterdam, Hogeschool van Amsterrdam (HvA)", description: "This is a test setup for testing the performance of the new hydraulic pump." },
-                ]} /> */}
-
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <FormField
-                name={'name'}
-                type='text'
-                value={formData.name}
-                label={'Name'}
-                placeholder={'Enter test setup name'}
-                onChange={handleChange}
-                required
-              />
-
-              <FormField
-                name={'location'}
-                type='text'
-                value={formData.location}
-                label={'Location'}
-                placeholder={'Enter test setup location'}
-                onChange={handleChange}
-                required
-              />
-
-            </div>
-
-              <FormField
-                name={'experimentPreparationProtocolName'}
-                type='text'
-                value={formData.experimentPreparationProtocolName}
-                label={'Experiment Preparation Protocol Name'}
-                placeholder={'Enter experiment preparation protocol name'}
-                onChange={handleChange}
-                explanation={"Please specify a name for the preparation of the experiments."}
-                example= {"experiment preparation, simulation preparation or other"}
-                required
-              />
-
-              <FormField
-                name={'testSpecimenName'}
-                type='text'
-                value={formData.testSpecimenName}
-                label={'Set-up or test specimen-name'}
-                placeholder={'Enter Set-up or test specimen-name'}
-                onChange={handleChange}
-                explanation={"If multiple components are tested, please specify the name of the test set-up. If a particular component/part is tested, please name the part."}
-                example= {"Hydraulic pump test set-up (if >1 component in the set-up are being tested in the investigation) or “Bearing” / “Test specimen” (if only a specific component is being tested in the investigation)"}
-                required
-              />
-
-            <FormField
-              name="description"
-              type="textarea"
-              value={formData.description}
-              label="Description"
-              placeholder="Enter a brief description of the test setup"
-              onChange={handleChange}
-              rows={4}
-              className='min-h-20'
-            />
-          </div>
+          <BasicInfoSection formData={formData} onFieldChange={handleChange} />
         </TabPanel>
 
-        <TabPanel isActive={selectedTab === 'characteristics'}>
-          <TabSwitcher
-            selectedTab={characteristicsView}
-            onTabChange={setCharacteristicsView}
-            tabs={[
-              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit characteristics with collapsible cards' },
-              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit characteristics inline in a grid' }
-            ]}
-          />
-          <TabPanel isActive={characteristicsView === 'simple-view'}>
+        <EntityGridTabPanel
+          isActive={selectedTab === 'characteristics'}
+          selectedView={characteristicsView}
+          onViewChange={setCharacteristicsView}
+          simpleViewTooltip="Edit characteristics with collapsible cards"
+          gridViewTooltip="Edit characteristics inline in a grid"
+          simpleContent={
             <CharacteristicsEditor
               characteristics={formData.characteristics}
               onCharacteristicsChange={(characteristics) =>
-                setFormData(prev => ({ ...prev, characteristics }))
+                setFormData((prev) => ({ ...prev, characteristics }))
               }
             />
-          </TabPanel>
-          <TabPanel isActive={characteristicsView === 'grid-view'}>
-            <div className="mt-3 border border-gray-200 rounded-lg">
-              <DataGrid
-                {...characteristicGridConfig}
-                showControls={true}
-                showDebug={false}
-                historyScopeKey={`${historyScopeBase}:characteristics`}
-                isActive={selectedTab === 'characteristics' && characteristicsView === 'grid-view'}
-                onRowDataChange={(nextRows) => setFormData(prev => ({
-                  ...prev,
-                  characteristics: nextRows.map((row) => {
-                    const existing = prev.characteristics.find((c) => c.id === row.id) || {};
-                    return {
-                      ...existing,
-                      ...row,
-                      comments: existing.comments || row.comments || [],
-                      commentsCount: undefined,
-                      commentHint: undefined
-                    };
-                  })
-                }))}
-                height={"45vh"}
-                hideClearAllMappings={true}
-              />
-            </div>
-          </TabPanel>
-        </TabPanel>
+          }
+          gridConfig={characteristicGridConfig}
+          historyScopeKey={`${historyScopeBase}:characteristics`}
+          isGridActive={selectedTab === 'characteristics' && characteristicsView === 'grid-view'}
+          onRowDataChange={handleCharacteristicRowsChange}
+        />
 
-        <TabPanel isActive={selectedTab === 'sensors'}>
-          <TabSwitcher
-            selectedTab={sensorsView}
-            onTabChange={setSensorsView}
-            tabs={[
-              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit sensors with collapsible cards' },
-              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit sensors inline in a grid' }
-            ]}
-          />
-          <TabPanel isActive={sensorsView === 'simple-view'}>
+        <EntityGridTabPanel
+          isActive={selectedTab === 'sensors'}
+          selectedView={sensorsView}
+          onViewChange={setSensorsView}
+          simpleViewTooltip="Edit sensors with collapsible cards"
+          gridViewTooltip="Edit sensors inline in a grid"
+          simpleContent={
             <SensorsEditor
               sensors={formData.sensors}
               onSensorsChange={(sensors) =>
-                setFormData(prev => ({ ...prev, sensors }))
+                setFormData((prev) => ({ ...prev, sensors }))
               }
             />
-          </TabPanel>
-          <TabPanel isActive={sensorsView === 'grid-view'}>
-            <div className="mt-3 border border-gray-200 rounded-lg">
-              <DataGrid
-                {...sensorGridConfig}
-                showControls={true}
-                showDebug={false}
-                historyScopeKey={`${historyScopeBase}:sensors`}
-                isActive={selectedTab === 'sensors' && sensorsView === 'grid-view'}
-                onRowDataChange={(nextRows) => setFormData(prev => ({
-                  ...prev,
-                  sensors: nextRows.map((row) => {
-                    const existing = prev.sensors.find((s) => s.id === row.id) || {};
-                    return {
-                      ...existing,
-                      ...row,
-                      additionalInfo: existing.additionalInfo || row.additionalInfo || []
-                    };
-                  })
-                }))}
-                height={"45vh"}
-                hideClearAllMappings={true}
-              />
-            </div>
-          </TabPanel>
-        </TabPanel>
+          }
+          gridConfig={sensorGridConfig}
+          historyScopeKey={`${historyScopeBase}:sensors`}
+          isGridActive={selectedTab === 'sensors' && sensorsView === 'grid-view'}
+          onRowDataChange={handleSensorRowsChange}
+        />
 
-        <TabPanel isActive={selectedTab === 'configurations'}>
-          <TabSwitcher
-            selectedTab={configurationsView}
-            onTabChange={setConfigurationsView}
-            tabs={[
-              { id: 'simple-view', label: 'Simple View', tooltip: 'Edit configurations with collapsible cards' },
-              { id: 'grid-view', label: 'Grid View', tooltip: 'Edit configurations inline in a grid' }
-            ]}
-          />
-          <TabPanel isActive={configurationsView === 'simple-view'}>
+        <EntityGridTabPanel
+          isActive={selectedTab === 'configurations'}
+          selectedView={configurationsView}
+          onViewChange={setConfigurationsView}
+          simpleViewTooltip="Edit configurations with collapsible cards"
+          gridViewTooltip="Edit configurations inline in a grid"
+          simpleContent={
             <ConfigurationsEditor
               configurations={formData.configurations}
               onConfigurationsChange={(configurations) =>
-                setFormData(prev => ({ ...prev, configurations }))
+                setFormData((prev) => ({ ...prev, configurations }))
               }
             />
-          </TabPanel>
-          <TabPanel isActive={configurationsView === 'grid-view'}>
-            <div className="mt-3 border border-gray-200 rounded-lg">
-              <DataGrid
-                {...configurationGridConfig}
-                showControls={true}
-                showDebug={false}
-                historyScopeKey={`${historyScopeBase}:configurations`}
-                isActive={selectedTab === 'configurations' && configurationsView === 'grid-view'}
-                onRowDataChange={(nextRows) => setFormData(prev => ({
-                  ...prev,
-                  configurations: nextRows.map((row) => {
-                    const existing = prev.configurations.find((c) => c.id === row.id) || {};
-                    return {
-                      ...existing,
-                      ...row,
-                      details: existing.details || row.details || [],
-                      detailsCount: undefined,
-                      detailsHint: undefined
-                    };
-                  })
-                }))}
-                height={"45vh"}
-                hideClearAllMappings={true}
-              />
-            </div>
-          </TabPanel>
-        </TabPanel>
-
+          }
+          gridConfig={configurationGridConfig}
+          historyScopeKey={`${historyScopeBase}:configurations`}
+          isGridActive={selectedTab === 'configurations' && configurationsView === 'grid-view'}
+          onRowDataChange={handleConfigurationRowsChange}
+        />
         <TabPanel isActive={selectedTab === 'measurement-protocols'}>
           <ProtocolEntityGridSection
             title="Measurement Protocols"
@@ -1926,4 +675,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 };
 
 export default TestSetupForm;
+
+
+
 

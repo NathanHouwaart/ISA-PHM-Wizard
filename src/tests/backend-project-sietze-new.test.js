@@ -7,6 +7,16 @@ const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
+const FIXTURE_CASES = [
+  {
+    name: 'example-single-run-sietze',
+    path: 'src/data/example-single-run-sietze.json',
+  },
+  {
+    name: 'example-multi-run-milling',
+    path: 'src/data/example-multi-run-milling.json',
+  },
+];
 
 const parseJsonValue = (value, fallback) => {
   if (value === undefined || value === null) return fallback;
@@ -82,6 +92,7 @@ const buildPayloadFromExport = (projectData) => {
       studyToProcessingProtocolSelection,
     }),
     studies,
+    expectedAssayCount: Array.isArray(testSetups[0]?.sensors) ? testSetups[0].sensors.length : 0,
   };
 };
 
@@ -95,13 +106,13 @@ const callConversionApi = async (payload) => {
   return response.json();
 };
 
-integrationDescribe('Backend integration with project-sietze-new fixture', () => {
-  it('converts fixture and preserves study/assay intent', async () => {
-    const fixturePath = path.resolve(process.cwd(), 'src/data/project-sietze-new.json');
+integrationDescribe('Backend integration with bundled example fixtures', () => {
+  it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ path: fixtureFile }) => {
+    const fixturePath = path.resolve(process.cwd(), fixtureFile);
     const fixtureRaw = await fs.readFile(fixturePath, 'utf8');
     const fixture = JSON.parse(fixtureRaw);
 
-    const { payload, studies } = buildPayloadFromExport(fixture);
+    const { payload, studies, expectedAssayCount } = buildPayloadFromExport(fixture);
     const output = await callConversionApi(payload);
 
     expect(Array.isArray(output.studies)).toBe(true);
@@ -109,7 +120,7 @@ integrationDescribe('Backend integration with project-sietze-new fixture', () =>
 
     output.studies.forEach((study) => {
       expect(Array.isArray(study.assays)).toBe(true);
-      expect(study.assays.length).toBe(11);
+      expect(study.assays.length).toBe(expectedAssayCount);
       expect(Array.isArray(study.processSequence)).toBe(true);
       expect(study.processSequence.length).toBeGreaterThan(0);
 
