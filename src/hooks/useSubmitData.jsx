@@ -2,6 +2,13 @@ import { useState, useRef } from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
 
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
+
 // Hook responsibility: perform the submit/convert API call using data from the
 // GlobalDataContext. Keeps isSubmitting and message local to the hook so the
 // context remains a pure data store.
@@ -56,7 +63,7 @@ export default function useSubmitData() {
 
       setMessage('Uploading to conversion service...');
 
-      console.log('[useSubmitData] submitting', jsonData);
+      debugLog('[useSubmitData] submitting', jsonData);
 
       const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
       const formData = new FormData();

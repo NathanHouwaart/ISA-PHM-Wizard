@@ -9,6 +9,13 @@ import {
   setProjectDatasetName,
   clearProjectDatasetName
 } from '../utils/projectMetadata';
+
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
 /**
  * Custom hook for managing dataset operations for a single project.
  * 
@@ -191,7 +198,7 @@ export function useProjectDataset(projectId) {
       setError(null);
       setProgress({ percent: 0, message: 'Starting...' });
 
-      console.log('[useProjectDataset] Starting directory indexing for project:', projectId);
+      debugLog('[useProjectDataset] Starting directory indexing for project:', projectId);
       const indexStartTime = performance.now();
 
       // Use the file system hook to pick and index the directory
@@ -202,7 +209,7 @@ export function useProjectDataset(projectId) {
       });
 
       if (!dataset) {
-        console.log('[useProjectDataset] User cancelled directory picker');
+        debugLog('[useProjectDataset] User cancelled directory picker');
         setLoading(false);
         setProgress(null);
         return;
@@ -219,8 +226,8 @@ export function useProjectDataset(projectId) {
       const indexEndTime = performance.now();
       const totalIndexDuration = ((indexEndTime - indexStartTime) / 1000).toFixed(2);
 
-      console.log(`[useProjectDataset] IndexedDB save completed in ${saveDuration}s`);
-      console.log(`[useProjectDataset] Total indexing time: ${totalIndexDuration}s`);
+      debugLog(`[useProjectDataset] IndexedDB save completed in ${saveDuration}s`);
+      debugLog(`[useProjectDataset] Total indexing time: ${totalIndexDuration}s`);
 
       // Update state
       setTree(dataset);
@@ -229,7 +236,7 @@ export function useProjectDataset(projectId) {
 
       // If this is the currently active project, update the global selectedDataset
       if (projectId === currentProjectId) {
-        console.log('[useProjectDataset] Updating selectedDataset for active project');
+        debugLog('[useProjectDataset] Updating selectedDataset for active project');
         setSelectedDataset(dataset);
       }
 
@@ -294,8 +301,7 @@ export function useProjectDataset(projectId) {
       setTree(null);
       clearProjectDatasetName(projectId);
       clearProjectDatasetStats(projectId);
-      clearProjectDatasetStats(projectId);
-      console.log('[useProjectDataset] Dataset deleted for project:', projectId);
+      debugLog('[useProjectDataset] Dataset deleted for project:', projectId);
 
     } catch (err) {
       console.error('[useProjectDataset] delete dataset error', err);

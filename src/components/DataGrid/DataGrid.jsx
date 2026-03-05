@@ -533,14 +533,23 @@ const DataGrid = forwardRef(({
                 const { rowIndex, rowId } = event.detail || {};
 
                 // Prefer using rowId if provided (stable), otherwise fall back to rowIndex
-                let newData = [];
-                if (rowId !== undefined && rowId !== null) {
+                const hasRowId = rowId !== undefined && rowId !== null;
+                const hasRowIndex = Number.isInteger(rowIndex)
+                    && rowIndex >= 0
+                    && rowIndex < hookRowData.length;
+
+                if (!hasRowId && !hasRowIndex) {
+                    return;
+                }
+
+                let newData = hookRowData;
+                if (hasRowId) {
                     newData = hookRowData.filter(r => r.id !== rowId);
-                } else if (typeof rowIndex === 'number') {
+                } else if (hasRowIndex) {
                     newData = hookRowData.filter((_, i) => i !== rowIndex);
                 }
 
-                if (newData.length > -1) {
+                if (newData.length !== hookRowData.length) {
                     updateRowDataBatch(newData);
                 }
             } catch (err) {
