@@ -1,33 +1,39 @@
-import React from 'react';
-
 import Card from '../components/Study/StudyCard';
 import Form from '../components/Study/StudyForm';
-import View from '../components/Study/StudyView';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 
 
 export const useStudies = () => {
     
     const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
-
-    const getCard = () => {
-        return Card;
-    }
-
-    const getForm = () => {
-        return Form;
-    }
-
-    const getView = () => {
-        return null;
-    }
+    const addItem = (study) => {
+        if (!study) return;
+        setStudies((prev) => [...(Array.isArray(prev) ? prev : []), study]);
+    };
+    const updateItem = (updatedStudy) => {
+        if (!updatedStudy?.id) return;
+        setStudies((prev) => (Array.isArray(prev) ? prev : []).map((study) => (
+            study?.id === updatedStudy.id ? updatedStudy : study
+        )));
+    };
+    const removeItem = (studyId) => {
+        if (!studyId) return;
+        setStudies((prev) => (Array.isArray(prev) ? prev : []).filter((study) => study?.id !== studyId));
+    };
+    const components = {
+        card: Card,
+        form: Form,
+        view: null,
+        mappingCard: Card
+    };
 
     return {
         items: studies,
         setItems: setStudies,
-        getCard,
-        getForm,
-        getView
+        addItem,
+        updateItem,
+        removeItem,
+        components,
     }
 }
 

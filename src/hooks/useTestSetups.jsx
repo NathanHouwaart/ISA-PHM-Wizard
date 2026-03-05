@@ -1,8 +1,5 @@
-import React from 'react';
-
 import Card from '../components/TestSetup/TestSetupCard';
 import Form from '../components/TestSetup/TestSetupForm';
-import View from '../components/TestSetup/TestSetupView';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import { hasContentChanged } from '../utils/testSetupUtils';
 
@@ -28,6 +25,12 @@ const incrementVersion = (setup) => {
 export const useTestSetups = () => {
 
     const { testSetups, setTestSetups: setTestSetupsRaw } = useGlobalDataContext();
+    const components = {
+        card: Card,
+        form: Form,
+        view: null,
+        mappingCard: Card
+    };
     
     // Wrap setTestSetups to auto-increment version on updates
     const setTestSetups = (updater) => {
@@ -62,25 +65,28 @@ export const useTestSetups = () => {
             return next;
         });
     };
-    
-    const getCard = () => {
-        return Card;
-    }
-
-    const getForm = () => {
-        return Form;
-    }
-
-    const getView = () => {
-        return null;
-    }
+    const addItem = (testSetup) => {
+        if (!testSetup) return;
+        setTestSetups((prev) => [...(Array.isArray(prev) ? prev : []), testSetup]);
+    };
+    const updateItem = (updatedTestSetup) => {
+        if (!updatedTestSetup?.id) return;
+        setTestSetups((prev) => (Array.isArray(prev) ? prev : []).map((testSetup) => (
+            testSetup?.id === updatedTestSetup.id ? updatedTestSetup : testSetup
+        )));
+    };
+    const removeItem = (testSetupId) => {
+        if (!testSetupId) return;
+        setTestSetups((prev) => (Array.isArray(prev) ? prev : []).filter((testSetup) => testSetup?.id !== testSetupId));
+    };
 
     return {
         items: testSetups,
         setItems: setTestSetups,
-        getCard,
-        getForm,
-        getView
+        addItem,
+        updateItem,
+        removeItem,
+        components,
     }
 }
 

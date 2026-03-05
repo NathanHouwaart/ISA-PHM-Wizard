@@ -64,12 +64,16 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     const [viewingItem, setViewingItem] = useState(null);
     const [pendingDeleteItem, setPendingDeleteItem] = useState(null);
 
-    const { items, setItems, getCard, getForm, getView } = itemHook();
-
-    // Get the component references
-    const CardComponent = getCard();
-    const FormComponent = getForm();
-    const ViewComponent = getView();
+    const hookApi = itemHook();
+    const {
+        items = [],
+        setItems = () => {},
+        components = {},
+    } = hookApi ?? {};
+    const CardComponent = components.card ?? null;
+    const FormComponent = components.form ?? null;
+    const ViewComponent = components.view ?? null;
+    const canManageCollection = Boolean(CardComponent && FormComponent);
     
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
@@ -160,6 +164,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                     <TooltipButton
                         onClick={() => setShowAddForm(true)}
                         tooltipText={addButtonTooltip}
+                        disabled={!canManageCollection}
                     >
                         <Plus className="w-5 h-5" />
                         <span>{addButtonText}</span>
@@ -169,7 +174,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 </div>
 
                 {/* Add/Edit Form */}
-                {(showAddForm || editingItem) &&
+                {(showAddForm || editingItem) && FormComponent &&
                     (
                         <div className="mb-8">
                             <FormComponent
@@ -204,7 +209,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 {/* Items Grid */}
                 {!showAddForm && !editingItem &&
                 <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-2" : "w-full space-y-2"}`}>
-                    {items.map(item => (
+                    {CardComponent && items.map(item => (
                         (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
                             <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => { ViewComponent && setViewingItem(item) }}>
                                 <CardComponent

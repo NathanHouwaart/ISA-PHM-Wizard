@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import StudyMeasurementMappingCard from '../components/StudyMeasurementMappingCard';
 import useStudyRuns from './useStudyRuns';
@@ -8,6 +6,12 @@ export const useMeasurements = () => {
     
     const { setStudies } = useGlobalDataContext(); // Keep setter for compatibility if needed
     const studyRuns = useStudyRuns();
+    const components = {
+        card: null,
+        form: null,
+        view: null,
+        mappingCard: StudyMeasurementMappingCard
+    };
     
     const addVariable = () => {
         return null;
@@ -21,17 +25,13 @@ export const useMeasurements = () => {
         return null;
     }
 
-    const cardComponent = () => {
-        return StudyMeasurementMappingCard;
-    }
-
     return {
         items: studyRuns,
         setItems : setStudies,
         addItem : addVariable,
         updateItem : updateVariable,
         removeItem : removeVariable,
-        cardComponent: cardComponent,
+        components,
     }
 }
 

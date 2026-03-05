@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMappingCard';
 import generateId from '../utils/generateId';
@@ -7,6 +5,12 @@ import generateId from '../utils/generateId';
 export const useMeasurementProtocols = () => {
 
     const { measurementProtocols, setMeasurementProtocols } = useGlobalDataContext();
+    const components = {
+        card: null,
+        form: null,
+        view: null,
+        mappingCard: ProcessingProtocolsMappingCard
+    };
 
     const addMeasurementProtocol = () => {
         const newProtocol = {
@@ -35,17 +39,13 @@ export const useMeasurementProtocols = () => {
         setMeasurementProtocols(prev => Array.isArray(prev) ? prev.filter(v => v.id !== variableId) : []);
     }
 
-    const cardComponent = () => {
-        return ProcessingProtocolsMappingCard;
-    }
-
     return {
         items: measurementProtocols || [],
         setItems: setMeasurementProtocols,
         addItem: addMeasurementProtocol,
         updateItem: updateMeasurementProtocol,
         removeItem: removeMeasurementProtocol,
-        cardComponent: cardComponent,
+        components,
     }
 }
 

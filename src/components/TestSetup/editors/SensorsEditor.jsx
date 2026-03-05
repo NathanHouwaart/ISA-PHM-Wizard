@@ -5,6 +5,7 @@ import { v4 as uuid4 } from 'uuid';
 import IconTooltipButton from '../../Widgets/IconTooltipButton';
 import TableTooltip from '../../Widgets/TableTooltip';
 import Paragraph from '../../Typography/Paragraph';
+import Heading3 from '../../Typography/Heading3';
 // Sensors Component
 const SensorsEditor = ({ sensors, onSensorsChange }) => {
   const [expandedSensors, setExpandedSensors] = useState(new Set());

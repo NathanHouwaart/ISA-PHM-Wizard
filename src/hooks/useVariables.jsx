@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useGlobalDataContext } from '../contexts/GlobalDataContext';
 import StudyVariableCard from '../components/StudyVariable/StudyVariableCard';
 import StudyVariableForm from '../components/StudyVariable/StudyVariableForm';
@@ -39,9 +39,12 @@ export const useVariables = () => {
         setStudyVariables(prev => prev.filter(variable => variable.id !== variableId));
     };
 
-    const getCard = () => StudyVariableCard;
-    const getForm = () => StudyVariableForm;
-    const getView = () => null;
+    const components = {
+        card: StudyVariableCard,
+        form: StudyVariableForm,
+        view: null,
+        mappingCard: StudyVariableCard
+    };
 
     return {
         items: studyVariables,
@@ -49,9 +52,7 @@ export const useVariables = () => {
         addItem: addVariable,
         updateItem: updateVariable,
         removeItem: removeVariable,
-        getCard,
-        getForm,
-        getView
+        components,
     };
 };
 
@@ -66,7 +67,7 @@ export const useFaultSpecifications = () => {
     };
     
     // Return a wrapped component that sets allowed types
-    const getForm = () => (props) => (
+    const FaultSpecForm = (props) => (
         <StudyVariableForm 
             {...props} 
             allowedTypes={VARIABLE_TYPE_OPTIONS.filter(t => t !== OPERATING_CONDITION_TYPE)} 
@@ -77,7 +78,10 @@ export const useFaultSpecifications = () => {
         ...result,
         items: filteredItems,
         addItem: addFaultSpecification,
-        getForm
+        components: {
+            ...result.components,
+            form: FaultSpecForm
+        },
     };
 };
 
@@ -92,7 +96,7 @@ export const useOperatingConditions = () => {
     };
 
     // Return a wrapped component that locks the type
-    const getForm = () => (props) => (
+    const OperatingConditionForm = (props) => (
         <StudyVariableForm 
             {...props} 
             lockedType={OPERATING_CONDITION_TYPE}
@@ -103,7 +107,10 @@ export const useOperatingConditions = () => {
         ...result,
         items: filteredItems,
         addItem: addOperatingCondition,
-        getForm
+        components: {
+            ...result.components,
+            form: OperatingConditionForm
+        },
     };
 };
 

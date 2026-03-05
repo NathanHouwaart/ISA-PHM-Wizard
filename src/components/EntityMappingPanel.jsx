@@ -10,9 +10,16 @@ import TooltipButton from './Widgets/TooltipButton';
 const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight: _minHeight }) => {
 
 
-    const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
-
-    const MappingCardComponent = cardComponent();
+    const hookApi = itemHook();
+    const {
+        items = [],
+        updateItem = () => {},
+        addItem = () => {},
+        removeItem = () => {},
+        components = {},
+    } = hookApi ?? {};
+    const MappingCardComponent = components.mappingCard ?? null;
+    const canCreate = typeof addItem === 'function';
 
     // Provide a stable controller to mapping cards. If the parent passed an explicit
     // handleInputChange or mappings array we prefer that, otherwise use the global controller.
@@ -59,6 +66,7 @@ const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleIn
                             setSelectedEntityIndex(items.length);
                             setOpenEditOnAdd(true);
                         }}
+                        disabled={!canCreate}
                         className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                     >
                         <span className='px-2 flex'>
