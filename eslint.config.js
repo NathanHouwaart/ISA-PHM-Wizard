@@ -111,7 +111,7 @@ export default [
     },
   },
   {
-    files: ['vite.config.*', 'eslint.config.*'],
+    files: ['vite.config.*', 'vitest.config.*', 'eslint.config.*'],
     languageOptions: {
       globals: globals.node,
     },

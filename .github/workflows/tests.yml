@@ -34,13 +34,13 @@ jobs:
       - run: npm run build
 
   integration:
-    name: Integration (Manual)
+    name: Integration
     needs: quality
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_integration }}
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_integration) }}
     runs-on: ubuntu-latest
     env:
       RUN_BACKEND_INTEGRATION: "1"
-      BACKEND_URL: ${{ inputs.backend_url }}
+      BACKEND_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_url || 'http://127.0.0.1:8080' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,12 +48,12 @@ jobs:
           node-version: 20
           cache: npm
       - name: Set up Python
-        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
+        if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1'))) }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Start local backend
-        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
+        if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1'))) }}
         shell: bash
         run: |
           set -euo pipefail
@@ -104,12 +104,12 @@ jobs:
       - run: npm ci
       - run: npm run test:integration
       - name: Print backend logs on failure
-        if: ${{ failure() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
+        if: ${{ failure() && (github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')))) }}
         run: |
           echo "---- backend.log ----"
           cat "${RUNNER_TEMP}/backend.log" || true
       - name: Stop local backend
-        if: ${{ always() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
+        if: ${{ always() && (github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')))) }}
         shell: bash
         run: |
           if [ -f "${RUNNER_TEMP}/backend.pid" ]; then
