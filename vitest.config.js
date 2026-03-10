@@ -2,11 +2,14 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   test: {
-    setupFiles: [path.resolve(__dirname, 'vitest.setup.cjs')],
-    environment: 'node',
-    // run in-band by default can help on Windows with some IPC issues; tests will still
-    // use worker threads when --threads true is provided by the CLI.
-    //threads: false,
+    setupFiles: [path.resolve(__dirname, 'src/tests/setup.js')],
+    environment: 'jsdom',
+    globals: true,
   }
 });
