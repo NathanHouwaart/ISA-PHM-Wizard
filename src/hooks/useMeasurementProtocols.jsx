@@ -1,10 +1,11 @@
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMappingCard';
 import generateId from '../utils/generateId';
 
 export const useMeasurementProtocols = () => {
 
-    const { measurementProtocols, setMeasurementProtocols } = useGlobalDataContext();
+    const { measurementProtocols } = useProjectData();
+    const { setMeasurementProtocols } = useProjectActions();
     const components = {
         card: null,
         form: null,

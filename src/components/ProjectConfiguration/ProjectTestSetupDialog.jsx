@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ProjectSectionDialog from './ProjectSectionDialog';
 import ProjectTestSetupSection from './sections/ProjectTestSetupSection';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions } from '../../contexts/GlobalDataContext';
 import { getProjectTestSetupId } from '../../utils/projectMetadata';
 
 const ProjectTestSetupDialog = ({ projectId, isOpen, onClose, onProjectMetaChange }) => {
-  const { setSelectedTestSetupId } = useGlobalDataContext();
+  const { setSelectedTestSetupId } = useProjectActions();
   const currentId = useMemo(() => getProjectTestSetupId(projectId), [projectId]);
   const [selection, setSelection] = useState(currentId);
 

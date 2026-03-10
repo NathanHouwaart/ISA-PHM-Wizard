@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
@@ -27,7 +27,7 @@ export default function useSubmitData() {
     studyToSensorProcessingMapping,
     studyToMeasurementProtocolSelection,
     studyToProcessingProtocolSelection,
-  } = useGlobalDataContext();
+  } = useProjectData();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('Submitting data...');

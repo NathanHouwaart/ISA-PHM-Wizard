@@ -7,7 +7,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import useProcessingProtocols from '../../hooks/useProcessingProtocols';
 
 // Import the single global provider
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 // Import components
 import { SlidePageTitle } from '../Typography/Heading2';
@@ -40,9 +40,9 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
     const {
         testSetups,
         selectedTestSetupId,
-        processingProtocols,
-        setProcessingProtocols,
-    } = useGlobalDataContext();
+        processingProtocols
+    } = useProjectData();
+    const { setProcessingProtocols } = useProjectActions();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
@@ -175,7 +175,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                     </WarningBanner>
                 )}
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
                     <div className="h-[45vh] flex flex-col overflow-hidden">
                         <div className="flex-1 min-h-0 overflow-y-auto">
                             <EntityMappingPanel
@@ -189,7 +189,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                     </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...processingProtocolsGridConfig}
                         height="45vh"

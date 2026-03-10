@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProjectConfigurationWizard from './ProjectConfigurationWizard';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { useProjectDataset } from '../../hooks/useProjectDataset';
 
 vi.mock('../../contexts/GlobalDataContext');
@@ -39,7 +39,8 @@ describe('ProjectConfigurationWizard', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    useGlobalDataContext.mockReturnValue(baseContext);
+    useProjectData.mockReturnValue(baseContext);
+    useProjectActions.mockReturnValue(baseContext);
     useProjectDataset.mockReturnValue(baseDataset);
   });
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
+import { useProjectData } from "../../contexts/GlobalDataContext";
 import { Save, X } from "lucide-react";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
@@ -10,7 +10,7 @@ import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses"
 
 const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { contacts } = useGlobalDataContext();
+  const { contacts } = useProjectData();
 
   const [formData, setFormData] = useState({
     title: item?.title || '',

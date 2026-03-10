@@ -2,11 +2,12 @@ import Card from '../components/Contact/ContactCard';
 import Form from '../components/Contact/ContactForm';
 import View from '../components/Contact/ContactView';
 
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 
 export const useContacts = () => {
     
-    const { contacts, setContacts } = useGlobalDataContext(); // Get studies and setStudies from global context
+    const { contacts } = useProjectData();
+    const { setContacts } = useProjectActions();
     const addItem = (contact) => {
         if (!contact) return;
         setContacts((prev) => [...(Array.isArray(prev) ? prev : []), contact]);

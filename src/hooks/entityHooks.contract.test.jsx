@@ -18,6 +18,8 @@ let mockContext;
 
 vi.mock('../contexts/GlobalDataContext', () => ({
   useGlobalDataContext: () => mockContext,
+  useProjectData: () => mockContext,
+  useProjectActions: () => mockContext,
 }));
 
 const createMockContext = () => ({
@@ -162,4 +164,3 @@ describe('entity hook contract', () => {
     expect(Array.isArray(result.current.items)).toBe(true);
   });
 });
-

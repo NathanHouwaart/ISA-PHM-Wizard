@@ -7,7 +7,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import useMeasurementProtocols from '../../hooks/useMeasurementProtocols';
 
 // Import the single global provider
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 // Import components
 import { SlidePageTitle } from '../Typography/Heading2';
@@ -40,9 +40,9 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
     const {
         testSetups,
         selectedTestSetupId,
-        measurementProtocols,
-        setMeasurementProtocols
-    } = useGlobalDataContext();
+        measurementProtocols
+    } = useProjectData();
+    const { setMeasurementProtocols } = useProjectActions();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
@@ -175,7 +175,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                     </WarningBanner>
                 )}
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
                     <div className="h-[45vh] flex flex-col overflow-hidden">
                         <EntityMappingPanel
                             name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
@@ -187,7 +187,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                     </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...measurementProtocolsGridConfig}
                         height="45vh"

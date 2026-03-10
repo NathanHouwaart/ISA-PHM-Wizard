@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 
 const stableStringify = (value) => {
   if (Array.isArray(value)) {
@@ -36,7 +36,7 @@ const mappingsEqual = (left, right, keyNames) => {
 export default function useMappingsController(mappingKey = 'studyToStudyVariableMapping', keyNames = { sourceKey: 'studyVariableId', targetKey: 'studyId' }) {
   // mappingKey: name of the mapping in GlobalDataContext.dataMap
   // keyNames: object with sourceKey and targetKey naming the mapping fields
-  const { dataMap } = useGlobalDataContext();
+  const { dataMap } = useProjectData();
 
   // Fallback to the study<->variable mapping if dataMap doesn't contain mappingKey
   const mapped = (dataMap && dataMap[mappingKey]) || null;

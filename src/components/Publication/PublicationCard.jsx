@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen, Mail, Link, BookOpen } from "lucide-react";
-import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
+import { useProjectData } from "../../contexts/GlobalDataContext";
 import { formatContactName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
 import Paragraph from "../Typography/Paragraph";
@@ -11,7 +11,7 @@ const PublicationCard = ({ item, onEdit, onRemove }) => {
 
     const publication = item;
 
-    const { contacts } = useGlobalDataContext();
+    const { contacts } = useProjectData();
 
     const correspondingContactId = publication.correspondingContactId || null;
     const contactDetails = publication.contactList

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { exportProject, importProject } from '../../utils/indexedTreeStore';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
@@ -35,6 +35,45 @@ const ActionGroup = ({ label, children, wrap = true }) => (
     <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap'}`}>{children}</div>
   </div>
 );
+
+const sanitizeFileName = (value) => {
+  const source = typeof value === 'string' ? value : '';
+  return source
+    .replace(/[<>:"/\\|?*]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const normalizeProjectName = (value) => {
+  const source = typeof value === 'string' ? value : '';
+  return source.trim().toLocaleLowerCase();
+};
+
+const resolveImportedProjectName = (requestedName, existingProjects = []) => {
+  const baseName = (typeof requestedName === 'string' && requestedName.trim())
+    ? requestedName.trim()
+    : 'Imported Project';
+  const usedNames = new Set(
+    (Array.isArray(existingProjects) ? existingProjects : [])
+      .map((project) => normalizeProjectName(project?.name))
+      .filter(Boolean)
+  );
+
+  if (!usedNames.has(normalizeProjectName(baseName))) {
+    return baseName;
+  }
+
+  const copyName = `${baseName} (copy)`;
+  if (!usedNames.has(normalizeProjectName(copyName))) {
+    return copyName;
+  }
+
+  let index = 2;
+  while (usedNames.has(normalizeProjectName(`${baseName} (${index})`))) {
+    index += 1;
+  }
+  return `${baseName} (${index})`;
+};
 
 const ProjectActionToolbar = ({
   isDefault,
@@ -102,7 +141,8 @@ const ProjectActionToolbar = ({
 );
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], switchProject, currentProjectId, createProject, deleteProject, resetProject, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID, setTestSetups } = useGlobalDataContext();
+  const { projects = [], currentProjectId, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID } = useProjectData();
+  const { switchProject, createProject, deleteProject, resetProject, setTestSetups } = useProjectActions();
   
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
@@ -243,12 +283,13 @@ export default function ProjectSessionsModal({ onClose }) {
   const handleExportProject = useCallback(async (id) => {
     const project = projects.find((x) => x.id === id);
     try {
-      const pkg = await exportProject(id);
+      const pkg = await exportProject(id, { projectName: project?.name });
       const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `project-${id}.json`;
+      const fileBaseName = sanitizeFileName(project?.name || pkg?.projectName || id) || 'project-export';
+      a.download = `${fileBaseName}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -290,8 +331,14 @@ export default function ProjectSessionsModal({ onClose }) {
     try {
       const text = await file.text();
       const pkg = JSON.parse(text);
+      const requestedName = (
+        (typeof pkg?.projectName === 'string' && pkg.projectName.trim()) ||
+        (typeof pkg?.projectId === 'string' && pkg.projectId.trim()) ||
+        'Imported Project'
+      );
+      const importName = resolveImportedProjectName(requestedName, projects);
       const newId = createProject(
-        pkg && pkg.projectId ? `${pkg.projectId}-copy` : `Imported Project`,
+        importName,
         pkg?.experimentType || DEFAULT_EXPERIMENT_TYPE_ID
       );
       
@@ -319,7 +366,7 @@ export default function ProjectSessionsModal({ onClose }) {
         onConfirm: () => handleImportFile(file),
       });
     }
-  }, [createProject, completeImport]);
+  }, [createProject, completeImport, projects]);
 
   async function handleConflictResolution(resolution) {
     if (!pendingImport) return;

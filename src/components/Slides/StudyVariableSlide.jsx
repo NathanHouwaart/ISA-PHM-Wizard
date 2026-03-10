@@ -3,7 +3,7 @@ import { Layers } from 'lucide-react';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle, default as Paragraph } from '../Typography/Paragraph';
@@ -34,7 +34,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         studyVariables,
         selectedDataset,
         experimentType
-    } = useGlobalDataContext();
+    } = useProjectData();
 
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
     const studyRuns = useStudyRuns();
@@ -236,7 +236,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     Each cell can contain either a literal value (e.g. a threshold) or the filename of a run-specific time-series dataset. Pick the approach that best documents the study.
                 </Paragraph>
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
                     {studies.length === 0 && (
                         <WarningBanner type="warning">
                             <strong>No experiments available.</strong> Create experiments before mapping variables.
@@ -260,7 +260,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     {studies.length === 0 && (
                         <WarningBanner type="warning">
                             <strong>No experiments available.</strong> Create experiments before mapping variables.

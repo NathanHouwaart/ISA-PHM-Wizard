@@ -5,7 +5,7 @@ import PageWrapper from "../../layout/PageWrapper";
 import "./StudyTable.css";
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import Paragraph from '../Typography/Paragraph';
 import generateId from '../../utils/generateId';
 
@@ -43,7 +43,8 @@ const columns = [
 
 export const StudyTable = forwardRef(({ onHeightChange }, ref) => {
 
-    const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
+    const { studies } = useProjectData();
+    const { setStudies } = useProjectActions();
 
     const history = useRef([]);
     const future = useRef([]);

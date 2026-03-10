@@ -1,7 +1,7 @@
 import React, { forwardRef, useCallback, useMemo } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
 import usePageTab from '../../hooks/usePageWidth';
@@ -19,13 +19,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
 
   const {
     studies,
-    setStudies,
     testSetups,
     selectedTestSetupId,
     selectedDataset,
-    studyToMeasurementProtocolSelection,
-    setStudyToMeasurementProtocolSelection
-  } = useGlobalDataContext();
+    studyToMeasurementProtocolSelection
+  } = useProjectData();
+  const { setStudies, setStudyToMeasurementProtocolSelection } = useProjectActions();
 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
   const studyRuns = useStudyRuns();

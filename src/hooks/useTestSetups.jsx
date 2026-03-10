@@ -1,6 +1,6 @@
 import Card from '../components/TestSetup/TestSetupCard';
 import Form from '../components/TestSetup/TestSetupForm';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import { hasContentChanged } from '../utils/testSetupUtils';
 
 // Helper to ensure test setup has version tracking fields
@@ -24,7 +24,8 @@ const incrementVersion = (setup) => {
 
 export const useTestSetups = () => {
 
-    const { testSetups, setTestSetups: setTestSetupsRaw } = useGlobalDataContext();
+    const { testSetups } = useProjectData();
+    const { setTestSetups: setTestSetupsRaw } = useProjectActions();
     const components = {
         card: Card,
         form: Form,

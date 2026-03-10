@@ -15,7 +15,7 @@ import SlideReloadOverlay from '../components/Slides/SlideReloadOverlay';
 import { cn } from '../utils/utils';
 import Heading1 from '../components/Typography/Heading1';
 // ProjectSelector removed in favor of the single 'Change Project' button in the header
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
@@ -43,7 +43,15 @@ export const IsaQuestionnaire = () => {
     handleChildHeightChange,
   } = useDynamicHeightContainer(currentPage, 400);
 
-  const { setScreenWidth, pageTabStates, explorerOpen, resolveExplorerSelection, currentProjectId, projects, selectedTestSetupId, testSetups } = useGlobalDataContext();
+  const {
+    pageTabStates,
+    explorerOpen,
+    currentProjectId,
+    projects,
+    selectedTestSetupId,
+    testSetups
+  } = useProjectData();
+  const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
 
   // Overlay state management - all overlays follow the same conditional rendering pattern

@@ -3,10 +3,10 @@ import Heading3 from '../../Typography/Heading3';
 import Paragraph from '../../Typography/Paragraph';
 import TooltipButton from '../../Widgets/TooltipButton';
 import TestSetupPickerDialog from '../../TestSetup/TestSetupPickerDialog';
-import { useGlobalDataContext } from '../../../contexts/GlobalDataContext';
+import { useProjectData } from '../../../contexts/GlobalDataContext';
 
 const ProjectTestSetupSection = ({ projectId: _projectId, value, onChange }) => {
-  const { testSetups = [] } = useGlobalDataContext();
+  const { testSetups = [] } = useProjectData();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const selectedSetup = Array.isArray(testSetups)

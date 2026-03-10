@@ -122,7 +122,7 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                     ]}
                 />
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
                     <div className="max-h-[45vh] overflow-y-auto">
                         <Collection
                             onHeightChange={() => {}}
@@ -139,7 +139,7 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                     </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...variableGridConfig}
                         showControls={true}

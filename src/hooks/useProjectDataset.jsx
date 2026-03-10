@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadTree, clearTree, saveTree } from '../utils/indexedTreeStore';
 import { useFileSystem } from './useFileSystem';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import {
   ensureProjectDatasetStats,
   setProjectDatasetStats,
@@ -77,7 +77,8 @@ export function useProjectDataset(projectId) {
   const [metadata, setMetadata] = useState({ setupName: null, lastEdited: null });
   
   const fileSystem = useFileSystem();
-  const { currentProjectId, setSelectedDataset } = useGlobalDataContext();
+  const { currentProjectId } = useProjectData();
+  const { setSelectedDataset } = useProjectActions();
 
   /**
    * Load project metadata from localStorage

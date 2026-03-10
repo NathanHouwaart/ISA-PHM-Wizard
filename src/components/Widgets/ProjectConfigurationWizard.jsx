@@ -5,7 +5,7 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from './TooltipButton';
 import Z_INDEX from '../../constants/zIndex';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import {
   DEFAULT_EXPERIMENT_TYPE_ID
 } from '../../constants/experimentTypes';
@@ -34,12 +34,8 @@ const ProjectConfigurationWizard = ({
   initialStep = 0,
   onProjectMetaChange
 }) => {
-  const {
-    projects = [],
-    renameProject,
-    updateProjectExperimentType,
-    setSelectedTestSetupId
-  } = useGlobalDataContext();
+  const { projects = [] } = useProjectData();
+  const { renameProject, updateProjectExperimentType, setSelectedTestSetupId } = useProjectActions();
 
   const targetProject = useMemo(
     () => projects.find((p) => p.id === projectId),

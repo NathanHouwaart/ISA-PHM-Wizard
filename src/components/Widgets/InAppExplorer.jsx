@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TooltipButton from './TooltipButton';
 import { Folder } from 'lucide-react';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 /**
  * InAppExplorer - File browser overlay for selecting files from indexed dataset
@@ -23,7 +23,8 @@ import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
  * ```
  */
 const InAppExplorer = ({ onClose, onSelect }) => {
-  const { selectedDataset, loadDatasetSubtree } = useGlobalDataContext();
+  const { selectedDataset } = useProjectData();
+  const { loadDatasetSubtree } = useProjectActions();
 
   const [currentPath, setCurrentPath] = useState("");
   const [pathStack, setPathStack] = useState([]);

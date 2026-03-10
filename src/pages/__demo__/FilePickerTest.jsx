@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import TooltipButton from "../../components/Widgets/TooltipButton";
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { directoryOpen, supported as bfsSupported } from 'browser-fs-access';
 
 export const FileExplorer = () => {
@@ -159,7 +159,8 @@ export const FileExplorer = () => {
 
   const currentNode = findNode(allFiles, currentPath);
   const nodesToShow = currentNode?.children || [];
-  const { explorerOpen, resolveExplorer, selectedDataset } = useGlobalDataContext();
+  const { explorerOpen, selectedDataset } = useProjectData();
+  const { resolveExplorer } = useProjectActions();
 
   // If another component calls openExplorer(), the global flag explorerOpen will
   // be set and we should open this modal as an overlay so callers get the UI.

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import FormField from '../Form/FormField';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import generateId from '../../utils/generateId';
 import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
@@ -11,7 +11,7 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
+  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 

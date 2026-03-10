@@ -4,7 +4,7 @@ import { Edit2, PlusCircleIcon, Trash2, Layers, HelpCircle } from 'lucide-react'
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
 import EditEntityModal from './EditEntityModal';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 import Heading2 from './Typography/Heading2';
 import Paragraph from './Typography/Paragraph';
 import TooltipButton from './Widgets/TooltipButton';
@@ -20,7 +20,7 @@ const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, han
         onOpenHandled && onOpenHandled();
     }
 
-    const { selectedTestSetupId, testSetups } = useGlobalDataContext();
+    const { selectedTestSetupId, testSetups } = useProjectData();
 
     const selectedTestSetup = testSetups.find(s => s.id === selectedTestSetupId);
     // Normalize sensors to array form

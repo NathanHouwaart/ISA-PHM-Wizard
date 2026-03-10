@@ -6,7 +6,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 import FormField from '../Form/FormField';
 
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
@@ -17,7 +17,7 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { dataMap } = useGlobalDataContext();
+    const { dataMap } = useProjectData();
     const [investigation, setInvestigation] = dataMap['investigation']
 
 

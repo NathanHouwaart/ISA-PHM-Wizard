@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Layers } from 'lucide-react';
 
 import FormField from './Form/FormField';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 import Heading3 from './Typography/Heading3';
 import Paragraph from './Typography/Paragraph';
 import useStudyRuns from '../hooks/useStudyRuns';
@@ -18,7 +18,7 @@ const StudyMeasurementMappingCard = ({
   onStudyProtocolChange,
   fileFieldLabel = 'Measurement File'
 }) => {
-  const { selectedTestSetupId, testSetups } = useGlobalDataContext();
+  const { selectedTestSetupId, testSetups } = useProjectData();
   const allRuns = useStudyRuns();
   const [activeRunId] = useState(item?.runId || item?.id);
   const activeRun = singleRunMode ? item : (allRuns.find(r => r.runId === activeRunId) || item);

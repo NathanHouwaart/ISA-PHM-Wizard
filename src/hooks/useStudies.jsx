@@ -1,11 +1,12 @@
 import Card from '../components/Study/StudyCard';
 import Form from '../components/Study/StudyForm';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 
 
 export const useStudies = () => {
     
-    const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
+    const { studies } = useProjectData();
+    const { setStudies } = useProjectActions();
     const addItem = (study) => {
         if (!study) return;
         setStudies((prev) => [...(Array.isArray(prev) ? prev : []), study]);

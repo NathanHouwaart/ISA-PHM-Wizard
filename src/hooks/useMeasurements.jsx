@@ -1,10 +1,10 @@
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions } from '../contexts/GlobalDataContext';
 import StudyMeasurementMappingCard from '../components/StudyMeasurementMappingCard';
 import useStudyRuns from './useStudyRuns';
 
 export const useMeasurements = () => {
     
-    const { setStudies } = useGlobalDataContext(); // Keep setter for compatibility if needed
+    const { setStudies } = useProjectActions(); // Keep setter for compatibility if needed
     const studyRuns = useStudyRuns();
     const components = {
         card: null,

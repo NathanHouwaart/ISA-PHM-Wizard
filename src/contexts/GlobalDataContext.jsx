@@ -48,6 +48,82 @@ export const useGlobalDataContext = () => {
     return context;
 };
 
+// Explicit contract hooks to discourage broad direct context reads.
+export const useProjectData = () => {
+    const context = useGlobalDataContext();
+
+    return {
+        studies: context.studies,
+        testSetups: context.testSetups,
+        investigation: context.investigation,
+        contacts: context.contacts,
+        publications: context.publications,
+        selectedTestSetupId: context.selectedTestSetupId,
+        studyVariables: context.studyVariables,
+        measurementProtocols: context.measurementProtocols,
+        processingProtocols: context.processingProtocols,
+        studyToMeasurementProtocolSelection: context.studyToMeasurementProtocolSelection,
+        studyToProcessingProtocolSelection: context.studyToProcessingProtocolSelection,
+        studyToStudyVariableMapping: context.studyToStudyVariableMapping,
+        sensorToMeasurementProtocolMapping: context.sensorToMeasurementProtocolMapping,
+        studyToSensorMeasurementMapping: context.studyToSensorMeasurementMapping,
+        sensorToProcessingProtocolMapping: context.sensorToProcessingProtocolMapping,
+        studyToSensorProcessingMapping: context.studyToSensorProcessingMapping,
+        screenWidth: context.screenWidth,
+        experimentType: context.experimentType,
+        pageTabStates: context.pageTabStates,
+        selectedDataset: context.selectedDataset,
+        explorerOpen: context.explorerOpen,
+        initDatasetHydrated: context.initDatasetHydrated,
+        dataMap: context.dataMap,
+        projects: context.projects,
+        currentProjectId: context.currentProjectId,
+        DEFAULT_PROJECT_ID: context.DEFAULT_PROJECT_ID,
+        MULTI_RUN_EXAMPLE_PROJECT_ID: context.MULTI_RUN_EXAMPLE_PROJECT_ID,
+        DEFAULT_PROJECT_NAME: context.DEFAULT_PROJECT_NAME
+    };
+};
+
+export const useProjectActions = () => {
+    const context = useGlobalDataContext();
+
+    return {
+        setStudies: context.setStudies,
+        setTestSetups: context.setTestSetups,
+        setInvestigation: context.setInvestigation,
+        setContacts: context.setContacts,
+        setPublications: context.setPublications,
+        setSelectedTestSetupId: context.setSelectedTestSetupId,
+        setStudyVariables: context.setStudyVariables,
+        setMeasurementProtocols: context.setMeasurementProtocols,
+        setProcessingProtocols: context.setProcessingProtocols,
+        setStudyToMeasurementProtocolSelection: context.setStudyToMeasurementProtocolSelection,
+        setStudyToProcessingProtocolSelection: context.setStudyToProcessingProtocolSelection,
+        setStudyToStudyVariableMapping: context.setStudyToStudyVariableMapping,
+        setSensorToMeasurementProtocolMapping: context.setSensorToMeasurementProtocolMapping,
+        setStudyToSensorMeasurementMapping: context.setStudyToSensorMeasurementMapping,
+        setSensorToProcessingProtocolMapping: context.setSensorToProcessingProtocolMapping,
+        setStudyToSensorProcessingMapping: context.setStudyToSensorProcessingMapping,
+        setScreenWidth: context.setScreenWidth,
+        setExperimentType: context.setExperimentType,
+        setPageTabStates: context.setPageTabStates,
+        setSelectedDataset: context.setSelectedDataset,
+        loadDatasetSubtree: context.loadDatasetSubtree,
+        setExplorerOpen: context.setExplorerOpen,
+        openExplorer: context.openExplorer,
+        closeExplorer: context.closeExplorer,
+        resolveExplorerSelection: context.resolveExplorerSelection,
+        // Backward-compatible alias used by legacy/demo callers.
+        resolveExplorer: context.resolveExplorerSelection,
+        createProject: context.createProject,
+        deleteProject: context.deleteProject,
+        renameProject: context.renameProject,
+        switchProject: context.switchProject,
+        resetProject: context.resetProject,
+        updateProjectExperimentType: context.updateProjectExperimentType
+    };
+};
+
 // Helper function to read from local storage and parse
 const loadFromLocalStorage = (key, initialValue) => {
     try {
@@ -349,7 +425,7 @@ export const GlobalDataProvider = ({ children }) => {
             try {
                 // Check if we're in an example project
                 if (!isExampleProject(currentProjectId)) return;
-                
+
                 // only act after dataset hydration attempt finished
                 if (!initHydrated) return;
 

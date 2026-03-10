@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import StudyVariableCard from '../components/StudyVariable/StudyVariableCard';
 import StudyVariableForm from '../components/StudyVariable/StudyVariableForm';
 import { 
@@ -11,7 +11,8 @@ import {
 import generateId from '../utils/generateId';
 
 export const useVariables = () => {
-    const { studyVariables, setStudyVariables } = useGlobalDataContext();
+    const { studyVariables } = useProjectData();
+    const { setStudyVariables } = useProjectActions();
 
     const addVariable = (overrideData = {}) => {
         const newVariable = {

@@ -177,13 +177,34 @@ export async function clearTree(projectId = 'example-project') {
 
 // Export all nodes and per-project localStorage keys for a given projectId.
 // Export only the selected test setup (if any) rather than all test setups.
-export async function exportProject(projectId = 'example-project') {
+export async function exportProject(projectId = 'example-project', options = {}) {
   // If projectId is null or undefined, throw error (cannot export nothing)
   if (!projectId) {
     throw new Error('Cannot export project: projectId is null or undefined');
   }
   
   try {
+    const providedProjectName = typeof options?.projectName === 'string'
+      ? options.projectName.trim()
+      : '';
+    let projectName = providedProjectName || '';
+
+    // If caller did not provide a name, try to resolve it from the global project catalog.
+    if (!projectName) {
+      try {
+        const projectsRaw = localStorage.getItem('globalAppData_projects');
+        const projects = projectsRaw ? JSON.parse(projectsRaw) : [];
+        if (Array.isArray(projects)) {
+          const project = projects.find((entry) => entry?.id === projectId);
+          if (project?.name && typeof project.name === 'string') {
+            projectName = project.name.trim();
+          }
+        }
+      } catch (e) {
+        console.warn('[indexedTreeStore] export projectName lookup error', e);
+      }
+    }
+
     const nodes = await db.nodes.where('projectId').equals(projectId).toArray();
     // collect per-project localStorage entries
     const ls = {};
@@ -219,6 +240,7 @@ export async function exportProject(projectId = 'example-project') {
     return {
       exportedAt: Date.now(),
       projectId,
+      projectName: projectName || projectId,
       nodes: nodes.map((r) => ({ path: r.path, compressed: r.compressed, parentPath: r.parentPath, updatedAt: r.updatedAt, meta: r.meta })),
       localStorage: ls,
       selectedTestSetup: selectedSetup  // single setup or null

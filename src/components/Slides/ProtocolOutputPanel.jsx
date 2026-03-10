@@ -67,7 +67,7 @@ const ProtocolOutputPanel = ({
         </WarningBanner>
       )}
 
-      <TabPanel isActive={selectedTab === 'simple-view'}>
+      <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
         <div className="h-[45vh] flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <DualSidebarStudyRunPanel
@@ -90,7 +90,7 @@ const ProtocolOutputPanel = ({
         </div>
       </TabPanel>
 
-      <TabPanel isActive={selectedTab === 'grid-view'}>
+      <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
         {!selectedDataset && (
           <WarningBanner type="info">
             <strong>No dataset indexed.</strong> {noDatasetMessage}

@@ -2,7 +2,7 @@
 import React, { forwardRef } from 'react';
 
 // Import the single global provider
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 import useStudies from '../../hooks/useStudies';
 import Collection, {
@@ -42,13 +42,13 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
     // Access global context
-    const { 
-        studies, 
-        setStudies,
+    const {
+        studies,
         experimentType,
         testSetups,
         selectedTestSetupId
-    } = useGlobalDataContext();
+    } = useProjectData();
+    const { setStudies } = useProjectActions();
 
     const experimentConfig = getExperimentTypeConfig(experimentType);
     // Screen width is managed centrally by IsaQuestionnaire; no per-slide effect needed here.
@@ -180,7 +180,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                     ]}
                 />
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
                     <div className="max-h-[45vh] overflow-y-auto">
                         <Collection
                             onHeightChange={() => { }}
@@ -197,7 +197,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                     </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...studiesGridConfig}
                         showControls={true}

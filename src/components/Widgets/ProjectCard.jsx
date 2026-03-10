@@ -17,7 +17,7 @@ import {
   Cpu
 } from 'lucide-react';
 
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import { DEFAULT_EXPERIMENT_TYPE_ID, getExperimentTypeConfig } from '../../constants/experimentTypes';
 import {
   getProjectDatasetName,
@@ -63,7 +63,7 @@ const ProjectCard = ({
   _refreshToken = 0,
   className = ''
 }) => {
-  const { testSetups = [] } = useGlobalDataContext();
+  const { testSetups = [] } = useProjectData();
 
   const datasetName = getProjectDatasetName(project.id) || 'Not indexed';
   const lastEdited = getProjectLastEdited(project.id);

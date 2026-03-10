@@ -1,10 +1,10 @@
 // PageWrapper.jsx
 import React from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 
 const PageWrapper = ({ children, widthClass }) => {
 
-  const { screenWidth } = useGlobalDataContext();
+  const { screenWidth } = useProjectData();
 
   // Allow caller to override the default screen width from context by passing widthClass
   const effectiveWidth = widthClass || screenWidth;

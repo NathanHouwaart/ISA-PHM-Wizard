@@ -24,10 +24,10 @@ const EntityGridTabPanel = ({
           { id: 'grid-view', label: 'Grid View', tooltip: gridViewTooltip },
         ]}
       />
-      <TabPanel isActive={selectedView === 'simple-view'}>
+      <TabPanel isActive={selectedView === 'simple-view'} unmountOnHide>
         {simpleContent}
       </TabPanel>
-      <TabPanel isActive={selectedView === 'grid-view'}>
+      <TabPanel isActive={selectedView === 'grid-view'} unmountOnHide>
         <div className="mt-3 border border-gray-200 rounded-lg">
           <DataGrid
             {...gridConfig}

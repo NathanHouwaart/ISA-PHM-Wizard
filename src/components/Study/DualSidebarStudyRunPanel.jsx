@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import { buildStudyRunGroups } from '../../utils/studyRunLayouts';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
@@ -18,7 +18,7 @@ const DualSidebarStudyRunPanel = ({
   mappingCardProps = {},
 }) => {
   const MappingCard = MappingCardComponent;
-  const { experimentType } = useGlobalDataContext();
+  const { experimentType } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const supportsMultipleRuns = !!experimentConfig.supportsMultipleRuns;
 

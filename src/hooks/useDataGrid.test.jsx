@@ -256,4 +256,91 @@ describe('useDataGrid history model', () => {
       { id: 'p1', name: 'Row changed', description: '' }
     ]);
   });
+
+  it('clears mapping values with clearAllMappings and keeps row callbacks silent', () => {
+    const onRowDataChange = vi.fn();
+
+    const { result } = renderHook(() =>
+      useDataGrid({
+        rowData: baseRows,
+        columnData: baseColumns,
+        mappings: baseMappings,
+        fieldMappings,
+        onRowDataChange
+      })
+    );
+
+    expect(result.current.mappings[0].value).toEqual(['old-spec', 'old-unit']);
+    expect(result.current.historyIndex).toBe(0);
+
+    act(() => {
+      result.current.clearAllMappings();
+    });
+
+    expect(result.current.historyIndex).toBe(1);
+    expect(result.current.mappings[0].value).toBe('');
+    expect(result.current.rowData[0].name).toBe('Parameter 1');
+    expect(onRowDataChange).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.undo();
+    });
+    expect(result.current.mappings[0].value).toEqual(['old-spec', 'old-unit']);
+
+    act(() => {
+      result.current.redo();
+    });
+    expect(result.current.mappings[0].value).toBe('');
+  });
+
+  it('prunes mappings that reference missing rows or columns', () => {
+    const { result } = renderHook(() =>
+      useDataGrid({
+        rowData: [{ id: 'p1', name: 'Parameter 1' }],
+        columnData: [{ id: 's1', alias: 'Sensor 1' }],
+        mappings: [
+          { targetId: 'p1', sourceId: 's1', value: ['ok', 'unit'] },
+          { targetId: 'missing-row', sourceId: 's1', value: ['bad', 'unit'] },
+          { targetId: 'p1', sourceId: 'missing-col', value: ['bad', 'unit'] }
+        ],
+        fieldMappings
+      })
+    );
+
+    expect(result.current.mappings).toHaveLength(1);
+    expect(result.current.mappings[0]).toEqual({
+      targetId: 'p1',
+      sourceId: 's1',
+      value: ['ok', 'unit']
+    });
+  });
+
+  it('projects object and string mapping values to child columns consistently', () => {
+    const { result, rerender } = renderHook(
+      ({ mappings }) =>
+        useDataGrid({
+          rowData: baseRows,
+          columnData: baseColumns,
+          mappings,
+          fieldMappings
+        }),
+      {
+        initialProps: {
+          mappings: [{ targetId: 'p1', sourceId: 's1', value: { specification: 'obj-spec', unit: 'obj-unit' } }]
+        }
+      }
+    );
+
+    expect(result.current.gridData[0].s1_spec).toBe('obj-spec');
+    expect(result.current.gridData[0].s1_unit).toBe('obj-unit');
+
+    act(() => {
+      rerender({
+        mappings: [{ targetId: 'p1', sourceId: 's1', value: 'str-spec;str-unit' }]
+      });
+    });
+
+    expect(result.current.gridData[0].s1_spec).toBe('str-spec');
+    expect(result.current.gridData[0].s1_unit).toBe('str-unit');
+  });
 });

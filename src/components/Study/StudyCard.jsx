@@ -3,7 +3,7 @@ import React from 'react';
 
 import AvatarInitials from '../Widgets/AvatarInitials';
 import TooltipButton from '../Widgets/TooltipButton';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
 /**
@@ -27,7 +27,7 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 const StudyCard = ({ item, onEdit, onRemove }) => {
 
   const study = item;
-  const { experimentType, testSetups, selectedTestSetupId } = useGlobalDataContext();
+  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
   const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;

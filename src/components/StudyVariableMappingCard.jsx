@@ -6,11 +6,11 @@ import Paragraph from './Typography/Paragraph';
 import useStudyRuns from '../hooks/useStudyRuns';
 import ItemSelector from './Selectors/ItemSelector';
 import { TabPanel } from './TabSwitcher';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 
 const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange, singleRunMode = false }) => {
     const studyRuns = useStudyRuns();
-    const { studies, studyVariables } = useGlobalDataContext();
+    const { studies, studyVariables } = useProjectData();
 
     // When singleRunMode is true, item is the active run passed from DualSidebarStudyRunPanel
     // In that case, we just display that single run's mapping

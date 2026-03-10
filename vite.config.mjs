@@ -19,6 +19,26 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/tests/setup.js'],
+    coverage: {
+      provider: 'v8',
+      all: true,
+      include: ['src/**/*.{js,jsx}'],
+      exclude: [
+        'src/**/*.test.{js,jsx}',
+        'src/tests/**',
+        'src/pages/__demo__/**',
+        'src/NewGrid.jsx',
+        'src/index.jsx'
+      ],
+      reporter: ['text', 'json-summary', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      thresholds: {
+        statements: 25,
+        branches: 60,
+        functions: 40,
+        lines: 25
+      }
+    }
   },
   define: {
     // This is important for making Buffer available globally

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
 import { expandStudiesIntoRuns } from '../utils/studyRuns';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
 
 const useStudyRuns = () => {
-    const { studies, experimentType } = useGlobalDataContext();
+    const { studies, experimentType } = useProjectData();
 
     return useMemo(() => {
         const config = getExperimentTypeConfig(experimentType);

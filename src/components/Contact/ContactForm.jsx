@@ -8,11 +8,11 @@ import Paragraph from "../Typography/Paragraph";
 import generateId from "../../utils/generateId";
 
 import { CONTACT_ROLE_OPTIONS } from "../../constants/contactRoles";
-import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
+import { useProjectData } from "../../contexts/GlobalDataContext";
 import { isValidEmail } from '../../utils/validation';
 
 export const ContactForm = ({ item, onSave, onCancel, isEditing = false }) => {
-    const { publications, contacts } = useGlobalDataContext();
+    const { publications, contacts } = useProjectData();
 
     const [formData, setFormData] = useState({
         id: item?.id || '',

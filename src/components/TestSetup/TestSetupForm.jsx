@@ -3,7 +3,7 @@ import { X, Save } from 'lucide-react';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { v4 as uuid4 } from 'uuid';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions } from '../../contexts/GlobalDataContext';
 
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
@@ -43,7 +43,7 @@ const getDirtyFingerprint = (value) => JSON.stringify(normalizeForDirtyCheck(val
 
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
-  const { setScreenWidth } = useGlobalDataContext();
+  const { setScreenWidth } = useProjectActions();
   
   const initialFormState = useMemo(() => ({
     name: '',

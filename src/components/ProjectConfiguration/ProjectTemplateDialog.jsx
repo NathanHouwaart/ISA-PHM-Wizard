@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ProjectSectionDialog from './ProjectSectionDialog';
 import ExperimentTemplateSection from './sections/ExperimentTemplateSection';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions } from '../../contexts/GlobalDataContext';
 import { getProjectExperimentTypeId } from '../../utils/projectMetadata';
 import { DEFAULT_EXPERIMENT_TYPE_ID } from '../../constants/experimentTypes';
 
 const ProjectTemplateDialog = ({ projectId, isOpen, onClose, onProjectMetaChange }) => {
-  const { updateProjectExperimentType } = useGlobalDataContext();
+  const { updateProjectExperimentType } = useProjectActions();
   const currentId = useMemo(
     () => getProjectExperimentTypeId(projectId, DEFAULT_EXPERIMENT_TYPE_ID),
     [projectId]

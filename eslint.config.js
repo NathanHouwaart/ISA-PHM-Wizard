@@ -7,6 +7,7 @@ export default [
   {
     ignores: [
       'dist',
+      'coverage/**',
       'src/pages/__demo__/**',
       'src/NewGrid.jsx',
       'src/components/RevoGridExample.jsx',
@@ -43,6 +44,49 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: './contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+            {
+              name: '../contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+            {
+              name: '../../contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+            {
+              name: '../../../contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+            {
+              name: '../../../../contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+            {
+              name: '../../../../../contexts/GlobalDataContext',
+              importNames: ['useProjectContext'],
+              message:
+                'Use useProjectData and/or useProjectActions in runtime code.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -61,6 +105,9 @@ export default [
         afterEach: 'readonly',
         vi: 'readonly',
       },
+    },
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
   {

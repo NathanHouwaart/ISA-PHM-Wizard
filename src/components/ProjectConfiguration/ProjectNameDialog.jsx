@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ProjectSectionDialog from './ProjectSectionDialog';
 import ProjectNameSection from './sections/ProjectNameSection';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 const ProjectNameDialog = ({ projectId, isOpen, onClose }) => {
-  const { renameProject, projects = [] } = useGlobalDataContext();
+  const { projects = [] } = useProjectData();
+  const { renameProject } = useProjectActions();
   const project = projects.find((p) => p.id === projectId);
   const [value, setValue] = useState(project?.name || '');
 

@@ -26,7 +26,11 @@ const TabSwitcher = ({ selectedTab, onTabChange, tabs, className = '' }) => {
 };
 
 
-export const TabPanel = ({ isActive, children }) => {
+export const TabPanel = ({ isActive, children, unmountOnHide = false }) => {
+    if (!isActive && unmountOnHide) {
+        return null;
+    }
+
     return (
         <div
             className={`transition-opacity overflow-hidden duration-500 ease-in-out ${isActive ? 'opacity-100 max-h-[9999px]' : 'opacity-0 max-h-0'
