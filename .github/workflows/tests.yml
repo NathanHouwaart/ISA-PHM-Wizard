@@ -13,6 +13,22 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      run_backend_integration:
+        description: Run backend integration tests (requires backend)
+        required: false
+        default: false
+        type: boolean
+      run_local_backend:
+        description: Start ISA-PHM-Backend in this workflow before integration tests
+        required: false
+        default: true
+        type: boolean
+      backend_url:
+        description: Backend base URL for integration tests
+        required: false
+        default: http://127.0.0.1:8080
+        type: string
 
 jobs:
   quality:
@@ -42,3 +58,96 @@ jobs:
           if-no-files-found: warn
       - name: Build
         run: npm run build
+
+  backend-integration:
+    name: Backend Integration Tests
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_backend_integration }}
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUN_BACKEND_INTEGRATION: "1"
+      BACKEND_URL: ${{ inputs.backend_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Setup Python
+        if: ${{ inputs.run_local_backend }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Start local backend
+        if: ${{ inputs.run_local_backend }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BACKEND_DIR="${RUNNER_TEMP}/ISA-PHM-Backend"
+          git clone --depth 1 https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
+          cd "${BACKEND_DIR}"
+
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+          python -m pip install isatools==0.14.2
+
+          mkdir -p "${HOME}/.local/bin"
+          cat > "${HOME}/.local/bin/python3.9" <<'SH'
+          #!/usr/bin/env bash
+          exec python "$@"
+          SH
+          chmod +x "${HOME}/.local/bin/python3.9"
+          export PATH="${HOME}/.local/bin:${PATH}"
+
+          BACKEND_PORT="$(python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8080")
+          parsed = urlparse(url)
+          print(parsed.port or 8080)
+          PY
+          )"
+
+          nohup python -m uvicorn main:app --host 127.0.0.1 --port "${BACKEND_PORT}" > "${RUNNER_TEMP}/backend.log" 2>&1 &
+          echo $! > "${RUNNER_TEMP}/backend.pid"
+
+          for i in {1..45}; do
+            if curl -fsS "http://127.0.0.1:${BACKEND_PORT}/openapi.json" > /dev/null; then
+              echo "Backend is ready on port ${BACKEND_PORT}"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Backend failed to start in time. Log output:"
+          cat "${RUNNER_TEMP}/backend.log" || true
+          exit 1
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Upload backend log
+        if: ${{ always() && inputs.run_local_backend }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-log
+          path: ${{ runner.temp }}/backend.log
+          if-no-files-found: ignore
+
+      - name: Stop local backend
+        if: ${{ always() && inputs.run_local_backend }}
+        shell: bash
+        run: |
+          if [ -f "${RUNNER_TEMP}/backend.pid" ]; then
+            kill "$(cat "${RUNNER_TEMP}/backend.pid")" || true
+          fi
