@@ -1,12 +1,5 @@
 name: CI
 
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 on:
   pull_request:
   push:
@@ -14,81 +7,53 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      run_backend_integration:
-        description: Run backend integration tests (requires backend)
+      run_integration:
+        description: Run backend integration lane
         required: false
         default: false
         type: boolean
-      run_local_backend:
-        description: Start ISA-PHM-Backend in this workflow before integration tests
-        required: false
-        default: true
-        type: boolean
       backend_url:
-        description: Backend base URL for integration tests
+        description: Backend base URL for integration lane
         required: false
-        default: http://127.0.0.1:8080
+        default: http://localhost:8080
         type: string
 
 jobs:
   quality:
-    name: Lint, Coverage, Build
+    name: Lint, Test, Build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - name: Install deps
-        run: npm ci
-      - name: Lint
-        run: npm run lint:ci
-      - name: Coverage
-        run: npm run test:coverage
-      - name: Upload coverage artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage
-          if-no-files-found: warn
-      - name: Build
-        run: npm run build
+      - run: npm ci
+      - run: npm run lint:ci
+      - run: npm run test:run
+      - run: npm run build
 
-  backend-integration:
-    name: Backend Integration Tests
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_backend_integration }}
+  integration:
+    name: Integration (Manual)
     needs: quality
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_integration }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     env:
       RUN_BACKEND_INTEGRATION: "1"
       BACKEND_URL: ${{ inputs.backend_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
-      - name: Install frontend deps
-        run: npm ci
-
-      - name: Setup Python
-        if: ${{ inputs.run_local_backend }}
+      - name: Set up Python
+        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
-
+          python-version: '3.11'
       - name: Start local backend
-        if: ${{ inputs.run_local_backend }}
+        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -97,10 +62,12 @@ jobs:
           git clone --depth 1 https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
           cd "${BACKEND_DIR}"
 
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          # Required by backend conversion script in most environments.
           python -m pip install isatools==0.14.2
 
+          # Backend script invokes "python3.9"; provide a compatible shim on the runner.
           mkdir -p "${HOME}/.local/bin"
           cat > "${HOME}/.local/bin/python3.9" <<'SH'
           #!/usr/bin/env bash
@@ -109,10 +76,11 @@ jobs:
           chmod +x "${HOME}/.local/bin/python3.9"
           export PATH="${HOME}/.local/bin:${PATH}"
 
+          # Determine local port from BACKEND_URL if provided.
           BACKEND_PORT="$(python - <<'PY'
           import os
           from urllib.parse import urlparse
-          url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8080")
+          url = os.environ.get("BACKEND_URL", "http://localhost:8080")
           parsed = urlparse(url)
           print(parsed.port or 8080)
           PY
@@ -121,6 +89,7 @@ jobs:
           nohup python -m uvicorn main:app --host 127.0.0.1 --port "${BACKEND_PORT}" > "${RUNNER_TEMP}/backend.log" 2>&1 &
           echo $! > "${RUNNER_TEMP}/backend.pid"
 
+          # Wait for backend readiness.
           for i in {1..45}; do
             if curl -fsS "http://127.0.0.1:${BACKEND_PORT}/openapi.json" > /dev/null; then
               echo "Backend is ready on port ${BACKEND_PORT}"
@@ -132,20 +101,15 @@ jobs:
           echo "Backend failed to start in time. Log output:"
           cat "${RUNNER_TEMP}/backend.log" || true
           exit 1
-
-      - name: Run integration tests
-        run: npm run test:integration
-
-      - name: Upload backend log
-        if: ${{ always() && inputs.run_local_backend }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-log
-          path: ${{ runner.temp }}/backend.log
-          if-no-files-found: ignore
-
+      - run: npm ci
+      - run: npm run test:integration
+      - name: Print backend logs on failure
+        if: ${{ failure() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
+        run: |
+          echo "---- backend.log ----"
+          cat "${RUNNER_TEMP}/backend.log" || true
       - name: Stop local backend
-        if: ${{ always() && inputs.run_local_backend }}
+        if: ${{ always() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
         shell: bash
         run: |
           if [ -f "${RUNNER_TEMP}/backend.pid" ]; then
