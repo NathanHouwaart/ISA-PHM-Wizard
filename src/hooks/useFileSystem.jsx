@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react';
 import { directoryOpen } from 'browser-fs-access';
 
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
+
 /**
  * Custom hook for file system operations with support for large datasets (100k+ files).
  * 
@@ -283,7 +290,7 @@ export function useFileSystem() {
       // Use native API for Chromium browsers (handles large datasets better)
       // Use browser-fs-access for Firefox and others (more compatible)
       if (isNativeSupported()) {
-        console.log('[useFileSystem] Using native File System Access API (Chromium)');
+        debugLog('[useFileSystem] Using native File System Access API (Chromium)');
         try {
           dataset = await indexDirectoryNative(onProgress);
         } catch (nativeErr) {
@@ -292,7 +299,7 @@ export function useFileSystem() {
           dataset = await indexDirectoryFallback(onProgress);
         }
       } else {
-        console.log('[useFileSystem] Using browser-fs-access (non-Chromium)');
+        debugLog('[useFileSystem] Using browser-fs-access (non-Chromium)');
         dataset = await indexDirectoryFallback(onProgress);
       }
 

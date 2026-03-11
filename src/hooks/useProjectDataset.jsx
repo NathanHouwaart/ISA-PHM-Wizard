@@ -1,8 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadTree, clearTree, saveTree } from '../utils/indexedTreeStore';
 import { useFileSystem } from './useFileSystem';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
+import {
+  ensureProjectDatasetStats,
+  setProjectDatasetStats,
+  clearProjectDatasetStats,
+  setProjectDatasetName,
+  clearProjectDatasetName
+} from '../utils/projectMetadata';
 
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
 /**
  * Custom hook for managing dataset operations for a single project.
  * 
@@ -64,13 +77,18 @@ export function useProjectDataset(projectId) {
   const [metadata, setMetadata] = useState({ setupName: null, lastEdited: null });
   
   const fileSystem = useFileSystem();
-  const { currentProjectId, setSelectedDataset } = useGlobalDataContext();
+  const { currentProjectId } = useProjectData();
+  const { setSelectedDataset } = useProjectActions();
 
   /**
    * Load project metadata from localStorage
    * Includes test setup name and last edited timestamp
    */
   const loadMetadata = useCallback(() => {
+    if (!projectId) {
+      setMetadata({ setupName: null, lastEdited: null });
+      return;
+    }
     try {
       // Load test setup name
       const setupIdRaw = localStorage.getItem(`globalAppData_${projectId}_selectedTestSetupId`);
@@ -114,17 +132,35 @@ export function useProjectDataset(projectId) {
   useEffect(() => {
     let mounted = true;
 
+    if (!projectId) {
+      setTree(null);
+      setLoading(false);
+      setProgress(null);
+      return () => {
+        mounted = false;
+      };
+    }
+
     (async () => {
       try {
         setLoading(true);
         const loadedTree = await loadTree(projectId);
         if (mounted) {
           setTree(loadedTree);
+          if (loadedTree) {
+            setProjectDatasetName(projectId, loadedTree.rootName || loadedTree.name || null);
+            ensureProjectDatasetStats(projectId, loadedTree);
+          } else {
+            clearProjectDatasetName(projectId);
+            clearProjectDatasetStats(projectId);
+          }
         }
       } catch (err) {
         console.error('[useProjectDataset] Error loading tree for project', projectId, err);
         if (mounted) {
           setTree(null);
+          clearProjectDatasetName(projectId);
+          clearProjectDatasetStats(projectId);
         }
       } finally {
         if (mounted) {
@@ -133,7 +169,6 @@ export function useProjectDataset(projectId) {
       }
     })();
 
-    // Load metadata
     loadMetadata();
 
     return () => {
@@ -155,12 +190,16 @@ export function useProjectDataset(projectId) {
    * Shows progress and handles errors gracefully
    */
   const indexDataset = useCallback(async () => {
+    if (!projectId) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       setProgress({ percent: 0, message: 'Starting...' });
 
-      console.log('[useProjectDataset] Starting directory indexing for project:', projectId);
+      debugLog('[useProjectDataset] Starting directory indexing for project:', projectId);
       const indexStartTime = performance.now();
 
       // Use the file system hook to pick and index the directory
@@ -171,7 +210,7 @@ export function useProjectDataset(projectId) {
       });
 
       if (!dataset) {
-        console.log('[useProjectDataset] User cancelled directory picker');
+        debugLog('[useProjectDataset] User cancelled directory picker');
         setLoading(false);
         setProgress(null);
         return;
@@ -188,15 +227,17 @@ export function useProjectDataset(projectId) {
       const indexEndTime = performance.now();
       const totalIndexDuration = ((indexEndTime - indexStartTime) / 1000).toFixed(2);
 
-      console.log(`[useProjectDataset] IndexedDB save completed in ${saveDuration}s`);
-      console.log(`[useProjectDataset] Total indexing time: ${totalIndexDuration}s`);
+      debugLog(`[useProjectDataset] IndexedDB save completed in ${saveDuration}s`);
+      debugLog(`[useProjectDataset] Total indexing time: ${totalIndexDuration}s`);
 
       // Update state
       setTree(dataset);
+      setProjectDatasetName(projectId, dataset?.rootName || dataset?.name || null);
+      setProjectDatasetStats(projectId, dataset);
 
       // If this is the currently active project, update the global selectedDataset
       if (projectId === currentProjectId) {
-        console.log('[useProjectDataset] Updating selectedDataset for active project');
+        debugLog('[useProjectDataset] Updating selectedDataset for active project');
         setSelectedDataset(dataset);
       }
 
@@ -239,6 +280,10 @@ export function useProjectDataset(projectId) {
    * Removes from IndexedDB and clears in-memory state
    */
   const deleteDataset = useCallback(async () => {
+    if (!projectId) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -255,7 +300,9 @@ export function useProjectDataset(projectId) {
       }
 
       setTree(null);
-      console.log('[useProjectDataset] Dataset deleted for project:', projectId);
+      clearProjectDatasetName(projectId);
+      clearProjectDatasetStats(projectId);
+      debugLog('[useProjectDataset] Dataset deleted for project:', projectId);
 
     } catch (err) {
       console.error('[useProjectDataset] delete dataset error', err);
@@ -290,6 +337,13 @@ export function useProjectDataset(projectId) {
       const loadedTree = await loadTree(projectId);
       setTree(loadedTree);
       loadMetadata();
+      if (loadedTree) {
+        setProjectDatasetName(projectId, loadedTree.rootName || loadedTree.name || null);
+        setProjectDatasetStats(projectId, loadedTree);
+      } else {
+        clearProjectDatasetName(projectId);
+        clearProjectDatasetStats(projectId);
+      }
     } catch (err) {
       console.error('[useProjectDataset] Error refreshing dataset for project', projectId, err);
       setTree(null);

@@ -19,13 +19,13 @@ export const IntroductionSlide = forwardRef(({onHeightChange}, ref) => {
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Welcome to the ISA-PHM wizard!
+                Welcome to the ISA-PHM input wizard!
             </SlidePageSubtitle>
 
             <Paragraph className='text-lg font-semibold mx-20 mb-8 text-gray-700'>
-                With this Wizard it is super easy to annotate measurements of your experiment with ISA-compliant metadata according to FAIR principles.
+                With this Wizard it is easy to annotate measurements of your experiment according to FAIR principles, and translate the metadata to the standardized ISA-PHM format.
                 <br/><br/>
-                Click on the Next button to start the metadata annotation of the results data of your experiments.
+                Click on the Next button to start the metadata annotation of your experiments.
             </Paragraph>
         </div>
     );

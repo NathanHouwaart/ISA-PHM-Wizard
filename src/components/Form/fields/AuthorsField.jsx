@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { GripVertical, Mail, X, ChevronDown, ChevronUp } from 'lucide-react';
 import IconToolTipButton from '../../Widgets/IconTooltipButton';
 import EmailPromptModal from '../../Publication/EmailPromptModal';
-import { useGlobalDataContext } from '../../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../../contexts/GlobalDataContext';
 import { cn } from '../../../utils/utils';
 import { BASE_INPUT_CLASSNAME } from './constants';
 
@@ -28,7 +28,8 @@ const AuthorsField = ({
     const [showEmailPrompt, setShowEmailPrompt] = useState(false);
     const [pendingCorrespondingAuthor, setPendingCorrespondingAuthor] = useState(null);
 
-    const { contacts, setContacts } = useGlobalDataContext();
+    const { contacts } = useProjectData();
+    const { setContacts } = useProjectActions();
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
     const containerRef = useRef(null);
@@ -294,12 +295,16 @@ const AuthorsField = ({
                         setIsDropdownVisible(nextValue.length > 0);
                     }}
                     onFocus={() => {
-                        if (inputValue.length > 0) {
+                        if (filteredAuthors.length > 0) {
                             setIsDropdownVisible(true);
                         }
                     }}
                     onBlur={(event) => {
-                        if (!dropdownRef.current?.contains(event.relatedTarget)) {
+                        const nextFocusTarget = event.relatedTarget;
+                        const focusStayedInsideField = containerRef.current?.contains(nextFocusTarget);
+                        const focusMovedToDropdown = dropdownRef.current?.contains(nextFocusTarget);
+
+                        if (!focusStayedInsideField && !focusMovedToDropdown) {
                             setTimeout(() => setIsDropdownVisible(false), 150);
                         }
                     }}

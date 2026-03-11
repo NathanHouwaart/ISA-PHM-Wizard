@@ -11,6 +11,21 @@ node_modules
 dist
 dist-ssr
 *.local
+coverage/
+*.lcov
+
+# Python / notebook artifacts
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Local scratch / generated analysis outputs
+.tmp-*
+tmp-isa-phm-out*.json
+submitted.json
+temp_py_diff.txt
+test-report*.txt
+.github/workflows/log.txt
 
 # Editor directories and files
 .vscode/*

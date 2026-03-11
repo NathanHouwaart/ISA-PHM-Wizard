@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback } from 'react'
 import { Layers } from 'lucide-react';
 
 // Import hooks
@@ -7,7 +7,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import useMeasurementProtocols from '../../hooks/useMeasurementProtocols';
 
 // Import the single global provider
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 // Import components
 import { SlidePageTitle } from '../Typography/Heading2';
@@ -25,7 +25,7 @@ import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
-
+import generateId from '../../utils/generateId';
 
 export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -40,9 +40,9 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
     const {
         testSetups,
         selectedTestSetupId,
-        measurementProtocols,
-        setMeasurementProtocols
-    } = useGlobalDataContext();
+        measurementProtocols
+    } = useProjectData();
+    const { setMeasurementProtocols } = useProjectActions();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
@@ -63,13 +63,6 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
     const handleDataGridMappingsChange = useCallback((newMappings) => {
         mappingsController.setMappings(newMappings);
     }, [mappingsController]);
-
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
-
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
 
     // Handle input changes in EntityMappingPanel
     const addNewProtocol = () => {
@@ -140,7 +133,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
         ],
         customActions: [
             {
-                label: '+ Add Protocol',
+                label: '+ Add Protocol parameter',
                 onClick: addNewProtocol,
                 className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
                 title: 'Add a new protocol'
@@ -152,7 +145,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
         <div ref={combinedRef} >
 
             <SlidePageTitle>
-                Measurement Protocols
+                Measurement Protocol
             </SlidePageTitle>
 
             <SlidePageSubtitle>
@@ -182,29 +175,28 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                     </WarningBanner>
                 )}
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
-
-                    <EntityMappingPanel
-                        name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        itemHook={useMeasurementProtocols}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                    />
-
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <EntityMappingPanel
+                            name={`Measurement Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                            itemHook={useMeasurementProtocols}
+                            mappings={mappingsController.mappings}
+                            handleInputChange={mappingsController.updateMappingValue}
+                            minHeight={WINDOW_HEIGHT}
+                        />
+                    </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...measurementProtocolsGridConfig}
+                        height="45vh"
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
-
                 </TabPanel>
             </div>
         </div>

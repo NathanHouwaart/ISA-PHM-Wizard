@@ -1,35 +1,37 @@
-import React from 'react';
-
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions } from '../contexts/GlobalDataContext';
 import StudyMeasurementMappingCard from '../components/StudyMeasurementMappingCard';
+import useStudyRuns from './useStudyRuns';
 
 export const useMeasurements = () => {
     
-    const { studies, setStudies } = useGlobalDataContext(); // Get studies and setStudies from global context
+    const { setStudies } = useProjectActions(); // Keep setter for compatibility if needed
+    const studyRuns = useStudyRuns();
+    const components = {
+        card: null,
+        form: null,
+        view: null,
+        mappingCard: StudyMeasurementMappingCard
+    };
     
     const addVariable = () => {
         return null;
     }
 
-    const updateVariable = (updatedVariable) => {
+    const updateVariable = (_updatedVariable) => {
         return null;
     }
 
-    const removeVariable = (variableId) => {
+    const removeVariable = (_variableId) => {
         return null;
-    }
-
-    const cardComponent = () => {
-        return StudyMeasurementMappingCard;
     }
 
     return {
-        items: studies,
+        items: studyRuns,
         setItems : setStudies,
         addItem : addVariable,
         updateItem : updateVariable,
         removeItem : removeVariable,
-        cardComponent: cardComponent,
+        components,
     }
 }
 

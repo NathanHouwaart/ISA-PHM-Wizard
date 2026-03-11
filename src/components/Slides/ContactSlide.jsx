@@ -1,5 +1,4 @@
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'lucide-react';
+import React, { forwardRef } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
@@ -20,6 +19,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
 
     const resizeElementRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
+    const cnt = useContacts();
 
     return (
         <div ref={combinedRef}>
@@ -29,7 +29,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
             </SlidePageTitle>
             
             <SlidePageSubtitle>
-                Manage the contributors to the investigation, and assign their roles.
+                Manage the contributors to the project, and assign their roles.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-4'>
@@ -37,7 +37,7 @@ export const ContactSlide = forwardRef(({ onHeightChange}, ref) => {
                     onHeightChange={() => { }}
                     itemHook={useContacts} // This hook will need to pull 'studies' from the global context
                 >
-                    <CollectionTitle>Contacts</CollectionTitle>
+                    <CollectionTitle>Contacts ({cnt?.items?.length || 0})</CollectionTitle>
                     <CollectionSubtitle>Add, Remove And Edit Contacts</CollectionSubtitle>
                     <CollectionAddButtonText>Add Contact</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Contacts Found</CollectionEmptyStateTitle>

@@ -1,5 +1,12 @@
 import { useMemo, useCallback } from 'react';
 
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
+
 /**
  * Custom hook for managing rich mappings with multiple value types
  * Provides utilities to work with mappings that have complex value structures
@@ -46,14 +53,14 @@ export const useRichMappings = (mappings, setMappings) => {
 
   // Update or create a mapping
   const updateMapping = useCallback((studyId, variableId, valueKey, newValue) => {
-    console.log('updateMapping called with:', { studyId, variableId, valueKey, newValue });
-    console.log('Current mappings:', mappings);
+    debugLog('updateMapping called with:', { studyId, variableId, valueKey, newValue });
+    debugLog('Current mappings:', mappings);
     
     const existingIndex = mappings.findIndex(m => 
       m.studyId === studyId && m.studyVariableId === variableId
     );
 
-    console.log('Existing mapping index:', existingIndex);
+    debugLog('Existing mapping index:', existingIndex);
 
     let updatedMappings;
 
@@ -62,7 +69,7 @@ export const useRichMappings = (mappings, setMappings) => {
       updatedMappings = [...mappings];
       const existingMapping = transformToRichFormat(updatedMappings[existingIndex]);
       
-      console.log('Updating existing mapping:', existingMapping);
+      debugLog('Updating existing mapping:', existingMapping);
       
       updatedMappings[existingIndex] = {
         ...existingMapping,
@@ -73,7 +80,7 @@ export const useRichMappings = (mappings, setMappings) => {
       };
     } else {
       // Create new mapping
-      console.log('Creating new mapping');
+      debugLog('Creating new mapping');
       const newMapping = {
         studyId,
         studyVariableId: variableId,
@@ -87,7 +94,7 @@ export const useRichMappings = (mappings, setMappings) => {
       updatedMappings = [...mappings, newMapping];
     }
 
-    console.log('Updated mappings:', updatedMappings);
+    debugLog('Updated mappings:', updatedMappings);
     setMappings(updatedMappings);
   }, [mappings, setMappings, transformToRichFormat]);
 

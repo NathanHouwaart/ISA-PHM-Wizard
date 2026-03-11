@@ -20,6 +20,7 @@ const TextInputField = ({
     required,
     type = 'text',
     value,
+    ...rest
 }) => {
     const [buffer, setBuffer] = useState(value ?? '');
     const [isEditing, setIsEditing] = useState(false);
@@ -71,6 +72,7 @@ const TextInputField = ({
             placeholder={placeholder || example}
             required={required}
             className={cn(BASE_INPUT_CLASSNAME, className)}
+            {...rest}
         />
     );
 };

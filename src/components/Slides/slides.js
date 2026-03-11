@@ -4,12 +4,11 @@ import IntroductionSlide from './IntroductionSlide.jsx';
 import InvestigationSlide from './InvestigationSlide.jsx';
 import PublicationSlide from './PublicationSlide.jsx';
 import StudySlide from './StudySlide.jsx';
+import FaultSpecificationsSlide from './FaultSpecificationsSlide.jsx';
+import OperatingConditionsSlide from './OperatingConditionsSlide.jsx';
 import StudyVariableSlide from './StudyVariableSlide.jsx';
 import MeasurementOutputSlide from './MeasurementOutputSlide.jsx';
-import ProcessingProtocolsSlide from './ProcessingProtocolsSlide.jsx';
 import ProcessingOutputSlide from './ProcessingOutputSlide.jsx';
-import AssaySlide from './AssaySlide.jsx';
-import MeasurementProtocolSlide from './MesurementProtocolsSlide.jsx';
 
 export const slides = [
   IntroductionSlide,
@@ -17,10 +16,9 @@ export const slides = [
   ContactSlide,
   PublicationSlide,
   StudySlide,
+  FaultSpecificationsSlide,
+  OperatingConditionsSlide,
   StudyVariableSlide,
-  MeasurementProtocolSlide,
   MeasurementOutputSlide,
-  ProcessingProtocolsSlide,
-  ProcessingOutputSlide,
-  AssaySlide
+  ProcessingOutputSlide
 ];

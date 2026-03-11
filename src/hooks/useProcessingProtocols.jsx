@@ -1,15 +1,21 @@
-import React from 'react';
-
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMappingCard';
+import generateId from '../utils/generateId';
 
 export const useProcessingProtocols = () => {
 
-    const { processingProtocols, setProcessingProtocols } = useGlobalDataContext();
+    const { processingProtocols } = useProjectData();
+    const { setProcessingProtocols } = useProjectActions();
+    const components = {
+        card: null,
+        form: null,
+        view: null,
+        mappingCard: ProcessingProtocolsMappingCard
+    };
 
     const addProcessingProtocol = () => {
         const newProtocol = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: `New Protocol ${processingProtocols.length + 1}`,
             type: '',
             unit: '',
@@ -34,17 +40,13 @@ export const useProcessingProtocols = () => {
         setProcessingProtocols(prev => Array.isArray(prev) ? prev.filter(v => v.id !== variableId) : []);
     }
 
-    const cardComponent = () => {
-        return ProcessingProtocolsMappingCard;
-    }
-
     return {
         items: processingProtocols || [],
         setItems: setProcessingProtocols,
         addItem: addProcessingProtocol,
         updateItem: updateProcessingProtocol,
         removeItem: removeProcessingProtocol,
-        cardComponent: cardComponent,
+        components,
     }
 }
 

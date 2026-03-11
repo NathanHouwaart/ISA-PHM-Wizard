@@ -1,5 +1,5 @@
 // hooks/useResizeObserver.js
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 
 /**
  * Custom hook to observe the resize of a DOM element.
@@ -21,7 +21,7 @@ const useResizeObserver = (onResize) => {
       return; // Nothing to observe or no callback
     }
 
-    const resizeObserver = new ResizeObserver(entries => {
+    const resizeObserver = new ResizeObserver((_entries) => {
       // It's crucial to use the currentElement's offsetHeight here,
       // as 'entries' might not always reflect the latest computed style accurately
       // if there are multiple layout passes.

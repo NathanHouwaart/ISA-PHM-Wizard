@@ -16,8 +16,10 @@ vi.mock('./useFileSystem', () => ({
 }));
 
 vi.mock('../contexts/GlobalDataContext', () => ({
-  useGlobalDataContext: () => ({
+  useProjectData: () => ({
     currentProjectId: 'test-project-123',
+  }),
+  useProjectActions: () => ({
     setSelectedDataset: vi.fn(),
   }),
 }));

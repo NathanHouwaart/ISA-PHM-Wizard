@@ -1,4 +1,6 @@
 import React, { isValidElement, Children } from 'react';
+import Heading4 from '../Typography/Heading4';
+import Paragraph from '../Typography/Paragraph';
 
 export const AnimatedTooltipExplanation = ({ children }) => children;
 AnimatedTooltipExplanation.displayName = 'AnimatedTooltipExplanation';
@@ -6,7 +8,7 @@ AnimatedTooltipExplanation.displayName = 'AnimatedTooltipExplanation';
 export const AnimatedTooltipExample = ({ children }) => children;
 AnimatedTooltipExample.displayName = 'AnimatedTooltipExample';
 
-export function AnimatedTooltip({ isVisible, children, className = '' }) {
+const AnimatedTooltip = ({ isVisible, children, className = '' }) => {
   const explanations = Children.toArray(children).filter(
     (child) => isValidElement(child) && child.type === AnimatedTooltipExplanation
   );
@@ -40,13 +42,13 @@ export function AnimatedTooltip({ isVisible, children, className = '' }) {
       >
         {explanations.length > 0 && (
           <div className="mb-3">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+            <Heading4 className="mb-2 flex items-center">
               <div className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
               Explanation
-            </h4>
+            </Heading4>
             <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
               {explanations.map((exp, i) => (
-                <p key={i}>{exp}</p>
+                <div key={i}>{exp}</div>
               ))}
             </div>
           </div>
@@ -54,10 +56,10 @@ export function AnimatedTooltip({ isVisible, children, className = '' }) {
 
         {examples.length > 0 && (
           <div className={explanations.length ? 'border-t border-gray-100 pt-3' : ''}>
-            <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+            <Heading4 className="mb-2 flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
               Example
-            </h4>
+            </Heading4>
             <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border-l-4 border-green-500 space-y-1">
               {examples.map((ex, i) => (
                 <div key={i}>{ex.props.children}</div>
@@ -68,6 +70,6 @@ export function AnimatedTooltip({ isVisible, children, className = '' }) {
       </div>
     </div>
   );
-}
+};
 
 export default AnimatedTooltip;

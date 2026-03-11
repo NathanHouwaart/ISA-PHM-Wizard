@@ -1,15 +1,21 @@
-import React from 'react';
-
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import ProcessingProtocolsMappingCard from '../components/ProcessingProtocolsMappingCard';
+import generateId from '../utils/generateId';
 
 export const useMeasurementProtocols = () => {
 
-    const { measurementProtocols, setMeasurementProtocols } = useGlobalDataContext();
+    const { measurementProtocols } = useProjectData();
+    const { setMeasurementProtocols } = useProjectActions();
+    const components = {
+        card: null,
+        form: null,
+        view: null,
+        mappingCard: ProcessingProtocolsMappingCard
+    };
 
     const addMeasurementProtocol = () => {
         const newProtocol = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: `New Protocol ${measurementProtocols.length + 1}`,
             type: '',
             unit: '',
@@ -34,17 +40,13 @@ export const useMeasurementProtocols = () => {
         setMeasurementProtocols(prev => Array.isArray(prev) ? prev.filter(v => v.id !== variableId) : []);
     }
 
-    const cardComponent = () => {
-        return ProcessingProtocolsMappingCard;
-    }
-
     return {
         items: measurementProtocols || [],
         setItems: setMeasurementProtocols,
         addItem: addMeasurementProtocol,
         updateItem: updateMeasurementProtocol,
         removeItem: removeMeasurementProtocol,
-        cardComponent: cardComponent,
+        components,
     }
 }
 

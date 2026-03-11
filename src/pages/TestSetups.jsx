@@ -14,8 +14,6 @@ import Collection, {
 import useTestSetups from '../hooks/useTestSetups';
 import PageWrapper from '../layout/PageWrapper';
 
-import initialTestSetups from '../data/InitialTestSetups.json'
-
 export const TestSetups = () => {
 
   const {
@@ -23,7 +21,6 @@ export const TestSetups = () => {
     childRefs,
     handleChildHeightChange,
   } = useDynamicHeightContainer();
-
 
   return (
     <PageWrapper>
@@ -34,10 +31,9 @@ export const TestSetups = () => {
               ref={el => childRefs.current[0] = el}
               onHeightChange={handleChildHeightChange}
               itemHook={useTestSetups}
-              initialItems={initialTestSetups}
             >
               <CollectionTitle>Test Setups</CollectionTitle>
-              <CollectionSubtitle>View, add and edit test-setups used in the investigations, by specifying relevant components and sensors.</CollectionSubtitle>
+              <CollectionSubtitle>View, add and edit test-setups used in the projects, by specifying relevant components and sensors.</CollectionSubtitle>
               <CollectionAddButtonText>Add Test Setup</CollectionAddButtonText>
               <CollectionEmptyStateTitle>No Test Setups Found</CollectionEmptyStateTitle>
               <CollectionEmptyStateSubtitle>Get started by adding your first Test Setup</CollectionEmptyStateSubtitle>

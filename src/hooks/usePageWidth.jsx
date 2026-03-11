@@ -1,4 +1,4 @@
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 
 /**
  * Simple hook to manage tab state for a specific page
@@ -6,7 +6,8 @@ import { useGlobalDataContext } from '../contexts/GlobalDataContext';
  * @param {string} defaultTab - The default tab when first visiting this page
  */
 export const usePageTab = (pageNumber, defaultTab = 'simple-view') => {
-    const { pageTabStates, setPageTabStates } = useGlobalDataContext();
+    const { pageTabStates } = useProjectData();
+    const { setPageTabStates } = useProjectActions();
     
     // Get the current tab for this page, or use default
     const selectedTab = pageTabStates[pageNumber] || defaultTab;

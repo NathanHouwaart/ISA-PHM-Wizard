@@ -1,9 +1,12 @@
 // hooks/useCombinedRefs.js
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 const useCombinedRefs = (...refs) => {
+  const refsRef = useRef(refs);
+  refsRef.current = refs;
+
   return useCallback((node) => {
-    refs.forEach(ref => {
+    refsRef.current.forEach(ref => {
       if (ref === null) return; // Ignore null refs
 
       // Handle function refs
@@ -18,7 +21,7 @@ const useCombinedRefs = (...refs) => {
         }
       }
     });
-  }, [...refs]); // Re-create if any of the input refs change
+  }, []);
 };
 
 export default useCombinedRefs;

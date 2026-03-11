@@ -5,6 +5,7 @@ import useCombinedRefs from '../hooks/useCombinedRefs';
 
 import { Plus, Wrench } from 'lucide-react';
 import Paragraph from './Typography/Paragraph';
+import Heading1 from './Typography/Heading1';
 
 import TooltipButton from './Widgets/TooltipButton';
 import AlertDecisionDialog from './Widgets/AlertDecisionDialog';
@@ -63,21 +64,20 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     const [viewingItem, setViewingItem] = useState(null);
     const [pendingDeleteItem, setPendingDeleteItem] = useState(null);
 
-    const { items, setItems, getCard, getForm, getView } = itemHook();
-
-    // Get the component references
-    const CardComponent = getCard();
-    const FormComponent = getForm();
-    const ViewComponent = getView();
+    const hookApi = itemHook();
+    const {
+        items = [],
+        setItems = () => {},
+        components = {},
+    } = hookApi ?? {};
+    const CardComponent = components.card ?? null;
+    const FormComponent = components.form ?? null;
+    const ViewComponent = components.view ?? null;
+    const canManageCollection = Boolean(CardComponent && FormComponent);
     
 
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
-
-    const handleAdd = (itemData) => {
-        setItems(prevItems => [...prevItems, itemData]);
-        setShowAddForm(false);
-    };
 
     const handleRemove = (itemId) => {
         const itemToRemove = items.find(item => item.id === itemId);
@@ -121,7 +121,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     let addButtonTooltip = 'Add a new item to the collection';
     let emptyStateTitle = 'No Items Yet';
     let emptyStateSubtitle = 'Get started by adding your first item.';
-    let emptyStateAddButtonText = 'Add First Item';
+    let _emptyStateAddButtonText = 'Add First Item';
 
     React.Children.forEach(children, (child) => {
         if (!isValidElement(child)) {
@@ -145,7 +145,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 emptyStateSubtitle = child.props.children;
                 break;
             case CollectionEmptyStateAddButtonText:
-                emptyStateAddButtonText = child.props.children;
+                _emptyStateAddButtonText = child.props.children;
                 break;
             default:
                 break;
@@ -158,12 +158,13 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 {/* Header */}
                 <div className="pl-3 flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+                        <Heading1 className="mb-0 border-b-0 text-left px-0 py-0">{title}</Heading1>
                         <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>
                     </div>
                     <TooltipButton
                         onClick={() => setShowAddForm(true)}
                         tooltipText={addButtonTooltip}
+                        disabled={!canManageCollection}
                     >
                         <Plus className="w-5 h-5" />
                         <span>{addButtonText}</span>
@@ -173,7 +174,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 </div>
 
                 {/* Add/Edit Form */}
-                {(showAddForm || editingItem) &&
+                {(showAddForm || editingItem) && FormComponent &&
                     (
                         <div className="mb-8">
                             <FormComponent
@@ -208,7 +209,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                 {/* Items Grid */}
                 {!showAddForm && !editingItem &&
                 <div className={`${grid ? "grid grid-cols-1 lg:grid-cols-2 gap-2" : "w-full space-y-2"}`}>
-                    {items.map(item => (
+                    {CardComponent && items.map(item => (
                         (viewingItem?.id !== item.id && editingItem?.id !== item.id) && (
                             <div key={item.id} className={ViewComponent ? "cursor-pointer" : ''} onClick={() => { ViewComponent && setViewingItem(item) }}>
                                 <CardComponent

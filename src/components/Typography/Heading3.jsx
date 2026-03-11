@@ -4,7 +4,6 @@ import React from 'react';
 import { cn } from '../../utils/utils';
 
 const heading3ClassName             = "text-xl font-semibold text-gray-800";
-const collectionCardTitleClassName  = "flex items-center justify-center mb-2";
 
 const Heading3 = ({ children, className, ...props }) => {
   return (

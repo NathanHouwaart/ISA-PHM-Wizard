@@ -1,44 +1,38 @@
 import { useState, useRef } from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
+import { buildConversionPayload } from '../utils/conversionPayload';
+
+const DEV_LOGS = Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (DEV_LOGS) {
+    console.log(...args);
+  }
+};
 
 // Hook responsibility: perform the submit/convert API call using data from the
 // GlobalDataContext. Keeps isSubmitting and message local to the hook so the
 // context remains a pure data store.
 export default function useSubmitData() {
   const {
-    investigations,
+    investigation,
     publications,
     contacts,
     studyVariables,
-    measurementProtocols,
-    processingProtocols,
     studies,
     testSetups,
     selectedTestSetupId,
+    experimentType,
     studyToStudyVariableMapping,
-    sensorToMeasurementProtocolMapping,
     studyToSensorMeasurementMapping,
-    sensorToProcessingProtocolMapping,
     studyToSensorProcessingMapping,
-    studyToAssayMapping,
-  } = useGlobalDataContext();
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
+  } = useProjectData();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('Submitting data...');
   const [error, setError] = useState(null);
   const controllerRef = useRef(null);
-
-  // Helper: normalize protocol mappings for a given sensor id
-  const mapProtocolsForSensor = (mappings = [], sensorId) => {
-    if (!mappings || mappings.length === 0) return [];
-    return (mappings || [])
-      .filter((m) => String(m.sourceId) === String(sensorId) || String(m.sensorId) === String(sensorId))
-      .map((m) => ({
-        sourceId: m.sourceId ?? m.sensorId ?? null,
-        targetId: m.targetId ?? m.target ?? m.mappingTargetId ?? null,
-        value: m.value ?? [],
-      }));
-  };
 
   const submitData = async () => {
     // create a fresh AbortController for this submit
@@ -51,56 +45,25 @@ export default function useSubmitData() {
     setError(null);
 
     try {
-      const jsonData = {
-        identifier: investigations?.investigationIdentifier,
-        title: investigations?.investigationTitle,
-        description: investigations?.investigationDescription,
-        license: investigations?.license,
-        submission_date: investigations?.submissionDate,
-        public_release_date: investigations?.publicReleaseDate,
-        publications: publications,
-        contacts: contacts,
-        study_variables: studyVariables,
-        measurement_protocols: measurementProtocols,
-        processing_protocols: processingProtocols,
-        studies: (studies || []).map((study) => ({
-          ...study,
-          publications,
-          contacts,
-          used_setup: (testSetups || []).find((setup) => setup.id === selectedTestSetupId),
-          study_to_study_variable_mapping: (studyToStudyVariableMapping || [])
-            .filter((mapping) => mapping.studyId === study.id)
-            .map((mapping) => {
-              const variable = (studyVariables || []).find((v) => v.id === mapping.studyVariableId);
-              return {
-                studyId: mapping.studyId,
-                studyVariableId: mapping.studyVariableId,
-                value: mapping.value,
-                variableName: variable?.name || 'Unknown Variable',
-              };
-            }),
-          assay_details: ((testSetups || []).find((setup) => setup.id === selectedTestSetupId)?.sensors || []).map((sensor) => {
-            const used_sensor = Object.fromEntries(
-              Object.entries(sensor).filter(([key]) => !key.startsWith('processingProtocol'))
-            );
-
-
-
-            return {
-              used_sensor,
-              measurement_protocols: mapProtocolsForSensor(sensorToMeasurementProtocolMapping, sensor.id),
-              processing_protocols: mapProtocolsForSensor(sensorToProcessingProtocolMapping, sensor.id),
-              raw_file_name: (studyToSensorMeasurementMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-              processed_file_name: (studyToSensorProcessingMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-              assay_file_name: (studyToAssayMapping || []).find((mapping) => mapping.sensorId === sensor.id && mapping.studyId === study.id)?.value || '',
-            };
-          }),
-        })),
-      };
+      const jsonData = buildConversionPayload({
+        investigation,
+        publications,
+        contacts,
+        studyVariables,
+        studies,
+        testSetups,
+        selectedTestSetupId,
+        experimentType,
+        studyToStudyVariableMapping,
+        studyToSensorMeasurementMapping,
+        studyToSensorProcessingMapping,
+        studyToMeasurementProtocolSelection,
+        studyToProcessingProtocolSelection,
+      });
 
       setMessage('Uploading to conversion service...');
 
-      console.log('[useSubmitData] submitting', jsonData);
+      debugLog('[useSubmitData] submitting', jsonData);
 
       const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
       const formData = new FormData();

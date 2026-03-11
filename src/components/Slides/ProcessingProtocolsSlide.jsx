@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback } from 'react'
 import { Layers } from 'lucide-react';
 
 // Import hooks
@@ -7,7 +7,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 import useProcessingProtocols from '../../hooks/useProcessingProtocols';
 
 // Import the single global provider
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 // Import components
 import { SlidePageTitle } from '../Typography/Heading2';
@@ -25,7 +25,7 @@ import DataGrid from '../DataGrid/DataGrid';
 import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
-
+import generateId from '../../utils/generateId';
 
 export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -38,18 +38,11 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
 
     // Access global context
     const {
-        studies,
         testSetups,
-        setScreenWidth,
         selectedTestSetupId,
-        processingProtocols,
-        setProcessingProtocols,
-        sensorToProcessingProtocolMapping,
-        setSensorToProcessingProtocolMapping,
-        setTestSetups,
-        studyToSensorMeasurementMapping,
-        setStudyToSensorMeasurementMapping
-    } = useGlobalDataContext();
+        processingProtocols
+    } = useProjectData();
+    const { setProcessingProtocols } = useProjectActions();
 
     const selectedTestSetup = testSetups.find(setup => setup.id === selectedTestSetupId);
 
@@ -71,13 +64,6 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         mappingsController.setMappings(newMappings);
     }, [mappingsController]);
 
-    // Screen width is managed globally by IsaQuestionnaire based on persisted tab state.
-
-    // Helper function to generate unique IDs
-    const generateId = () => {
-        return crypto.randomUUID();
-    };
-
     // Handle input changes in EntityMappingPanel
     const addNewProtocol = () => {
         const newProtocol = {
@@ -90,11 +76,6 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         // if (gridMode === 'sensor-protocols' && callGridMethod('addRow', newProtocol)) return;
         setProcessingProtocols([...processingProtocols, newProtocol]);
     };
-
-    // // Handle cell edits in the grid
-    // const handleDataGridMappingsChange = useCallback((newMappings) => {
-    //     setSensorToProcessingProtocolMapping(newMappings);
-    // }, [setSensorToProcessingProtocolMapping]);
 
     // Handle row data changes
     const handleDataGridRowDataChange = useCallback((newRowData) => {
@@ -152,7 +133,7 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
         ],
         customActions: [
             {
-                label: '+ Add Protocol',
+                label: '+ Add Protocol parameter',
                 onClick: addNewProtocol,
                 className: 'px-3 py-1 text-sm bg-purple-50 text-purple-700 border border-purple-300 rounded hover:bg-purple-100',
                 title: 'Add a new protocol'
@@ -194,29 +175,30 @@ export const ProcessingProtocolsSlide = forwardRef(({ onHeightChange, currentPag
                     </WarningBanner>
                 )}
 
-                <TabPanel isActive={selectedTab === 'simple-view'}>
-
-                    <EntityMappingPanel
-                        name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
-                        itemHook={useProcessingProtocols}
-                        mappings={mappingsController.mappings}
-                        handleInputChange={mappingsController.updateMappingValue}
-                        minHeight={WINDOW_HEIGHT}
-                    />
-
+                <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
+                    <div className="h-[45vh] flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-y-auto">
+                            <EntityMappingPanel
+                                name={`Processing Protocols for ${selectedTestSetup?.name || 'Selected Test Setup'}`}
+                                itemHook={useProcessingProtocols}
+                                mappings={mappingsController.mappings}
+                                handleInputChange={mappingsController.updateMappingValue}
+                                minHeight={WINDOW_HEIGHT}
+                            />
+                        </div>
+                    </div>
                 </TabPanel>
 
-                <TabPanel isActive={selectedTab === 'grid-view'}>
+                <TabPanel isActive={selectedTab === 'grid-view'} unmountOnHide>
                     <DataGrid
                         {...processingProtocolsGridConfig}
+                        height="45vh"
                         showControls={true}
                         showDebug={false}
                         onDataChange={handleDataGridMappingsChange}
                         onRowDataChange={handleDataGridRowDataChange}
-                        height={WINDOW_HEIGHT}
                         isActive={selectedTab === 'grid-view' && currentPage === pageIndex}
                     />
-
                 </TabPanel>
             </div>
         </div>

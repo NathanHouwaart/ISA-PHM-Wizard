@@ -6,7 +6,7 @@ import useCombinedRefs from '../../hooks/useCombinedRefs';
 
 import FormField from '../Form/FormField';
 
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 
 import { SlidePageTitle } from '../Typography/Heading2';
 import { SlidePageSubtitle } from '../Typography/Paragraph';
@@ -17,8 +17,8 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     const elementToObserveRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, elementToObserveRef);
 
-    const { dataMap } = useGlobalDataContext();
-    const [investigation, setInvestigation] = dataMap['investigations']
+    const { dataMap } = useProjectData();
+    const [investigation, setInvestigation] = dataMap['investigation']
 
 
     function handleChange(e) {
@@ -32,31 +32,21 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
         <div ref={combinedRef} >
                 
                 <SlidePageTitle>
-                  Investigation Information
+                  Project Information
                 </SlidePageTitle>
                 
                 <SlidePageSubtitle>
-                    The investigation describes the research project, including all experiments (described by studies) and measurements (described by assays). Please provide the basic information about the investigation.
+                    Please provide the basic information about the project.
                 </SlidePageSubtitle>
                 
                 <div className='bg-gray-50 p-4 space-y-3 pl-10 border-gray-300 border rounded-lg'>
-                    <FormField
-                        name={"investigationIdentifier"}
-                        label={"Investigation Identifier"}
-                        type={"text"}
-                        placeholder={"i1"}
-                        explanation={"Identifier of the investigation."}
-                        example={"i1"}
-                        onChange={handleChange}
-                        value={investigation.investigationIdentifier}
-                    />
 
                     <FormField
                         name={"investigationTitle"}
-                        label={"Investigation Title"}
+                        label={"Project Title"}
                         type={"text"}
-                        placeholder={"Investigation Title"}
-                        explanation={"A title for the investigation."}
+                        placeholder={"Project Title"}
+                        explanation={"A title for the project."}
                         example={"Diagnostics on a test-bench X"}
                         onChange={handleChange}
                         value={investigation.investigationTitle}
@@ -64,10 +54,10 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <FormField
                         name={"investigationDescription"}
-                        label={"Investigation Description"}
+                        label={"Project Description"}
                         type={"textarea"}
-                        placeholder={"Description of the investigation"}
-                        explanation={"A short text summarising the investigation."}
+                        placeholder={"Description of the project"}
+                        explanation={"A short text summarising the project."}
                         example={"Measuring fault responses of bearings on test bench X using sensor Y and Z to assess sensor effectiveness."}
                         onChange={handleChange}
                         value={investigation.investigationDescription}
@@ -86,9 +76,9 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <FormField
                         name={"submissionDate"}
-                        label={"Submission Date"}
+                        label={"Project execution / data collection date"}
                         type={"date"}
-                        explanation={"The date when the investigation data was submitted to the database. If not applicable, please leave empty."}
+                        explanation={"The date when you are creating this investigation metadata. This represents when you entered the information in this wizard."}
                         example={"01-10-2023"}
                         onChange={handleChange}
                         value={investigation.submissionDate}
@@ -109,6 +99,6 @@ export const InvestigationSlide = forwardRef(({ onHeightChange }, ref) => {
     );
 });
 
-InvestigationSlide.displayName = "Investigation"; // Set display name for better debugging
+InvestigationSlide.displayName = "Project Information"; // Set display name for better debugging
 
 export default InvestigationSlide;

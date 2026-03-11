@@ -9,7 +9,6 @@ const useCombinedRef = (externalRef) => {
             if (typeof externalRef === 'function') {
                 externalRef(node);
             } else if (externalRef && typeof externalRef === 'object') {
-                // eslint-disable-next-line no-param-reassign
                 externalRef.current = node;
             }
         },

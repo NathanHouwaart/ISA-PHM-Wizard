@@ -1,22 +1,24 @@
 // src/components/TabSwitcher.js
 import React from 'react';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import { TooltipButton } from './Widgets/TooltipButton';
+import TooltipButton from './Widgets/TooltipButton';
+import { cn } from '../utils/utils';
 
-const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
+const TabSwitcher = ({ selectedTab, onTabChange, tabs, className = '' }) => {
     return (
-        <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm">
+        <div className={cn("flex bg-gray-100 rounded-lg p-1 border border-gray-300 mb-4 shadow-sm", className)}>
             {tabs.map((tab) => (
                  <TooltipButton 
                     key={tab.id}
-                    className={`bg-transparent cursor-pointer w-full justify-around py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
+                    className={`bg-transparent cursor-pointer flex-1 min-w-0 justify-center py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 ${selectedTab === tab.id
                         ? 'bg-white text-blue-600 shadow-md'
                         : 'text-gray-600 hover:bg-gray-200'
                         }`}
                     onClick={() => onTabChange(tab.id)}
                     tooltipText={tab.tooltip}
                 >
-                    {tab.label}
+                    <span className="block w-full text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                        {tab.label}
+                    </span>
                 </TooltipButton>
             ))}
         </div>
@@ -24,7 +26,11 @@ const TabSwitcher = ({ selectedTab, onTabChange, tabs }) => {
 };
 
 
-export const TabPanel = ({ isActive, children }) => {
+export const TabPanel = ({ isActive, children, unmountOnHide = false }) => {
+    if (!isActive && unmountOnHide) {
+        return null;
+    }
+
     return (
         <div
             className={`transition-opacity overflow-hidden duration-500 ease-in-out ${isActive ? 'opacity-100 max-h-[9999px]' : 'opacity-0 max-h-0'

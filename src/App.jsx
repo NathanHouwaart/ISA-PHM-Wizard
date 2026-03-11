@@ -20,7 +20,6 @@ const IsaQuestionnaire = React.lazy(() => import("./pages/IsaQuestionnaire"));
 
 // Demo/test pages - only loaded in development mode
 const SimpleRevoGridTest = isDev ? React.lazy(() => import("./pages/__demo__/SimpleRevoGridTest")) : null;
-const GridTest = isDev ? React.lazy(() => import("./pages/__demo__/GridTest")) : null;
 const FileSystemTest = isDev ? React.lazy(() => import("./pages/__demo__/FileSystemTest")) : null;
 const FilePickerTest = isDev ? React.lazy(() => import("./pages/__demo__/FilePickerTest")) : null;
 const NewGrid = isDev ? React.lazy(() => import("./pages/__demo__/NewGrid")) : null;
@@ -69,14 +68,6 @@ function App() {
                 element={
                   <Suspense fallback={<div className="p-8 text-center">Loading demo...</div>}>
                     <SimpleRevoGridTest />
-                  </Suspense>
-                } 
-              />
-              <Route 
-                path="/demo/gridtest" 
-                element={
-                  <Suspense fallback={<div className="p-8 text-center">Loading demo...</div>}>
-                    <GridTest />
                   </Suspense>
                 } 
               />

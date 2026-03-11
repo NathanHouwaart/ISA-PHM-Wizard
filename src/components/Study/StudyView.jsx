@@ -1,6 +1,6 @@
 import React from 'react';
 
-const StudyView = (props) => {
+const StudyView = () => {
     return (
         <div>
             

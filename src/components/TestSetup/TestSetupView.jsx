@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TestSetupView = (props) => {
+const TestSetupView = () => {
     return (
         <div>
             TestSetupView

@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
-import { Save, Star, X } from "lucide-react";
-import { formatContactName } from "../../utils/utils";
+import { useState, useEffect } from "react";
+import { useProjectData } from "../../contexts/GlobalDataContext";
+import { Save, X } from "lucide-react";
 import FormField from "../Form/FormField";
 import TooltipButton from "../Widgets/TooltipButton";
 import Heading3 from "../Typography/Heading3";
@@ -9,9 +8,9 @@ import Paragraph from "../Typography/Paragraph";
 
 import { PUBLICATION_STATUS_OPTIONS } from "../../constants/publicationStatuses";
 
-export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
+const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { contacts } = useGlobalDataContext();
+  const { contacts } = useProjectData();
 
   const [formData, setFormData] = useState({
     title: item?.title || '',
@@ -53,42 +52,6 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
       [e.target.name]: e.target.value
     }));
   };
-
-  // Add contact
-  const handleAddContact = useCallback((input) => {
-    const contactObj = typeof input === 'object'
-      ? input
-      : contacts.find(a => formatContactName(a).toLowerCase() === input.toLowerCase());
-
-    if (!contactObj) return;
-
-    setSelectedContacts(prev => {
-      if (prev.some(contact => contact.id === contactObj.id)) return prev;
-
-      const nextContacts = [...prev, { ...contactObj }];
-      // Do not auto-set the corresponding contact when adding. The user must
-      // explicitly choose the corresponding contact via the UI.
-      return nextContacts;
-    });
-  }, [contacts, correspondingContactId]);
-
-  // Remove Contact
-  const handleRemoveContact = useCallback((contactToRemove) => {
-    setSelectedContacts(prev => {
-      const updated = prev.filter(contact => contact.id !== contactToRemove.id);
-      if (contactToRemove.id === correspondingContactId) {
-        // Clear corresponding contact instead of implicitly assigning another.
-        setCorrespondingContactId('');
-      }
-      return updated;
-    });
-  }, [correspondingContactId]);
-
-  const handleSetCorrespondingContact = useCallback((contactId) => {
-    setCorrespondingContactId(contactId);
-  }, []);
-
-  // Contacts are stored as simple objects and corresponding author selection remains explicit.
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -184,11 +147,9 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
           tags={contacts}
           onChange={(e) => {
             const next = Array.isArray(e.target.value) ? e.target.value : [];
-            // Determine whether this change added a new author (length increased)
-            const addedAnAuthor = next.length > selectedContacts.length;
-                    setSelectedContacts(next);
-                    // Do not auto-set correspondingContactId here. Corresponding author
-                    // must be chosen explicitly by clicking the corresponding control.
+            setSelectedContacts(next);
+            // Do not auto-set correspondingContactId here. Corresponding author
+            // must be chosen explicitly by clicking the corresponding control.
           }}
           correspondingAuthorId={correspondingContactId}
           onCorrespondingAuthorChange={setCorrespondingContactId}
@@ -219,3 +180,5 @@ export const PublicationForm = ({ item, onSave, onCancel, isEditing = false }) =
     </div>
   );
 };
+
+export default PublicationForm;

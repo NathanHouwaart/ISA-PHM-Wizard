@@ -1,15 +1,16 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useFileSystem } from './useFileSystem';
 import { directoryOpen } from 'browser-fs-access';
 
 // Mock browser-fs-access
-jest.mock('browser-fs-access', () => ({
-  directoryOpen: jest.fn(),
+vi.mock('browser-fs-access', () => ({
+  directoryOpen: vi.fn(),
 }));
 
 describe('useFileSystem', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset window.showDirectoryPicker mock
     delete window.showDirectoryPicker;
   });
@@ -19,11 +20,11 @@ describe('useFileSystem', () => {
       const { result } = renderHook(() => useFileSystem());
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.progress).toEqual({ percent: 0, message: '' });
+      expect(result.current.progress).toBeNull();
     });
 
     it('should detect native API support in Chromium', () => {
-      window.showDirectoryPicker = jest.fn();
+      window.showDirectoryPicker = vi.fn();
       
       const { result } = renderHook(() => useFileSystem());
 
@@ -101,7 +102,7 @@ describe('useFileSystem', () => {
       const progressUpdates = [];
       
       await act(async () => {
-        await result.current.pickAndIndexDirectory((progress) => {
+        await result.current.pickAndIndexDirectory((_progress) => {
           progressUpdates.push({ ...result.current.progress });
         });
       });
@@ -209,7 +210,7 @@ describe('useFileSystem', () => {
         },
       };
 
-      window.showDirectoryPicker = jest.fn().mockResolvedValue(mockRootHandle);
+      window.showDirectoryPicker = vi.fn().mockResolvedValue(mockRootHandle);
 
       const { result } = renderHook(() => useFileSystem());
 
@@ -224,7 +225,7 @@ describe('useFileSystem', () => {
     });
 
     it('should fallback to browser-fs-access if native fails', async () => {
-      window.showDirectoryPicker = jest.fn().mockRejectedValue(
+      window.showDirectoryPicker = vi.fn().mockRejectedValue(
         new Error('Native API failed')
       );
 
@@ -246,7 +247,7 @@ describe('useFileSystem', () => {
     });
 
     it('should handle user cancellation of native picker', async () => {
-      window.showDirectoryPicker = jest.fn().mockResolvedValue(null);
+      window.showDirectoryPicker = vi.fn().mockResolvedValue(null);
 
       const { result } = renderHook(() => useFileSystem());
 
@@ -382,7 +383,7 @@ describe('useFileSystem', () => {
       });
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.progress).toEqual({ percent: 0, message: '' });
+      expect(result.current.progress).toBeNull();
     });
   });
 });

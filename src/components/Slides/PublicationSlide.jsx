@@ -1,5 +1,4 @@
-import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit2, Trash2, Save, X, User, Mail, MapPin, Calendar } from 'lucide-react';
+import React, { forwardRef } from 'react';
 import useResizeObserver from '../../hooks/useResizeObserver';
 import useCombinedRefs from '../../hooks/useCombinedRefs';
 
@@ -20,6 +19,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
 
     const resizeElementRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
+    const pubs = usePublications();
 
     return (
         <div ref={combinedRef}>
@@ -29,7 +29,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Manage the contributors to the investigation, and assign their roles.
+                Manage the publications related to the project.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-4 border-gray-300 border rounded-lg pb-2'>
@@ -37,7 +37,7 @@ export const PublicationSlide = forwardRef(({ onHeightChange}, ref) => {
                     onHeightChange={() => { }}
                     itemHook={usePublications} // This hook will need to pull 'studies' from the global context
                 >
-                    <CollectionTitle>Publications</CollectionTitle>
+                    <CollectionTitle>Publications ({pubs?.items?.length || 0})</CollectionTitle>
                     <CollectionSubtitle>Add, Remove And Edit Publications</CollectionSubtitle>
                     <CollectionAddButtonText>Add Publication</CollectionAddButtonText>
                     <CollectionEmptyStateTitle>No Publication Found</CollectionEmptyStateTitle>

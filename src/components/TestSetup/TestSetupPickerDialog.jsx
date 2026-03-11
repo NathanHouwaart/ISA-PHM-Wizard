@@ -8,6 +8,7 @@ import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import IconTooltipButton from '../Widgets/IconTooltipButton';
 import TestSetupSelectableCard from './TestSetupSelectableCard';
+import Z_INDEX from '../../constants/zIndex';
 
 /**
  * TestSetupPickerDialog
@@ -57,9 +58,9 @@ const TestSetupPickerDialog = ({
   };
 
   const modal = (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300`} />
-      <div className="relative z-[91] w-full max-w-6xl flex flex-col" style={{ maxHeight: 'calc(100vh - 32px)' }}>
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: Z_INDEX.DIALOG }}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300" style={{ zIndex: Z_INDEX.MODAL_BACKDROP }} />
+      <div className="relative w-full max-w-6xl flex flex-col" style={{ maxHeight: 'calc(100vh - 32px)', zIndex: Z_INDEX.DIALOG + 1 }}>
         <div
           className={`bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 transform transition-all duration-300 ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} flex flex-col overflow-hidden`}
           style={{ height: '80vh', maxHeight: '80vh' }}

@@ -7,12 +7,19 @@ import Paragraph from './Typography/Paragraph';
 import Heading3 from './Typography/Heading3';
 import TooltipButton from './Widgets/TooltipButton';
 
-export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight }) {
+const EntityMappingPanel = ({ name, tileNamePrefix, itemHook, mappings, handleInputChange, disableAdd = false, minHeight: _minHeight }) => {
 
 
-    const { items, updateItem, addItem, removeItem, cardComponent } = itemHook();
-
-    const MappingCardComponent = cardComponent();
+    const hookApi = itemHook();
+    const {
+        items = [],
+        updateItem = () => {},
+        addItem = () => {},
+        removeItem = () => {},
+        components = {},
+    } = hookApi ?? {};
+    const MappingCardComponent = components.mappingCard ?? null;
+    const canCreate = typeof addItem === 'function';
 
     // Provide a stable controller to mapping cards. If the parent passed an explicit
     // handleInputChange or mappings array we prefer that, otherwise use the global controller.
@@ -24,14 +31,15 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
     const selectedEntity = useMemo(() => items[selectedEntityIndex], [items, selectedEntityIndex]);
 
     return (
-        <div className='flex' style={minHeight ? { minHeight } : undefined}>
+        <div className='flex flex-col md:flex-row gap-6 h-full' >
 
             {/* Sidebar for Variable Navigation */}
-            <div className="w-full overflow-auto md:w-1/4  bg-white border border-gray-200 rounded-xl p-4 flex flex-col flex-shrink-0 mb-6 md:mb-0 md:mr-6">
-                <Heading3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+            <div className="w-full md:w-1/6 bg-white border border-gray-300 rounded-2xl p-4 flex flex-col flex-shrink-0 shadow-md max-h-full">
+                <Heading3 className="text-lg text-gray-900">
                     {name}
                 </Heading3>
-                <div className="overflow-y-auto flex-grow">
+                <Paragraph className="text-xs text-gray-500 mb-2">Select an item.</Paragraph>
+                <div className="overflow-y-auto flex-1 space-y-2">
                     {items.map((item, index) => {
                         const key = item?.id ?? item?.uuid ?? `${name || 'mapping'}-${item?.name || index}`;
                         return (
@@ -39,9 +47,9 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                             key={key}
                             tooltipText={item.name}
                             onClick={() => setSelectedEntityIndex(index)}
-                            className={`w-full text-left p-3 rounded-lg mb-2 transition-colors duration-200 ${index === selectedEntityIndex
-                                ? 'bg-blue-600 text-white shadow-md'
-                                : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            className={`w-full text-left px-3 py-2 rounded-md transition-colors ${index === selectedEntityIndex
+                                ? 'bg-blue-600 text-white shadow'
+                                : 'bg-white text-gray-700 border border-gray-200 hover:bg-blue-50'
                                 }`}
                         >
                             {tileNamePrefix ? `${tileNamePrefix}${(index + 1).toString().padStart(2, '0')}` : item.name}
@@ -58,6 +66,7 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                             setSelectedEntityIndex(items.length);
                             setOpenEditOnAdd(true);
                         }}
+                        disabled={!canCreate}
                         className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                     >
                         <span className='px-2 flex'>
@@ -70,7 +79,7 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
 
             {/* Conditional rendering of tab content */}
             {selectedEntity ? (
-                <div className='w-full '>
+                <div className='flex-1 max-h-full overflow-y-auto'>
                     {MappingCardComponent &&
                         <MappingCardComponent
                             item={selectedEntity}
@@ -85,12 +94,12 @@ export function EntityMappingPanel({ name, tileNamePrefix, itemHook, mappings, h
                     }
                 </div>
             ) : (
-                <div className="h-full w-full flex items-center justify-center bg-white border-2 border-dashed border-gray-200 rounded-xl min-h-[220px]">
-                    <Paragraph className="text-gray-400 text-sm">Select an item from the list</Paragraph>
+                <div className="flex-1 min-w-0 flex items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm min-h-[220px]">
+                    <Paragraph className="text-gray-500 text-sm">Select an item from the list</Paragraph>
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
 export default EntityMappingPanel

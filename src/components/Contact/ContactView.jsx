@@ -1,9 +1,11 @@
-import { X, Mail, User, MapPin, Calendar, Edit2, Smartphone, Printer, Fingerprint, BriefcaseBusiness } from "lucide-react";
+import { X, Mail, MapPin, Edit2, Smartphone, Printer, Fingerprint, BriefcaseBusiness } from "lucide-react";
 import TooltipButton from "../Widgets/TooltipButton";
-import { CardParagraph } from "../Typography/Paragraph";
+import AvatarInitials from "../Widgets/AvatarInitials";
+import Heading3 from "../Typography/Heading3";
+import Paragraph from "../Typography/Paragraph";
 
 
-export const ContactView = ({ item, onSave, onCancel }) => {
+const ContactView = ({ item, onSave, onCancel }) => {
 
   const contact = item;
 
@@ -11,18 +13,21 @@ export const ContactView = ({ item, onSave, onCancel }) => {
     <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
       <div className="flex items-start justify-between mx-4 mb-6">
         <div className="mb-4 flex items-center space-x-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-            {contact.firstName?.[0]}{contact.lastName?.[0]}
-          </div>
+          <AvatarInitials 
+            name={`${contact.firstName || ''} ${contact.lastName || ''}`} 
+            size="lg"
+            gradientFrom="from-blue-500"
+            gradientTo="to-purple-600"
+          />
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">{contact.firstName} {contact.midInitials} {contact.lastName}</h3>
-            <p>
+            <Heading3 className="text-2xl font-bold text-gray-900">{contact.firstName} {contact.midInitials} {contact.lastName}</Heading3>
+            <Paragraph>
               {contact.roles && contact.roles.length > 0
                 ? contact.roles.join(', ')
                 : 'No roles assigned'
               }
-            </p>
-            <p className="text-sm text-gray-500">{contact.department}</p>
+            </Paragraph>
+            <Paragraph className="text-sm text-gray-500">{contact.department}</Paragraph>
           </div>
         </div>
         <TooltipButton
@@ -38,8 +43,8 @@ export const ContactView = ({ item, onSave, onCancel }) => {
         <div className="flex items-center space-x-3">
           <Mail className="w-5 h-5 text-gray-400" />
           <div>
-            <p className="text-sm text-gray-500">Email</p>
-            <p className="text-gray-900">{contact.email}</p>
+            <Paragraph className="text-sm text-gray-500">Email</Paragraph>
+            <Paragraph className="text-gray-900">{contact.email}</Paragraph>
           </div>
         </div>
 
@@ -47,8 +52,8 @@ export const ContactView = ({ item, onSave, onCancel }) => {
           <div className="flex items-center space-x-3">
             <Smartphone className="w-5 h-5 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500">Phone</p>
-              <p className="text-gray-900">{contact.phone}</p>
+              <Paragraph className="text-sm text-gray-500">Phone</Paragraph>
+              <Paragraph className="text-gray-900">{contact.phone}</Paragraph>
             </div>
           </div>
         )}
@@ -57,8 +62,8 @@ export const ContactView = ({ item, onSave, onCancel }) => {
           <div className="flex items-center space-x-3">
             <Printer className="w-5 h-5 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500">Fax</p>
-              <p className="text-gray-900">{contact.fax}</p>
+              <Paragraph className="text-sm text-gray-500">Fax</Paragraph>
+              <Paragraph className="text-gray-900">{contact.fax}</Paragraph>
             </div>
           </div>
         )}
@@ -67,8 +72,8 @@ export const ContactView = ({ item, onSave, onCancel }) => {
           <div className="flex items-center space-x-3">
             <MapPin className="w-5 h-5 text-gray-400" />
             <div>
-              <p className="text-sm text-gray-500">Location</p>
-              <p className="text-gray-900">{contact.address}</p>
+              <Paragraph className="text-sm text-gray-500">Location</Paragraph>
+              <Paragraph className="text-gray-900">{contact.address}</Paragraph>
             </div>
           </div>
         )}
@@ -87,7 +92,7 @@ export const ContactView = ({ item, onSave, onCancel }) => {
           <div className="flex items-center space-x-3">
             <Fingerprint className="w-5 h-5 text-gray-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-500">ORCID</p>
+              <Paragraph className="text-sm text-gray-500">ORCID</Paragraph>
               <a href={`https://orcid.org/${contact.orcid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 break-all">
                 {contact.orcid}
               </a>
@@ -99,8 +104,8 @@ export const ContactView = ({ item, onSave, onCancel }) => {
           <div className="flex items-center space-x-3">
             <BriefcaseBusiness className="w-5 h-5 text-gray-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-500">Affiliation</p>
-              <p className="text-gray-900 break-words">{contact.affiliations.join(', ')}</p>
+              <Paragraph className="text-sm text-gray-500">Affiliation</Paragraph>
+              <Paragraph className="text-gray-900 break-words">{contact.affiliations.join(', ')}</Paragraph>
             </div>
           </div>
         )}

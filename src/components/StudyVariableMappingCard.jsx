@@ -1,135 +1,215 @@
-import { Edit2, Trash2 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
+
 import FormField from './Form/FormField';
-import EditEntityModal from './EditEntityModal';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
-import { VARIABLE_TYPE_OPTIONS } from '../constants/variableTypes';
 import Heading3 from './Typography/Heading3';
 import Paragraph from './Typography/Paragraph';
+import useStudyRuns from '../hooks/useStudyRuns';
+import ItemSelector from './Selectors/ItemSelector';
+import { TabPanel } from './TabSwitcher';
+import { useProjectData } from '../contexts/GlobalDataContext';
 
-export function StudyVariableMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled }) {
+const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange, singleRunMode = false }) => {
+    const studyRuns = useStudyRuns();
+    const { studies, studyVariables } = useProjectData();
 
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    // When singleRunMode is true, item is the active run passed from DualSidebarStudyRunPanel
+    // In that case, we just display that single run's mapping
+    const activeVariable = singleRunMode ? studyVariables[itemIndex] : item;
 
-    // Open modal when parent signals an add-created item
-    if (openEdit && !isEditModalOpen) {
-        setIsEditModalOpen(true);
-        onOpenHandled && onOpenHandled();
-    }
 
-    const { studies } = useGlobalDataContext();
+    const runsByStudy = useMemo(() => {
+        const grouped = new Map();
+        studyRuns.forEach((run) => {
+            if (!grouped.has(run.studyId)) {
+                grouped.set(run.studyId, []);
+            }
+            grouped.get(run.studyId).push(run);
+        });
+        return grouped;
+    }, [studyRuns]);
 
-    const filteredMappings = studies.map(s =>
-        mappings.find(m => m.studyVariableId === item.id && m.studyId === s.id) || {
-            studyVariableId: item.id,
-            studyId: s.id,
-            value: ''
+    const studyTabs = useMemo(() => {
+        return studies
+            .map((study) => ({
+                studyId: study.id,
+                label: study.name || 'Untitled study',
+                runs: runsByStudy.get(study.id) || []
+            }))
+            .filter((group) => group.runs.length > 0);
+    }, [studies, runsByStudy]);
+
+    const [activeStudyId, setActiveStudyId] = useState(studyTabs[0]?.studyId);
+
+    useEffect(() => {
+        if (!studyTabs.length) {
+            setActiveStudyId(undefined);
+            return;
         }
-    );
+        if (!activeStudyId || !studyTabs.some((tab) => tab.studyId === activeStudyId)) {
+            setActiveStudyId(studyTabs[0].studyId);
+        }
+    }, [studyTabs, activeStudyId]);
+
+    const mappingByRunId = useMemo(() => {
+        const lookup = new Map();
+        studyRuns.forEach((run) => {
+            const match = mappings.find((m) => {
+                if (m.studyRunId) {
+                    return m.studyVariableId === item.id && m.studyRunId === run.runId;
+                }
+                return m.studyVariableId === item.id && m.studyId === run.studyId;
+            });
+            lookup.set(run.runId, match || {
+                studyVariableId: item.id,
+                studyRunId: run.runId,
+                studyId: run.studyId,
+                value: ''
+            });
+        });
+        return lookup;
+    }, [studyRuns, mappings, item.id]);
 
     return (
         <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
-            {/* Variable Header, Edit/Remove Buttons */}
-            <div className="flex justify-between items-start mb-4 border-b pb-4">
-                <Heading3 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
-                    {item.name}
+            <div className="mb-4 border-b pb-4">
+                <Heading3 className="text-3xl font-bold text-gray-800">
+                    {activeVariable?.name || 'Unnamed variable'}
                 </Heading3>
-                <div className="flex space-x-3">
-                    <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                        title="Edit Variable Details"
-                    >
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        Edit Details
-                    </button>
-                    <button
-                        onClick={() => removeParameter(item.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm transform hover:scale-105"
-                        title="Remove Parameter"
-                    >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove
-                    </button>
-                </div>
             </div>
             <Paragraph className="text-md text-gray-700 mb-4">
-                {item.description}
+                {activeVariable?.description}
             </Paragraph>
             <div className="flex justify-between items-center text-sm font-medium text-gray-600 bg-gray-50 px-4 py-2 rounded-md mb-6 border border-gray-200">
-                <span>Type: <span className="font-semibold text-gray-800">{item.type}</span></span>
-                {item.unit && <span>Unit: <span className="font-semibold text-gray-800">{item.unit}</span></span>}
+                <span>Type: <span className="font-semibold text-gray-800">{activeVariable?.type}</span></span>
+                {activeVariable?.unit && <span>Unit: <span className="font-semibold text-gray-800">{activeVariable?.unit}</span></span>}
             </div>
 
-            {/* mappings Grid - this is where the dynamic inputs are */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredMappings.map((mapping, index) => {
-                    return (
-                        <div
-                            key={`${mapping.studyId}-${mapping.studyVariableId}`}
-                            className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
-                        >
-                            <FormField
-                                label={`Study S${(index + 1).toString().padStart(2, '0')}`}
-                                name={`Study S${(index + 1).toString().padStart(2, '0')}`}
-                                value={mapping ? mapping.value : ''} // Ensure value is not undefined
-                                commitOnBlur={true}
-                                onChange={(e) =>
-                                    handleInputChange(
-                                        itemIndex,
-                                        { studyVariableId: mapping.studyVariableId, studyId: mapping.studyId },
-                                        e.target.value
-                                    )
-                                }
-                                placeholder={"Enter value"}
-                            />
-                        </div>
-                    )
-                })}
-            </div>
+            {singleRunMode ? (
+                // When used in DualSidebarStudyRunPanel: item is the active run
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    {studyVariables.map((variable, varIndex) => {
+                        const mapping = mappings.find((m) => 
+                            m.studyVariableId === variable.id && 
+                            (m.studyRunId === item.runId || m.studyRunId === item.id)
+                        ) || {
+                            studyVariableId: variable.id,
+                            studyRunId: item.runId || item.id,
+                            studyId: item.studyId,
+                            value: ''
+                        };
 
-            {/* Edit Variable Details Modal */}
-            <div className={`transition-all duration-200 ${(isEditModalOpen) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <EditEntityModal
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    onSave={onSave}
-                    initialData={item}
-                    title={`Edit Variable: ${item.name}`}
-                    fields={[
-                        { 
-                            name: 'name', 
-                            label: 'Variable Name', 
-                            explanation: "Define all variables that can be varied in the experiments. As many variables can be added/removed as required to describe the experiment.",
-                            example: ": Fault type, fault severity or motor speed or other."
-                        
-                        },
-                        { 
-                            name: 'type', 
-                            label: 'Variable Type', 
-                            type: 'select', 
-                            options: VARIABLE_TYPE_OPTIONS,
-                            explanation: "Describe the type of the variable (e.g. operating condition/fault specification).",
-                            example: "Quantitative fault specification, qualitative fault specification, operational condition, environmental condition or other."
-                        },
-                        { 
-                            name: 'unit', 
-                            label: 'Unit',  
-                            explanation: "Unit corresponding with the variable. Please leave empty if none.",
-                            example: "Hz, RPM, m/s."
-                        },
-                        { 
-                            name: 'description', 
-                            label: 'Description', 
-                            type: 'textarea',
-                            explanation: "Description of the variable.",
-                            example: "Measures the impact or intensity of the fault."
-                        }
-                    ]}
-                />
-            </div>
+                        return (
+                            <div key={variable.id} className="bg-white border border-blue-100 rounded-xl p-4 shadow-sm mb-3">
+                                <div className="mb-2">
+                                    <Heading3 className="text-base font-semibold text-blue-900">
+                                        {variable.name}
+                                    </Heading3>
+                                    <Paragraph className="text-xs text-gray-600">{variable.description}</Paragraph>
+                                </div>
+                                <FormField
+                                    label=""
+                                    name={`mapping-${variable.id}`}
+                                    value={mapping.value || ''}
+                                    commitOnBlur
+                                    className="w-full"
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            varIndex,
+                                            {
+                                                studyVariableId: variable.id,
+                                                studyRunId: item.runId || item.id,
+                                                studyId: item.studyId
+                                            },
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Enter mapped value"
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                // Original EntityMappingPanel usage: item is a variable, show all runs
+                <>
+                    {studyTabs.length === 0 ? (
+                <Paragraph className="italic text-gray-500">
+                    No studies with runs available. Add runs to start mapping this variable.
+                </Paragraph>
+            ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <ItemSelector
+                        items={studyTabs}
+                        selectedId={activeStudyId}
+                        onChange={setActiveStudyId}
+                        idKey="studyId"
+                        labelKey="label"
+                        getBadgeContent={(study) => `${study.runs.length} run${study.runs.length !== 1 ? 's' : ''}`}
+                        placeholder="Search studies..."
+                        searchLabel="Search Studies"
+                        className="mb-3"
+                    />
+
+                    {studyTabs.map((study) => (
+                        <TabPanel key={study.studyId} isActive={activeStudyId === study.studyId}>
+                            {study.runs.length === 0 ? (
+                                <Paragraph className="text-sm text-gray-500 italic">
+                                    This study has no runs defined yet.
+                                </Paragraph>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {study.runs.map((run) => {
+                                        const mapping = mappingByRunId.get(run.runId);
+                                        return (
+                                            <div
+                                                key={`${run.runId}-${item.id}`}
+                                                className="bg-white border border-blue-100 rounded-xl p-4 shadow-sm flex flex-col gap-3"
+                                                >
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[11px] uppercase tracking-wide text-blue-500">
+                                                            {study.label}
+                                                        </p>
+                                                        <Heading3 className="text-base font-semibold text-blue-900">
+                                                            {run.runCount > 1 ? `Run ${run.runNumber}` : 'Single run'}
+                                                        </Heading3>
+                                                    </div>
+                                                    <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700">
+                                                        {run.studyIndex !== undefined ? `S${run.studyIndex + 1}` : 'Run'}
+                                                    </span>
+                                                </div>
+                                                <FormField
+                                                    label=""
+                                                    name={`mapping-${run.runId}`}
+                                                    value={mapping?.value || ''}
+                                                    commitOnBlur
+                                                    className="w-full min-w-[160px]"
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            itemIndex,
+                                                            {
+                                                                studyVariableId: mapping.studyVariableId,
+                                                                studyRunId: mapping.studyRunId || run.runId,
+                                                                studyId: run.studyId
+                                                            },
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    placeholder="Enter mapped value"
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </TabPanel>
+                    ))}
+                </div>
+            )}
+                </>
+            )}
         </div >
-    )
-}
+    );
+};
 
-export default StudyVariableMappingCard
+export default StudyVariableMappingCard;

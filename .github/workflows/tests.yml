@@ -12,11 +12,6 @@ on:
         required: false
         default: false
         type: boolean
-      backend_url:
-        description: Backend base URL for integration lane
-        required: false
-        default: http://localhost:8080
-        type: string
 
 jobs:
   quality:
@@ -34,13 +29,13 @@ jobs:
       - run: npm run build
 
   integration:
-    name: Integration (Manual)
+    name: Integration
     needs: quality
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_integration }}
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_integration) }}
     runs-on: ubuntu-latest
     env:
       RUN_BACKEND_INTEGRATION: "1"
-      BACKEND_URL: ${{ inputs.backend_url }}
+      BACKEND_URL: http://127.0.0.1:8080
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,12 +43,10 @@ jobs:
           node-version: 20
           cache: npm
       - name: Set up Python
-        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.9'
       - name: Start local backend
-        if: ${{ startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -62,7 +55,7 @@ jobs:
           git clone --depth 1 https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
           cd "${BACKEND_DIR}"
 
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
           # Required by backend conversion script in most environments.
           python -m pip install isatools==0.14.2
@@ -104,12 +97,12 @@ jobs:
       - run: npm ci
       - run: npm run test:integration
       - name: Print backend logs on failure
-        if: ${{ failure() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
+        if: ${{ failure() }}
         run: |
           echo "---- backend.log ----"
           cat "${RUNNER_TEMP}/backend.log" || true
       - name: Stop local backend
-        if: ${{ always() && (startsWith(inputs.backend_url, 'http://localhost') || startsWith(inputs.backend_url, 'http://127.0.0.1')) }}
+        if: ${{ always() }}
         shell: bash
         run: |
           if [ -f "${RUNNER_TEMP}/backend.pid" ]; then

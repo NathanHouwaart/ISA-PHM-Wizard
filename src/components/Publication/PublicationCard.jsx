@@ -1,16 +1,17 @@
 import { ArrowDown, ArrowUp, Edit2, Trash2, UserPen, Mail, Link, BookOpen } from "lucide-react";
-import { useGlobalDataContext } from "../../contexts/GlobalDataContext";
+import { useProjectData } from "../../contexts/GlobalDataContext";
 import { formatContactName } from "../../utils/utils";
 import Heading3 from "../Typography/Heading3";
 import Paragraph from "../Typography/Paragraph";
 import TooltipButton from "../Widgets/TooltipButton";
+import AvatarInitials from "../Widgets/AvatarInitials";
 // Display contact list and corresponding badge. Contribution priority UI was removed.
 
-export const PublicationCard = ({ item, onEdit, onRemove }) => {
+const PublicationCard = ({ item, onEdit, onRemove }) => {
 
     const publication = item;
 
-    const { contacts } = useGlobalDataContext();
+    const { contacts } = useProjectData();
 
     const correspondingContactId = publication.correspondingContactId || null;
     const contactDetails = publication.contactList
@@ -30,10 +31,12 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                        {/* Display initials from the first two words of the title, if available */}
-                        {publication.title.split(" ").slice(0, 2).map(word => word[0]).join("")}
-                    </div>
+                    <AvatarInitials 
+                        name={publication.title} 
+                        size="md"
+                        gradientFrom="from-blue-500"
+                        gradientTo="to-purple-600"
+                    />
                     <div className="flex-1 min-w-0">
                         <Heading3>{publication.title}</Heading3>
                         <div className="mt-1 text-sm text-gray-500 space-y-2">
@@ -126,3 +129,5 @@ export const PublicationCard = ({ item, onEdit, onRemove }) => {
         </div>
     );
 };
+
+export default PublicationCard;

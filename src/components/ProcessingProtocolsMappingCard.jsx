@@ -1,15 +1,18 @@
 
 
-import { Edit2, PlusCircleIcon, Trash2, Layers } from 'lucide-react';
+import { Edit2, PlusCircleIcon, Trash2, Layers, HelpCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import FormField from './Form/FormField';
 import EditEntityModal from './EditEntityModal';
-import { useGlobalDataContext } from '../contexts/GlobalDataContext';
+import { useProjectData } from '../contexts/GlobalDataContext';
+import Heading2 from './Typography/Heading2';
+import Paragraph from './Typography/Paragraph';
+import TooltipButton from './Widgets/TooltipButton';
+import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from './Tooltip/AnimatedTooltipProvider';
 
-
-export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled }) {
-
+const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled}) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
     // If parent requests opening edit modal for newly added item, open and notify parent
     if (openEdit && !isEditModalOpen) {
@@ -17,7 +20,7 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
         onOpenHandled && onOpenHandled();
     }
 
-    const { selectedTestSetupId, testSetups } = useGlobalDataContext();
+    const { selectedTestSetupId, testSetups } = useProjectData();
 
     const selectedTestSetup = testSetups.find(s => s.id === selectedTestSetupId);
     // Normalize sensors to array form
@@ -70,32 +73,58 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
             {item && selectedTestSetupId ? (
                 <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col min-h-full">
                     {/* Protocol Header, Edit/Remove Buttons */}
-                    <div className='mb-4 border-b pb-4'>
-                        <div className="flex justify-between items-start ">
-                            <h2 className="text-3xl font-bold text-gray-800 flex-grow pr-4">
+                    <div className='mb-3 border-b pb-2'>
+                        <div className="flex justify-between items-center">
+                            <Heading2 className="text-3xl flex-grow pr-4">
                                 {item.name}
-                            </h2>
+                            </Heading2>
 
                             <div className="flex space-x-3">
-                                <button
+                                <TooltipButton
+                                    tooltipText="Show field help"
+                                    onClick={() => setIsTooltipVisible(prev => !prev)}
+                                    className="bg-transparent h-10 w-10 p-0 flex items-center justify-center group hover:bg-gray-200 rounded-full transition-colors duration-200"
+                                >
+                                    <HelpCircle className="h-5 w-5 text-gray-500 group-hover:text-blue-500 transition-colors duration-200" />
+                                </TooltipButton>
+                                <TooltipButton
+                                    tooltipText="Edit protocol details"
                                     onClick={() => setIsEditModalOpen(true)}
                                     className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
-                                    title="Edit Protocol Details"
                                 >
-                                    <Edit2 className="w-4 h-4 mr-2" />
-                                    Edit Details
-                                </button>
-                                <button
+                                    <span className="flex items-center">
+                                        <Edit2 className="w-4 h-4 mr-2" />
+                                        Edit Details
+                                    </span>
+                                </TooltipButton>
+                                <TooltipButton
+                                    tooltipText="Delete protocol"
                                     onClick={() => removeParameter(item.id)}
-                                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
-                                    title="Remove Protocol"
+                                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center text-sm"
                                 >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Remove
-                                </button>
+                                    <span className="flex items-center">
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Remove
+                                    </span>
+                                </TooltipButton>
                             </div>
                         </div>
-                        <p className="text-md text-gray-700 mt-2 italic">{item.description || "no description available"}</p>
+                        <Paragraph className="text-sm text-gray-700 mt-1 italic">{item.description || "no description available"}</Paragraph>
+                        
+                        <AnimatedTooltip isVisible={isTooltipVisible}>
+                            <AnimatedTooltipExplanation>
+                                <div className="space-y-2">
+                                    <div><strong>Specification:</strong> Specify the data processing detail.</div>
+                                    <div><strong>Unit:</strong> Specify the unit of the data processing detail, if applicable.</div>
+                                </div>
+                            </AnimatedTooltipExplanation>
+                            <AnimatedTooltipExample>
+                                <div className="space-y-2">
+                                    <div><strong>Specification example:</strong> Butterworth bandpass filter, 4th order, 0.5-20Hz</div>
+                                    <div><strong>Unit example:</strong> Hz, g, m/s²</div>
+                                </div>
+                            </AnimatedTooltipExample>
+                        </AnimatedTooltip>
                     </div>
 
                     {/* mappings Grid - specification + unit per sensor */}
@@ -108,27 +137,28 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
                                     className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
                                 >
                                     <div className="mb-2 font-semibold text-gray-700">{sensor.alias || sensor.name || `Sensor ${String(index + 1).padStart(2, '0')}`}</div>
-                                    <FormField
-                                        label="Specification"
-                                        name={`specification`}
-                                        value={val.specification || ''}
-                                        commitOnBlur={true}
-                                        onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), specification: e.target.value })}
-                                        placeholder="Enter specification"
-                                        explanation = "Specify the data processing detail."
-                                        example = "Butterworth bandpass filter, 4th order, 0.5-20Hz"
-                                    />
-
-                                    <FormField
-                                        label="Unit"
-                                        name={`unit`}
-                                        value={val.unit || ''}
-                                        commitOnBlur={true}
-                                        onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), unit: e.target.value })}
-                                        placeholder="Enter unit"
-                                        explanation = "Specify the unit of the data processing detail, if applicable."
-                                        example = "Hz, g, m/s²"
-                                    />
+                                    <div className="flex gap-3">
+                                        <div className="flex-1">
+                                            <FormField
+                                                label="Specification"
+                                                name={`specification`}
+                                                value={val.specification || ''}
+                                                commitOnBlur={true}
+                                                onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), specification: e.target.value })}
+                                                placeholder="Enter specification"
+                                            />
+                                        </div>
+                                        <div className="w-32">
+                                            <FormField
+                                                label="Unit"
+                                                name={`unit`}
+                                                value={val.unit || ''}
+                                                commitOnBlur={true}
+                                                onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), unit: e.target.value })}
+                                                placeholder="Enter unit"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             )
                         })}
@@ -163,12 +193,12 @@ export function ProcessingProtocolsMappingCard({ item, itemIndex, mappings, onSa
             ) : (
                 <div className="h-full w-full flex flex-col items-center justify-center text-gray-500 text-lg">
                     <Layers className="w-16 h-16 mb-4 text-gray-500" />
-                    <p className="text-xl font-semibold">No test setup selected</p>
-                    <p>Go to the project settings (icon with three layers) and select a test setup for your project</p>
+                    <Paragraph className="text-xl font-semibold">No test setup selected</Paragraph>
+                    <Paragraph>Go to the project settings (icon with three layers) and select a test setup for your project</Paragraph>
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
 export default ProcessingProtocolsMappingCard;

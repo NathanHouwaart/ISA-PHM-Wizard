@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from 'react';
 import applyFilesToRange from './dataGridUtils';
 import { captureGridSelection } from './dataGridHelpers';
-import { useGlobalDataContext } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import TooltipButton from '../Widgets/TooltipButton';
 
 /**
@@ -19,10 +19,10 @@ export default function FilePickerPlugin({ api = {} }) {
   // future-proof: api = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug }
   const { gridRef, getFlatColumns, hookRowData = [], fields = {}, updateMappingsBatch, showDebug } = api;
 
-  const fileInputRef = useRef(null);
   const selectionSnapshotRef = useRef(null);
   const filesRef = useRef(null);
-  const { openExplorer, selectedDataset } = useGlobalDataContext();
+  const { selectedDataset } = useProjectData();
+  const { openExplorer } = useProjectActions();
   
   // Disable button if no dataset is indexed
   const isDisabled = !selectedDataset;

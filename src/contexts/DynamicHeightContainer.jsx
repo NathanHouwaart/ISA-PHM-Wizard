@@ -1,6 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 // contexts/DynamicHeightContainerContext.js
 import React, { createContext, useContext, useRef, useState, useCallback, useEffect } from 'react';
-import useResizeObserver from '../hooks/useResizeObserver'; // Assuming this hook is external
 
 // Create the context
 const DynamicHeightContainerContext = createContext(null);

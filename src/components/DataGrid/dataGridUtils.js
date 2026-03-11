@@ -30,7 +30,6 @@ export function applyFilesToRange(range, rows, flatCols, files) {
   const sy = Math.min(y0, y1);
   const ey = Math.max(y0, y1);
 
-  const totalCells = (ey - sy + 1) * (ex - sx + 1);
   const fileArray = Array.prototype.slice.call(files || []);
 
   const results = [];

@@ -91,12 +91,16 @@ const AlertDecisionDialog = ({
     cancelTooltip,
     onConfirm,
     onCancel,
+    tertiaryLabel,
+    tertiaryTooltip,
+    onTertiary,
     showCancel = true,
     className,
     icon,
     children,
     confirmButtonProps = {},
     cancelButtonProps = {},
+    tertiaryButtonProps = {},
     overlayClassName,
     contentClassName,
     ...surfaceProps
@@ -186,6 +190,7 @@ const AlertDecisionDialog = ({
 
     const { className: confirmClassName, ...restConfirmButtonProps } = confirmButtonProps;
     const { className: cancelClassName, ...restCancelButtonProps } = cancelButtonProps;
+    const { className: tertiaryClassName, ...restTertiaryButtonProps } = tertiaryButtonProps;
 
     return createPortal(
         <div
@@ -235,6 +240,19 @@ const AlertDecisionDialog = ({
                                     {...restCancelButtonProps}
                                 >
                                     {cancelLabel}
+                                </TooltipButton>
+                            )}
+                            {tertiaryLabel && typeof onTertiary === 'function' && (
+                                <TooltipButton
+                                    onClick={() => onTertiary?.()}
+                                    tooltipText={tertiaryTooltip || tertiaryLabel}
+                                    className={cn(
+                                        'bg-gray-100 text-gray-700 hover:bg-gray-200',
+                                        tertiaryClassName
+                                    )}
+                                    {...restTertiaryButtonProps}
+                                >
+                                    {tertiaryLabel}
                                 </TooltipButton>
                             )}
                             <TooltipButton
