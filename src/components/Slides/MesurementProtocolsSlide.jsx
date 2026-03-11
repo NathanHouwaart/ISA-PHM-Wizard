@@ -149,7 +149,7 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
             </SlidePageTitle>
 
             <SlidePageSubtitle>
-                Measurement protocol describe how raw measurement data is acquired. Use this slide to view and manage per-sensor measurement protocol records and acquisition metadata such as sampling rate, phase, data acquisition unit, orientation, calibration parameters, and other sensor-specific settings.
+                Measurement protocols describe how raw measurement data is acquired. Use this slide to view and manage per-sensor measurement protocol records and acquisition metadata such as sampling rate, phase, data acquisition unit, orientation, calibration parameters, and other sensor-specific settings.
             </SlidePageSubtitle>
 
             <div className='bg-gray-50 p-3 border-gray-300 border rounded-lg pb-2 relative'>
