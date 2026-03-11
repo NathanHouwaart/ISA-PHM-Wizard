@@ -19,7 +19,7 @@ import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import { isFaultSpecification } from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import usePageTab from '../../hooks/usePageWidth';
+import { usePageTab } from '../../hooks/usePageWidth';
 
 const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
