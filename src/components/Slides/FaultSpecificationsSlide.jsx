@@ -20,7 +20,7 @@ import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { FAULT_SPEC_TYPES, isOperatingCondition } from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
-import usePageTab from '../../hooks/usePageWidth';
+import { usePageTab } from '../../hooks/usePageWidth';
 
 const plugins = { select: new SelectTypePlugin() };
 
