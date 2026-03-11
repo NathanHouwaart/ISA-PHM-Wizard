@@ -45,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.9'
       - name: Start local backend
         shell: bash
         run: |
@@ -55,7 +55,7 @@ jobs:
           git clone --depth 1 https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
           cd "${BACKEND_DIR}"
 
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
           # Required by backend conversion script in most environments.
           python -m pip install isatools==0.14.2
