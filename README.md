@@ -1,68 +1,76 @@
+﻿# ISA-PHM Wizard
 
-# ISA-PHM Wizard
+This README gives a high-level view of how the wizard implements ISA-PHM from the paper *ISA-PHM - a Standardized Format for Storing and Utilizing Metadata of Diagnostic and Prognostic Tests* ([PDF](docs/references/ISA-PHM_paper_final.pdf)). It focuses on project/session management, test setup authoring, questionnaire capture, and export-ready metadata structure.
 
-A small React + Vite application that helps create and manage ISA/PHM-style study metadata. The project is a work-in-progress and provides a set of tools for creating investigations, selecting test setups, mapping study variables, and exporting structured metadata.
+## What This Wizard Can Do
 
-This repository started as a course project and has been extended with an interactive data grid, mapping helpers, and a small landing experience.
+- Manage multiple projects in one workspace.
+- Configure each project with:
+  - Dataset index
+  - Experiment template (single-run or multi-run)
+  - Selected test setup
+- Build and maintain reusable test setups:
+  - Basic setup metadata
+  - Characteristics
+  - Sensors
+  - Configurations
+  - Measurement protocols
+  - Processing protocols
+- Fill an ISA-style questionnaire flow with 10 slides:
+  - Project information, contacts, publications
+  - Experiments/studies
+  - Fault specs and operating conditions
+  - Test matrix mappings
+  - Raw and processed output mappings
+- Use both simple card views and grid views for fast editing where available.
+- Export project data for backend conversion.
 
-## What’s in this repo
+## Typical Workflow
 
-- A React app bootstrapped with Vite
-- A `GlobalDataContext` provider that holds studies, test setups, mappings and other app data (persisted to localStorage)
-- Pages/components for:
-	- Landing / Home page (quick access to main tools)
-	- ISA Questionnaire form (capture investigation metadata)
-	- Test Setups management
-	- Study variable mapping grid(s)
-	- An About page that embeds the official ISA-PHM Dutch Prognostics Lab page and acts as a local wiki with extra notes
-- Several reusable UI and typography components under `src/components`
-- Utility hooks (e.g. `useDataGrid`, `useRichMappings`) in `src/hooks`
+1. Open project sessions and select or create a project.
+2. Configure project name, experiment template, dataset, and test setup.
+3. Build or update test setup content.
+4. Open ISA Questionnaire and complete all slides.
+5. Click `Convert to ISA-PHM`.
 
-## Recent changes
+## Documentation
 
-- Home page converted into a landing page with larger hero and big CTA cards for About, Test Setups and ISA Questionnaire.
-- About page now embeds the public ISA-PHM Dutch Prognostics Lab and provides a local wiki/notes area and a direct link to the official page.
-- A `PageWrapper` component centralizes the page background and card styling; pages can request a wider layout via the `widthClass` prop.
-- `NewGrid` branch merged into `main` (merge commit included in the repo history).
+All user guidance lives in [`docs/README.md`](docs/README.md).
 
-## Run locally
+Quick links:
 
-Install and start the dev server (PowerShell):
+- [`docs/README_GENERAL_USAGE.md`](docs/README_GENERAL_USAGE.md)
+- [`docs/README_TEST_SETUPS.md`](docs/README_TEST_SETUPS.md)
+- [`docs/README_QUESTIONNAIRES.md`](docs/README_QUESTIONNAIRES.md)
+- [`docs/README_EXAMPLE_PROJECTS.md`](docs/README_EXAMPLE_PROJECTS.md)
+- [`docs/README_MULTIPLE_RUNS.md`](docs/README_MULTIPLE_RUNS.md)
+- [`docs/README_ISA_QUESTIONNAIRE_SLIDES.md`](docs/README_ISA_QUESTIONNAIRE_SLIDES.md)
+- [`docs/README_TEST_SETUP_TABS.md`](docs/README_TEST_SETUP_TABS.md)
+
+## Run Locally
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Open the app at the URL reported by Vite (usually http://localhost:5173).
+Open the Vite URL (usually `http://localhost:5173/ISA-PHM-Wizard/#/`).
 
-Build for production and preview:
+## Build
 
 ```powershell
 npm run build
 npm run preview
 ```
 
-## Files of interest
-
-- `src/layout/PageWrapper.jsx` — global page background and centered card layout
-- `src/contexts/GlobalDataContext.jsx` — main application state and persistence
-- `src/pages/Home.jsx` — landing page (hero + CTAs)
-- `src/pages/About.jsx` — iframe embed of the ISA-PHM Dutch Prognostics Lab + local wiki
-- `src/pages/IsaQuestionnaire.jsx` — investigation form
-- `src/components` — UI components, typography, cards, grids
-- `src/hooks` — custom hooks used across the app
-
-## Notes & limitations
-
-- The About page uses an iframe to embed an external website. Many websites disallow embedding via `X-Frame-Options` or CSP. When embedding is blocked the app shows a fallback button to open the official site in a new tab.
-- Cross-origin iframes cannot be styled or controlled from the parent page due to browser security (same-origin policy). The app provides a visual wrapper only.
-- If you want to mirror or theme the embedded site locally, consider building a server-side proxy that fetches and rewrites HTML/CSS — this requires a backend and appropriate permissions.
-
 ## Backend
 
-The backend for this project lives in a separate repository: https://github.com/NathanHouwaart/ISA-PHM-Backend
+Backend repository:
 
-That repository is responsible for server-side functionality such as conversions, storage endpoints, and any API used by the front-end. If you plan to run the full stack locally, clone and start that repo alongside this one.
+- https://github.com/NathanHouwaart/ISA-PHM-Backend
 
-If you want a different README layout or additional sections (development checklist, code owners, example screenshots), tell me which sections you'd like and I will update it.
+## Notes
+
+- Data is stored locally in browser storage (project-scoped keys).
+- Global test setup catalog is shared across projects.
+- The app uses hash routing (`#/...`).

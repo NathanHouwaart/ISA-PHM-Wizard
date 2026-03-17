@@ -5,6 +5,7 @@ import Paragraph from '../Typography/Paragraph';
 import FormField from '../Form/FormField';
 import DataGrid from '../DataGrid/DataGrid';
 import IconTooltipButton from '../Widgets/IconTooltipButton';
+import SuggestionStrip from '../Suggestions/SuggestionStrip';
 
 const ProtocolEntityGridSection = ({
   title,
@@ -24,6 +25,8 @@ const ProtocolEntityGridSection = ({
   gridConfig,
   onGridMappingsChange,
   onGridRowDataChange,
+  parameterSuggestions = [],
+  onAddSuggestedParameter,
   isTabActive = false,
   historyScopeKey = '',
   emptyStateTitle,
@@ -114,6 +117,14 @@ const ProtocolEntityGridSection = ({
                     type="textarea"
                     placeholder="Optional notes for this protocol variant"
                     className="min-h-20"
+                  />
+
+                  <SuggestionStrip
+                    title="Suggested parameters"
+                    subtitle="Click to add one suggested parameter to this protocol."
+                    suggestions={parameterSuggestions}
+                    onSelect={onAddSuggestedParameter}
+                    className="bg-gray-50"
                   />
 
                   {sensors.length === 0 ? (

@@ -478,6 +478,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     handleProcessingProtocolMappingsChange,
     handleMeasurementProtocolRowsChange,
     handleProcessingProtocolRowsChange,
+    addMeasurementProtocolParameterSuggestion,
+    addProcessingProtocolParameterSuggestion,
+    measurementParameterSuggestions,
+    processingParameterSuggestions,
     measurementProtocolGridConfig,
     processingProtocolGridConfig,
   } = useProtocolSections({ formData, setFormData });
@@ -599,6 +603,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             gridConfig={measurementProtocolGridConfig}
             onGridMappingsChange={handleMeasurementProtocolMappingsChange}
             onGridRowDataChange={handleMeasurementProtocolRowsChange}
+            parameterSuggestions={measurementParameterSuggestions}
+            onAddSuggestedParameter={addMeasurementProtocolParameterSuggestion}
             isTabActive={selectedTab === 'measurement-protocols'}
             historyScopeKey={`${historyScopeBase}:measurement-protocol:${activeMeasurementProtocolId || 'none'}`}
             emptyStateTitle="No measurement protocols added yet."
@@ -625,6 +631,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             gridConfig={processingProtocolGridConfig}
             onGridMappingsChange={handleProcessingProtocolMappingsChange}
             onGridRowDataChange={handleProcessingProtocolRowsChange}
+            parameterSuggestions={processingParameterSuggestions}
+            onAddSuggestedParameter={addProcessingProtocolParameterSuggestion}
             isTabActive={selectedTab === 'processing-protocols'}
             historyScopeKey={`${historyScopeBase}:processing-protocol:${activeProcessingProtocolId || 'none'}`}
             emptyStateTitle="No processing protocols added yet."

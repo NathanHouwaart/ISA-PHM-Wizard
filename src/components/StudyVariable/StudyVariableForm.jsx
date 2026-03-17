@@ -7,6 +7,7 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
 import generateId from '../../utils/generateId';
+import SuggestionStrip from '../Suggestions/SuggestionStrip';
 
 /**
  * StudyVariableForm Component
@@ -24,7 +25,16 @@ import generateId from '../../utils/generateId';
  * @param {string[]} [props.allowedTypes] - If provided, limits the type dropdown options
  * @returns {JSX.Element} Variable edit form
  */
-const StudyVariableForm = ({ item, onSave, onCancel, isEditing = false, allowedTypes, lockedType }) => {
+const StudyVariableForm = ({
+  item,
+  onSave,
+  onCancel,
+  isEditing = false,
+  allowedTypes,
+  lockedType,
+  suggestions = [],
+  onAddSuggestionAsNew
+}) => {
   const [formData, setFormData] = useState({
     id: item?.id || '',
     name: item?.name || 'New Variable',
@@ -82,6 +92,13 @@ const StudyVariableForm = ({ item, onSave, onCancel, isEditing = false, allowedT
             {formError}
           </Paragraph>
         )}
+
+        <SuggestionStrip
+          title="Suggested variables"
+          subtitle="Click to add one of these suggestions as a new variable."
+          suggestions={suggestions}
+          onSelect={onAddSuggestionAsNew}
+        />
         
         <div className="rounded-lg space-y-2 pt-2">
       <FormField
