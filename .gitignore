@@ -13,6 +13,7 @@ dist-ssr
 *.local
 coverage/
 *.lcov
+tools/
 
 # Python / notebook artifacts
 __pycache__/

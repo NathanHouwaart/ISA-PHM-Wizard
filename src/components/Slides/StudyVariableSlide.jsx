@@ -310,6 +310,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                 }}
                                                 showControls={true}
                                                 showDebug={false}
+                                                enableBulkFill={true}
                                                 onDataChange={handleSingleRunGridMappingsChange}
                                                 height={Math.min(600, (sortedVariables.length * 50) + 115)}
                                                 isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
@@ -383,6 +384,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                         {...{...baseGridConfig, rowData: sortedVariables}}
                                                         showControls={true}
                                                         showDebug={false}
+                                                        enableBulkFill={true}
                                                         onDataChange={onGridMappingsChangeByStudyId[study.id]}
                                                         height={Math.min(600, (sortedVariables.length * 50) + 115)}
                                                         isActive={currentPage === pageIndex && activeStudyId === study.id}

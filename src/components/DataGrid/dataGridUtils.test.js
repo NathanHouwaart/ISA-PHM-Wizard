@@ -31,6 +31,20 @@ describe('applyFilesToRange', () => {
     expect(result[0].value).toBe('dir/sub/a.txt');
   });
 
+  it('naturally sorts numeric filenames before assignment', () => {
+    const rows = [{ id: 'r1' }];
+    const cols = [{ prop: 'c1' }, { prop: 'c2' }, { prop: 'c3' }];
+    const range = { x: 0, y: 0, x1: 2, y1: 0 };
+    const files = [makeFile('1.csv'), makeFile('10.csv'), makeFile('2.csv')];
+
+    const result = applyFilesToRange(range, rows, cols, files);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].value).toBe('1.csv');
+    expect(result[1].value).toBe('2.csv');
+    expect(result[2].value).toBe('10.csv');
+  });
+
   it('returns empty for invalid inputs', () => {
     expect(applyFilesToRange(null, [], [], [])).toEqual([]);
     expect(applyFilesToRange({}, [], [], null)).toEqual([]);

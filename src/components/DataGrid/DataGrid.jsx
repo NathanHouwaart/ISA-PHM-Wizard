@@ -1,4 +1,4 @@
-import React, { useCallback, forwardRef } from 'react';
+import React, { useCallback, forwardRef, useMemo } from 'react';
 import { useDataGrid } from '../../hooks/useDataGrid';
 import {
     applyRowUpdates,
@@ -14,6 +14,7 @@ import useGridLayoutSync from './hooks/useGridLayoutSync';
 import useGridMappingsEmitter from './hooks/useGridMappingsEmitter';
 import useGridControlsApi from './hooks/useGridControlsApi';
 import useGridImperativeApi from './hooks/useGridImperativeApi';
+import useGridBulkFillActions from './hooks/useGridBulkFillActions';
 import DataGridControls from './components/DataGridControls';
 import DataGridViewport from './components/DataGridViewport';
 import "./DataGrid.css";
@@ -48,6 +49,7 @@ const DataGrid = forwardRef(({
     showDebug = false,      // Show debug information
     rowsize = 50,           // Row height in pixels
     isActive = true,        // Whether this grid is active (should respond to global undo/redo)
+    enableBulkFill = false, // Show row bulk-fill helpers in controls
     historyScopeKey,        // Optional history context key (resets undo/redo when key changes)
 
     // Event handlers
@@ -289,6 +291,24 @@ const DataGrid = forwardRef(({
         showDebug
     });
 
+    const { bulkFillActions } = useGridBulkFillActions({
+        showDebug: DBG,
+        gridRef,
+        translateRangeCoordinates,
+        getFlatColumns,
+        getRowByIndex,
+        staticColumns,
+        isStandaloneGrid,
+        isEditableColumn,
+        fields,
+        commitGridChanges
+    });
+
+    const controlsActions = useMemo(() => {
+        if (!enableBulkFill) return customActions;
+        return [...customActions, ...bulkFillActions];
+    }, [enableBulkFill, customActions, bulkFillActions]);
+
     // Render the complete data grid with controls and debug view
     return (
         <div className={`data-grid ${className} flex flex-col`} style={{ height }}>
@@ -299,7 +319,7 @@ const DataGrid = forwardRef(({
                 canRedo={canRedo}
                 undo={undo}
                 redo={redo}
-                customActions={customActions}
+                customActions={controlsActions}
                 hideClearAllMappings={hideClearAllMappings}
                 stats={stats}
                 handleClearAllMappings={handleClearAllMappings}

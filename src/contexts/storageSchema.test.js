@@ -5,6 +5,7 @@ import {
     loadGlobalTestSetupsWithMigrations,
     loadProjectStateWithMigrations
 } from './storageSchema';
+import { encodeJsonForStorage } from '../utils/storageCodec';
 
 const DEFAULTS = {
     studies: [],
@@ -116,5 +117,26 @@ describe('storageSchema', () => {
         expect(
             JSON.parse(localStorage.getItem('globalAppData_testSetups_schemaVersion'))
         ).toBe(TEST_SETUPS_SCHEMA_VERSION);
+    });
+
+    it('reads compressed project state values', () => {
+        const mapping = Array.from({ length: 1500 }).map((_, index) => ({
+            studyVariableId: `var-${index % 10}`,
+            studyRunId: `study-1::run-${String(index + 1).padStart(4, '0')}`,
+            value: `value-${index}`
+        }));
+        localStorage.setItem(
+            'globalAppData_project-3_studyToStudyVariableMapping',
+            encodeJsonForStorage(mapping, { forceCompression: true })
+        );
+
+        const result = loadProjectStateWithMigrations({
+            projectId: 'project-3',
+            resolveDefaultValue: getDefault
+        });
+
+        expect(Array.isArray(result.state.studyToStudyVariableMapping)).toBe(true);
+        expect(result.state.studyToStudyVariableMapping).toHaveLength(mapping.length);
+        expect(result.state.studyToStudyVariableMapping[0]).toEqual(mapping[0]);
     });
 });

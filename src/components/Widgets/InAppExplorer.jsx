@@ -1,7 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import TooltipButton from './TooltipButton';
 import { Folder } from 'lucide-react';
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
+
+const NATURAL_SORT_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+function compareNodesNaturally(a, b) {
+  if (a.isDirectory && !b.isDirectory) return -1;
+  if (!a.isDirectory && b.isDirectory) return 1;
+  return NATURAL_SORT_COLLATOR.compare(a.name || '', b.name || '');
+}
 
 /**
  * InAppExplorer - File browser overlay for selecting files from indexed dataset
@@ -53,7 +61,10 @@ const InAppExplorer = ({ onClose, onSelect }) => {
   }
 
   const currentNode = findNode(tree, currentPath);
-  const nodesToShow = currentNode?.children || [];
+  const nodesToShow = useMemo(
+    () => (currentNode?.children ? [...currentNode.children].sort(compareNodesNaturally) : []),
+    [currentNode]
+  );
   const hasItems = Array.isArray(tree) && tree.length > 0;
 
   function enterFolder(relPath) {

@@ -75,6 +75,7 @@ export default function DataGridControls({
                             {customActions.map((action, index) => (
                                 <TooltipButton
                                     key={index}
+                                    onMouseDown={action.onMouseDown}
                                     onClick={action.onClick}
                                     disabled={action.disabled}
                                     className={action.className || `px-3 py-1 text-sm rounded border ${action.disabled

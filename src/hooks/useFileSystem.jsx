@@ -7,6 +7,7 @@ const debugLog = (...args) => {
     console.log(...args);
   }
 };
+const NATURAL_SORT_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 /**
  * Custom hook for file system operations with support for large datasets (100k+ files).
@@ -350,7 +351,7 @@ function sortNodes(nodes) {
     .sort((a, b) => {
       if (a.isDirectory && !b.isDirectory) return -1;
       if (!a.isDirectory && b.isDirectory) return 1;
-      return (a.name || '').localeCompare(b.name || '');
+      return NATURAL_SORT_COLLATOR.compare(a.name || '', b.name || '');
     })
     .map((n) => (n.isDirectory ? { ...n, children: sortNodes(n.children || []) } : n));
 }

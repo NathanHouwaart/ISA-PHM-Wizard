@@ -1,3 +1,5 @@
+import { decodeJsonFromStorage, encodeJsonForStorage } from '../utils/storageCodec';
+
 const PROJECT_SCHEMA_VERSION = 1;
 const TEST_SETUPS_SCHEMA_VERSION = 1;
 
@@ -87,11 +89,7 @@ const readJsonValue = (storage, key) => {
     }
 
     try {
-        const raw = storage.getItem(key);
-        if (raw === null) {
-            return { exists: false, value: undefined };
-        }
-        return { exists: true, value: JSON.parse(raw) };
+        return decodeJsonFromStorage(storage.getItem(key));
     } catch (error) {
         return { exists: true, value: undefined };
     }
@@ -100,7 +98,7 @@ const readJsonValue = (storage, key) => {
 const writeJsonValue = (storage, key, value) => {
     if (!storage) return false;
     try {
-        storage.setItem(key, JSON.stringify(value));
+        storage.setItem(key, encodeJsonForStorage(value));
         return true;
     } catch (error) {
         return false;

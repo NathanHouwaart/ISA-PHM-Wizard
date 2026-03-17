@@ -20,6 +20,11 @@ import {
     loadProjectStateWithMigrations,
     writeProjectStateSnapshot
 } from './storageSchema';
+import {
+    decodeJsonFromStorage,
+    encodeJsonForStorage,
+    isQuotaExceededError
+} from '../utils/storageCodec';
 import { 
     useExampleProjects, 
     isExampleProject, 
@@ -127,10 +132,8 @@ export const useProjectActions = () => {
 // Helper function to read from local storage and parse
 const loadFromLocalStorage = (key, initialValue) => {
     try {
-        const storedData = localStorage.getItem(key);
-        if (storedData) {
-            return JSON.parse(storedData);
-        }
+        const { exists, value } = decodeJsonFromStorage(localStorage.getItem(key));
+        if (exists && value !== undefined) return value;
     } catch (error) {
         console.error("Error parsing data from localStorage", error);
         // Fallback to initial value if parsing fails
@@ -138,12 +141,33 @@ const loadFromLocalStorage = (key, initialValue) => {
     return initialValue;
 };
 
+const quotaFailedKeys = new Set();
+
 // Helper to write JSON to localStorage
 const saveToLocalStorage = (key, value) => {
     try {
-        localStorage.setItem(key, JSON.stringify(value));
+        const payload = encodeJsonForStorage(value);
+        localStorage.setItem(key, payload);
+        quotaFailedKeys.delete(key);
+        return true;
     } catch (err) {
+        if (isQuotaExceededError(err)) {
+            try {
+                // Retry with forced compression for near-quota payloads.
+                const compressedPayload = encodeJsonForStorage(value, { forceCompression: true });
+                localStorage.setItem(key, compressedPayload);
+                quotaFailedKeys.delete(key);
+                return true;
+            } catch (retryErr) {
+                if (!quotaFailedKeys.has(key)) {
+                    console.error('[GlobalDataContext] saveToLocalStorage quota error', key, retryErr);
+                    quotaFailedKeys.add(key);
+                }
+                return false;
+            }
+        }
         console.error('[GlobalDataContext] saveToLocalStorage error', err);
+        return false;
     }
 };
 

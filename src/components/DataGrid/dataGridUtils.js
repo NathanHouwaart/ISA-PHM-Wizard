@@ -16,6 +16,27 @@
  * - flatCols: flattened array of column definitions (each must have prop field)
  * - files: array-like of File objects (only name and webkitRelativePath used)
  */
+function getFilePath(file) {
+  if (!file || typeof file !== 'object') return '';
+  const relativePath = typeof file.webkitRelativePath === 'string' ? file.webkitRelativePath.trim() : '';
+  const name = typeof file.name === 'string' ? file.name : '';
+  return relativePath || name;
+}
+
+function sortFilesNaturally(files) {
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const fileArray = Array.prototype.slice.call(files || []);
+
+  return fileArray
+    .map((file, index) => ({ file, index, path: getFilePath(file) }))
+    .sort((a, b) => {
+      const byPath = collator.compare(a.path, b.path);
+      if (byPath !== 0) return byPath;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.file);
+}
+
 export function applyFilesToRange(range, rows, flatCols, files) {
   if (!range || !rows || !flatCols || !files) return [];
 
@@ -30,7 +51,7 @@ export function applyFilesToRange(range, rows, flatCols, files) {
   const sy = Math.min(y0, y1);
   const ey = Math.max(y0, y1);
 
-  const fileArray = Array.prototype.slice.call(files || []);
+  const fileArray = sortFilesNaturally(files);
 
   const results = [];
   let fileIndex = 0;
@@ -49,7 +70,7 @@ export function applyFilesToRange(range, rows, flatCols, files) {
       }
 
       const f = fileArray[fileIndex++];
-      const path = f.webkitRelativePath && f.webkitRelativePath.trim() !== '' ? f.webkitRelativePath : f.name;
+      const path = getFilePath(f);
 
       results.push({
         rowId: row.id ?? row.rowId ?? r,
