@@ -93,13 +93,41 @@ Assays are constructed automatically from the study–sensor–run mappings you 
 
 Before (or alongside) filling in the ISA hierarchy, you define a **Test Setup** — the reusable description of your physical lab bench. It contains:
 
-- **Characteristics** — fixed hardware properties (motor type, bearing model, nominal power)
+- **Characteristics** — fixed hardware properties of the rig that are the same across all experiments (motor model, rated power, shaft geometry)
 - **Sensors** — every measurement channel (alias, model, type)
-- **Configurations** — named variants of the setup (e.g. healthy bearing vs. faulted bearing)
+- **Configurations** — each specific physical component installed in the rig for testing (the ISA-PHM "Sample")
 - **Measurement Protocols** — how raw signals were acquired (sample rate, filter settings, etc.)
 - **Processing Protocols** — how raw signals were turned into features (FFT, windowing, etc.)
 
 Test setups are shared across projects. Once you have defined a setup for a lab bench, any future project on the same bench reuses it rather than re-entering everything.
+
+### What is a Configuration?
+
+A Configuration is the ISA-PHM **Sample** — it identifies **which specific physical component was installed** in the rig for a given experiment. This is not just a health label; it is a distinct physical object.
+
+> **Key rule:** Two experiments that use the same component *type* but a **different physical unit** should each have their own Configuration.
+
+**Example — XJTU-SY bearing dataset:**  
+15 accelerated degradation experiments, each run to failure. All use the same bearing model (LDK UER204), but each uses a **different physical bearing unit**. Each of those 15 bearing units is its own Configuration:
+
+| Configuration name | Replaceable Component ID |
+|---|---|
+| `LDK UER204 — Unit 01 (run-to-failure)` | `BRG-01` |
+| `LDK UER204 — Unit 02 (run-to-failure)` | `BRG-02` |
+| `LDK UER204 — Unit 03 (run-to-failure)` | `BRG-03` |
+| … | … |
+| `LDK UER204 — Unit 15 (run-to-failure)` | `BRG-15` |
+
+This matters for traceability: if a bearing's failure mode differs from the others, you can identify which unit that was. The Replaceable Component ID (`BRG-01` etc.) is the unique tag for that physical object.
+
+**Characteristics vs. Configurations:**
+
+| | Characteristics | Configurations |
+|---|---|---|
+| What it describes | The fixed rig itself (same for all experiments) | The specific component swapped in per experiment |
+| ISA-PHM entity | Study Design Descriptor | Sample |
+| Changes per experiment? | No | Yes (different unit, different fault, different specimen) |
+| Example | Motor rated power = 11 kW | Bearing unit 03 — outer race fault |
 
 ---
 

@@ -19,6 +19,7 @@ Reference for *ISA-PHM - a Standardized Format for Storing and Utilizing Metadat
 | [Project Sessions](./guides/GUIDE_PROJECT_MANAGEMENT.md) | Create, configure, import, export, and switch projects from the Project Sessions modal |
 | [Test Setups](./guides/GUIDE_TEST_SETUPS.md) | Build your lab bench description (sensors, configurations, protocols) |
 | [Questionnaire](./guides/GUIDE_QUESTIONNAIRE.md) | Navigate the 10-slide ISA questionnaire (assumes project and test setup are ready) |
+| [Working with the Grid](./guides/GUIDE_GRID.md) | Grid navigation, Fill Row / Row+ / Row−, and the file picker for bulk file assignment |
 | [Export](./guides/GUIDE_EXPORT.md) | What "Convert to ISA-PHM" produces and how to use the output |
 | [Troubleshooting](./guides/TROUBLESHOOTING.md) | Empty dropdowns, missing rows, conversion failures |
 

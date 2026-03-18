@@ -53,11 +53,11 @@ This choice affects the Test Matrix (Slide 8) and Output mapping slides (9 & 10)
 
 ### Step 3 — Dataset indexation *(skippable)*
 
-If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects).
+If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects). See **[Working with the Grid](./GUIDE_GRID.md#assign-files-file-picker)** for how bulk assignment, left-to-right fill, and blank/truncate behaviour work.
 
 > **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
 >
-> **Example:** If your dataset root is `pump_bench/` and a file lives at `pump_bench/vibration/run1_ch1.csv`, the path written into the JSON will be `vibration/run1_ch1.csv`. That path is only correct if the JSON lives at `pump_bench/`.
+> **Example:** If your dataset root is `pump_bench/` and a file lives at `pump_bench/vibration/run1_ch1.csv`, the path written into the JSON will be `./vibration/run1_ch1.csv`. That path is only correct if the JSON lives at `pump_bench/`.
 
 Skip this step if you prefer to type file paths manually on Slides 9–10.
 

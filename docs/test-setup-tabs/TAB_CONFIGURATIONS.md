@@ -11,7 +11,32 @@
 
 ## Purpose
 
-Defines named variants of the test setup — typically different physical states of the replaceable component (e.g. healthy vs. faulted bearing, different tool grades, different shaft assemblies). Each configuration can be linked to an experiment on Questionnaire Slide 5.
+A Configuration is the ISA-PHM **Sample** — it identifies the **specific physical component installed** in the rig for a given experiment. This is not just a health label or fault class; it is a distinct physical object.
+
+> **Key rule:** Two experiments that use the same component *type* but a **different physical unit** should each have their own Configuration.
+
+**Example:** A run-to-failure dataset with 15 bearing units — all LDK UER204 — where each unit is tested independently until it fails. Even though the bearing model is identical, each physical unit is its own Configuration:
+
+| Configuration name | Replaceable Component ID |
+|---|---|
+| `LDK UER204 — Unit 01 (run-to-failure)` | `BRG-01` |
+| `LDK UER204 — Unit 02 (run-to-failure)` | `BRG-02` |
+| … | … |
+
+This traceability matters: if one bearing develops an unexpected failure mode, you can identify it by its ID.
+
+Each configuration can be linked to an experiment on Questionnaire Slide 5.
+
+---
+
+## Characteristics vs. Configurations
+
+| | Characteristics | Configurations |
+|---|---|---|
+| What it describes | Fixed properties of the rig (same for all experiments) | The specific component swapped in per experiment |
+| ISA-PHM entity | Study Design Descriptor | Sample |
+| Changes per experiment? | No | Yes |
+| Example | Motor rated power = 11 kW | Bearing unit 03 — outer race fault |
 
 ---
 

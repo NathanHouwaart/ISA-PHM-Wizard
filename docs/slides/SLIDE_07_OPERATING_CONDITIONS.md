@@ -5,9 +5,12 @@
 
 ---
 
-[SCREENSHOT: Slide 7 — Operating Conditions, empty state]
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-7-empty.png" alt="Slide 7 — Empty Operating Conditions view" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-7-simple.png" alt="Slide 7 — Operating Conditions simple view with two conditions added" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-7.png" alt="Slide 7 — Operating Conditions grid view with two conditions added" /></td>
+</tr></table>
 
-[SCREENSHOT: Slide 7 — Operating Conditions, several condition rows filled via suggestions]
 
 ---
 
@@ -48,7 +51,7 @@ All variables on this slide have the type **Operating condition** — this is fi
 | Feed Rate | mm/min |
 | Depth of Cut | mm |
 
-[SCREENSHOT: Slide 7 — suggestion chip strip, with several already added]
+![SCREENSHOT: Slide 7 — suggestion chip strip, with several already added](../images/annotated/isa-questionnaire-slide-7-suggestions.png)
 
 **Manually:** Click **+ Add** for a blank row.
 
@@ -79,7 +82,19 @@ Often both types of variables are needed: the fault condition describes *what* w
 
 ## Downstream use
 
-Same as fault specifications: each operating condition becomes a **Study Factor** in `s_study_XX.txt`, with values per sample from Slide 8.
+Each operating condition becomes a `study.factors[]` entry in the exported `isa-phm.json`, alongside the fault specification factors from Slide 6. The JSON structure is identical to Slide 6 — the only distinction is the `factorType`:
+
+| Slide 7 field | JSON key | Example |
+|---|---|---|
+| Variable Name | `factors[].factorName` | `"Motor Speed"` |
+| Type | `factors[].factorType.annotationValue` | always `"Operating condition"` |
+| Unit | `factors[].comments[name="unit"].value` | `"RPM"` |
+| Description | `factors[].comments[name="description"].value` | `"Rotational speed of the drivetrain"` |
+
+Sietze example factors from this slide: `Motor Speed`, `Discharge Pressure`, `Flow`.  
+Milling example factors from this slide: `Cutting Speed`, `Depth of Cut`, `Feed`, `Material`.
+
+The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one entry per variable per sample row, referencing the factor by `@id`. This is the same mechanism as Slide 6.
 
 ---
 

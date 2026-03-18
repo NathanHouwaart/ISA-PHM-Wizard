@@ -7,7 +7,7 @@
 
 Slide 1 is purely informational. It introduces the wizard and its purpose.
 
-[SCREENSHOT: Slide 1 — Introduction slide, full view]
+![Slide 1 — Introduction slide, full view](../images/annotated/isa-questionnaire-slide-1.png)
 
 ## What it says
 
@@ -17,11 +17,23 @@ Slide 1 is purely informational. It introduces the wizard and its purpose.
 
 Read it. Click **Next** to proceed to Slide 2.
 
+> **Tip:** Before clicking Next, make sure you have already created a project linked to a test setup. If the questionnaire opened without a test setup configured, dropdowns on Slides 5, 9, and 10 will be empty. Go back to the Project Sessions modal and link a test setup first.
+
 ---
 
 ## Why FAIR matters
 
-FAIR stands for Findable, Accessible, Interoperable, Reusable. Applying the ISA-PHM format to your dataset metadata means anyone (including future you) can understand what was measured, how, and under what conditions — without needing to contact the original researcher.
+FAIR stands for **F**indable, **A**ccessible, **I**nteroperable, **R**eusable. Applying the ISA-PHM format to your dataset metadata means anyone (including future you) can understand what was measured, how, and under what conditions — without needing to contact the original researcher.
+
+The ISA-PHM Wizard handles the formatting. Your job is to fill in the facts accurately.
+
+---
+
+## What the wizard produces
+
+After completing all 10 slides and clicking **Convert to ISA-PHM**, the wizard returns a single **`isa-phm.json`** file. This file contains the full structured metadata for your experiment — investigation details, study descriptions, factor values, and assay entries with links to your data files.
+
+Place it in the root of your dataset folder alongside your `.csv` files, then zip and deposit to make the dataset FAIR-compliant.
 
 ---
 

@@ -5,11 +5,11 @@
 
 ---
 
-[SCREENSHOT: Slide 6 — Fault Specifications, empty state]
-
-[SCREENSHOT: Slide 6 — Fault Specifications, simple view with several fault spec rows]
-
-[SCREENSHOT: Slide 6 — Fault Specifications, grid view]
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-6-empty.png" alt="Slide 6 — Empty Fault Specifications view" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-6-simple.png" alt="Slide 6 — Fault Specifications simple view with two fault specifications added" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-6.png" alt="Slide 6 — Fault Specifications grid view with two fault specifications added" /></td>
+</tr></table>
 
 ---
 
@@ -27,7 +27,6 @@ Defines the fault-related variables that characterize your experiments. These be
 | **Quantitative fault specification** | Numeric fault amount — fault severity level, fault size in mm |
 | **Damage** | Wear or damage quantity, e.g. VB (wear land width) |
 | **RUL** | Remaining Useful Life value |
-| **Time** | A time-domain variable associated with the fault state |
 | **Other** | Anything that doesn't fit the above |
 
 ---
@@ -57,7 +56,8 @@ Defines the fault-related variables that characterize your experiments. These be
 - Fault Component
 - VB (milling tool wear)
 
-[SCREENSHOT: Slide 6 — suggestion chips visible at top of slide]
+![SCREENSHOT: Slide 6 — suggestion chip strip, with several already added](../images/annotated/isa-questionnaire-slide-6-suggestions.png)
+
 
 **Manually:** Click **+ Add** to create a blank row and fill all fields yourself.
 
@@ -69,7 +69,6 @@ Defines the fault-related variables that characterize your experiments. These be
 
 ## Tips
 
-- Only define variables that actually differ between experiments. If fault type is the same for every study, it can be noted in the description instead.
 - Keep names short — they appear as column headers in the Test Matrix.
 - You can add, edit, or delete variables at any time before exporting. Deleting a variable also removes its values from the Test Matrix.
 
@@ -77,7 +76,16 @@ Defines the fault-related variables that characterize your experiments. These be
 
 ## Downstream use
 
-Each fault specification becomes a **Study Factor** in the ISA Study files (`s_study_XX.txt`). The values you assign on Slide 8 become the factor values per sample row.
+Each fault specification variable becomes a `study.factors[]` entry in the JSON, shared across all studies in the project.
+
+| Slide 6 field | JSON key | Example |
+|---|---|---|
+| Variable Name | `factors[].factorName` | `"Fault Type"` |
+| Type | `factors[].factorType.annotationValue` | `"Qualitative fault specification"` |
+| Unit | `factors[].comments[name="unit"].value` | `"mm"` |
+| Description | `factors[].comments[name="description"].value` | `"Type of fault introduced onto the bearing"` |
+
+The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one `factorValue` entry per variable per sample row, referencing the factor by `@id`.
 
 ---
 

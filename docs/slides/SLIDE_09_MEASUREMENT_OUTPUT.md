@@ -5,11 +5,16 @@
 
 ---
 
-[SCREENSHOT: Slide 9 — Raw Measurement Output, empty/warning state (no protocols or sensors)]
-
-[SCREENSHOT: Slide 9 — Raw Measurement Output, grid view with study rows, sensor columns, and file names filled]
-
-[SCREENSHOT: Slide 9 — Raw Measurement Output, simple view showing one study card with protocol selected and sensor file fields]
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-9-empty.png" alt="Slide 9 — empty state" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-9-simple-filled.png" alt="Slide 9 — simple view" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-9-grid-filled.png" alt="Slide 9 — grid view with filenames filled" /></td>
+</tr>
+<tr>
+  <td align="center"><em>Empty state</em></td>
+  <td align="center"><em>Simple view</em></td>
+  <td align="center"><em>Grid view</em></td>
+</tr></table>
 
 ---
 
@@ -37,7 +42,7 @@ Additionally, each study has a **Measurement Protocol** selector (a dropdown or 
 
 For each study, use the **Measurement Protocol** dropdown to select which protocol was used during that experiment.
 
-[SCREENSHOT: Slide 9 — measurement protocol dropdown open for a study row]
+![Slide 9 — measurement protocol dropdown for a study row](../images/annotated/isa-questionnaire-slide-9-grid-protocol.png)
 
 If the dropdown is empty: the test setup has no measurement protocols. Add them in the test setup editor → **Measurement** tab.
 
@@ -48,42 +53,22 @@ For each study/run row and each sensor column, enter the filename or relative pa
 - `bearing_1500rpm_vib_ch1.csv`
 - `study1_run2_accelerometer.csv`
 
-[SCREENSHOT: Slide 9 — grid view, several cells filled with filenames]
+![Slide 9 — grid view with filenames filled across sensor columns](../images/annotated/isa-questionnaire-slide-9-grid-filled.png)
 
 > **Tip:** Tab across sensor columns to fill each file name for a study row in one pass. Ctrl+Z undoes the last cell edit.
+
 
 File names should match the actual filenames in your dataset deposit so the assay files link correctly.
 
 ### 3. File picker (optional, with indexed dataset)
 
-If your project has a **dataset** configured, a file picker action lets you browse and select from the indexed file list instead of typing paths.
+If your project has a dataset indexed, a file picker button appears when you select cells in a row. Click it to browse the indexed file list and assign paths without typing.
 
-[SCREENSHOT: Slide 9 — file picker button visible in a cell/row]
+![Slide 9 — file picker button visible in the grid toolbar](../images/annotated/isa-questionnaire-slide-9-file-picker-button.png)
 
-#### Root folder and relative paths
+The file picker supports **bulk assignment**: select multiple sensor-column cells for a study/run row, then open the picker. Files are assigned left to right in alphabetical filename order. Picking fewer files than cells leaves the remaining cells blank; picking more files than cells truncates the extras.
 
-Index the **root folder** of your dataset — not a subfolder. All file paths written into the output JSON are **relative to the folder you indexed**. After downloading the JSON, you place it manually in that same root folder. When the dataset is zipped and shared, the JSON sits at the root and its relative paths correctly resolve to the data files beneath it.
-
-If you index a subfolder, the relative paths will be wrong once the JSON is placed at the true dataset root.
-
-| Dataset root | File location | Path written in JSON |
-|---|---|---|
-| `pump_bench/` | `pump_bench/vibration/run1_ch1.csv` | `vibration/run1_ch1.csv` |
-| `pump_bench/` | `pump_bench/run1_vib_ch1.csv` | `run1_vib_ch1.csv` |
-
-#### Left-to-right column population
-
-When you use the file picker for a study row, selected files are assigned to sensor columns **from left to right** in the order they appear in the file browser (typically alphabetical by filename).
-
-For this to work correctly on large datasets, **your filenames must sort alphabetically in the same order as your sensor columns.** If your sensor columns are (left to right) `acc_x`, `acc_y`, `acc_z`, your files should sort in that same order:
-
-```
-study01_acc_x_run1.csv   → assigned to acc_x column
-study01_acc_y_run1.csv   → assigned to acc_y column
-study01_acc_z_run1.csv   → assigned to acc_z column
-```
-
-> **Tip:** Design your file naming convention before collecting data. A consistent pattern like `{study}_{sensor}_{run}.{ext}` sorts predictably and maps cleanly to the sensor columns defined in the test setup.
+For full details on fill behaviour, file naming conventions, and root-folder relative paths — see **[Working with the Grid](../guides/GUIDE_GRID.md#assign-files-file-picker)**.
 
 ---
 
@@ -93,7 +78,7 @@ Simple view shows one study at a time. Select a study from the left panel to see
 - Its measurement protocol selector
 - A field for each sensor's raw output file/value
 
-[SCREENSHOT: Slide 9 — simple view, one study selected, sensor fields visible]
+![Slide 9 — simple view with one study selected and sensor fields visible](../images/annotated/isa-questionnaire-slide-9-simple-filled.png)
 
 ---
 
@@ -109,7 +94,18 @@ Simple view shows one study at a time. Select a study from the left panel to see
 
 ## Downstream use
 
-Each populated cell in this grid generates one assay entry in the output JSON, linking a raw data file to a specific sensor channel, run, and study. The expected data file format per assay is a two-column file (timestamp + one measurement value). The measurement protocol and its per-sensor parameter values are recorded alongside the assay.
+Each sensor column for a study generates one `study.assays[]` entry. Slides 9 and 10 together fill in the **same assay objects** — Slide 9 supplies the measurement process and the raw data file; Slide 10 adds the processing process and processed output file.
+
+| Slide 9 element | JSON location | Example |
+|---|---|---|
+| Assay filename | `assays[].filename` | `"a_st01_se01"` (study 1, sensor 1) |
+| Raw data file name | `assays[].dataFiles[].name` | `"Vibration_Motor-2_100_time-bearing bpfo 3-ch1.txt"` |
+| File type | `assays[].dataFiles[].type` | `"Derived Data File"` |
+| Measurement type | `assays[].measurementType.annotationValue` | `"Vibration"` |
+| Sensor model | `assays[].technologyPlatform` | `"Wilcoxon 786B-10"` |
+| Measurement protocol | `assays[].processSequence[0].executesProtocol.@id` | references the measurement protocol |
+
+Assay filenames follow the pattern `a_st{study_index}_se{sensor_index}` — e.g. study 1 / sensor 3 → `a_st01_se03`.
 
 > **Multi-axis sensors** (e.g., a tri-axis accelerometer) should each be entered as separate sensors in the test setup (`acc_x`, `acc_y`, `acc_z`). Each axis then has its own column in this grid and generates its own assay.
 

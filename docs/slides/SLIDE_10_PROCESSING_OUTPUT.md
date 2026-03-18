@@ -5,11 +5,16 @@
 
 ---
 
-[SCREENSHOT: Slide 10 — Processing Protocol Output, empty/warning state]
-
-[SCREENSHOT: Slide 10 — Processing Protocol Output, grid view with file names filled]
-
-[SCREENSHOT: Slide 10 — Processing Protocol Output, simple view for one study]
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-10-empty.png" alt="Slide 10 — empty state" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-10-simple-filled.png" alt="Slide 10 — simple view" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-10-grid-filled.png" alt="Slide 10 — grid view with filenames filled" /></td>
+</tr>
+<tr>
+  <td align="center"><em>Empty state</em></td>
+  <td align="center"><em>Simple view</em></td>
+  <td align="center"><em>Grid view</em></td>
+</tr></table>
 
 ---
 
@@ -39,7 +44,7 @@ Each study also has a **Processing Protocol** selector.
 
 For each study, use the **Processing Protocol** dropdown to select which transformation pipeline was applied to the raw data.
 
-[SCREENSHOT: Slide 10 — processing protocol dropdown open for a study]
+![Slide 10 — processing protocol dropdown for a study row](../images/annotated/isa-questionnaire-slide-10-grid-protocol.png)
 
 If the dropdown is empty: add processing protocols in the test setup editor → **Processing** tab.
 
@@ -50,13 +55,13 @@ For each study/run row and each sensor column, enter the filename of the process
 - `features_bearing_run1_ch1.csv`
 - `fft_study2_vib.csv`
 
-[SCREENSHOT: Slide 10 — grid filled with processed filenames]
-
 > **Tip:** Same grid navigation as Slide 9 — Tab across sensor columns for each row, Ctrl+Z to undo the last edit.
+
+![Slide 10 — grid view with processed filenames filled](../images/annotated/isa-questionnaire-slide-10-grid-filled.png)
 
 ### 3. File picker (optional)
 
-Same as Slide 9 — if a dataset is configured, use the file picker to select files from the indexed list. The same root-folder, relative-path, and left-to-right column population rules apply. See [Slide 9 — File picker](./SLIDE_09_MEASUREMENT_OUTPUT.md#3-file-picker-optional-with-indexed-dataset) for the full explanation.
+If a dataset is configured, use the file picker to browse and assign files from the indexed list. Bulk selection, left-to-right fill, blank/truncate behaviour, and root-folder path rules are all identical. See **[Working with the Grid](../guides/GUIDE_GRID.md#assign-files-file-picker)** for full details.
 
 ---
 
@@ -76,7 +81,19 @@ If your dataset is raw-only (no feature extraction was done), Slide 10 can be le
 
 ## Downstream use
 
-Same as Slide 9: generates `a_stXX_stYY.txt` assay files, but for the processed data assays. The processing protocol and its parameters appear at the top of the file.
+Slide 10 fills in the **second process** in each assay's `processSequence[]` — the same assay objects created by Slide 9. Both slides contribute to the same `study.assays[]` entries; they are not separate assay files.
+
+| Slide 10 element | JSON location | Example |
+|---|---|---|
+| Processed output file | `assays[].processSequence[1].outputs[].@id` → `dataFiles[].name` | `"features_bearing_run1_ch1.csv"` |
+| Processing protocol | `assays[].processSequence[1].executesProtocol.@id` | references the processing protocol |
+| Process name | `assays[].processSequence[1].name` | `"vib_ch_1_run_1_processing"` |
+
+The two chained processes in `processSequence` are:
+1. **Measurement process** (Slide 9) — takes the study sample as input, outputs the raw data file.
+2. **Processing process** (Slide 10) — takes the raw data file as input, outputs the processed data file.
+
+Assay filenames are driven by Slide 9 and follow `a_st{study_index}_se{sensor_index}`. If Slide 10 is left empty for a sensor/study, the processing step's output will be blank.
 
 ---
 
