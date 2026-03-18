@@ -67,6 +67,7 @@
     "jsdom": "^27.0.0",
     "json-dereference": "^0.0.1",
     "node-fetch": "^2.7.0",
+    "playwright": "^1.58.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.10",
     "tw-animate-css": "^1.3.4",

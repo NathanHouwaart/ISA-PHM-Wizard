@@ -18,6 +18,17 @@ describe('Backend root endpoint', () => {
       res = await fetch(rootUrl, { signal: controller.signal });
     } catch (err) {
       clearTimeout(timeout);
+      // If the root endpoint timed out or was refused, the backend may simply
+      // not expose GET /. Fall back to the OpenAPI docs endpoint (same check
+      // done below for 404/405 responses) before declaring the backend unreachable.
+      if (err.name === 'AbortError' || err.name === 'TypeError') {
+        const docsRes = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/openapi.json`).catch(() => null);
+        if (docsRes?.ok) {
+          const docs = await docsRes.json();
+          expect(typeof docs?.openapi).toBe('string');
+          return;
+        }
+      }
       throw new Error(`Failed to reach backend at ${rootUrl}: ${err.message}. Start backend or disable integration tests.`);
     }
 

@@ -21,6 +21,8 @@ import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { FAULT_SPEC_TYPES, isOperatingCondition } from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import { usePageTab } from '../../hooks/usePageWidth';
+import { FAULT_SPECIFICATION_SUGGESTIONS } from '../../constants/suggestionCatalog';
+import SuggestionStrip from '../Suggestions/SuggestionStrip';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -30,6 +32,16 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
 
     const { items: faultSpecs, setItems: setStudyVariables, addItem } = useFaultSpecifications();
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+
+    const handleAddSuggestedFaultSpec = useCallback((suggestion) => {
+        if (!suggestion) return;
+        addItem({
+            name: suggestion.name || 'New Variable',
+            type: suggestion.type || FAULT_SPEC_TYPES[0],
+            unit: suggestion.unit || '',
+            description: suggestion.description || ''
+        });
+    }, [addItem]);
 
     const handleRowDataChange = useCallback((newRows) => {
         setStudyVariables(prevAll => {
@@ -120,6 +132,14 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                         { id: 'simple-view', label: 'Simple View', tooltip: 'Card-based view for managing fault specs' },
                         { id: 'grid-view', label: 'Grid View', tooltip: 'Table-based view for bulk editing' }
                     ]}
+                />
+
+                <SuggestionStrip
+                    className="mb-3"
+                    title="Suggested fault specifications"
+                    subtitle="Click to add one suggestion as a new variable. You can still add custom ones."
+                    suggestions={FAULT_SPECIFICATION_SUGGESTIONS}
+                    onSelect={handleAddSuggestedFaultSpec}
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>

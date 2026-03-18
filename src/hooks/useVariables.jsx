@@ -8,6 +8,10 @@ import {
     isFaultSpecification,
     isOperatingCondition
 } from '../constants/variableTypes';
+import {
+    FAULT_SPECIFICATION_SUGGESTIONS,
+    OPERATING_CONDITION_SUGGESTIONS
+} from '../constants/suggestionCatalog';
 import generateId from '../utils/generateId';
 
 export const useVariables = () => {
@@ -63,8 +67,11 @@ export const useFaultSpecifications = () => {
 
     const filteredItems = useMemo(() => items.filter(isFaultSpecification), [items]);
 
-    const addFaultSpecification = () => {
-        addItem({ type: VARIABLE_TYPE_OPTIONS[0] });
+    const addFaultSpecification = (overrideData = {}) => {
+        addItem({
+            type: overrideData.type || VARIABLE_TYPE_OPTIONS[0],
+            ...overrideData
+        });
     };
     
     // Return a wrapped component that sets allowed types
@@ -72,6 +79,8 @@ export const useFaultSpecifications = () => {
         <StudyVariableForm 
             {...props} 
             allowedTypes={VARIABLE_TYPE_OPTIONS.filter(t => t !== OPERATING_CONDITION_TYPE)} 
+            suggestions={FAULT_SPECIFICATION_SUGGESTIONS}
+            onAddSuggestionAsNew={addFaultSpecification}
         />
     );
 
@@ -92,8 +101,11 @@ export const useOperatingConditions = () => {
 
     const filteredItems = useMemo(() => items.filter(isOperatingCondition), [items]);
 
-    const addOperatingCondition = () => {
-        addItem({ type: OPERATING_CONDITION_TYPE });
+    const addOperatingCondition = (overrideData = {}) => {
+        addItem({
+            ...overrideData,
+            type: OPERATING_CONDITION_TYPE
+        });
     };
 
     // Return a wrapped component that locks the type
@@ -101,6 +113,8 @@ export const useOperatingConditions = () => {
         <StudyVariableForm 
             {...props} 
             lockedType={OPERATING_CONDITION_TYPE}
+            suggestions={OPERATING_CONDITION_SUGGESTIONS}
+            onAddSuggestionAsNew={addOperatingCondition}
         />
     );
 

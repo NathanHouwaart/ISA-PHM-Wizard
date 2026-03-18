@@ -20,6 +20,8 @@ import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import { isFaultSpecification } from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import { usePageTab } from '../../hooks/usePageWidth';
+import { OPERATING_CONDITION_SUGGESTIONS } from '../../constants/suggestionCatalog';
+import SuggestionStrip from '../Suggestions/SuggestionStrip';
 
 const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -27,6 +29,15 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
 
     const { items: operatingConditions, setItems: setStudyVariables, addItem } = useOperatingConditions();
     const [selectedTab, setSelectedTab] = usePageTab(pageIndex, 'simple-view');
+
+    const handleAddSuggestedOperatingCondition = useCallback((suggestion) => {
+        if (!suggestion) return;
+        addItem({
+            name: suggestion.name || 'New Variable',
+            unit: suggestion.unit || '',
+            description: suggestion.description || ''
+        });
+    }, [addItem]);
 
     const handleRowDataChange = useCallback((newRows) => {
         setStudyVariables(prevAll => {
@@ -123,6 +134,14 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
                         { id: 'simple-view', label: 'Simple View', tooltip: 'Card-based view for managing operating conditions' },
                         { id: 'grid-view', label: 'Grid View', tooltip: 'Table-based view for bulk editing' }
                     ]}
+                />
+
+                <SuggestionStrip
+                    className="mb-3"
+                    title="Suggested operating conditions"
+                    subtitle="Click to add one suggestion as a new variable. You can still add custom ones."
+                    suggestions={OPERATING_CONDITION_SUGGESTIONS}
+                    onSelect={handleAddSuggestedOperatingCondition}
                 />
 
                 <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>

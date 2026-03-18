@@ -2,6 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuid4 } from 'uuid';
 import { Template } from '@revolist/react-datagrid';
 import { DeleteRowCellTemplate, PatternCellTemplate } from '../../DataGrid/CellTemplates';
+import {
+  MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS,
+  PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS
+} from '../../../constants/suggestionCatalog';
 
 const useProtocolSections = ({ formData, setFormData }) => {
   const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
@@ -163,6 +167,28 @@ const useProtocolSections = ({ formData, setFormData }) => {
     }));
   }, [activeMeasurementProtocolId, setFormData]);
 
+  const addMeasurementProtocolParameterSuggestion = useCallback((suggestion) => {
+    if (!activeMeasurementProtocolId || !suggestion) return;
+    setFormData((prev) => ({
+      ...prev,
+      measurementProtocols: (prev.measurementProtocols || []).map((protocol) => {
+        if (protocol.id !== activeMeasurementProtocolId) return protocol;
+        return {
+          ...protocol,
+          parameters: [
+            ...(protocol.parameters || []),
+            {
+              id: uuid4(),
+              name: suggestion.name || `Parameter ${(protocol.parameters || []).length + 1}`,
+              description: suggestion.description || '',
+              unit: suggestion.unit || ''
+            }
+          ]
+        };
+      })
+    }));
+  }, [activeMeasurementProtocolId, setFormData]);
+
   const addProcessingProtocolParameter = useCallback(() => {
     if (!activeProcessingProtocolId) return;
     setFormData((prev) => ({
@@ -178,6 +204,28 @@ const useProtocolSections = ({ formData, setFormData }) => {
               name: `Parameter ${(protocol.parameters || []).length + 1}`,
               description: '',
               unit: ''
+            }
+          ]
+        };
+      })
+    }));
+  }, [activeProcessingProtocolId, setFormData]);
+
+  const addProcessingProtocolParameterSuggestion = useCallback((suggestion) => {
+    if (!activeProcessingProtocolId || !suggestion) return;
+    setFormData((prev) => ({
+      ...prev,
+      processingProtocols: (prev.processingProtocols || []).map((protocol) => {
+        if (protocol.id !== activeProcessingProtocolId) return protocol;
+        return {
+          ...protocol,
+          parameters: [
+            ...(protocol.parameters || []),
+            {
+              id: uuid4(),
+              name: suggestion.name || `Parameter ${(protocol.parameters || []).length + 1}`,
+              description: suggestion.description || '',
+              unit: suggestion.unit || ''
             }
           ]
         };
@@ -274,10 +322,11 @@ const useProtocolSections = ({ formData, setFormData }) => {
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
       { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      { prop: 'unit', name: 'Unit', size: 130, readonly: false },
       {
         prop: 'description',
         name: 'Description',
-        size: 260,
+        size: 320,
         readonly: false,
         cellProperties: () => ({
           style: {
@@ -337,10 +386,11 @@ const useProtocolSections = ({ formData, setFormData }) => {
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
       { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      { prop: 'unit', name: 'Unit', size: 130, readonly: false },
       {
         prop: 'description',
         name: 'Description',
-        size: 260,
+        size: 320,
         readonly: false,
         cellProperties: () => ({
           style: {
@@ -380,6 +430,10 @@ const useProtocolSections = ({ formData, setFormData }) => {
     handleProcessingProtocolMappingsChange,
     handleMeasurementProtocolRowsChange,
     handleProcessingProtocolRowsChange,
+    addMeasurementProtocolParameterSuggestion,
+    addProcessingProtocolParameterSuggestion,
+    measurementParameterSuggestions: MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS,
+    processingParameterSuggestions: PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS,
     measurementProtocolGridConfig,
     processingProtocolGridConfig,
   };
