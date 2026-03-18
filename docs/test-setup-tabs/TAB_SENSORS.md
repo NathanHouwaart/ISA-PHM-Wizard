@@ -14,11 +14,13 @@
 
 ## Purpose
 
-Defines all measurement channels in the test setup. Each sensor becomes:
+Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Each sensor becomes:
 - A column in the Measurement Protocol parameter grid (Measurement tab)
 - A column in the Processing Protocol parameter grid (Processing tab)
 - A column in the Raw Measurement Output grid (Questionnaire Slide 9)
 - A column in the Processing Output grid (Questionnaire Slide 10)
+
+> **Multi-axis sensors:** A tri-axis accelerometer (X, Y, Z) must be entered as **three separate sensors** — one per axis (e.g., `acc_x`, `acc_y`, `acc_z`). Each axis generates its own assay entry in the output JSON, linked to its own two-column data file.
 
 ---
 
@@ -40,6 +42,8 @@ The app auto-generates an alias like `Sensor SE01` when you click **+ Add Sensor
 
 **Simple view:** One card per sensor.  
 **Grid view:** All sensors in a table; faster for setups with many channels.
+
+> **Tip:** Grid view is recommended for setups with many channels. You can paste values copied from a spreadsheet directly into grid cells.
 
 [SCREENSHOT: Sensors tab — simple view add button and first sensor card]
 

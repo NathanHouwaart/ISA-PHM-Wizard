@@ -120,8 +120,9 @@ All user guidance lives in [`docs/README.md`](docs/README.md).
 
 ### Main workflow
 
+- [`docs/guides/GUIDE_PROJECT_MANAGEMENT.md`](docs/guides/GUIDE_PROJECT_MANAGEMENT.md) — Project Sessions modal: create, configure, import, and switch projects
 - [`docs/guides/GUIDE_TEST_SETUPS.md`](docs/guides/GUIDE_TEST_SETUPS.md) — Build a test setup (sensors, configurations, protocols)
-- [`docs/guides/GUIDE_QUESTIONNAIRE.md`](docs/guides/GUIDE_QUESTIONNAIRE.md) — Navigate the 10-slide ISA questionnaire
+- [`docs/guides/GUIDE_QUESTIONNAIRE.md`](docs/guides/GUIDE_QUESTIONNAIRE.md) — Navigate the 10-slide ISA questionnaire (assumes project and test setup are ready)
 - [`docs/guides/GUIDE_EXPORT.md`](docs/guides/GUIDE_EXPORT.md) — What the ISA-PHM output contains and how to use it
 - [`docs/guides/TROUBLESHOOTING.md`](docs/guides/TROUBLESHOOTING.md) — Empty dropdowns, missing rows, conversion failures
 
@@ -212,7 +213,7 @@ The export step sends project data to the ISA-PHM backend, which converts it to 
 │   │   ├── useMeasurements.jsx  # Sensor measurement CRUD
 │   │   ├── useMappingsController.jsx # Generic entity-mapping operations
 │   │   ├── useDataGrid.jsx      # Grid interactions + undo/redo
-│   │   ├── useSubmitData.jsx    # Backend POST + ZIP download
+│   │   ├── useSubmitData.jsx    # Backend POST + JSON download
 │   │   ├── useFileSystem.jsx    # Project import/export (File System Access API)
 │   │   └── ...                  # Other entity and utility hooks
 │   ├── contexts/                # React context providers

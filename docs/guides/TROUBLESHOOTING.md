@@ -72,7 +72,7 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 **Cause:** The metadata payload is malformed — most commonly a missing required field such as investigation title or contact email.  
 **Fix:** Review Slides 2–4 and ensure all required fields are filled. Retry.
 
-### Assay files in the ZIP are mostly empty
+### Assay data in the output is mostly empty
 
 **Cause:** The file/value mappings in Slides 9 and/or 10 were not filled in.  
 **Fix:** Return to Slides 9–10, fill in the file names or values per sensor per run, and re-convert.

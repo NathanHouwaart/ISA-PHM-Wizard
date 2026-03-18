@@ -42,6 +42,8 @@ For **Prognostics Experiment** (multi-run): each study appears multiple times â€
 
 [SCREENSHOT: Slide 8 â€” grid view with a cell being edited (cursor visible in cell)]
 
+> **Tip:** Tab across a row to fill all variable values for one study, then move down to the next row. Ctrl+Z undoes the last cell edit within the session.
+
 **Simple view:**
 1. Select a study from the left panel.
 2. For each variable, a field or input appears on the right.

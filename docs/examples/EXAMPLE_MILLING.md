@@ -88,7 +88,7 @@ Each run gets its own row. For each run and each sensor, you provide the file re
 1. **Multi-run = one row per run**, not per study. A study with 10 runs has 10 rows in the Test Matrix and output grids.
 2. **Degradation is captured in the variable values per run.** VB increases across runs of the same study — this is what makes the data prognostic.
 3. **Operating conditions are typically constant** across all runs of a prognostic study (same recipe, same machine settings). The degradation itself is the variable.
-4. **File names per run** often encode the run number or inspection index: `milling_runA_pass4_ch1.mat`.
+4. **File names per run** often encode the run number or inspection index: `milling_runA_pass4_ch1.csv`.
 5. The **same study can be compared run-to-run** in the output files because runs stay group within one Study in the ISA hierarchy.
 
 ---

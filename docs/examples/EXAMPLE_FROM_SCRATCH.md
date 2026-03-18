@@ -222,9 +222,9 @@ Fill file names:
 
 | Study | vib_ch1 | vib_ch2 |
 |---|---|---|
-| Healthy Run | `healthy_ch1.mat` | `healthy_ch2.mat` |
-| BPFO Severity 1 | `bpfo_sev1_ch1.mat` | `bpfo_sev1_ch2.mat` |
-| BPFO Severity 2 | `bpfo_sev2_ch1.mat` | `bpfo_sev2_ch2.mat` |
+| Healthy Run | `healthy_ch1.csv` | `healthy_ch2.csv` |
+| BPFO Severity 1 | `bpfo_sev1_ch1.csv` | `bpfo_sev1_ch2.csv` |
+| BPFO Severity 2 | `bpfo_sev2_ch1.csv` | `bpfo_sev2_ch2.csv` |
 
 [SCREENSHOT: Slide 9 — grid with protocols and file names filled]
 
@@ -254,18 +254,11 @@ Click **Convert to ISA-PHM**.
 
 [SCREENSHOT: Download prompt / success message]
 
-Download the ZIP. It contains:
+Download the `.json` file. It contains the full ISA-PHM metadata for your project, including:
 
-```
-i_investigation.txt
-s_study_01.txt    ← Healthy Run
-s_study_02.txt    ← BPFO Severity 1
-s_study_03.txt    ← BPFO Severity 2
-a_st01_st01.txt   ← Healthy Run, raw measurement assay (vib_ch1, vib_ch2)
-a_st01_st02.txt   ← Healthy Run, processing assay
-a_st02_st01.txt   ← BPFO Severity 1, raw measurement assay
-...
-```
+- The **investigation** (title, contacts, publications, dates)
+- One **study** entry per experiment (Healthy Run, BPFO Severity 1, BPFO Severity 2) with study factors and test matrix values
+- One **assay** entry per sensor per study for raw measurements, and one per sensor per study for processed outputs
 
 ---
 

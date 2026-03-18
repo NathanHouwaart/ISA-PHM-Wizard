@@ -63,6 +63,8 @@ Defines the fault-related variables that characterize your experiments. These be
 
 **Grid view:** Edit all variables in a spreadsheet layout. Type dropdown supports all type options.
 
+> **Tip:** Tab between cells to move across a row quickly. Ctrl+Z undoes an accidental change within the session.
+
 ---
 
 ## Tips

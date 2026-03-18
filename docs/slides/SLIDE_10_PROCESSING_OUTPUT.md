@@ -48,13 +48,15 @@ If the dropdown is empty: add processing protocols in the test setup editor → 
 For each study/run row and each sensor column, enter the filename of the processed output:
 
 - `features_bearing_run1_ch1.csv`
-- `fft_study2_vib.mat`
+- `fft_study2_vib.csv`
 
 [SCREENSHOT: Slide 10 — grid filled with processed filenames]
 
+> **Tip:** Same grid navigation as Slide 9 — Tab across sensor columns for each row, Ctrl+Z to undo the last edit.
+
 ### 3. File picker (optional)
 
-Same as Slide 9 — if a dataset is configured, use the file picker to select files from the indexed list.
+Same as Slide 9 — if a dataset is configured, use the file picker to select files from the indexed list. The same root-folder, relative-path, and left-to-right column population rules apply. See [Slide 9 — File picker](./SLIDE_09_MEASUREMENT_OUTPUT.md#3-file-picker-optional-with-indexed-dataset) for the full explanation.
 
 ---
 
@@ -66,7 +68,7 @@ Same as Slide 9 — if a dataset is configured, use the file picker to select fi
 | Files represent | Raw sensor signals | Derived features / processed data |
 | ISA assay type | Raw data acquisition | Derived data |
 
-Both slides contribute assay files to the output ZIP. A complete project typically has entries on both slides.
+Both slides contribute assay entries to the output JSON. A complete project typically has entries on both slides.
 
 If your dataset is raw-only (no feature extraction was done), Slide 10 can be left empty. The assay file will still be generated but will be blank.
 
@@ -80,8 +82,8 @@ Same as Slide 9: generates `a_stXX_stYY.txt` assay files, but for the processed 
 
 ## Final step after Slide 10
 
-After completing Slide 10 (or at any point), click **Convert to ISA-PHM** to generate the output ZIP.  
-See [Export Guide](../guides/GUIDE_EXPORT.md) for what the ZIP contains and how to use it.
+After completing Slide 10 (or at any point), click **Convert to ISA-PHM** to generate the output JSON.  
+See [Export Guide](../guides/GUIDE_EXPORT.md) for what the output contains and how to use it.
 
 ---
 

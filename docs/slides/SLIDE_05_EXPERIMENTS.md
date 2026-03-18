@@ -38,6 +38,8 @@ Defines all experiments in the project. Each experiment becomes one ISA Study. T
 
 **Grid view:** Each row is an experiment. Click a cell to edit. Use the trash column to delete a row.
 
+> **Tip:** Grid view is the fastest way to add many experiments at once — Tab moves to the next cell, Enter confirms. Ctrl+Z undoes the last edit within the session.
+
 [SCREENSHOT: Slide 5 — grid view with experiments, configuration column showing dropdown]
 
 ---

@@ -11,7 +11,9 @@ For real-world filled examples, see [Example: Sietze (single-run)](../examples/E
 
 Open the app. You will land on the Home page.
 
-[SCREENSHOT: Home page showing the three navigation cards — About, Test Setups, ISA Questionnaire]
+> **Live app:** [https://nathanhouwaart.github.io/ISA-PHM-Wizard/](https://nathanhouwaart.github.io/ISA-PHM-Wizard/)
+
+![Home Screen](../images/home.png)
 
 ---
 
@@ -22,7 +24,7 @@ Test setups must exist before you create a project, because a project links to o
 1. Click **Test Setups** from the Home page.
 2. Click **Add Test Setup**.
 
-[SCREENSHOT: Test Setups overview — empty state, "Add Test Setup" button visible]
+![Create new Test Setup](../images/annotated/example-test-setup-create.png)
 
 ### 1a — Basic Info tab
 
@@ -35,9 +37,26 @@ Fill in the required fields:
 | Experiment Preparation Protocol Name | Standard bearing swap |
 | Set-up or test specimen-name | Pump bench v1 |
 
-[SCREENSHOT: Basic Info tab — fields filled with the values above]
+![SCREENSHOT: Basic Info tab — fields filled with the values above](../images/annotated/example-test-setup-basic-info.png)
 
-### 1b — Sensors tab
+### 1b — Characteristics tab
+
+Document the fixed hardware properties of your test rig — anything that doesn't change between experiments.
+
+1. Click **+ Add Characteristic**.
+2. Add a few key properties:
+
+| Category | Value | Unit |
+|---|---|---|
+| Motor | WEG W21 | |
+| Motor Power | 2.2 | kW |
+| Pump Bearing | 6308.2Z.C3 | |
+
+![SCREENSHOT: Characteristics tab — three characteristic rows filled](../images/annotated/example-test-setup-characteristics.png)
+
+> **Tip:** Include model numbers, bearing designations, and rated specifications — enough for someone else to replicate your setup.
+
+### 1c — Sensors tab
 
 1. Click **+ Add Sensor**.
 2. Add at least one sensor:
@@ -49,62 +68,99 @@ Fill in the required fields:
 | Sensor Type | Accelerometer |
 | Measurement Type | Vibration |
 
-[SCREENSHOT: Sensors tab — one sensor row filled in]
+![SCREENSHOT: Sensors tab — three sensor rows filled in](../images/annotated/example-test-setup-sensors.png)
 
 > **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 9 & 10).
 
-### 1c — Configurations tab
+### 1d — Configurations tab
 
-Add a configuration for each hardware variant you tested.
+A configuration is the **specific physical component installed** in the rig for a given experiment — the ISA-PHM "Sample". Include the component designation and its condition, not just a health label.
 
 1. Click **+ Add Configuration**.
-2. Fill: Name = `Healthy Bearing`, Replaceable Component ID = `RC-001`.
-3. (Optional) add a second: Name = `Faulted Bearing`, ID = `RC-002`.
+2. Add two configurations:
 
-[SCREENSHOT: Configurations tab — two configurations listed]
+| Name | Replaceable Component ID |
+|---|---|
+| `6309.C4 — No fault (baseline)` | `RC-001` |
+| `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` | `RC-002` |
 
-### 1d — Measurement Protocols tab
+![SCREENSHOT: Configurations tab — two configurations listed](../images/annotated/example-test-setup-configurations.png)
+
+> **Tip:** Include the bearing designation (or impeller model, tool spec) in the name — "Healthy Bearing" alone tells a reader nothing about which bearing was used.
+
+### 1e — Measurement Protocols tab
 
 1. Click **+ Add Protocol Variant** (or similar button).
 2. Name it `Standard Acquisition`.
 3. Add a parameter using the suggestions strip or **+ Add parameter**:
    - Parameter: `Sampling Rate`, Unit: `kHz`, Value for vib_ch1: `25.6`
 
-[SCREENSHOT: Measurement Protocols tab — one protocol variant with one parameter row and sensor column filled]
+![SCREENSHOT: Measurement Protocols tab — one protocol variant with one parameter row and sensor column filled](../images/annotated/example-test-setup-measurement-protocol.png)
 
-### 1e — Processing Protocols tab
+### 1f — Processing Protocols tab
 
 Same pattern. Name it `FFT Feature Extraction`. Add at least one parameter.
 
-[SCREENSHOT: Processing Protocols tab — one protocol variant with parameters]
+![SCREENSHOT: Processing Protocols tab — one protocol variant with parameters](../images/annotated/example-test-setup-processing-protocol.png)
 
-### 1f — Save
+### 1g — Save
 
-Click **Add Test Setup** at the bottom.
+Click **Add Test Setup** or **Update Test Setup** at the bottom.
 
-[SCREENSHOT: Save button highlighted at the bottom of the editor]
+![SCREENSHOT: Save button highlighted at the bottom of the editor](../images/annotated/example-test-setup-save-update.png)
 
 ---
 
 ## Step 2 — Create a Project
 
-1. Click **ISA Questionnaire** in the navbar or Home page.
-2. The Project Sessions modal opens.
+Click **ISA Questionnaire** in the navbar or Home page. The **Project Sessions** modal opens — this is where you create and manage projects before entering the questionnaire.
 
-[SCREENSHOT: Project Sessions modal — empty, showing "Create New Project" option]
+![Project Sessions modal — open, showing Create New Project button](../images/annotated/project-sessions-create-new-project.png)
 
-3. Click **Create New Project** (or equivalent button).
-4. Enter a project name, e.g. `Pump Diagnostics 2026`, and confirm.
+Click **Create New Project**. This walks you through four short setup slides:
 
-[SCREENSHOT: Project name entry dialog — name filled in]
+### 2a — Project name
 
-5. The new project appears. You now need to configure it:
-   - Click **Template** → select **Diagnostic Experiment** → save.
-   - Click **Test Setup** → select `My Pump Bench` → save.
+Enter a name for the project, e.g. `Pump Diagnostics 2026`. This is for your own reference only — it is not exported.
 
-[SCREENSHOT: Project card showing configured template and test setup]
+![Project Sessions — project name entry](../images/annotated/project-sessions-project-name.png)
 
-6. Click **Select** (or the project card) to make it the active project.
+### 2b — Experiment type
+
+Select the template that matches your experiment:
+
+| Option | When to use |
+|---|---|
+| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+
+Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
+
+For this guide, select **Diagnostic Experiment**.
+
+![Project Sessions — experiment type selection](../images/annotated/project-sessions-project-type.png)
+
+### 2c — Dataset indexation *(skippable)*
+
+If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects).
+
+> **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
+> 
+> **Example:** If your dataset root is `pump_bench/` and a file lives at `pump_bench/vibration/run1_ch1.csv`, the path written into the JSON will be `vibration/run1_ch1.csv`. That path is only correct if the JSON lives at `pump_bench/`.
+
+For this guide, skip this step — file names will be typed manually.
+
+![Project Sessions — dataset indexation slide](../images/annotated/project-sessions-dataset-selection.png)
+
+### 2d — Test setup selection
+
+Select the test setup this project uses. Choose **My Pump Bench** (the one created in Step 1).
+
+![Project Sessions — test setup selection](../images/annotated/project-sessions-select-test-setup.png)
+
+After confirming, click **Select** on the project card to make it the active project and enter the questionnaire.
+
+![Project Sessions — new project created, ready to select](../images/annotated/project-sessions-created.png)
 
 ---
 
@@ -112,7 +168,7 @@ Click **Add Test Setup** at the bottom.
 
 You are now inside the 10-slide questionnaire.
 
-[SCREENSHOT: Slide 1 Introduction — fresh blank project]
+![SCREENSHOT: Slide 1 Introduction — fresh blank project](../images/annotated/isa-questionnaire-slide-1.png)
 
 ### Slide 2 — Project Information
 
@@ -125,30 +181,44 @@ Fill:
 
 Click **Next**.
 
-[SCREENSHOT: Slide 2 — fields filled]
+![SCREENSHOT: Slide 2 — fields filled](../images/annotated/isa-questionnaire-slide-2.png)
 
 ### Slide 3 — Contacts
 
 Click **Add Contact**. Fill first name, last name, email, and at least one role.
 
-Click **Next**.
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-add-contact.png" alt="Add Contact button" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-contact-info.png" alt="Contact form filled" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-contact-added.png" alt="Contact card added" /></td>
+</tr></table>
 
-[SCREENSHOT: Slide 3 — one contact card]
+Click **Next**.
 
 ### Slide 4 — Publications
 
-Optional. Skip if you have no publication yet. Click **Next**.
+Optional. Skip if you have no publication yet.
+
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-add-publication.png" alt="Add Publication button" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-publication-info.png" alt="Publication form filled" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-3-publication-added.png" alt="Publication card added" /></td>
+</tr></table>
+
+Click **Next**.
 
 ### Slide 5 — Experiment Descriptions
 
-Click **Add** (or **+**) to add two experiments:
+Click **Add** (or **+**) to add two experiments. For each experiment, give it a name and select its **Configuration** from the dropdown:
 
 | Name | Configuration |
 |---|---|
-| Healthy Baseline | Healthy Bearing |
-| BPFO Fault Test | Faulted Bearing |
+| Healthy Baseline | `6309.C4 — No fault (baseline)` |
+| BPFO Fault Test | `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` |
 
-[SCREENSHOT: Slide 5 — two experiment cards, each with a configuration selected]
+> **Note:** The **Configuration** dropdown is populated from the configurations you defined in the test setup (Step 1d). If the dropdown is empty, go back to the test setup editor → **Configurations** tab and add at least one configuration.
+
+![SCREENSHOT: Slide 5 — two experiment cards, each with a configuration selected](../images/annotated/isa-questionnaire-slide-5.png)
 
 Click **Next**.
 
@@ -158,7 +228,7 @@ Click the suggestion chips to add:
 - **Fault Type** (Qualitative fault specification)
 - **Fault Severity** (Quantitative fault specification)
 
-[SCREENSHOT: Slide 6 — two fault specification rows added via suggestion chips]
+![SCREENSHOT: Slide 6 — two fault specification rows added via suggestion chips](../images/annotated/isa-questionnaire-slide-6.png)
 
 Click **Next**.
 
@@ -168,7 +238,7 @@ Click the suggestion chips to add:
 - **Rotational Speed** (RPM)
 - **Load** (N)
 
-[SCREENSHOT: Slide 7 — two operating condition rows]
+![SCREENSHOT: Slide 7 — two operating condition rows](../images/annotated/isa-questionnaire-slide-7.png)
 
 Click **Next**.
 
@@ -183,26 +253,28 @@ For each study and each variable, enter the value that applies to that run:
 
 Click a cell in the grid and type the value, or use simple view to fill study by study.
 
-[SCREENSHOT: Slide 8 grid view — cells filled with the values above]
+> **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many studies and variables.
+
+![SCREENSHOT: Slide 8 grid view — cells filled with the values above](../images/annotated/isa-questionnaire-slide-8.png)
 
 Click **Next**.
 
 ### Slide 9 — Raw Measurement Output
 
-1. For each study, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
+1. For each study/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
 2. Fill in the file names (or values) per sensor and per run:
-   - Healthy Baseline / vib_ch1: `healthy_run1_ch1.mat`
-   - BPFO Fault Test / vib_ch1: `bpfo_sev1_ch1.mat`
+   - Healthy Baseline / vib_ch1: `healthy_run1_ch1.csv`
+   - BPFO Fault Test / vib_ch1: `bpfo_sev1_ch1.csv`
 
-[SCREENSHOT: Slide 9 — protocol selected per study and file names in sensor columns]
+![SCREENSHOT: Slide 9 — protocol selected per study and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
 
 Click **Next**.
 
 ### Slide 10 — Processing Protocol Output
 
-Same pattern as Slide 9, using **Processing Protocol** (`FFT Feature Extraction`).
+Same pattern as Slide 9, using **Processing Protocol** (`Processing Protocol 1`).
 
-[SCREENSHOT: Slide 10 — protocol selected and processed file names filled]
+![SCREENSHOT: Slide 10 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
 
 ---
 
@@ -210,23 +282,21 @@ Same pattern as Slide 9, using **Processing Protocol** (`FFT Feature Extraction`
 
 Click **Convert to ISA-PHM** (visible on the last slide or in the header area).
 
-[SCREENSHOT: Convert to ISA-PHM button highlighted]
+The wizard sends your metadata to the backend service and returns a downloadable `.json` file containing the full ISA-PHM structured metadata.
 
-The wizard sends your metadata to the backend service and returns a ZIP download containing the ISA-PHM files.
 
-[SCREENSHOT: Success state / download prompt after conversion]
+<table><tr>
+  <td><img src="../images/annotated/isa-questionnaire-convert.png" alt="Convert to ISA-PHM Button Highlighted" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-converting.png" alt="Converting" /></td>
+</tr></table>
 
 ---
 
 ## What you created
 
-```
-i_investigation.txt          ← project title, contacts, publications
-s_study_01.txt               ← Healthy Baseline study + test matrix values
-s_study_02.txt               ← BPFO Fault Test study + test matrix values
-a_st01_stXX.txt              ← assay files per study–sensor pair (raw output)
-a_st02_stXX.txt              ← assay files per study–sensor pair (processed output)
-```
+A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — investigation details, study descriptions, factor values, and assay entries with links to your data files (the relative paths you filled in on Slides 9–10).
+
+This file is the metadata companion to your dataset. Place it in the root of your dataset folder alongside your `.csv` data files, then zip and deposit everything together to make the dataset FAIR-compliant.
 
 ---
 

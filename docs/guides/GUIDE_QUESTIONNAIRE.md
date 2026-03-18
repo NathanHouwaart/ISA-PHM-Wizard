@@ -97,6 +97,8 @@ Most slides offer two views, toggled by tabs at the top:
 - Faster for bulk input — click a cell and type
 - Supports undo/redo within the session
 
+> **Tip:** In grid view, press Ctrl+Z to undo and Ctrl+Y (or Ctrl+Shift+Z) to redo. This works within the current session only — refreshing the page clears the undo history.
+
 [SCREENSHOT: A slide shown in simple view]
 
 [SCREENSHOT: The same slide in grid view]

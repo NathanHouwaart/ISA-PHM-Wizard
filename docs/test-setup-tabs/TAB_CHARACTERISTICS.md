@@ -39,6 +39,8 @@ Documents fixed hardware properties of the test rig and its components. Characte
 2. Edit category, value, and unit directly in the table.
 3. Comment count is shown as a badge; actual comment content is only editable in simple view.
 
+> **Tip:** Grid view is ideal for initial bulk entry. Switch to simple view afterwards to add comments to individual rows — comments are not editable in the grid.
+
 [SCREENSHOT: Characteristics tab — simple view, one card expanded with comments field visible]
 
 ---

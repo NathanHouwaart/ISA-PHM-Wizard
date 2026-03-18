@@ -44,7 +44,48 @@ A study can have one run (diagnostic template) or multiple sequential runs (prog
 
 ### Assay
 
-The measurements linked to a study. Each assay represents one file or data stream produced by one sensor for one run. In the wizard these are constructed automatically from the study–sensor–run mappings you fill in on Slides 9 and 10.
+The measurements linked to a study. Each assay represents the output of **one sensor channel** for **one run**.
+
+> **Key rule:** An assay data file always has **exactly two columns** — a timestamp column and a **single measurement value** column. One sensor channel → one assay file.
+
+**Multi-axis sensors must be split into separate entries.** A tri-axis accelerometer (X, Y, Z) produces **three assays** — one per axis. In the wizard this means registering three separate sensor entries in the test setup, not one.
+
+<details>
+<summary>Example — tri-axis accelerometer</summary>
+
+Instead of one sensor entry `acc`:
+
+| Alias | Type |
+|-------|------|
+| `acc` | Accelerometer |
+
+Define **three** sensor entries, one per axis:
+
+| Alias   | Type          |
+|---------|---------------|
+| `acc_x` | Accelerometer |
+| `acc_y` | Accelerometer |
+| `acc_z` | Accelerometer |
+
+Each will generate its own two-column assay file in the output JSON:
+
+```
+timestamp, acc_x
+0.000,     0.012
+0.001,     0.015
+...
+```
+
+```
+timestamp, acc_y
+0.000,    -0.003
+0.001,    -0.001
+...
+```
+
+</details>
+
+Assays are constructed automatically from the study–sensor–run mappings you fill in on Slides 9 and 10. **One populated cell in that grid = one assay entry** in the output JSON.
 
 ---
 
@@ -75,6 +116,45 @@ Choose **Diagnostic** for bearing seeded-fault datasets, freeze-profile tests, o
 
 Choose **Prognostics** for milling tool wear, accelerated degradation, or any experiment where the same sample is measured repeatedly over time.
 
+### Decision Flowchart
+
+Not sure which template applies to your experiment? Work through the questions below:
+
+```mermaid
+flowchart TD
+    A([Start]) --> B{Do you measure the\nsame component or sample\nrepeatedly over time?}
+
+    B -- No --> C{Is each fault condition\ncaptured in one\nmeasurement snapshot?}
+    C -- Yes --> DIAG
+    C -- No --> D{Can you split into\nseparate conditions,\none snapshot each?}
+    D -- Yes --> DIAG
+    D -- No --> RECONSIDER([Reconsider your\nexperiment structure])
+
+    B -- Yes --> E{Is the measurement\nsequence time-ordered\nfor the same sample?}
+    E -- Yes --> F{Goal: estimate RUL\nor track degradation\nover time?}
+    F -- Yes --> PROG
+    F -- No --> G{Are runs ordered &\non the same sample\nwith changing health?}
+    G -- Yes --> PROG
+    G -- No --> DIAG
+
+    E -- No --> DIAG
+
+    DIAG(["✅ Diagnostic Experiment\n─────────────────────\nTemplate: Diagnostic\nRuns per study: 1\nGoal: fault detection\nor classification\n─────────────────────\nExample: Bearing seeded-\nfault dataset, one capture\nper fault condition"])
+
+    PROG(["✅ Prognostics Experiment\n─────────────────────\nTemplate: Prognostics\nRuns per study: N\nGoal: RUL estimation\nor degradation tracking\n─────────────────────\nExample: Milling tool wear,\nmeasured every N passes\nuntil tool failure"])
+```
+
+#### Quick rules of thumb
+
+| Signal | Template |
+|---|---|
+| Fault **seeded** (known size, known location) measured **once** per condition | Diagnostic |
+| Fault **injected artificially** at different severity levels | Diagnostic |
+| Same component measured at **regular intervals** as it wears/ages | Prognostics |
+| Test ends at **failure** (run-to-failure) | Prognostics |
+| Dataset has a **RUL label** per sample | Prognostics |
+| Dataset has a **fault class label** per sample | Diagnostic |
+
 The template choice affects:
 - Slide 5 (Experiment Descriptions) — shows a `Number of runs` field only for prognostics
 - Slide 8 (Test Matrix) — columns multiply per run for prognostics
@@ -88,21 +168,20 @@ Study variables are the conditions that differ between studies. They come in two
 
 | Flavour | Slide | Type options | Example |
 |---|---|---|---|
-| **Fault Specifications** | Slide 6 | Qualitative fault spec, Quantitative fault spec, Damage, RUL, Time, Other | Fault Type = BPFO, Fault Severity = 2 |
-| **Operating Conditions** | Slide 7 | Operating condition (fixed) | Motor Speed = 1300 RPM, Load = 50 N |
+| **Fault Specifications** | Slide 6 | Qualitative fault spec, Quantitative fault spec, Damage, RUL, Other | Fault Type = BPFO, Fault Severity = 2 |
+| **Operating Conditions** | Slide 7 | Operating condition | Motor Speed = 1300 RPM, Load = 50 N |
 
 On Slide 8 (Test Matrix) you assign a value for each variable to each study (or run). This is what makes each study description unique and machine-readable.
+
+> **Note (prognostic tests):** The ISA-PHM paper specifies that time-varying operating conditions in long-term degradation tests should be stored as separate time series files (one per variable per run), synchronised to a reference timestamp. The wizard currently captures operating conditions as scalar values only — time-varying file-based operating conditions are out of scope for this version.
 
 ---
 
 ## The Export
 
-Pressing **Convert to ISA-PHM** sends your metadata to a backend conversion service. It returns a ZIP containing ISA-PHM formatted files:
-- `i_investigation.txt` — the investigation-level ISA file
-- `s_study_XX.txt` per study — study-level ISA files with the test matrix
-- `a_stXX_stYY.txt` per assay — assay-level ISA files with measurement/processing output
+Pressing **Convert to ISA-PHM** sends your metadata to a backend conversion service. It returns a `.json` file containing the full ISA-PHM structured metadata, including the investigation, all studies, and all assays.
 
-These files can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant.
+This file can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant.
 
 ---
 

@@ -16,8 +16,9 @@ Reference for *ISA-PHM - a Standardized Format for Storing and Utilizing Metadat
 
 | Guide | What it covers |
 |---|---|
+| [Project Sessions](./guides/GUIDE_PROJECT_MANAGEMENT.md) | Create, configure, import, export, and switch projects from the Project Sessions modal |
 | [Test Setups](./guides/GUIDE_TEST_SETUPS.md) | Build your lab bench description (sensors, configurations, protocols) |
-| [Questionnaire](./guides/GUIDE_QUESTIONNAIRE.md) | Navigate the 10-slide ISA questionnaire |
+| [Questionnaire](./guides/GUIDE_QUESTIONNAIRE.md) | Navigate the 10-slide ISA questionnaire (assumes project and test setup are ready) |
 | [Export](./guides/GUIDE_EXPORT.md) | What "Convert to ISA-PHM" produces and how to use the output |
 | [Troubleshooting](./guides/TROUBLESHOOTING.md) | Empty dropdowns, missing rows, conversion failures |
 
@@ -62,11 +63,3 @@ Each slide has its own page with field tables, dependency notes, and screenshot 
 | [From scratch](./examples/EXAMPLE_FROM_SCRATCH.md) | Invented simple bearing diagnostics — complete walkthrough from nothing to export |
 | [Single Run Sietze](./examples/EXAMPLE_SIETZE.md) | Pre-loaded real-world diagnostic example (single-run template) |
 | [Multi Run Milling](./examples/EXAMPLE_MILLING.md) | Pre-loaded real-world prognostics example (multi-run template) |
-
----
-
-## Engineering / developer notes
-
-Implementation notes, bugfixes, and refactor write-ups (not user-facing):
-
-`BUGFIX_*`, `HOOK_API_*`, `REFACTOR_*`, `PHASE*`, `VERSION_*`, `OVERLAY_*`, `PERFORMANCE.md`, `FormFieldRefactorPlan.md`, `EVENT_HANDLER_BEST_PRACTICES.md`, `FILE_SYSTEM_IMPROVEMENTS.md`, `HYBRID_FILE_SYSTEM_APPROACH.md`, `CODE_REVIEW_*`

@@ -54,6 +54,8 @@ All variables on this slide have the type **Operating condition** — this is fi
 
 **Grid view:** Edit all conditions in a table layout.
 
+> **Tip:** Tab through cells to fill all conditions quickly. Ctrl+Z undoes the last edit within the session.
+
 ---
 
 ## Difference from Fault Specifications

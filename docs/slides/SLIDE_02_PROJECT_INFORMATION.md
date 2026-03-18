@@ -40,7 +40,7 @@ Captures the top-level ISA Investigation metadata: what the project is, who it's
 
 ## Downstream use
 
-These fields map directly to the `INVESTIGATION` block at the top of `i_investigation.txt` in the export ZIP.
+These fields map directly to the `INVESTIGATION` block at the top level of the exported ISA-PHM JSON.
 
 ---
 
