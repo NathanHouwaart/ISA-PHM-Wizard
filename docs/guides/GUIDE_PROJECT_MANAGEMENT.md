@@ -8,7 +8,7 @@ This guide covers everything related to creating, naming, configuring, switching
 
 Every time you open the **ISA Questionnaire**, the Project Sessions modal appears first. This is where you manage all your projects.
 
-[SCREENSHOT: Project Sessions modal — overview with existing projects listed and action buttons]
+![Project Sessions modal — overview with existing projects listed and action buttons](../images/annotated/project-sessions-create-new-project.png)
 
 From this modal you can:
 - Select the active project (click a project card)
@@ -24,57 +24,75 @@ From this modal you can:
 ## Creating a New Project
 
 1. Open **ISA Questionnaire**.
-2. In the Project Sessions modal, click **New Project** (or the equivalent create button).
-3. Enter a project name and confirm.
+2. In the Project Sessions modal, click **Create New Project**.
 
-[SCREENSHOT: New project name input dialog — empty name field]
+![Project Sessions modal — Create New Project button](../images/annotated/project-sessions-create-new-project.png)
 
-The project appears in the modal with default configuration. You must now configure it before filling the questionnaire.
+This opens a short four-step setup wizard:
+
+### Step 1 — Project name
+
+Enter a name for the project. This is for your own reference only — it is not included in the exported metadata.
+
+![Project Sessions — project name entry](../images/annotated/project-sessions-project-name.png)
+
+### Step 2 — Experiment type
+
+Select the template that matches your experiment:
+
+| Option | When to use |
+|---|---|
+| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+
+Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
+
+![Project Sessions — experiment type selection](../images/annotated/project-sessions-project-type.png)
+
+This choice affects the Test Matrix (Slide 8) and Output mapping slides (9 & 10). **You can change it later** from the project card, but doing so resets run-level mappings.
+
+### Step 3 — Dataset indexation *(skippable)*
+
+If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects).
+
+> **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
+>
+> **Example:** If your dataset root is `pump_bench/` and a file lives at `pump_bench/vibration/run1_ch1.csv`, the path written into the JSON will be `vibration/run1_ch1.csv`. That path is only correct if the JSON lives at `pump_bench/`.
+
+Skip this step if you prefer to type file paths manually on Slides 9–10.
+
+![Project Sessions — dataset indexation](../images/annotated/project-sessions-dataset-selection.png)
+
+### Step 4 — Test setup selection
+
+Select the test setup this project uses. Only one test setup can be active per project. The selected setup's sensors, configurations, and protocols become available throughout the questionnaire.
+
+If no test setups exist yet, create one first: see [Test Setups Guide](./GUIDE_TEST_SETUPS.md).
+
+![Project Sessions — test setup selection](../images/annotated/project-sessions-select-test-setup.png)
+
+After confirming, the new project card appears in the modal. Click **Select** to make it active and enter the questionnaire.
+
+![Project Sessions — new project created, ready to select](../images/annotated/project-sessions-created.png)
 
 ---
 
 ## Configuring a Project
 
-Each project has four configuration sections, accessible from its card in the modal:
+The four configuration sections are set during the creation wizard (above) but can all be changed later from the project card in the modal.
 
-### 1. Name
+![SCREENSHOT: Change active projects configuration](../images/annotated/project-sessions-project-configuration.png)
 
-Click the rename icon on the project card to update the display name.
+From left to right:
 
-[SCREENSHOT: Project card — rename icon highlighted]
-
-### 2. Template
-
-Click **Template** on the project card.
-
-[SCREENSHOT: Template selection dialog — two options shown]
-
-Choose one:
-
-| Option | Use when |
-|---|---|
-| **Diagnostic Experiment** | Short-term tests, each study has one file set (one run) |
-| **Prognostics Experiment** | Degradation tests, same study has multiple sequential runs |
-
-This choice affects the Test Matrix (Slide 8) and Output mapping slides (9 & 10). **You can change it later**, but doing so resets run-level mappings.
-
-### 3. Test Setup
-
-Click **Test Setup** on the project card.
-
-[SCREENSHOT: Test Setup selection dialog — list of available test setups]
-
-Select the test setup that represents your lab bench. Only one test setup can be active per project. The selected setup's sensors, configurations, and protocols become available throughout the questionnaire.
-
-If no test setups exist yet, create one first: see [Test Setups Guide](./GUIDE_TEST_SETUPS.md).
-
-### 4. Dataset (optional)
-
-Click **Dataset** on the project card.
-
-[SCREENSHOT: Dataset configuration dialog]
-
-The dataset is an optional indexed list of your data files. When configured, Slide 8 and Slides 9–10 offer a file picker that lets you browse and assign files instead of typing paths manually. This is especially useful for large datasets with many files.
+| Icon | Button | Description |
+|---|---|---|
+| 📁 | **Dataset** | Index a local dataset folder to enable the file picker on Slides 9–10. File paths in the output JSON will be relative to this folder. |
+| 🔄 | **Experiment** | Change the experiment type (Diagnostic or Prognostics). Changing this resets run-level mappings. |
+| 🧪 | **Test Setup** | Switch the test setup linked to this project. The selected setup's sensors, configurations, and protocols become available throughout the questionnaire. |
+| ✏️ | **Rename** | Rename the project display name (not exported). |
+| 📤 | **Export** | Download the project as a JSON file for backup or sharing on another machine. |
+| 🗑️ | **Delete** | Permanently remove the project from localStorage. This cannot be undone. |
 
 ---
 
@@ -82,7 +100,9 @@ The dataset is an optional indexed list of your data files. When configured, Sli
 
 Click a project card (or a **Select** / **Open** button) to make it the active project. The questionnaire loads that project's data.
 
-[SCREENSHOT: Project card selected/highlighted — "active" indicator visible]
+![Project Sessions — project cards, ready to select](../images/annotated/project-sessions-created.png)
+
+
 
 ---
 
@@ -90,7 +110,7 @@ Click a project card (or a **Select** / **Open** button) to make it the active p
 
 Use **Import** in the Project Sessions modal to load a previously exported project JSON file. The file contains all project data and the test setup it used.
 
-[SCREENSHOT: Import button in the modal]
+![SCREENSHOT: Import button in the modal](../images/annotated/project-sessions-project-import.png)
 
 > The two built-in example projects (`Single Run Sietze` and `Multi Run Milling`) are loaded this way — they ship as JSON files in `src/data/`.
 
@@ -103,7 +123,7 @@ Use **Export** on a project card to download it as a JSON file. This file:
 - Includes the linked test setup snapshot
 - Can be shared, backed up, or re-imported on another machine
 
-[SCREENSHOT: Export button on a project card]
+![SCREENSHOT: Export button on a project card](../images/annotated/project-sessions-project-export.png)
 
 ---
 
@@ -111,7 +131,7 @@ Use **Export** on a project card to download it as a JSON file. This file:
 
 Click the delete icon on a project card. A confirmation dialog appears.
 
-[SCREENSHOT: Delete confirmation dialog]
+![SCREENSHOT: Delete confirmation dialog](../images/annotated/project-sessions-delete.png)
 
 > All data for that project is removed from localStorage. This cannot be undone.
 
@@ -125,6 +145,20 @@ All project data is stored in the browser's **localStorage** (no server-side sav
 - Data does **not** sync between different browsers or devices
 
 **Use Export regularly** to back up work in progress.
+
+### Clearing all data
+
+If you want to start completely fresh — removing all projects, test setups, and settings — you can wipe the app's localStorage directly from your browser's developer tools:
+
+1. Open **DevTools** (`F12` or `Ctrl+Shift+I` / `Cmd+Option+I` on Mac).
+2. Go to the **Application** tab (Chrome/Edge) or **Storage** tab (Firefox).
+3. In the left sidebar, expand **Local Storage** and click the entry for the app's URL.
+4. Press the 🚫 **Clear all** button (the icon that looks like a no-entry sign), or right-click the URL entry and choose **Clear**.
+5. Reload the page — the app will start as if freshly installed.
+
+> **Warning:** This deletes everything permanently. Export any projects you want to keep first.
+
+![SCREENSHOT: Clear Local Storage](../images/annotated/project-sessions-localstorage-delete.png)
 
 ---
 
