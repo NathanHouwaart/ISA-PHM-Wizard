@@ -157,7 +157,10 @@ export const useDataGrid = ({
       isInternalRowEmitRef.current = false;
       lastIncomingRowsRef.current = incomingRows;
       lastIncomingMappingsRef.current = incomingMappings;
-      return;
+      // Only skip if the parent echoed back exactly what we emitted (echo-loop prevention).
+      // If the parent transformed the data further (e.g. propagating a value to more rows),
+      // allow the sync to proceed so the grid reflects those additional changes.
+      if (deepEqual(incomingRows, currentRowDataRef.current)) return;
     }
 
     if (!incomingRowsChangedFromLast && !incomingMappingsChangedFromLast) {
