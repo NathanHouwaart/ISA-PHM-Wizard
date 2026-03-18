@@ -4,9 +4,11 @@
 
 ---
 
-[SCREENSHOT: Basic Info tab — all fields empty (new test setup)]
 
-[SCREENSHOT: Basic Info tab — all fields filled with a real example]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-basic-info-empty.png" alt="Basic Info tab — all fields empty (new test setup)" /></td>
+  <td><img src="../images/annotated/test-setup-basic-info-populated.png" alt="Basic Info tab — all fields filled with a real example" /></td>
+</tr></table>
 
 ---
 
@@ -39,6 +41,8 @@ A human-readable string — no fixed format required. City, building, room, or l
 ## Experiment Preparation Protocol Name
 
 The name of the document or SOP that describes how the test rig is prepared for each experiment. For example, how a bearing is installed, calibrated, or zeroed. This does not link to a file — it's a reference name used in ISA-PHM metadata.
+
+> **Note:** The default value `Experiment Preparation Protocol Name` is also perfectly valid if you don't have a specific SOP name.
 
 ## Set-up or test specimen-name
 

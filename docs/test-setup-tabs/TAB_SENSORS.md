@@ -4,11 +4,11 @@
 
 ---
 
-[SCREENSHOT: Sensors tab — empty state]
-
-[SCREENSHOT: Sensors tab — simple view with two or three sensors]
-
-[SCREENSHOT: Sensors tab — grid view with multiple sensor rows]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-sensors-empty.png" alt="Sensors tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-sensors-populated.png" alt="Sensors tab — simple view with sensors filled" /></td>
+  <td><img src="../images/annotated/test-setup-sensors-populated-grid-view.png" alt="Sensors tab — grid view" /></td>
+</tr></table>
 
 ---
 
@@ -45,7 +45,7 @@ The app auto-generates an alias like `Sensor SE01` when you click **+ Add Sensor
 
 > **Tip:** Grid view is recommended for setups with many channels. You can paste values copied from a spreadsheet directly into grid cells.
 
-[SCREENSHOT: Sensors tab — simple view add button and first sensor card]
+![Sensors tab — add button and first sensor card](../images/annotated/test-setup-sensors-add.png)
 
 ---
 

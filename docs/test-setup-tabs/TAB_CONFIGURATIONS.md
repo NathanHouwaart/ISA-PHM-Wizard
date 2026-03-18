@@ -2,9 +2,10 @@
 
 ---
 
-[SCREENSHOT: Configurations tab — empty state]
-
-[SCREENSHOT: Configurations tab — two configurations listed in simple view]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-configurations-empty.png" alt="Configurations tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-configurations-populated.png" alt="Configurations tab — two configurations listed" /></td>
+</tr></table>
 
 ---
 
@@ -30,7 +31,7 @@ Defines named variants of the test setup — typically different physical states
 2. Fill the Name and optionally the Replaceable Component ID.
 3. Add one or more **Detail** entries (name/value pairs) for extra traceability.
 
-[SCREENSHOT: Configurations tab — one configuration card open with name, component ID, and a detail entry]
+![Configurations tab — one configuration card open with name, component ID, and a detail entry](../images/annotated/test-setup-configurations-edit.png)
 
 ---
 
@@ -54,7 +55,7 @@ On Questionnaire Slide 5 (Experiment Descriptions), each experiment has a **Conf
 
 This is important for traceability: the ISA-PHM output includes the configuration name as a design descriptor for each study.
 
-[SCREENSHOT: Slide 5 experiment card showing the configuration dropdown populated from test setup configurations]
+![Slide 5 — experiment card with configuration dropdown populated from test setup configurations](../images/annotated/test-setup-configurations-link-to-questionnaire.png)
 
 ---
 

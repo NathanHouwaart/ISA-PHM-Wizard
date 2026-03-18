@@ -4,9 +4,10 @@
 
 ---
 
-[SCREENSHOT: Processing Protocols tab — empty state]
-
-[SCREENSHOT: Processing Protocols tab — one protocol variant expanded with parameters and sensor columns]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-processing-pr-empty.png" alt="Processing Protocols tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-processing-pr-expanded.png" alt="Processing Protocols tab — one protocol expanded with parameters" /></td>
+</tr></table>
 
 ---
 
@@ -50,8 +51,6 @@ Each processing protocol variant contains:
 | Segment Length | samples |
 | Resampling Rate | Hz |
 
-[SCREENSHOT: Processing Protocols tab — suggestion chips visible]
-
 ---
 
 ## Filling the sensor-parameter grid
@@ -60,18 +59,20 @@ Same as Measurement Protocols: each parameter row has a value per sensor column.
 
 For processing, values often differ per sensor channel — for example, different frequency ranges of interest per sensor type.
 
-[SCREENSHOT: Processing Protocols tab — grid with per-sensor values filled]
+![Processing Protocols tab — grid with per-sensor values filled](../images/annotated/test-setup-processing-pr-gird.png)
 
 ---
 
 ## Multiple variants
 
-Add separate variants for significantly different processing pipelines applied to the same raw data:
+Add separate variants for significantly different processing pipelines applied to the same raw data. For example:
 
 - Variant A: `Time-Domain RMS` — extracts RMS per window
 - Variant B: `FFT Envelope` — applies Hilbert transform then FFT
 
 Each study on Slide 10 selects one variant.
+
+![Processing Protocols tab — two protocol variants in the list](../images/annotated/test-setup-processing-pr-multiple-protocols.png)
 
 ---
 
@@ -87,7 +88,7 @@ Each study on Slide 10 selects one variant.
 
 ## Downstream use
 
-The selected processing protocol on Slide 10 appears in `a_stXX_stYY.txt` as the Assay Measurement Type for the processing assay. Its parameters and per-sensor values are serialized as Protocol Parameter rows.
+The selected processing protocol on Slide 10 is serialized into `isa-phm.json` as the Assay Measurement Type for the processing assay. Its parameters and per-sensor values appear as Protocol Parameter rows within that file.
 
 ---
 

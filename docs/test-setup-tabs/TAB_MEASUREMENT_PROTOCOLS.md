@@ -4,11 +4,11 @@
 
 ---
 
-[SCREENSHOT: Measurement Protocols tab — empty state (no protocols yet)]
 
-[SCREENSHOT: Measurement Protocols tab — one protocol variant expanded, showing parameters and sensor columns]
-
-[SCREENSHOT: Measurement Protocols tab — sensor-parameter grid with values filled]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-measurement-pr-empty.png" alt="Measurement Protocols tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-measurement-pr-expanded.png" alt="Measurement Protocols tab — one protocol expanded with parameters" /></td>
+</tr></table>
 
 ---
 
@@ -36,8 +36,6 @@ Each protocol variant contains:
 2. Enter a **Name** (e.g. `Standard Acquisition 25.6 kHz`).
 3. Optionally add a **Description**.
 
-[SCREENSHOT: Measurement Protocols tab — new protocol created, name field filled]
-
 ---
 
 ## Adding parameters
@@ -58,8 +56,6 @@ Each parameter is a row in the protocol's table. Add parameters two ways:
 
 **Manual:** Click **+ Add parameter**. Fill Name, Unit, and Description yourself.
 
-[SCREENSHOT: Measurement Protocols tab — suggestion chip strip visible above parameter list]
-
 ---
 
 ## Sensor-parameter mapping grid
@@ -70,7 +66,7 @@ After adding parameters and sensors (sensors must exist on the Sensors tab), a g
 
 Fill in the value of each parameter for each sensor. Many parameters are the same across all sensors (e.g. sampling rate); others may differ (e.g. amplifier gain per channel).
 
-[SCREENSHOT: Measurement Protocols tab — grid with parameter rows and sensor columns, several cells filled]
+![Measurement Protocols tab — grid with parameter rows and sensor columns, several cells filled](../images/annotated/test-setup-measurement-pr-gird.png)
 
 ---
 
@@ -83,7 +79,7 @@ Add a second or third variant if different experiments used different acquisitio
 
 On Slide 9, each study independently selects which variant was used.
 
-[SCREENSHOT: Measurement Protocols tab — two protocol variants collapsed in list, both named]
+![Measurement Protocols tab — two protocol variants in the list](../images/annotated/test-setup-measurement-pr-multiple-protocols.png)
 
 ---
 

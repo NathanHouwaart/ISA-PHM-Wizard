@@ -2,11 +2,11 @@
 
 ---
 
-[SCREENSHOT: Characteristics tab — empty state]
-
-[SCREENSHOT: Characteristics tab — simple view with several rows, one expanded showing comments]
-
-[SCREENSHOT: Characteristics tab — grid view with multiple rows]
+<table><tr>
+  <td><img src="../images/annotated/test-setup-characteristics-empty.png" alt="Characteristics tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-characteristics-populated.png" alt="Characteristics tab — simple view with rows filled" /></td>
+  <td><img src="../images/annotated/test-setup-characteristics-populated-grid-view.png" alt="Characteristics tab — grid view" /></td>
+</tr></table>
 
 ---
 
@@ -41,7 +41,15 @@ Documents fixed hardware properties of the test rig and its components. Characte
 
 > **Tip:** Grid view is ideal for initial bulk entry. Switch to simple view afterwards to add comments to individual rows — comments are not editable in the grid.
 
-[SCREENSHOT: Characteristics tab — simple view, one card expanded with comments field visible]
+## Managing Comments
+
+Each characteristic can have one or more free-text comments — useful for recording *why* a value is what it is, or noting a change over time (e.g. a bearing replacement date).
+
+Comments are only visible and editable in **simple view**. Expand a characteristic card to reveal the comment field. In grid view, a badge shows how many comments exist, but you cannot edit them there.
+
+![Characteristics tab — simple view, one card expanded with comment field visible](../images/annotated/test-setup-characteristics-comments.png)
+
+> **Tip:** Use comments for provenance notes like `Replaced 2026-01-15 after run 42` or `Value from manufacturer datasheet rev. C`.
 
 ---
 
