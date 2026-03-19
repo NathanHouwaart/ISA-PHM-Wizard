@@ -9,7 +9,7 @@ This guide covers the full creation workflow. For per-tab field details, see the
 ## Why test setups come first
 
 The questionnaire (Slides 5, 9, 10) depends on data that lives in the test setup:
-- Slide 5 (Experiments) pulls **configurations** to let you link each study to a hardware state
+- Slide 5 (Experiments) pulls **configurations** to let you link each experiment to a hardware state
 - Slide 9 (Raw Output) pulls **sensors** and **measurement protocols**
 - Slide 10 (Processed Output) pulls **sensors** and **processing protocols**
 

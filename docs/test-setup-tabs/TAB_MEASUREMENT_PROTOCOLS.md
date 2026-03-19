@@ -14,9 +14,9 @@
 
 ## Purpose
 
-Documents how raw signals are acquired. You can define multiple protocol **variants** within one test setup (e.g. different sample rates for different measurement campaigns). On Questionnaire Slide 9, each study is linked to one protocol variant.
+Documents how raw signals are acquired. You can define multiple protocol **variants** within one test setup (e.g. different sample rates for different measurement campaigns). On Questionnaire Slide 9, each experiment *(ISA: Study)* is linked to one protocol variant.
 
-In ISA-PHM terms, the measurement protocol becomes the Assay measurement type and its parameters become the Protocol Parameters in the assay file.
+In ISA-PHM terms, the selected measurement protocol is referenced in each measurement output *(ISA: Assay)* as `processSequence[0].executesProtocol`. Its parameters become protocol parameter values for that process.
 
 ---
 
@@ -77,7 +77,7 @@ Add a second or third variant if different experiments used different acquisitio
 - Variant A: `High-Speed Acquisition` — 51.2 kHz sample rate
 - Variant B: `Low-Speed Acquisition` — 12.8 kHz sample rate
 
-On Slide 9, each study independently selects which variant was used.
+On Slide 9, each experiment *(ISA: Study)* independently selects which variant was used.
 
 ![Measurement Protocols tab — two protocol variants in the list](../images/annotated/test-setup-measurement-pr-multiple-protocols.png)
 
@@ -85,7 +85,7 @@ On Slide 9, each study independently selects which variant was used.
 
 ## Downstream use
 
-The selected protocol on Slide 9 appears in `a_stXX_stYY.txt` as the Assay Measurement Type. Its parameters and per-sensor values are serialized as Protocol Parameter Name/Value rows.
+The selected protocol on Slide 9 is serialized inside `isa-phm.json` for each assay (`a_st{study_index}_se{sensor_index}`) via `processSequence[0].executesProtocol`. Its parameters and per-sensor values are serialized as protocol parameter values.
 
 ---
 

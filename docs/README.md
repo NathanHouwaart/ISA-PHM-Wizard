@@ -6,7 +6,7 @@ Reference for *ISA-PHM - a Standardized Format for Storing and Utilizing Metadat
 
 ## New here? Start in order
 
-1. [ISA-PHM Concepts](./guides/GUIDE_CONCEPTS.md) — understand Investigation / Study / Assay, test setups, and the dependency chain before touching the app
+1. [ISA-PHM Concepts](./guides/GUIDE_CONCEPTS.md) — understand the Project/Experiment/Measurement Output hierarchy *(ISA: Investigation/Study/Assay)*, test setups, and the dependency chain before touching the app
 2. [Quick Start](./guides/GUIDE_QUICKSTART.md) — blank screen to first export, step by step with example values
 3. [Project Management](./guides/GUIDE_PROJECT_MANAGEMENT.md) — create, configure, import, export, and switch projects
 

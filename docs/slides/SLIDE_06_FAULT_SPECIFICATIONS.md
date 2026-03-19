@@ -1,6 +1,6 @@
 # Slide 6 — Fault Specifications
 
-**ISA-PHM hierarchy level:** Study (factor variables)  
+**ISA-PHM hierarchy level:** Experiment *(ISA: Study)* — Fault Specification *(ISA: Study Factor)*  
 **Dependencies:** None
 
 ---
@@ -15,7 +15,7 @@
 
 ## Purpose
 
-Defines the fault-related variables that characterize your experiments. These become the factor columns in the Study files and the rows in the Test Matrix grid (Slide 8, left section).
+Defines the fault-related variables that characterize your experiments. These become the factor columns in the experiment entries and the rows in the Test Matrix grid (Slide 8, left section).
 
 ---
 
@@ -76,7 +76,7 @@ Defines the fault-related variables that characterize your experiments. These be
 
 ## Downstream use
 
-Each fault specification variable becomes a `study.factors[]` entry in the JSON, shared across all studies in the project.
+Each fault specification variable becomes a `study.factors[]` entry in the JSON, shared across all experiments in the project.
 
 | Slide 6 field | JSON key | Example |
 |---|---|---|
@@ -85,8 +85,8 @@ Each fault specification variable becomes a `study.factors[]` entry in the JSON,
 | Unit | `factors[].comments[name="unit"].value` | `"mm"` |
 | Description | `factors[].comments[name="description"].value` | `"Type of fault introduced onto the bearing"` |
 
-The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one `factorValue` entry per variable per sample row, referencing the factor by `@id`.
+The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one `factorValue` entry per variable per configuration row (ISA: sample), referencing the factor by `@id`.
 
 ---
 
-[← Slide 5](./SLIDE_05_EXPERIMENTS.md) | [Next: Slide 7 →](./SLIDE_07_OPERATING_CONDITIONS.md)
+[← Slide 5](./SLIDE_05_EXPERIMENTS.md) | [Next: Slide 7 →](./SLIDE_07_OPERATING_CONDITIONS.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

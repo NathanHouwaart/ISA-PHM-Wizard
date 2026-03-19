@@ -1,9 +1,20 @@
 # Quick Start — First ISA-PHM Project
 
-This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple artificia scenario so every field has a concrete example value.
+This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple artificial scenario so every field has a concrete example value.
 
 **Scenario used in this guide:** A single-run bearing diagnostics test on a small motor-pump bench.  
 For real-world filled examples, see [Example: Sietze (single-run)](../examples/EXAMPLE_SIETZE.md) and [Example: Milling (multi-run)](../examples/EXAMPLE_MILLING.md).
+
+## Minimal path (if you are in a hurry)
+
+1. Create one test setup with at least: 1 sensor, 1 configuration, 1 measurement protocol, 1 processing protocol.
+2. Create a project in Project Sessions, select **Diagnostic Experiment**, and link the test setup.
+3. Fill Slides 2–5 (project info, contacts, experiments).
+4. Add at least one fault specification (Slide 6) and one operating condition (Slide 7).
+5. Fill Test Matrix values (Slide 8), then raw/processed file mappings (Slides 9–10).
+6. Click **Convert to ISA-PHM**.
+
+If you want the full field-by-field walkthrough, continue below.
 
 ---
 
@@ -131,8 +142,8 @@ Select the template that matches your experiment:
 
 | Option | When to use |
 |---|---|
-| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
-| **Prognostics Experiment** | Each study contains a longer duration measurement, cinsisting of one or multiple sequential runs (degradation / run-to-failure) |
+| **Diagnostic Experiment** | Each experiment is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each experiment spans a longer duration measurement, consisting of one or multiple sequential runs (degradation / run-to-failure) |
 
 Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
 
@@ -246,7 +257,7 @@ Click **Next**.
 
 For each experiment and each variable, enter the value that applies to that run:
 
-| Study | Fault Type | Fault Severity | Rotational Speed | Load |
+| Experiment *(ISA: Study)* | Fault Type | Fault Severity | Rotational Speed | Load |
 |---|---|---|---|---|
 | Healthy Baseline | None | 0 | 1500 | 50 |
 | BPFO Fault Test | BPFO | 1 | 1500 | 50 |
@@ -266,13 +277,17 @@ Click **Next**.
    - Healthy Baseline / vib_ch1: `healthy_run1_ch1.csv`
    - BPFO Fault Test / vib_ch1: `bpfo_sev1_ch1.csv`
 
-![SCREENSHOT: Slide 9 — protocol selected per study and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
+> **Required file format:** Each mapped raw file should contain exactly two columns: `time` + one sensor measurement column.
+
+![SCREENSHOT: Slide 9 — protocol selected per experiment and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
 
 Click **Next**.
 
 ### Slide 10 — Processing Protocol Output
 
 Same pattern as Slide 9, using **Processing Protocol** (`Processing Protocol 1`).
+
+> **Required file format:** Each mapped processed file should contain exactly two columns: `time` (or index/frequency) + one processed value column.
 
 ![SCREENSHOT: Slide 10 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
 
@@ -294,7 +309,7 @@ The wizard sends your metadata to the backend service and returns a downloadable
 
 ## What you created
 
-A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — investigation details, study descriptions, factor values, and assay entries with links to your data files (the relative paths you filled in on Slides 9–10).
+A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — project details, experiment descriptions, variable values (fault specifications and operating conditions), and measurement output entries with links to your data files (the relative paths you filled in on Slides 9–10).
 
 This file is the metadata companion to your dataset. Place it in the root of your dataset folder alongside your `.csv` data files, then zip and deposit everything together to make the dataset FAIR-compliant.
 

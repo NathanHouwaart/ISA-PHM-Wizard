@@ -12,7 +12,7 @@ Open it by loading the ISA Questionnaire and selecting **Single Run Sietze** fro
 |---|---|
 | Template | Diagnostic Experiment (single-run) |
 | Test setup | Techport |
-| Studies | 2 (BPFO Fault Severity 1 and Severity 2) |
+| Experiments | 2 (BPFO Fault Severity 1 and Severity 2) |
 | Sensors | 11 vibration channels + current channels |
 | Fault specs | Fault Type, Fault Position, Fault Severity |
 | Operating conditions | Motor Speed, Discharge Pressure, Flow |
@@ -53,7 +53,7 @@ One configuration per bearing fault state (healthy, BPFO severity 1, BPFO severi
 
 ### Slide 2 — Project Information
 
-[SCREENSHOT: Slide 2 — Sietze project, showing the filled investigation title and description]
+[SCREENSHOT: Slide 2 — Sietze project, showing the filled project title and description]
 
 | Field | Value |
 |---|---|
@@ -85,7 +85,7 @@ Two experiments:
 
 Each has a submission date (2023-10-26) and publication date (2023-12-17).
 
-### Slides 6 & 7 — Study Variables
+### Slides 6 & 7 — Experiment Variables
 
 **Fault specifications:**
 
@@ -105,20 +105,20 @@ Each has a submission date (2023-10-26) and publication date (2023-12-17).
 
 ### Slide 8 — Test Matrix
 
-[SCREENSHOT: Slide 8 grid view — Sietze project — BPFO, position, severity, and operating condition values filled for both studies]
+[SCREENSHOT: Slide 8 grid view — Sietze project — BPFO, position, severity, and operating condition values filled for both experiments]
 
-| Study | Fault Type | Fault Position | Fault Severity | Motor Speed | Discharge Pressure | Flow |
+| Experiment | Fault Type | Fault Position | Fault Severity | Motor Speed | Discharge Pressure | Flow |
 |---|---|---|---|---|---|---|
 | BPFO Fault Severity 1 100% | BPFO | Center | 1 | 1300 | 120 | 1.4 |
 | BPFO Fault Severity 2 100% | BPFO | Center | 2 | 1300 | 120 | 1.4 |
 
-Note that operating conditions are the same for both studies (same operating point), differing only in fault condition.
+Note that operating conditions are the same for both experiments (same operating point), differing only in fault condition.
 
 ### Slide 9 — Raw Measurement Output
 
 [SCREENSHOT: Slide 9 — Sietze project — measurement protocol selected, filenames filled across 11 sensor columns]
 
-Each study row has the `Standard Measurement Protocol` selected. File names follow the pattern:
+Each experiment row has the `Standard Measurement Protocol` selected. File names follow the pattern:
 `Vibration_Motor-2_100_time-bearing bpfo X-chY.txt`
 
 ### Slide 10 — Processing Protocol Output
@@ -131,9 +131,9 @@ Processed filenames follow the same naming convention but point to the extracted
 
 ## Key lessons from this example
 
-1. **Single-run = one row per study.** No run columns in the Test Matrix.
-2. **Constant operating conditions** are still documented per study — both rows have the same values.
-3. **File naming patterns** are often consistent: the filename encodes study identity (speed, fault type, severity).
+1. **Single-run = one row per experiment.** No run columns in the Test Matrix.
+2. **Constant operating conditions** are still documented per experiment — both rows have the same values.
+3. **File naming patterns** are often consistent: the filename encodes experiment identity (speed, fault type, severity).
 4. **11 sensors** = 11 columns in Slides 9–10 — this is why sensors should be given short, descriptive aliases.
 
 ---

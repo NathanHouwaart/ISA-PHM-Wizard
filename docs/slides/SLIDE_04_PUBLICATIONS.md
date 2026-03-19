@@ -1,6 +1,6 @@
 # Slide 4 — Publications
 
-**ISA-PHM hierarchy level:** Investigation  
+**ISA-PHM hierarchy level:** Project *(ISA: Investigation)*  
 **Dependencies:** Contacts (Slide 3) — a publication's corresponding author must be an existing contact with an email address
 
 ---
@@ -54,7 +54,7 @@ If a contact is set as corresponding author, their email cannot be removed on Sl
 
 ## Downstream use
 
-Each publication becomes an entry in the top-level `publications[]` array. The same list is duplicated inside every `study.publications[]`.
+Each publication becomes an entry in the top-level `publications[]` array. The same list is duplicated inside every experiment's `study.publications[]` entry in the output JSON.
 
 | Slide 4 field | JSON key | Example |
 |---|---|---|
@@ -68,4 +68,4 @@ Author order in `authorList` matches the order you selected contacts on this sli
 
 ---
 
-[← Slide 3](./SLIDE_03_CONTACTS.md) | [Next: Slide 5 →](./SLIDE_05_EXPERIMENTS.md)
+[← Slide 3](./SLIDE_03_CONTACTS.md) | [Next: Slide 5 →](./SLIDE_05_EXPERIMENTS.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

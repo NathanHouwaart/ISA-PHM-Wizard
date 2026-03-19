@@ -40,9 +40,9 @@ If any of these are missing, the Project Sessions modal lets you configure them 
 
 ## Slide categories and recommended order
 
-### Category A — Investigation metadata (Slides 2–4)
+### Category A — Project metadata *(ISA: Investigation)* (Slides 2–4)
 
-Captures the top-level ISA Investigation fields. These slides are independent of each other and of the test setup.
+Captures the top-level project metadata *(ISA: Investigation fields)*. These slides are independent of each other and of the test setup.
 
 | Slide | What you fill |
 |---|---|
@@ -52,34 +52,34 @@ Captures the top-level ISA Investigation fields. These slides are independent of
 
 Complete these early. They have no dependencies.
 
-### Category B — Study definitions (Slide 5)
+### Category B — Experiment definitions (Slide 5)
 
-Defines the experiments (ISA Studies). **Requires configurations from the test setup.**
+Defines the individual experiments in the project. **Requires configurations from the test setup.**
 
 | Slide | What you fill |
 |---|---|
 | 5 — Experiment Descriptions | Experiment name, description, dates, configuration, run count (prognostics only) |
 
-### Category C — Study variables (Slides 6–7)
+### Category C — Experiment variables (Slides 6–7)
 
-Define the variables that distinguish experiments from each other. These are independent of the test setup.
+Define the variables (fault specifications and operating conditions) that distinguish experiments from each other. These are independent of the test setup.
 
 | Slide | What you fill |
 |---|---|
 | 6 — Fault Specifications | Fault-related variables (type, severity, location, etc.) |
 | 7 — Operating Conditions | Environmental and operational variables (speed, load, temperature) |
 
-**Complete slides 5, 6, and 7 before Slide 8.** The test matrix requires both studies and variables to exist.
+**Complete slides 5, 6, and 7 before Slide 8.** The test matrix requires both experiments and variables to exist.
 
 ### Category D — Mappings (Slides 8–10)
 
-Map studies and runs to values and files. These are the most dependency-heavy slides.
+Map experiments and runs to values and files. These are the most dependency-heavy slides.
 
 | Slide | What you fill | Requires |
 |---|---|---|
-| 8 — Test Matrix | Variable values per study/run | Studies (Slide 5) + Variables (Slides 6–7) |
-| 9 — Raw Measurement Output | Raw file per sensor per study/run + measurement protocol per study | Studies + Sensors + Measurement Protocols |
-| 10 — Processing Output | Processed file per sensor per study/run + processing protocol per study | Studies + Sensors + Processing Protocols |
+| 8 — Test Matrix | Variable values per experiment/run | Experiments (Slide 5) + Variables (Slides 6–7) |
+| 9 — Raw Measurement Output | Raw file per sensor per experiment/run + measurement protocol per experiment | Experiments + Sensors + Measurement Protocols |
+| 10 — Processing Output | Processed file per sensor per experiment/run + processing protocol per experiment | Experiments + Sensors + Processing Protocols |
 
 ---
 
@@ -98,6 +98,8 @@ Most slides offer two views, toggled by tabs at the top:
 - Supports undo/redo within the session
 
 > **Tip:** In grid view, press Ctrl+Z to undo and Ctrl+Y (or Ctrl+Shift+Z) to redo. This works within the current session only — refreshing the page clears the undo history.
+>
+> For full grid controls, bulk-fill actions, and file picker behavior, see [Working with the Grid](./GUIDE_GRID.md).
 
 [SCREENSHOT: A slide shown in simple view]
 
@@ -109,7 +111,7 @@ Both views write to the same underlying data. Switching view does not lose edits
 
 ## The In-App Explorer
 
-The drawer on the right side (the layers icon) opens the **In-App Explorer**, which shows a tree view of the current project's mapped data. Use it to quickly verify what studies, variables, and mappings are currently active.
+The drawer on the right side (the layers icon) opens the **In-App Explorer**, which shows a tree view of the current project's mapped data. Use it to quickly verify what experiments, variables, and mappings are currently active.
 
 [SCREENSHOT: In-App Explorer drawer open, showing project tree]
 
@@ -132,8 +134,8 @@ The button is always accessible. You can press it at any point, but incomplete m
 | Configuration dropdown (Slide 5) is empty | No configurations in selected test setup | Add configurations in test setup → Configurations tab |
 | Protocol dropdown (Slides 9–10) is empty | No protocols in selected test setup | Add measurement/processing protocols in test setup |
 | No sensor columns in grid (Slides 9–10) | No sensors in selected test setup | Add sensors in test setup → Sensors tab |
-| Test matrix grid has no variable columns | No study variables on Slides 6–7 | Go back and add fault specs / operating conditions |
-| Test matrix grid has no study rows | No experiments on Slide 5 | Go back and add experiments |
+| Test matrix grid has no variable columns | No experiment variables on Slides 6–7 | Go back and add fault specs / operating conditions |
+| Test matrix grid has no experiment rows | No experiments on Slide 5 | Go back and add experiments |
 
 ---
 

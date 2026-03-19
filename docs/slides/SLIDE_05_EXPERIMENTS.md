@@ -1,6 +1,6 @@
 # Slide 5 — Experiment Descriptions
 
-**ISA-PHM hierarchy level:** Study  
+**ISA-PHM hierarchy level:** Experiment *(ISA: Study)*  
 **Dependencies:** Test setup selected + at least one configuration in that setup (for the configuration dropdown)
 
 ---
@@ -26,10 +26,10 @@ Defines all experiments in the project. Each experiment becomes one ISA Study. T
 |---|---|---|---|
 | **Experiment Name** | Yes | Descriptive short name | `BPFO Fault Severity 1 100%` |
 | **Description** | No | Free-text description of what was done | `Outer race fault, seeded at the 6 o'clock position` |
-| **Submission Date** | No | When this study was submitted/recorded | `2023-10-26` |
-| **Publication Date** | No | When this study was published | `2023-12-17` |
+| **Submission Date** | No | When this experiment was submitted/recorded | `2023-10-26` |
+| **Publication Date** | No | When this experiment was published | `2023-12-17` |
 | **Configuration** | No | The test setup configuration that applies | `Faulted Bearing RC-002` |
-| **Number of Runs** | Prognostics only | How many sequential runs this study contains | `5` |
+| **Number of Runs** | Prognostics only | How many sequential runs this experiment contains | `5` |
 
 ---
 
@@ -65,7 +65,7 @@ If the dropdown is empty:
 
 ## Number of runs (Prognostics Experiment only)
 
-This field only appears when the project template is set to **Prognostics Experiment**. Set it to the number of runs (measurement intervals) for each study. For example, a milling tool wear experiment with 5 tool inspections = 5 runs.
+This field only appears when the project template is set to **Prognostics Experiment**. Set it to the number of runs (measurement intervals) for each experiment. For example, a milling tool wear experiment with 5 tool inspections = 5 runs.
 
 Another concrete example: the [XJTU-SY bearing dataset](https://biaowang.tech/xjtu-sy-bearing-datasets/) runs each bearing to failure, recording multiple short acquisition windows along the way — each acquisition window is one run. If a bearing produced 123 acquisitions before failure, that experiment has **Number of Runs = 123**.
 
@@ -77,7 +77,7 @@ Each run gets its own column in the Test Matrix (Slide 8) and its own row in the
 
 ## Downstream use
 
-Each experiment becomes one **Study** entry in the exported `isa-phm.json`. The study file is named automatically following the pattern `s{nn}_.txt` (e.g. `s01_.txt`, `s02_.txt`).
+Each experiment becomes one **Study** entry in the exported `isa-phm.json`. The experiment file (ISA: study file) is named automatically following the pattern `s{nn}_.txt` (e.g. `s01_.txt`, `s02_.txt`).
 
 Field mapping:
 
@@ -89,12 +89,12 @@ Field mapping:
 | Publication Date | `publicReleaseDate` | `"2023-12-17"` |
 | Number of Runs | `comments[total_runs]` | `"1"` |
 
-The **Experiment Type** set during project creation (Diagnostic / Prognostic) is written into each study as a `studyDesignDescriptor` — either `"Diagnostics"` or `"Prognostics"`.
+The **Experiment Type** set during project creation (Diagnostic / Prognostic) is written into each experiment as a `studyDesignDescriptor` — either `"Diagnostics"` or `"Prognostics"`.
 
-The selected **Configuration** is written into the study's `materials.samples[].characteristics` — as the `Configuration Name` characteristic (the name you gave it) and the `Replaceable Component` characteristic (the replaceable component ID). This is how a study know exactly what physical component was installed during that particular experiment.
+The selected **Configuration** is written into the experiment's `materials.samples[].characteristics` — as the `Configuration Name` characteristic (the name you gave it) and the `Replaceable Component` characteristic (the replaceable component ID). This is how the wizard knows exactly what physical component was installed during each experiment.
 
-Assay entries (one per sensor, see Slides 9–10) are nested under each study and use the filename pattern `a_st{study_n}_se{sensor_n}`.
+Measurement output entries (one per sensor, see Slides 9–10) are nested under each experiment in the output JSON and use the filename pattern `a_st{experiment_n}_se{sensor_n}`.
 
 ---
 
-[← Slide 4](./SLIDE_04_PUBLICATIONS.md) | [Next: Slide 6 →](./SLIDE_06_FAULT_SPECIFICATIONS.md)
+[← Slide 4](./SLIDE_04_PUBLICATIONS.md) | [Next: Slide 6 →](./SLIDE_06_FAULT_SPECIFICATIONS.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

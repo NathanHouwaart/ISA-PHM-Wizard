@@ -78,7 +78,7 @@ Use Detail entries to record properties that are specific to this configuration 
 
 On Questionnaire Slide 5 (Experiment Descriptions), each experiment has a **Configuration** dropdown. The dropdown is populated from this list. Selecting a configuration links that experiment to the specific hardware state described here.
 
-This is important for traceability: the ISA-PHM output includes the configuration name as a design descriptor for each study.
+This is important for traceability: the ISA-PHM output includes the configuration name as a design descriptor for each experiment *(ISA: Study)*.
 
 ![Slide 5 — experiment card with configuration dropdown populated from test setup configurations](../images/annotated/test-setup-configurations-link-to-questionnaire.png)
 

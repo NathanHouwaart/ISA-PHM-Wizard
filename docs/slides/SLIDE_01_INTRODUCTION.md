@@ -31,10 +31,10 @@ The ISA-PHM Wizard handles the formatting. Your job is to fill in the facts accu
 
 ## What the wizard produces
 
-After completing all 10 slides and clicking **Convert to ISA-PHM**, the wizard returns a single **`isa-phm.json`** file. This file contains the full structured metadata for your experiment — investigation details, study descriptions, factor values, and assay entries with links to your data files.
+After completing all 10 slides and clicking **Convert to ISA-PHM**, the wizard returns a single **`isa-phm.json`** file. This file contains the full structured metadata for your experiment — project details, experiment descriptions, variable values (fault specifications and operating conditions), and measurement output entries with links to your data files.
 
 Place it in the root of your dataset folder alongside your `.csv` files, then zip and deposit to make the dataset FAIR-compliant.
 
 ---
 
-[← Back to Questionnaire Guide](../guides/GUIDE_QUESTIONNAIRE.md) | [Next: Slide 2 →](./SLIDE_02_PROJECT_INFORMATION.md)
+[← Back to Questionnaire Guide](../guides/GUIDE_QUESTIONNAIRE.md) | [Next: Slide 2 →](./SLIDE_02_PROJECT_INFORMATION.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

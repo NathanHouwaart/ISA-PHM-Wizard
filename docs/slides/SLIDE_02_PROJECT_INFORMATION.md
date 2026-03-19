@@ -1,6 +1,6 @@
 # Slide 2 — Project Information
 
-**ISA-PHM hierarchy level:** Investigation  
+**ISA-PHM hierarchy level:** Project *(ISA: Investigation)*  
 **Dependencies:** None
 
 ---
@@ -11,7 +11,7 @@
 
 ## Purpose
 
-Captures the top-level ISA Investigation metadata: what the project is, who it is for, when it happened, and under what license it can be used.
+Captures the top-level project metadata *(ISA: Investigation)*: what the project is, who it is for, when it happened, and under what license it can be used.
 
 ---
 
@@ -52,4 +52,4 @@ The experiment type set during project creation (Diagnostic / Prognostic) is sto
 
 ---
 
-[← Slide 1](./SLIDE_01_INTRODUCTION.md) | [Next: Slide 3 →](./SLIDE_03_CONTACTS.md)
+[← Slide 1](./SLIDE_01_INTRODUCTION.md) | [Next: Slide 3 →](./SLIDE_03_CONTACTS.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

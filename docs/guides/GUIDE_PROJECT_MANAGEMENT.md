@@ -42,14 +42,16 @@ Select the template that matches your experiment:
 
 | Option | When to use |
 |---|---|
-| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
-| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+| **Diagnostic Experiment** | Each experiment is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each experiment contains multiple sequential runs (degradation / run-to-failure) |
 
 Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
 
 ![Project Sessions — experiment type selection](../images/annotated/project-sessions-project-type.png)
 
 This choice affects the Test Matrix (Slide 8) and Output mapping slides (9 & 10). **You can change it later** from the project card, but doing so resets run-level mappings.
+
+<a id="step-3--dataset-indexation-skippable"></a>
 
 ### Step 3 — Dataset indexation *(skippable)*
 
@@ -164,6 +166,6 @@ If you want to start completely fresh — removing all projects, test setups, an
 
 ## Related guides
 
-- [ISA-PHM Concepts](./GUIDE_CONCEPTS.md) — understanding Investigation/Study/Assay and why setup comes first
+- [ISA-PHM Concepts](./GUIDE_CONCEPTS.md) — understanding the Project/Experiment/Measurement Output hierarchy *(ISA: Investigation/Study/Assay)* and why setup comes first
 - [Test Setups](./GUIDE_TEST_SETUPS.md) — creating the test setup before linking it to a project
 - [Export Guide](./GUIDE_EXPORT.md) — what happens after Convert to ISA-PHM

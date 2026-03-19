@@ -24,12 +24,12 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 
 ## Slide 8 — Test Matrix
 
-### Grid has no variable columns (only a study column)
+### Grid has no variable rows
 
-**Cause:** No study variables exist. You skipped Slides 6 and/or 7.  
+**Cause:** No experiment variables exist. You skipped Slides 6 and/or 7.  
 **Fix:** Go back to Slide 6 and add fault specifications. Go to Slide 7 and add operating conditions. Return to Slide 8.
 
-### Grid has no study rows
+### Grid has no experiment/run columns
 
 **Cause:** No experiments were created on Slide 5.  
 **Fix:** Go back to Slide 5 and add at least one experiment.
@@ -53,7 +53,7 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 **Cause:** The selected test setup has no sensors.  
 **Fix:** Edit the test setup → **Sensors** tab → add at least one sensor. Re-open the questionnaire.
 
-### No study rows appear in the output grid
+### No experiment rows appear in the output grid
 
 **Cause:** No experiments on Slide 5.  
 **Fix:** Go back to Slide 5 and add experiments.
@@ -69,10 +69,10 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 
 ### Conversion returns 4xx error
 
-**Cause:** The metadata payload is malformed — most commonly a missing required field such as investigation title or contact email.  
+**Cause:** The metadata payload is malformed — most commonly a missing required field such as project title or contact email.  
 **Fix:** Review Slides 2–4 and ensure all required fields are filled. Retry.
 
-### Assay data in the output is mostly empty
+### Measurement output data in the output is mostly empty
 
 **Cause:** The file/value mappings in Slides 9 and/or 10 were not filled in.  
 **Fix:** Return to Slides 9–10, fill in the file names or values per sensor per run, and re-convert.
