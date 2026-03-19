@@ -1,6 +1,6 @@
 # Quick Start — First ISA-PHM Project
 
-This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple invented scenario so every field has a concrete example value.
+This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple artificia scenario so every field has a concrete example value.
 
 **Scenario used in this guide:** A single-run bearing diagnostics test on a small motor-pump bench.  
 For real-world filled examples, see [Example: Sietze (single-run)](../examples/EXAMPLE_SIETZE.md) and [Example: Milling (multi-run)](../examples/EXAMPLE_MILLING.md).
@@ -74,15 +74,15 @@ Document the fixed hardware properties of your test rig — anything that doesn'
 
 ### 1d — Configurations tab
 
-A configuration is the **specific physical component installed** in the rig for a given experiment — the ISA-PHM "Sample". Include the component designation and its condition, not just a health label.
+A configuration defines the rig with the **specific physical components installed** for a given experiment - the ISA-PHM "Sample". For example, in a bearing test bench it is important to know which specific bearing (ID) is used, even if the introduced fault is the same.  Include the component designation and a unique ID, to unambiguously describe the used set-up.
 
 1. Click **+ Add Configuration**.
 2. Add two configurations:
 
 | Name | Replaceable Component ID |
 |---|---|
-| `6309.C4 — No fault (baseline)` | `RC-001` |
-| `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` | `RC-002` |
+| `Bearing #101 - 6309.C4` | `RC-001` |
+| `Bearing #201 - 6309.C4` | `RC-002` |
 
 ![SCREENSHOT: Configurations tab — two configurations listed](../images/annotated/example-test-setup-configurations.png)
 
@@ -132,7 +132,7 @@ Select the template that matches your experiment:
 | Option | When to use |
 |---|---|
 | **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
-| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+| **Prognostics Experiment** | Each study contains a longer duration measurement, cinsisting of one or multiple sequential runs (degradation / run-to-failure) |
 
 Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
 
@@ -209,12 +209,12 @@ Click **Next**.
 
 ### Slide 5 — Experiment Descriptions
 
-Click **Add** (or **+**) to add two experiments. For each experiment, give it a name and select its **Configuration** from the dropdown:
+Click **Add** (or **+**) to add two experiments. For each experiment, give it a name and select its **Configuration** (may be the same for the two experiments) from the dropdown:
 
 | Name | Configuration |
 |---|---|
-| Healthy Baseline | `6309.C4 — No fault (baseline)` |
-| BPFO Fault Test | `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` |
+| Healthy Baseline | `Bearing #101 - 6309.C4` |
+| BPFO Fault Test | `Bearing #201 - 6309.C4` |
 
 > **Note:** The **Configuration** dropdown is populated from the configurations you defined in the test setup (Step 1d). If the dropdown is empty, go back to the test setup editor → **Configurations** tab and add at least one configuration.
 
@@ -244,16 +244,16 @@ Click **Next**.
 
 ### Slide 8 — Test Matrix
 
-For each study and each variable, enter the value that applies to that run:
+For each experiment and each variable, enter the value that applies to that run:
 
 | Study | Fault Type | Fault Severity | Rotational Speed | Load |
 |---|---|---|---|---|
 | Healthy Baseline | None | 0 | 1500 | 50 |
 | BPFO Fault Test | BPFO | 1 | 1500 | 50 |
 
-Click a cell in the grid and type the value, or use simple view to fill study by study.
+Click a cell in the grid and type the value, or use simple view to fill experiment by experiment.
 
-> **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many studies and variables.
+> **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many experiments and variables.
 
 ![SCREENSHOT: Slide 8 grid view — cells filled with the values above](../images/annotated/isa-questionnaire-slide-8.png)
 
@@ -261,7 +261,7 @@ Click **Next**.
 
 ### Slide 9 — Raw Measurement Output
 
-1. For each study/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
+1. For each experiment/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
 2. Fill in the file names (or values) per sensor and per run:
    - Healthy Baseline / vib_ch1: `healthy_run1_ch1.csv`
    - BPFO Fault Test / vib_ch1: `bpfo_sev1_ch1.csv`

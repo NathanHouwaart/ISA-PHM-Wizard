@@ -95,7 +95,7 @@ Before (or alongside) filling in the ISA hierarchy, you define a **Test Setup** 
 
 - **Characteristics** — fixed hardware properties of the rig that are the same across all experiments (motor model, rated power, shaft geometry)
 - **Sensors** — every measurement channel (alias, model, type)
-- **Configurations** — each specific physical component installed in the rig for testing (the ISA-PHM "Sample")
+- **Configurations** — Variants of the setup containing different physical hardware components or test articles (e.g. changed bearings, impellers, tool pieces, etc.)
 - **Measurement Protocols** — how raw signals were acquired (sample rate, filter settings, etc.)
 - **Processing Protocols** — how raw signals were turned into features (FFT, windowing, etc.)
 
@@ -131,18 +131,18 @@ This matters for traceability: if a bearing's failure mode differs from the othe
 
 ---
 
-## Single-Run vs. Multi-Run Templates
+## Diagnostics vs. Prognostics Template
 
 The wizard supports two templates, chosen once per project:
 
 | Template | When to use | Paper equivalent |
 |---|---|---|
 | **Diagnostic Experiment** | Short tests with stable, injected faults — each study produces one file set | One row per Study in the ISA-PHM Study file |
-| **Prognostics Experiment** | Degradation / run-to-failure — same study has multiple sequential trajectories | Multiple rows per Study, one per run |
+| **Prognostics Experiment** | Degradation / run-to-failure — same study has one or more sequential trajectories | One or multiple rows per Study, one per run |
 
-Choose **Diagnostic** for bearing seeded-fault datasets, freeze-profile tests, or any experiment where each condition is measured once.
+Choose **Diagnostic** for bearing seeded-fault datasets, freeze-profile tests, or any experiment where each (fixed) fault + operating condition is measured once.
 
-Choose **Prognostics** for milling tool wear, accelerated degradation, or any experiment where the same sample is measured repeatedly over time.
+Choose **Prognostics** for milling tool wear, accelerated degradation, or any experiment where the same sample is measured during a longer tume period, or repeatedly over time.
 
 ### Decision Flowchart
 
@@ -159,12 +159,7 @@ flowchart TD
     D -- No --> RECONSIDER([Reconsider your\nexperiment structure])
 
     B -- Yes --> E{Is the measurement\nsequence time-ordered\nfor the same sample?}
-    E -- Yes --> F{Goal: estimate RUL\nor track degradation\nover time?}
-    F -- Yes --> PROG
-    F -- No --> G{Are runs ordered &\non the same sample\nwith changing health?}
-    G -- Yes --> PROG
-    G -- No --> DIAG
-
+    E -- Yes --> PROG
     E -- No --> DIAG
 
     DIAG(["✅ Diagnostic Experiment\n─────────────────────\nTemplate: Diagnostic\nRuns per study: 1\nGoal: fault detection\nor classification\n─────────────────────\nExample: Bearing seeded-\nfault dataset, one capture\nper fault condition"])
@@ -178,7 +173,7 @@ flowchart TD
 |---|---|
 | Fault **seeded** (known size, known location) measured **once** per condition | Diagnostic |
 | Fault **injected artificially** at different severity levels | Diagnostic |
-| Same component measured at **regular intervals** as it wears/ages | Prognostics |
+| Same component measured at **regular intervals** as it wears/ages (naturally or accelerated) | Prognostics |
 | Test ends at **failure** (run-to-failure) | Prognostics |
 | Dataset has a **RUL label** per sample | Prognostics |
 | Dataset has a **fault class label** per sample | Diagnostic |
@@ -209,16 +204,18 @@ On Slide 8 (Test Matrix) you assign a value for each variable to each study (or 
 
 Pressing **Convert to ISA-PHM** sends your metadata to a backend conversion service. It returns a `.json` file containing the full ISA-PHM structured metadata, including the investigation, all studies, and all assays.
 
-This file can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant.
+This file can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant. Furhter, additional (to be developed) software tools can read the .json file to automatically and consistenyl label a dataset for model traning and testing purposes.
 
 ---
 
 ## Dependency Chain
 
-Many things in the wizard depend on other things existing first. The correct order is:
+Many things in the wizard depend on other things existing first. The correct order id vyukdubg a dataset documentation file is:
 
 ```
 1. Create Test Setup
+   ├─ Add basic info
+   ├─ Add characteristics
    ├─ Add sensors
    ├─ Add configurations
    ├─ Add measurement protocols (after sensors)
@@ -230,10 +227,10 @@ Many things in the wizard depend on other things existing first. The correct ord
 3. Fill Questionnaire
    ├─ Slides 2–4: investigation-level metadata (independent)
    ├─ Slide 5: experiments (requires configurations from test setup)
-   ├─ Slides 6–7: study variables (independent)
-   ├─ Slide 8: test matrix (requires studies + variables)
-   ├─ Slide 9: raw output mapping (requires studies + sensors + measurement protocols)
-   └─ Slide 10: processed output mapping (requires studies + sensors + processing protocols)
+   ├─ Slides 6–7: experiment variables (independent)
+   ├─ Slide 8: test matrix (requires experiments + variables)
+   ├─ Slide 9: raw output mapping (requires experiments + sensors + measurement protocols)
+   └─ Slide 10: processed output mapping (requires experiments + sensors + processing protocols)
 
 4. Convert to ISA-PHM
 ```
