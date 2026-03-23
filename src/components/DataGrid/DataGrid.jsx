@@ -97,6 +97,8 @@ const DataGrid = forwardRef(({
 
     // Debug flag helper - when false all debug logging in this component is suppressed
     const DBG = !!showDebug;
+    const enableClipboardFallback = typeof navigator !== 'undefined'
+        && /firefox/i.test(navigator.userAgent || '');
 
     const resolveEditValue = useCallback((detail, columnProp) => {
         if (!detail) return undefined;
@@ -249,6 +251,25 @@ const DataGrid = forwardRef(({
         commitGridChanges
     });
 
+    const {
+        handlePasteRegion,
+        handleClipboardRangePaste,
+        handleClearRegion,
+        handleClipboardPasteShortcut,
+        handleClipboardCopyShortcut
+    } = useGridClipboardHandlers({
+        showDebug: DBG,
+        gridRef,
+        translateRangeCoordinates,
+        getFlatColumns,
+        staticColumns,
+        isEditableColumn,
+        getRowByIndex,
+        fields,
+        commitGridChanges,
+        handleClearCell
+    });
+
     const { handleBeforeKeyDown } = useGridInputHandlers({
         isActive,
         gridRef,
@@ -257,22 +278,11 @@ const DataGrid = forwardRef(({
         getEditableElementCurrentValue,
         isTextUndoCapableEditor,
         handleClearCell,
+        handleClipboardCopyShortcut,
+        handleClipboardPasteShortcut,
+        enableClipboardFallback,
         undo,
         redo
-    });
-
-    const {
-        handlePasteRegion,
-        handleClipboardRangePaste,
-        handleClearRegion
-    } = useGridClipboardHandlers({
-        showDebug: DBG,
-        staticColumns,
-        isEditableColumn,
-        getRowByIndex,
-        fields,
-        commitGridChanges,
-        handleClearCell
     });
 
     // Note: We don't handle beforeautofill - it fires BEFORE RevoGrid calculates the data

@@ -165,137 +165,110 @@ export const OPERATING_CONDITION_SUGGESTIONS = [
 export const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS = [
     {
         name: 'Sensor Location',
-        unit: '',
         description: 'Location where the sensor is mounted on the test setup.'
     },
     {
         name: 'Sensor Orientation',
-        unit: '',
         description: 'Orientation of the mounted sensor on the setup.'
     },
     {
         name: 'Sensor Mounting Method',
-        unit: '',
         description: 'Mounting method such as adhesive, stud, magnetic, or bracket.'
     },
     {
         name: 'Sampling Rate',
-        unit: 'Hz',
         description: 'Rate at which sensors collect a new sample.'
     },
     {
         name: 'Acquisition Duration',
-        unit: 's',
         description: 'Measurement duration captured per run or segment.'
     },
     {
         name: 'ADC Resolution',
-        unit: 'bit',
         description: 'Bit depth of analog-to-digital conversion.'
     },
     {
         name: 'Measured Unit',
-        unit: '',
         description: 'Measured unit of the sensor channel.'
     },
     {
         name: 'Phase',
-        unit: '',
         description: 'Current/voltage phase measured.'
     },
     {
         name: 'Sensor Frequency Range',
-        unit: 'Hz',
         description: 'Frequency range over which the sensor reliably captures machining signals.'
     },
     {
         name: 'Filter Type',
-        unit: '',
         description: 'Type of signal filtering applied to the sensor output to remove unwanted frequency components.'
     },
     {
         name: 'HP cutoff frequency',
-        unit: 'Hz',
         description: 'Cutoff frequency for a high-pass filter applied to the sensor signal to remove low-frequency noise.'
     },
     {
         name: 'Trigger Type',
-        unit: '',
         description: 'Acquisition trigger type (time-based, threshold, external trigger).'
     },
     {
         name: 'Trigger Threshold',
-        unit: '',
         description: 'Threshold value used to start acquisition in trigger mode.'
     },
     {
         name: 'Anti-alias Filter',
-        unit: '',
         description: 'Anti-aliasing filter configuration used before sampling.'
     },
     {
         name: 'Sensor Sensitivity',
-        unit: '',
         description: 'Sensor sensitivity conversion factor from signal to engineering units.'
     },
     {
         name: 'Preamplifier',
-        unit: '',
         description: 'Device used to boost sensor signals before main amplification, reducing signal loss and noise.'
     },
     {
         name: 'Preamplifier Gain',
-        unit: 'dB',
         description: 'Gain applied in the preamplifier stage.'
     },
     {
         name: 'Amplifier',
-        unit: '',
         description: 'Device that further amplifies the preamplified sensor signal for recording or processing.'
     },
     {
         name: 'Amplifier Gain',
-        unit: 'dB',
         description: 'Gain setting of the main amplifier.'
     },
     {
         name: 'Amplifier max load',
-        unit: '',
         description: 'Maximum signal amplitude the amplifier can handle without distortion.'
     },
     {
         name: 'Amplifier min load',
-        unit: '',
         description: 'Minimum detectable signal amplitude for accurate measurement.'
     },
     {
         name: 'Amplifier sensitivity',
-        unit: '',
         description: 'Amplifier gain, defining how input signals are scaled to output voltage.'
     },
     {
         name: 'Amplifier output',
-        unit: 'V',
         description: 'Voltage output from the amplifier that feeds the data acquisition system.'
     },
     {
         name: 'Current converter',
-        unit: '',
         description: 'Device that converts machine current into a measurable voltage or digital signal.'
     },
     {
         name: 'Power supply',
-        unit: '',
         description: 'Electrical source providing voltage and current to sensors, amplifiers, and acquisition hardware.'
     },
     {
         name: 'Power supply output',
-        unit: 'V',
         description: 'Nominal voltage and current delivered by the power supply to instrumentation.'
     },
     {
         name: 'Current type',
-        unit: '',
         description: 'Type of current being measured in the experiment, such as AC or DC from the milling machine motor.'
     }
 ];
@@ -303,92 +276,74 @@ export const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS = [
 export const PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS = [
     {
         name: 'Filter type',
-        unit: '',
         description: 'Type of signal filter applied to the measurement data, such as low-pass, high-pass, or band-pass, to remove unwanted frequency components.'
     },
     {
         name: 'Filter order',
-        unit: '',
         description: 'Order of the digital/analog filter.'
     },
     {
         name: 'Chunk size',
-        unit: 'samples',
         description: 'Chunk size used for processing.'
     },
     {
         name: 'Scaling range',
-        unit: '',
         description: 'Scaling range for processed data.'
     },
     {
         name: 'Scaling resolution',
-        unit: '',
         description: 'Scaling resolution for processed data.'
     },
     {
         name: 'Filter roll-off rate',
-        unit: 'dB/dec',
         description: 'Rate at which the filter attenuates frequencies beyond the cutoff, describing the steepness of the filter slope.'
     },
     {
         name: 'Filter LP cutoff frequency',
-        unit: 'Hz',
         description: 'Cutoff frequency for a low-pass filter applied to the signal to remove high-frequency noise.'
     },
     {
         name: 'Filter HP cutoff frequency',
-        unit: 'Hz',
         description: 'Cutoff frequency for a high-pass filter applied to the signal to remove low-frequency noise.'
     },
     {
         name: 'Window function',
-        unit: '',
         description: 'Window function applied before spectral transforms (e.g., Hanning, Hamming).'
     },
     {
         name: 'FFT size',
-        unit: 'samples',
         description: 'FFT length used for frequency-domain feature extraction.'
     },
     {
         name: 'Segment length',
-        unit: 'samples',
         description: 'Signal segment length used for block processing.'
     },
     {
         name: 'Overlap',
-        unit: '%',
         description: 'Segment overlap used in block-based processing.'
     },
     {
         name: 'Resampling frequency',
-        unit: 'Hz',
         description: 'Target resampling frequency after decimation/interpolation.'
     },
     {
         name: 'Detrending method',
-        unit: '',
         description: 'Method to remove trend or DC components before analysis.'
     },
     {
         name: 'Normalization method',
-        unit: '',
         description: 'Normalization approach such as z-score, min-max, or robust scaling.'
     },
     {
         name: 'Smoothing method',
-        unit: '',
         description: 'Algorithm or approach used to smooth the sensor signal, reducing high-frequency fluctuations.'
     },
     {
         name: 'Smoothing time constant',
-        unit: 's',
         description: 'Characteristic time over which the smoothing algorithm averages or filters the signal.'
     },
     {
         name: 'Smoothing sampling frequency',
-        unit: 'Hz',
         description: 'Frequency at which the smoothed signal is sampled or updated during acquisition or processing.'
     }
 ];

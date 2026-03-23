@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DataGrid from './DataGrid';
 
 let lastRevoProps;
@@ -77,6 +77,23 @@ const renderGrid = (props = {}) => {
             {...props}
         />
     );
+};
+
+const overrideNavigatorProperty = (property, value) => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(window.navigator, property);
+    Object.defineProperty(window.navigator, property, {
+        configurable: true,
+        writable: true,
+        value
+    });
+
+    return () => {
+        if (originalDescriptor) {
+            Object.defineProperty(window.navigator, property, originalDescriptor);
+        } else {
+            delete window.navigator[property];
+        }
+    };
 };
 
 describe('DataGrid', () => {
@@ -426,5 +443,120 @@ describe('DataGrid', () => {
                 value: ['new-spec', 'old-unit']
             }
         ]);
+    });
+
+    it('uses Firefox clipboard paste fallback on Ctrl+V', async () => {
+        const restoreUserAgent = overrideNavigatorProperty('userAgent', 'Mozilla/5.0 Firefox/127.0');
+        const clipboardMock = {
+            readText: vi.fn().mockResolvedValue('protocol-2')
+        };
+        const restoreClipboard = overrideNavigatorProperty('clipboard', clipboardMock);
+
+        try {
+            const hookState = createHookState({
+                rows: [{ id: 'row-1', measurementProtocolId: '' }]
+            });
+            useDataGridMock.mockReturnValue(hookState);
+
+            renderGrid();
+
+            const grid = screen.getByTestId('revo-grid');
+            grid.getSelectedRange = vi.fn().mockResolvedValue({
+                x: 0,
+                y: 0,
+                x1: 0,
+                y1: 0,
+                colType: 'rgCol'
+            });
+
+            grid.tabIndex = 0;
+            grid.focus();
+
+            fireEvent.keyDown(grid, { key: 'v', code: 'KeyV', ctrlKey: true });
+
+            await waitFor(() => {
+                expect(clipboardMock.readText).toHaveBeenCalledTimes(1);
+                expect(hookState.applyTransaction).toHaveBeenCalledTimes(1);
+            });
+
+            const transaction = hookState.applyTransaction.mock.calls[0][0];
+            expect(transaction.nextRowData[0].measurementProtocolId).toBe('protocol-2');
+        } finally {
+            restoreClipboard();
+            restoreUserAgent();
+        }
+    });
+
+    it('uses Firefox clipboard copy fallback on Ctrl+C', async () => {
+        const restoreUserAgent = overrideNavigatorProperty('userAgent', 'Mozilla/5.0 Firefox/127.0');
+        const clipboardMock = {
+            writeText: vi.fn().mockResolvedValue(undefined)
+        };
+        const restoreClipboard = overrideNavigatorProperty('clipboard', clipboardMock);
+
+        try {
+            const hookState = createHookState({
+                rows: [{ id: 'row-1', measurementProtocolId: 'protocol-1' }]
+            });
+            useDataGridMock.mockReturnValue(hookState);
+
+            renderGrid();
+
+            const grid = screen.getByTestId('revo-grid');
+            grid.getSelectedRange = vi.fn().mockResolvedValue({
+                x: 0,
+                y: 0,
+                x1: 0,
+                y1: 0,
+                colType: 'rgCol'
+            });
+            grid.getSource = vi.fn().mockResolvedValue([
+                { id: 'row-1', measurementProtocolId: 'protocol-1' }
+            ]);
+
+            grid.tabIndex = 0;
+            grid.focus();
+
+            fireEvent.keyDown(grid, { key: 'c', code: 'KeyC', ctrlKey: true });
+
+            await waitFor(() => {
+                expect(clipboardMock.writeText).toHaveBeenCalledTimes(1);
+            });
+
+            expect(clipboardMock.writeText).toHaveBeenCalledWith('protocol-1');
+        } finally {
+            restoreClipboard();
+            restoreUserAgent();
+        }
+    });
+
+    it('does not run clipboard fallback while editing an input', async () => {
+        const restoreUserAgent = overrideNavigatorProperty('userAgent', 'Mozilla/5.0 Firefox/127.0');
+        const clipboardMock = {
+            readText: vi.fn().mockResolvedValue('should-not-run')
+        };
+        const restoreClipboard = overrideNavigatorProperty('clipboard', clipboardMock);
+
+        try {
+            const hookState = createHookState({
+                rows: [{ id: 'row-1', measurementProtocolId: '' }]
+            });
+            useDataGridMock.mockReturnValue(hookState);
+
+            renderGrid();
+
+            const grid = screen.getByTestId('revo-grid');
+            const input = document.createElement('input');
+            grid.appendChild(input);
+            input.focus();
+
+            fireEvent.keyDown(input, { key: 'v', code: 'KeyV', ctrlKey: true });
+            await Promise.resolve();
+
+            expect(clipboardMock.readText).not.toHaveBeenCalled();
+        } finally {
+            restoreClipboard();
+            restoreUserAgent();
+        }
     });
 });
