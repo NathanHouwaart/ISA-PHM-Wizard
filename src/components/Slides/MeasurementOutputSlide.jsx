@@ -206,10 +206,6 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
           if (model?.isLastRunInStudy) {
             style['border-bottom'] = '3px solid black';
           }
-          if (!model?.showStudyLabel) {
-            style.background = '#f3f4f6';
-            style.color = '#6b7280';
-          }
           return { style };
         }
       }
@@ -217,7 +213,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     isCellEditable: ({ row, columnProp }) => {
       if (!row || !columnProp) return false;
       if (columnProp === 'measurementProtocolId') {
-        return Boolean(row?.showStudyLabel);
+        return true;
       }
       if (sensorIdSet.has(String(columnProp))) {
         return isRawEnabledForStudy(row?.studyId);

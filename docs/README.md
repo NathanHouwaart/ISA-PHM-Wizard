@@ -18,7 +18,7 @@ Reference for *ISA-PHM - a Standardized Format for Storing and Utilizing Metadat
 |---|---|
 | [Project Sessions](./guides/GUIDE_PROJECT_MANAGEMENT.md) | Create, configure, import, export, and switch projects from the Project Sessions modal |
 | [Test Setups](./guides/GUIDE_TEST_SETUPS.md) | Build your lab bench description (sensors, configurations, protocols) |
-| [Questionnaire](./guides/GUIDE_QUESTIONNAIRE.md) | Navigate the 10-slide ISA questionnaire (assumes project and test setup are ready) |
+| [Questionnaire](./guides/GUIDE_QUESTIONNAIRE.md) | Navigate the 11-slide ISA questionnaire (assumes project and test setup are ready) |
 | [Working with the Grid](./guides/GUIDE_GRID.md) | Grid navigation, Fill Row / Row+ / Row−, and the file picker for bulk file assignment |
 | [Export](./guides/GUIDE_EXPORT.md) | What "Convert to ISA-PHM" produces and how to use the output |
 | [Troubleshooting](./guides/TROUBLESHOOTING.md) | Empty dropdowns, missing rows, conversion failures |
@@ -39,8 +39,9 @@ Each slide has its own page with field tables, dependency notes, and screenshot 
 | 6 — Fault Specifications | [SLIDE_06_FAULT_SPECIFICATIONS.md](./slides/SLIDE_06_FAULT_SPECIFICATIONS.md) |
 | 7 — Operating Conditions | [SLIDE_07_OPERATING_CONDITIONS.md](./slides/SLIDE_07_OPERATING_CONDITIONS.md) |
 | 8 — Test Matrix | [SLIDE_08_TEST_MATRIX.md](./slides/SLIDE_08_TEST_MATRIX.md) |
-| 9 — Raw Measurement Output | [SLIDE_09_MEASUREMENT_OUTPUT.md](./slides/SLIDE_09_MEASUREMENT_OUTPUT.md) |
-| 10 — Processing Output | [SLIDE_10_PROCESSING_OUTPUT.md](./slides/SLIDE_10_PROCESSING_OUTPUT.md) |
+| 9 — Study Output Mode | [SLIDE_09_OUTPUT_MODE.md](./slides/SLIDE_09_OUTPUT_MODE.md) |
+| 10 — Raw Measurement Output | [SLIDE_09_MEASUREMENT_OUTPUT.md](./slides/SLIDE_09_MEASUREMENT_OUTPUT.md) |
+| 11 — Processing Output | [SLIDE_10_PROCESSING_OUTPUT.md](./slides/SLIDE_10_PROCESSING_OUTPUT.md) |
 
 ---
 

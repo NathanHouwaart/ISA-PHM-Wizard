@@ -21,6 +21,7 @@ Design notes:
 import Dexie from 'dexie';
 import LZString from 'lz-string';
 import { hasContentChanged } from './testSetupUtils';
+import { decodeJsonFromStorage } from './storageCodec';
 
 // DB name and initialization: assume a clean slate - no migration from older DBs.
 const DB_NAME = 'isa_phm_tree_db_v2';
@@ -226,8 +227,7 @@ export async function exportProject(projectId = 'example-project', options = {})
       const selectedIdRaw = localStorage.getItem(`globalAppData_${projectId}_selectedTestSetupId`);
       const selectedId = selectedIdRaw ? JSON.parse(selectedIdRaw) : null;
       if (selectedId) {
-        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-        const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
+        const { value: setups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
         if (Array.isArray(setups)) {
           const s = setups.find((x) => x.id === selectedId);
           if (s) selectedSetup = s;
@@ -266,9 +266,8 @@ export async function importProject(pkg, targetProjectId, options = {}) {
   let conflict = null;
   if (!options.skipConflictCheck && pkg.selectedTestSetup && pkg.selectedTestSetup.id) {
     try {
-      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-      let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
-      if (!Array.isArray(setups)) setups = [];
+      const { value: decodedSetups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
+      let setups = Array.isArray(decodedSetups) ? decodedSetups : [];
       
       const existing = setups.find((s) => s && s.id === pkg.selectedTestSetup.id);
       if (existing) {
@@ -322,9 +321,8 @@ export async function importProject(pkg, targetProjectId, options = {}) {
     // Append the imported selectedTestSetup to the global testSetups list (already checked for duplicates above)
     if (pkg.selectedTestSetup && pkg.selectedTestSetup.id && !conflict) {
       try {
-        const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-        let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
-        if (!Array.isArray(setups)) setups = [];
+        const { value: decodedSetups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
+        const setups = Array.isArray(decodedSetups) ? decodedSetups : [];
         const exists = setups.some((s) => s && s.id === pkg.selectedTestSetup.id);
         if (!exists) {
           setups.push(pkg.selectedTestSetup);

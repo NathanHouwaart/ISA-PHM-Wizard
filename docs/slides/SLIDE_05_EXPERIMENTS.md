@@ -16,7 +16,7 @@
 
 ## Purpose
 
-Defines all experiments in the project. Each experiment becomes one ISA Study. The set of experiments you create here drives the rows in the Test Matrix (Slide 8) and the output mapping workflow (Output Mode + Slides 9-10).
+Defines all experiments in the project. Each experiment becomes one ISA Study. The set of experiments you create here drives the rows in the Test Matrix (Slide 8) and the output mapping workflow (Output Mode + Slides 10-11).
 
 ---
 
@@ -95,7 +95,7 @@ The **Experiment Type** set during project creation (Diagnostic / Prognostic) is
 
 The selected **Configuration** is written into the experiment's `materials.samples[].characteristics` — as the `Configuration Name` characteristic (the name you gave it) and the `Replaceable Component` characteristic (the replaceable component ID). This is how the wizard knows exactly what physical component was installed during each experiment.
 
-Measurement output entries (one per sensor, see Slides 9–10) are nested under each experiment in the output JSON and use the filename pattern `se{sensor_n}` within each study.
+Measurement output entries (one per sensor, see Slides 10–11) are nested under each experiment in the output JSON and use the filename pattern `se{sensor_n}` within each study.
 
 ---
 

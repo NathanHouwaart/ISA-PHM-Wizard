@@ -75,9 +75,13 @@ The VB (wear land width) value increases across runs — this is the **degradati
 
 This contrasts with Sietze where operating conditions vary between experiments (different fault conditions) and each experiment has only one value.
 
-### Slides 9 & 10 — Output Mapping (multi-run)
+### Slide 9 — Study Output Mode (multi-run)
 
-[SCREENSHOT: Slide 9 — Milling project, grid view showing experiment+run rows and sensor columns]
+Set the study output mode to **Raw + processed**.
+
+### Slides 10 & 11 — Output Mapping (multi-run)
+
+[SCREENSHOT: Slide 10 — Milling project, grid view showing experiment+run rows and sensor columns]
 
 Each run gets its own row. For each run and each sensor, you provide the file recorded at that measurement interval.
 

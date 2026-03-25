@@ -1,6 +1,6 @@
 # The ISA Questionnaire
 
-The questionnaire is the main event — a 10-slide guided form that captures all project metadata and maps studies to measurements. This guide covers navigating the questionnaire, what each slide category does, and the order constraints you need to respect.
+The questionnaire is the main event — an 11-slide guided form that captures all project metadata and maps studies to measurements. This guide covers navigating the questionnaire, what each slide category does, and the order constraints you need to respect.
 
 For per-slide field details, see the [slides](../slides/) folder.
 
@@ -30,9 +30,9 @@ For per-slide field details, see the [slides](../slides/) folder.
 
 Confirm the project has:
 
-- [ ] A **test setup** selected (needed for Slides 5, 9, 10)
+- [ ] A **test setup** selected (needed for Slides 5, 10, 11)
 - [ ] The correct **experiment template** (Diagnostic or Prognostics) — changing it later resets run mappings
-- [ ] Sensors, configurations, and protocols in the test setup (needed for Slides 5, 9, 10)
+- [ ] Sensors, configurations, and protocols in the test setup (needed for Slides 5, 10, 11)
 
 If any of these are missing, the Project Sessions modal lets you configure them now. See [Project Management](./GUIDE_PROJECT_MANAGEMENT.md).
 
@@ -71,15 +71,16 @@ Define the variables (fault specifications and operating conditions) that distin
 
 **Complete slides 5, 6, and 7 before Slide 8.** The test matrix requires both experiments and variables to exist.
 
-### Category D — Mappings (Slides 8–10)
+### Category D — Mappings (Slides 8–11)
 
 Map experiments and runs to values and files. These are the most dependency-heavy slides.
 
 | Slide | What you fill | Requires |
 |---|---|---|
 | 8 — Test Matrix | Variable values per experiment/run | Experiments (Slide 5) + Variables (Slides 6–7) |
-| 9 — Raw Measurement Output | Raw file per sensor per experiment/run + measurement protocol per experiment | Experiments + Sensors + Measurement Protocols |
-| 10 — Processing Output | Processed file per sensor per experiment/run + processing protocol per experiment | Experiments + Sensors + Processing Protocols |
+| 9 — Study Output Mode | Select per-study output mode (`Raw only`, `Processed only`, `Raw + processed`) | Experiments (Slide 5) |
+| 10 — Raw Measurement Output | Raw file per sensor per experiment/run + measurement protocol per experiment | Experiments + Sensors + Measurement Protocols |
+| 11 — Processing Output | Processed file per sensor per experiment/run + processing protocol per experiment | Experiments + Sensors + Processing Protocols |
 
 ---
 
@@ -132,8 +133,8 @@ The button is always accessible. You can press it at any point, but incomplete m
 | Symptom | Cause | Fix |
 |---|---|---|
 | Configuration dropdown (Slide 5) is empty | No configurations in selected test setup | Add configurations in test setup → Configurations tab |
-| Protocol dropdown (Slides 9–10) is empty | No protocols in selected test setup | Add measurement/processing protocols in test setup |
-| No sensor columns in grid (Slides 9–10) | No sensors in selected test setup | Add sensors in test setup → Sensors tab |
+| Protocol dropdown (Slides 10–11) is empty | No protocols in selected test setup | Add measurement/processing protocols in test setup |
+| No sensor columns in grid (Slides 10–11) | No sensors in selected test setup | Add sensors in test setup → Sensors tab |
 | Test matrix grid has no variable columns | No experiment variables on Slides 6–7 | Go back and add fault specs / operating conditions |
 | Test matrix grid has no experiment rows | No experiments on Slide 5 | Go back and add experiments |
 

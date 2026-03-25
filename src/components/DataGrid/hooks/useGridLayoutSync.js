@@ -17,6 +17,54 @@ function updateColumnSize(columns, targetProp, nextSize) {
     });
 }
 
+function areColumnsEquivalent(nextColumn, previousColumn) {
+    if (!nextColumn || !previousColumn) {
+        return false;
+    }
+
+    const comparableKeys = [
+        'prop',
+        'size',
+        'name',
+        'pin',
+        'readonly',
+        'columnType',
+        'labelKey',
+        'valueKey',
+        'editor'
+    ];
+
+    const hasScalarDifference = comparableKeys.some((key) => (
+        nextColumn[key] !== previousColumn[key]
+    ));
+
+    if (hasScalarDifference) {
+        return false;
+    }
+
+    // Include function/reference fields so dynamic styling callbacks
+    // (e.g. duplicate-cell highlighting) can update without requiring
+    // a full page refresh.
+    if (nextColumn.cellProperties !== previousColumn.cellProperties) return false;
+    if (nextColumn.cellTemplate !== previousColumn.cellTemplate) return false;
+    if (nextColumn.source !== previousColumn.source) return false;
+
+    const nextChildren = Array.isArray(nextColumn.children) ? nextColumn.children : [];
+    const previousChildren = Array.isArray(previousColumn.children) ? previousColumn.children : [];
+
+    if (nextChildren.length !== previousChildren.length) {
+        return false;
+    }
+
+    for (let index = 0; index < nextChildren.length; index++) {
+        if (!areColumnsEquivalent(nextChildren[index], previousChildren[index])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export default function useGridLayoutSync({
     columnDefs = [],
     hookRowData = [],
@@ -208,10 +256,7 @@ export default function useGridLayoutSync({
         const columnsChanged = enhancedColumnDefs.length !== lastEnhancedColumnsRef.current.length
             || enhancedColumnDefs.some((column, index) => {
                 const lastColumn = lastEnhancedColumnsRef.current[index];
-                return !lastColumn
-                    || column.prop !== lastColumn.prop
-                    || column.size !== lastColumn.size
-                    || column.name !== lastColumn.name;
+                return !areColumnsEquivalent(column, lastColumn);
             });
 
         if (!columnsChanged) {

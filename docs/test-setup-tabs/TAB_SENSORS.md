@@ -17,8 +17,8 @@
 Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Each sensor becomes:
 - A column in the Measurement Protocol parameter grid (Measurement tab)
 - A column in the Processing Protocol parameter grid (Processing tab)
-- A column in the Raw Measurement Output grid (Questionnaire Slide 9)
-- A column in the Processing Output grid (Questionnaire Slide 10)
+- A column in the Raw Measurement Output grid (Questionnaire Slide 10)
+- A column in the Processing Output grid (Questionnaire Slide 11)
 
 > **Multi-axis sensors:** A tri-axis accelerometer (X, Y, Z) must be entered as **three separate sensors** — one per axis (e.g., `acc_x`, `acc_y`, `acc_z`). Each axis generates its own assay entry in the output JSON, linked to its own two-column data file.
 

@@ -125,7 +125,7 @@ For full details on selection behaviour, file naming conventions, and root-folde
 
 ## Tips
 
-- Fill the matrix before moving to Slides 9–10. Output mapping slides show the same experiment/run rows.
+- Fill the matrix before moving to Slides 9–11. Output mapping slides show the same experiment/run rows.
 - Values are free text — enter numbers, strings, or codes as they appear in your raw data filenames or experiment log.
 - Constant operating conditions (same value for every experiment) are still filled for every row — copy-paste or grid undo/redo help here.
 
@@ -194,4 +194,4 @@ Multiple `samples[]` entries per experiment — one per run. Variable values are
 
 ---
 
-[← Slide 7](./SLIDE_07_OPERATING_CONDITIONS.md) | [Next: Slide 9 →](./SLIDE_09_MEASUREMENT_OUTPUT.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)
+[← Slide 7](./SLIDE_07_OPERATING_CONDITIONS.md) | [Next: Slide 9 →](./SLIDE_09_OUTPUT_MODE.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

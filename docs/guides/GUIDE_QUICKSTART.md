@@ -11,7 +11,7 @@ For real-world filled examples, see [Example: Sietze (single-run)](../examples/E
 2. Create a project in Project Sessions, select **Diagnostic Experiment**, and link the test setup.
 3. Fill Slides 2–5 (project info, contacts, experiments).
 4. Add at least one fault specification (Slide 6) and one operating condition (Slide 7).
-5. Fill Test Matrix values (Slide 8), then raw/processed file mappings (Slides 9–10).
+5. Fill Test Matrix values (Slide 8), set output mode (Slide 9), then raw/processed file mappings (Slides 10–11).
 6. Click **Convert to ISA-PHM**.
 
 If you want the full field-by-field walkthrough, continue below.
@@ -81,7 +81,7 @@ Document the fixed hardware properties of your test rig — anything that doesn'
 
 ![SCREENSHOT: Sensors tab — three sensor rows filled in](../images/annotated/example-test-setup-sensors.png)
 
-> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 9 & 10).
+> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 10 & 11).
 
 ### 1d — Configurations tab
 
@@ -153,7 +153,7 @@ For this guide, select **Diagnostic Experiment**.
 
 ### 2c — Dataset indexation *(skippable)*
 
-If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects).
+If you have a local dataset folder, index it here to enable the file picker on Slides 10–11 (and Slide 8 for prognostics projects).
 
 > **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
 > 
@@ -177,7 +177,7 @@ After confirming, click **Select** on the project card to make it the active pro
 
 ## Step 3 — Fill the Questionnaire
 
-You are now inside the 10-slide questionnaire.
+You are now inside the 11-slide questionnaire.
 
 ![SCREENSHOT: Slide 1 Introduction — fresh blank project](../images/annotated/isa-questionnaire-slide-1.png)
 
@@ -270,7 +270,15 @@ Click a cell in the grid and type the value, or use simple view to fill experime
 
 Click **Next**.
 
-### Slide 9 — Raw Measurement Output
+### Slide 9 — Study Output Mode
+
+Set each study to `Raw only`, `Processed only`, or `Raw + processed`.
+
+For this walkthrough, set both studies to **Raw + processed**.
+
+Click **Next**.
+
+### Slide 10 — Raw Measurement Output
 
 1. For each experiment/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
 2. Fill in the file names (or values) per sensor and per run:
@@ -279,17 +287,17 @@ Click **Next**.
 
 > **Required file format:** Each mapped raw file should contain exactly two columns: `time` + one sensor measurement column.
 
-![SCREENSHOT: Slide 9 — protocol selected per experiment and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
+![SCREENSHOT: Slide 10 — protocol selected per experiment and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
 
 Click **Next**.
 
-### Slide 10 — Processing Protocol Output
+### Slide 11 — Processing Protocol Output
 
-Same pattern as Slide 9, using **Processing Protocol** (`Processing Protocol 1`).
+Same pattern as Slide 10, using **Processing Protocol** (`Processing Protocol 1`).
 
 > **Required file format:** Each mapped processed file should contain exactly two columns: `time` (or index/frequency) + one processed value column.
 
-![SCREENSHOT: Slide 10 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
+![SCREENSHOT: Slide 11 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
 
 ---
 
@@ -309,7 +317,7 @@ The wizard sends your metadata to the backend service and returns a downloadable
 
 ## What you created
 
-A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — project details, experiment descriptions, variable values (fault specifications and operating conditions), and measurement output entries with links to your data files (the relative paths you filled in on Slides 9–10).
+A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — project details, experiment descriptions, variable values (fault specifications and operating conditions), and measurement output entries with links to your data files (the relative paths you filled in on Slides 10–11).
 
 This file is the metadata companion to your dataset. Place it in the root of your dataset folder alongside your `.csv` data files, then zip and deposit everything together to make the dataset FAIR-compliant.
 

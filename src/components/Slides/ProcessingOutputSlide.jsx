@@ -206,7 +206,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
           if (model?.isLastRunInStudy) {
             style['border-bottom'] = '3px solid black';
           }
-          if (!model?.showStudyLabel || !isProcessedEnabledForStudy(model?.studyId)) {
+          if (!isProcessedEnabledForStudy(model?.studyId)) {
             style.background = '#f3f4f6';
             style.color = '#6b7280';
           }
@@ -217,7 +217,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     isCellEditable: ({ row, columnProp }) => {
       if (!row || !columnProp) return false;
       if (columnProp === 'processingProtocolId') {
-        return Boolean(row?.showStudyLabel) && isProcessedEnabledForStudy(row?.studyId);
+        return isProcessedEnabledForStudy(row?.studyId);
       }
       if (sensorIdSet.has(String(columnProp))) {
         return isProcessedEnabledForStudy(row?.studyId);

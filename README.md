@@ -7,6 +7,8 @@ The wizard guides users through describing their experimental setup (test rig, s
 
 > **Live app:** [https://nathanhouwaart.github.io/ISA-PHM-Wizard/](https://nathanhouwaart.github.io/ISA-PHM-Wizard/)
 
+> **Release notes:** [CHANGELOG.md](CHANGELOG.md)
+
 ![Home Screen](docs/images/home.png)
 
 ---
@@ -83,14 +85,15 @@ ISA-PHM is designed to produce datasets that are **Findable, Accessible, Interop
 
 **Project management** — Multiple named projects can be created in one browser session. Each project is independently configured with an experiment template (single-run diagnostic or multi-run prognostic), a dataset index, and a reference to a test setup.
 
-**10-step ISA questionnaire** — A slide-by-slide wizard collects:
+**11-step ISA questionnaire** — A slide-by-slide wizard collects:
 - Project *(ISA: Investigation)* title, license, and release dates
 - Contacts and publications
 - Experiments *(ISA: Studies)* with run counts
 - Fault specifications and operating conditions
 - Experiment-variable test matrix mappings
-- Raw measurement output mappings (sensor → measurement protocol → experiment)
-- Processed output mappings (sensor → processing protocol → experiment)
+- Study output mode per experiment (`Raw only`, `Processed only`, `Raw + processed`)
+- Raw measurement output mappings (sensor -> measurement protocol -> experiment)
+- Processed output mappings (sensor -> processing protocol -> experiment)
 
 **Export** — Completed projects are sent to the ISA-PHM backend, which returns a `.json` file containing the full ISA-PHM structured metadata.
 
@@ -101,7 +104,7 @@ ISA-PHM is designed to produce datasets that are **Findable, Accessible, Interop
 1. Open **Test Setups** → build the test setup (sensors, configurations, protocols).
 2. Open **ISA Questionnaire** → in **Project Sessions**, create or select a project.
 3. Configure the project in **Project Sessions**: experiment template, dataset index (optional), and linked test setup.
-4. Complete all 10 questionnaire slides.
+4. Complete all 11 questionnaire slides.
 5. Click **Convert to ISA-PHM** to download the output.
 
 For a detailed walkthrough, see [docs/guides/GUIDE_QUICKSTART.md](docs/guides/GUIDE_QUICKSTART.md).
@@ -122,13 +125,13 @@ All user guidance lives in [`docs/README.md`](docs/README.md).
 
 - [`docs/guides/GUIDE_PROJECT_MANAGEMENT.md`](docs/guides/GUIDE_PROJECT_MANAGEMENT.md) — Project Sessions modal: create, configure, import, and switch projects
 - [`docs/guides/GUIDE_TEST_SETUPS.md`](docs/guides/GUIDE_TEST_SETUPS.md) — Build a test setup (sensors, configurations, protocols)
-- [`docs/guides/GUIDE_QUESTIONNAIRE.md`](docs/guides/GUIDE_QUESTIONNAIRE.md) — Navigate the 10-slide ISA questionnaire (assumes project and test setup are ready)
+- [`docs/guides/GUIDE_QUESTIONNAIRE.md`](docs/guides/GUIDE_QUESTIONNAIRE.md) — Navigate the 11-slide ISA questionnaire (assumes project and test setup are ready)
 - [`docs/guides/GUIDE_EXPORT.md`](docs/guides/GUIDE_EXPORT.md) — What the ISA-PHM output contains and how to use it
 - [`docs/guides/TROUBLESHOOTING.md`](docs/guides/TROUBLESHOOTING.md) — Empty dropdowns, missing rows, conversion failures
 
 ### Slide-by-slide reference
 
-Individual guides for each of the 10 questionnaire slides live in [`docs/slides/`](docs/slides/).
+Individual guides for each of the 11 questionnaire slides live in [`docs/slides/`](docs/slides/).
 
 ### Test setup tab reference
 
@@ -176,7 +179,7 @@ The export step sends project data to the ISA-PHM backend, which converts it to 
 
 **Hook-based entity controllers** — Each entity type (studies, contacts, sensors, etc.) has a dedicated hook (`useStudies`, `useContacts`, …) that reads from and writes to the global context. `useMappingsController` provides generic CRUD for any mapping between two entity types.
 
-**Slide carousel** — The questionnaire is a carousel of 10 slide components (`src/components/Slides/`). Navigation state lives in `useCarouselNavigation`. Each slide is self-contained with its own form logic.
+**Slide carousel** — The questionnaire is a carousel of 11 slide components (`src/components/Slides/`). Navigation state lives in `useCarouselNavigation`. Each slide is self-contained with its own form logic.
 
 **Reusable test setups** — Test setups are stored in a global catalog (separate from project data), so the same rig description can be reused across many projects. When a project is configured to use a test setup, its ID is stored in the project record and resolved at runtime.
 
@@ -193,7 +196,7 @@ The export step sends project data to the ISA-PHM backend, which converts it to 
 │   ├── pages/                   # Top-level route pages
 │   │   ├── Home.jsx             # Landing page
 │   │   ├── TestSetups.jsx       # Test setup editor (6-tab interface)
-│   │   ├── IsaQuestionnaire.jsx # 10-slide questionnaire carousel
+│   │   ├── IsaQuestionnaire.jsx # 11-slide questionnaire carousel
 │   │   └── About.jsx            # About / info page
 │   ├── components/              # Reusable UI components
 │   │   ├── Slides/              # One component per questionnaire slide

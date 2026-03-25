@@ -16,6 +16,33 @@ This selection controls which fields are required and editable on the raw and pr
 
 ---
 
+## Layout and flow
+
+The slide uses a **two-pane guided layout**:
+- Left pane: study navigator with current mode badges and run count.
+- Right pane: focused editor for the selected study.
+
+In the focused editor:
+- Select mode using large choice cards.
+- See immediate requirement preview for:
+  - Slide 10 raw mappings
+  - Slide 11 processed mappings
+- Read the fixed mandatory rule strip.
+
+On mobile, the left pane is replaced by a compact study selector above the editor.
+
+---
+
+## Bulk actions
+
+A top action bar provides:
+- Global mode selector
+- **Apply to all studies** button
+
+Use this to quickly set one mode across the project.
+
+---
+
 ## Mandatory rule
 
 **Measurement protocol is always mandatory**, regardless of output mode.
@@ -24,7 +51,7 @@ This selection controls which fields are required and editable on the raw and pr
 
 ## Mode behavior
 
-| Output mode | Slide 9 raw files | Slide 10 processing protocol | Slide 10 processed files |
+| Output mode | Slide 10 raw files | Slide 11 processing protocol | Slide 11 processed files |
 |---|---|---|---|
 | `Raw only` | Required | Disabled | Disabled |
 | `Processed only` | Disabled | Required | Required |
@@ -36,7 +63,7 @@ This selection controls which fields are required and editable on the raw and pr
 
 - On the raw output slide, rows in `Processed only` mode are grayed out for raw file cells.
 - On the processed output slide, rows in `Raw only` mode are grayed out for processing protocol and processed file cells.
-- Duplicate study-level protocol cells for additional runs are shown as read-only duplicates.
+- Protocol selection is study-level; changing it on any run row updates the study selection.
 
 ---
 

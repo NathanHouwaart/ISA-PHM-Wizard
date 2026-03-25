@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { exportProject, importProject } from '../../utils/indexedTreeStore';
+import { decodeJsonFromStorage } from '../../utils/storageCodec';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
 import ProjectCard from './ProjectCard';
@@ -289,7 +290,7 @@ export default function ProjectSessionsModal({ onClose }) {
       const a = document.createElement('a');
       a.href = url;
       const fileBaseName = sanitizeFileName(project?.name || pkg?.projectName || id) || 'project-export';
-      a.download = `${fileBaseName}.json`;
+      a.download = `${fileBaseName} ISA-PHM.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -312,8 +313,7 @@ export default function ProjectSessionsModal({ onClose }) {
   const completeImport = useCallback(async (newId) => {
     try {
       // Reload the global testSetups from localStorage to reflect the newly imported test setup
-      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-      const setups = setupsRaw ? JSON.parse(setupsRaw) : [];
+      const { value: setups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
       if (Array.isArray(setups)) {
         setTestSetups(setups);
       }
@@ -374,9 +374,8 @@ export default function ProjectSessionsModal({ onClose }) {
     const { pkg, newProjectId, conflict } = pendingImport;
     
     try {
-      const setupsRaw = localStorage.getItem('globalAppData_testSetups');
-      let setups = setupsRaw ? JSON.parse(setupsRaw) : [];
-      if (!Array.isArray(setups)) setups = [];
+      const { value: decodedSetups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
+      let setups = Array.isArray(decodedSetups) ? decodedSetups : [];
       
       if (resolution === 'keep-local') {
         // Keep local version - import the project data but don't modify the test setup

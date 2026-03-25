@@ -174,7 +174,7 @@ After exporting the JSON, place it at the same root level (`pump_bench/`) and zi
 | Slide | When |
 |---|---|
 | **8 — Test Matrix** | Prognostics projects only, for variable value cells |
-| **9 — Raw Measurement Output** | Any project with a dataset indexed |
-| **10 — Processing Protocol Output** | Any project with a dataset indexed |
+| **10 — Raw Measurement Output** | Any project with a dataset indexed |
+| **11 — Processing Protocol Output** | Any project with a dataset indexed |
 
 For diagnostics test matrix cells (Slide 8), the file picker does not appear — enter values as plain text or numbers directly in the grid.

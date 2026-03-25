@@ -8,6 +8,8 @@ export default [
     ignores: [
       'dist',
       'coverage/**',
+      'tools/**',
+      '**/.venv/**',
       'src/pages/__demo__/**',
       'src/NewGrid.jsx',
       'src/components/RevoGridExample.jsx',

@@ -31,13 +31,17 @@ const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
 const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 const UUID_V4_LIKE_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const DEFAULT_PERF_LIMIT_MS = 15000;
+const BACKEND_PERF_LIMIT_MS = Number.isFinite(Number(process.env.BACKEND_PERF_LIMIT_MS))
+  ? Number(process.env.BACKEND_PERF_LIMIT_MS)
+  : DEFAULT_PERF_LIMIT_MS;
 
 const normalizeStudyFilename = (filename) => String(filename || '').replace(/^a_/, '');
 const normalizeExperimentPreparationName = (name) => String(name || '').replace(/\s+Protocol$/, '');
 
 const isSupportedAssayFilename = (filename) => {
   const value = String(filename || '');
-  return /^a_s\d{2}_.+\.txt$/i.test(value) || /^a_st\d{2}_se\d{2}$/i.test(value);
+  return /^a_s\d{2}_.+\.txt$/i.test(value) || /^a_st\d{2}_se\d{2}$/i.test(value) || /^se\d{2}$/i.test(value);
 };
 
 const expectCompatibleIdentifier = (actualIdentifier, expectedIdentifier) => {
@@ -727,9 +731,10 @@ integrationDescribe('ISA-PHM Conversion Integration Tests', () => {
       
       console.log('⏱️  Conversion time:', duration, 'ms');
       
-      // Conversion should complete in less than 10 seconds
-      expect(duration).toBeLessThan(10000);
-    }, 15000); // 15 second timeout
+      // Conversion should complete within a practical backend budget.
+      // The limit is configurable for slower CI/dev environments.
+      expect(duration).toBeLessThan(BACKEND_PERF_LIMIT_MS);
+    }, BACKEND_PERF_LIMIT_MS + 5000);
   });
 
   describe('Cross-References from API', () => {

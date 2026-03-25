@@ -111,7 +111,7 @@ timestamp, acc_y
 
 </details>
 
-Measurement outputs are constructed automatically from the experiment–sensor–run mappings you fill in on Slides 9 and 10. **One populated cell in that grid = one measurement output entry** in the output JSON.
+Measurement outputs are constructed automatically from the experiment–sensor–run mappings you fill in on Slides 10 and 11. **One populated cell in that grid = one measurement output entry** in the output JSON.
 
 ---
 
@@ -203,7 +203,7 @@ flowchart TD
 The template choice affects:
 - Slide 5 (Experiment Descriptions) — shows a `Number of runs` field only for prognostics
 - Slide 8 (Test Matrix) — columns multiply per run for prognostics
-- Slides 9 & 10 (Output mapping) — rows multiply per run
+- Slides 10 & 11 (Output mapping) — rows multiply per run
 
 ---
 
@@ -253,8 +253,9 @@ Many things in the wizard depend on other things existing first. The correct ord
    ├─ Slide 5: experiments (requires configurations from test setup)
    ├─ Slides 6–7: experiment variables — fault specifications & operating conditions (independent)
    ├─ Slide 8: test matrix (requires experiments + variables)
-   ├─ Slide 9: raw output mapping (requires experiments + sensors + measurement protocols)
-   └─ Slide 10: processed output mapping (requires experiments + sensors + processing protocols)
+   ├─ Slide 9: study output mode (required before output mapping)
+   ├─ Slide 10: raw output mapping (requires experiments + sensors + measurement protocols)
+   └─ Slide 11: processed output mapping (requires experiments + sensors + processing protocols)
 
 4. Convert to ISA-PHM
 ```
@@ -268,4 +269,4 @@ If a dropdown on a later slide is empty, something earlier in this chain is miss
 - [Quick Start — first project from blank to export](./GUIDE_QUICKSTART.md)
 - [Project Management — create, configure, import, export](./GUIDE_PROJECT_MANAGEMENT.md)
 - [Test Setups — build your lab bench description](./GUIDE_TEST_SETUPS.md)
-- [Questionnaire — fill all 10 slides](./GUIDE_QUESTIONNAIRE.md)
+- [Questionnaire — fill all 11 slides](./GUIDE_QUESTIONNAIRE.md)

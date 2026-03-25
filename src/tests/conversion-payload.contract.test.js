@@ -166,6 +166,7 @@ describe('conversion payload contract', () => {
     expect(firstStudy.assay_details).toHaveLength(1);
 
     const firstAssay = firstStudy.assay_details[0];
+    expect(firstAssay.assay_file_name).toBe('se01');
     expect(firstAssay.measurement_protocol_id).toBe('mp-b');
     expect(firstAssay.processing_protocol_id).toBe('pp-b');
     expect(firstAssay.measurement_protocols).toEqual([
@@ -206,6 +207,7 @@ describe('conversion payload contract', () => {
     expect(secondStudy.selectedMeasurementProtocolId).toBe('mp-a');
     expect(secondStudy.selectedProcessingProtocolId).toBe('pp-a');
     expect(secondStudy.total_runs).toBe(1);
+    expect(secondStudy.assay_details[0].assay_file_name).toBe('se01');
     expect(secondStudy.assay_details[0].runs).toEqual([
       {
         run_number: 1,
@@ -233,6 +235,81 @@ describe('conversion payload contract', () => {
     expect(payload.studies[0].used_setup).toBeNull();
     expect(Array.isArray(payload.studies[0].assay_details)).toBe(true);
     expect(payload.studies[0].assay_details).toHaveLength(0);
+  });
+
+  it('normalizes runCount to integer when source study stores it as a string', () => {
+    const payload = buildConversionPayload({
+      studies: [{ id: 'study-1', name: 'Study 1', runCount: '20' }],
+      testSetups: [],
+      selectedTestSetupId: null,
+    });
+
+    expect(payload.studies).toHaveLength(1);
+    expect(payload.studies[0].runCount).toBe(20);
+    expect(typeof payload.studies[0].runCount).toBe('number');
+    expect(payload.studies[0].total_runs).toBe(20);
+  });
+
+  it('applies output mode rules to raw/processed fields', () => {
+    const processedRun = createStudyRunId('study-processed', 1);
+    const rawRun = createStudyRunId('study-raw', 1);
+
+    const payload = buildConversionPayload({
+      studies: [
+        {
+          id: 'study-processed',
+          name: 'Processed Study',
+          runCount: 1,
+          outputMode: 'processed_only',
+          measurementProtocolId: 'mp-1',
+          processingProtocolId: 'pp-1',
+        },
+        {
+          id: 'study-raw',
+          name: 'Raw Study',
+          runCount: 1,
+          outputMode: 'raw_only',
+          measurementProtocolId: 'mp-1',
+          processingProtocolId: 'pp-1',
+        },
+      ],
+      testSetups: [
+        {
+          id: 'setup-1',
+          sensors: [{ id: 'sensor-1', alias: 'S1' }],
+          measurementProtocols: [{ id: 'mp-1', name: 'Measurement 1' }],
+          processingProtocols: [{ id: 'pp-1', name: 'Processing 1' }],
+          sensorToMeasurementProtocolMapping: [],
+          sensorToProcessingProtocolMapping: [],
+        },
+      ],
+      selectedTestSetupId: 'setup-1',
+      studyToSensorMeasurementMapping: [
+        { studyRunId: processedRun, sensorId: 'sensor-1', value: 'raw/processed-study.csv' },
+        { studyRunId: rawRun, sensorId: 'sensor-1', value: 'raw/raw-study.csv' },
+      ],
+      studyToSensorProcessingMapping: [
+        { studyRunId: processedRun, sensorId: 'sensor-1', value: 'proc/processed-study.csv' },
+        { studyRunId: rawRun, sensorId: 'sensor-1', value: 'proc/raw-study.csv' },
+      ],
+    });
+
+    const processedStudy = payload.studies.find((study) => study.id === 'study-processed');
+    const rawStudy = payload.studies.find((study) => study.id === 'study-raw');
+
+    expect(processedStudy).toBeTruthy();
+    expect(rawStudy).toBeTruthy();
+
+    const processedAssay = processedStudy.assay_details[0];
+    expect(processedAssay.processing_protocol_id).toBe('pp-1');
+    expect(processedAssay.runs[0].raw_file_name).toBe('');
+    expect(processedAssay.runs[0].processed_file_name).toBe('proc/processed-study.csv');
+
+    const rawAssay = rawStudy.assay_details[0];
+    expect(rawAssay.processing_protocol_id).toBe('');
+    expect(rawAssay.processing_protocols).toEqual([]);
+    expect(rawAssay.runs[0].raw_file_name).toBe('raw/raw-study.csv');
+    expect(rawAssay.runs[0].processed_file_name).toBe('');
   });
 
   it.each(FIXTURE_CASES)('builds a valid payload from $name fixture', async ({ path: fixtureFile }) => {
@@ -358,6 +435,7 @@ describe('conversion payload contract', () => {
       expect(study.study_to_study_variable_mapping.length).toBeGreaterThanOrEqual(0);
 
       study.assay_details.forEach((assay) => {
+        expect(/^se\d{2}$/i.test(assay.assay_file_name)).toBe(true);
         expect(Array.isArray(assay.runs)).toBe(true);
         expect(assay.runs).toHaveLength(study.total_runs);
         if (assay.runs.length > 0) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'; // Import useEffect
+import React, { useEffect, useMemo, useRef, useState } from 'react'; // Import useEffect
 
 import "../styles.css";
 
@@ -24,6 +24,8 @@ import { Layers, ChevronLeft, ChevronRight } from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 import Heading3 from '../components/Typography/Heading3';
+import PreExportValidationPanel from '../components/Widgets/PreExportValidationPanel';
+import { buildExportValidationReport } from '../utils/exportValidation';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -49,7 +51,13 @@ export const IsaQuestionnaire = () => {
     currentProjectId,
     projects,
     selectedTestSetupId,
-    testSetups
+    testSetups,
+    studies,
+    selectedDataset,
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
+    studyToSensorMeasurementMapping,
+    studyToSensorProcessingMapping,
   } = useProjectData();
   const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
@@ -57,6 +65,7 @@ export const IsaQuestionnaire = () => {
   // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
   const [isRemountingSlides, setIsRemountingSlides] = useState(false);
+  const [showValidationDetails, setShowValidationDetails] = useState(false);
   const [slidesKey, setSlidesKey] = useState(() => currentProjectId ? `slides-${currentProjectId}-${Date.now()}` : 'slides-none');
   const hasInitializedProjectRef = useRef(false);
   const overlayTimeoutRef = useRef(null);
@@ -150,8 +159,34 @@ export const IsaQuestionnaire = () => {
     };
   }, [currentProjectId, childRefs]);
 
+  const validationReport = useMemo(() => buildExportValidationReport({
+    studies,
+    testSetups,
+    selectedTestSetupId,
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
+    studyToSensorMeasurementMapping,
+    studyToSensorProcessingMapping,
+    selectedDataset,
+  }), [
+    studies,
+    testSetups,
+    selectedTestSetupId,
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
+    studyToSensorMeasurementMapping,
+    studyToSensorProcessingMapping,
+    selectedDataset,
+  ]);
+
+  const hasBlockingValidationIssues = validationReport?.hasBlockingErrors;
+
   const handleSubmit = () => {
-    // In a real application, you'd collect data from all forms here
+    if (hasBlockingValidationIssues) {
+      setShowValidationDetails(true);
+      return;
+    }
+
     submitData().catch(() => {
       // errors are displayed in overlay message; no additional alert needed
     });
@@ -288,6 +323,14 @@ export const IsaQuestionnaire = () => {
           </div>
         </div>
 
+        <div className="mx-5">
+          <PreExportValidationPanel
+            report={validationReport}
+            expanded={showValidationDetails}
+            onToggle={() => setShowValidationDetails((value) => !value)}
+          />
+        </div>
+
         <div className="flex items-center justify-center space-x-4 mx-5">
           {/* Previous: always rendered but invisible/disabled on first page to reserve space */}
           <TooltipButton
@@ -301,11 +344,14 @@ export const IsaQuestionnaire = () => {
           </TooltipButton>
 
           <TooltipButton
-            tooltipText="Submit the form"
+            tooltipText={hasBlockingValidationIssues ? 'Resolve blocking validation issues before converting' : 'Submit the form'}
             onClick={handleSubmit}
+            disabled={hasBlockingValidationIssues}
             className={cn(
-              "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg",
-              "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
+              "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg disabled:cursor-not-allowed disabled:opacity-70",
+              hasBlockingValidationIssues
+                ? "bg-gray-400 hover:bg-gray-400"
+                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
             )}
           >
             <span className='w-md'>Convert to ISA-PHM</span>

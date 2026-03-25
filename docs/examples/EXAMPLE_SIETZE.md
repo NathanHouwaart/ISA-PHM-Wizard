@@ -114,16 +114,22 @@ Each has a submission date (2023-10-26) and publication date (2023-12-17).
 
 Note that operating conditions are the same for both experiments (same operating point), differing only in fault condition.
 
-### Slide 9 — Raw Measurement Output
+### Slide 9 — Study Output Mode
 
-[SCREENSHOT: Slide 9 — Sietze project — measurement protocol selected, filenames filled across 11 sensor columns]
+[SCREENSHOT: Slide 9 — Sietze project — output mode set to Raw + processed]
+
+Set each experiment to **Raw + processed**.
+
+### Slide 10 — Raw Measurement Output
+
+[SCREENSHOT: Slide 10 — Sietze project — measurement protocol selected, filenames filled across 11 sensor columns]
 
 Each experiment row has the `Standard Measurement Protocol` selected. File names follow the pattern:
 `Vibration_Motor-2_100_time-bearing bpfo X-chY.txt`
 
-### Slide 10 — Processing Protocol Output
+### Slide 11 — Processing Protocol Output
 
-[SCREENSHOT: Slide 10 — Sietze project — processing protocol selected, processed filenames filled]
+[SCREENSHOT: Slide 11 — Sietze project — processing protocol selected, processed filenames filled]
 
 Processed filenames follow the same naming convention but point to the extracted feature files.
 
@@ -134,7 +140,7 @@ Processed filenames follow the same naming convention but point to the extracted
 1. **Single-run = one row per experiment.** No run columns in the Test Matrix.
 2. **Constant operating conditions** are still documented per experiment — both rows have the same values.
 3. **File naming patterns** are often consistent: the filename encodes experiment identity (speed, fault type, severity).
-4. **11 sensors** = 11 columns in Slides 9–10 — this is why sensors should be given short, descriptive aliases.
+4. **11 sensors** = 11 columns in Slides 10–11 — this is why sensors should be given short, descriptive aliases.
 
 ---
 

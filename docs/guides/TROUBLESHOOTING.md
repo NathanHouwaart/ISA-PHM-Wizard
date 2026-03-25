@@ -36,14 +36,14 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 
 ---
 
-## Slides 9 & 10 — Output Mapping
+## Slides 10 & 11 — Output Mapping
 
-### Measurement protocol dropdown is empty (Slide 9)
+### Measurement protocol dropdown is empty (Slide 10)
 
 **Cause:** The selected test setup has no measurement protocols.  
 **Fix:** Edit the test setup → **Measurement** tab → add at least one protocol variant.
 
-### Processing protocol dropdown is empty (Slide 10)
+### Processing protocol dropdown is empty (Slide 11)
 
 **Cause:** The selected test setup has no processing protocols.  
 **Fix:** Edit the test setup → **Processing** tab → add at least one protocol variant.
@@ -74,8 +74,8 @@ Quick reference for the most common problems in the ISA-PHM Wizard, organized by
 
 ### Measurement output data in the output is mostly empty
 
-**Cause:** The file/value mappings in Slides 9 and/or 10 were not filled in.  
-**Fix:** Return to Slides 9–10, fill in the file names or values per sensor per run, and re-convert.
+**Cause:** The file/value mappings in Slides 10 and/or 11 were not filled in.  
+**Fix:** Return to Slides 10–11, fill in the file names or values per sensor per run, and re-convert.
 
 ---
 

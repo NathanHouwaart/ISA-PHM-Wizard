@@ -9,6 +9,14 @@ const debugLog = (...args) => {
   }
 };
 
+const sanitizeFileName = (value) => {
+  const source = typeof value === 'string' ? value : '';
+  return source
+    .replace(/[<>:"/\\|?*]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 // Hook responsibility: perform the submit/convert API call using data from the
 // GlobalDataContext. Keeps isSubmitting and message local to the hook so the
 // context remains a pure data store.
@@ -27,6 +35,8 @@ export default function useSubmitData() {
     studyToSensorProcessingMapping,
     studyToMeasurementProtocolSelection,
     studyToProcessingProtocolSelection,
+    currentProjectId,
+    projects = [],
   } = useProjectData();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,7 +102,9 @@ export default function useSubmitData() {
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'isa-phm-out.json';
+      const activeProjectName = projects.find((project) => project?.id === currentProjectId)?.name;
+      const fileBaseName = sanitizeFileName(activeProjectName || 'Project') || 'Project';
+      a.download = `${fileBaseName} ISA-PHM.json`;
       a.click();
       URL.revokeObjectURL(url);
 
