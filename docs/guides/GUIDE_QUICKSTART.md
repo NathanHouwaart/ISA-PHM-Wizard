@@ -239,6 +239,8 @@ Click the suggestion chips to add:
 - **Fault Type** (Qualitative fault specification)
 - **Fault Severity** (Quantitative fault specification)
 
+Keep **Value Mode** as `Scalar` for these fixed labels. Use `Timeseries (.csv)` only when that factor is logged as a run-level CSV file.
+
 ![SCREENSHOT: Slide 6 — two fault specification rows added via suggestion chips](../images/annotated/isa-questionnaire-slide-6.png)
 
 Click **Next**.
@@ -248,6 +250,8 @@ Click **Next**.
 Click the suggestion chips to add:
 - **Rotational Speed** (RPM)
 - **Load** (N)
+
+For fixed setpoints, keep **Value Mode** as `Scalar`.
 
 ![SCREENSHOT: Slide 7 — two operating condition rows](../images/annotated/isa-questionnaire-slide-7.png)
 
@@ -263,6 +267,8 @@ For each experiment and each variable, enter the value that applies to that run:
 | BPFO Fault Test | BPFO | 1 | 1500 | 50 |
 
 Click a cell in the grid and type the value, or use simple view to fill experiment by experiment.
+
+If a variable uses `Timeseries (.csv)` mode, enter a dataset-relative `.csv` path (for example `./Case_01/Settings/speed/run_01.csv`) instead of a scalar value.
 
 > **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many experiments and variables.
 

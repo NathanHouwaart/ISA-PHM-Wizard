@@ -17,11 +17,19 @@ import { SlidePageSubtitle } from '../Typography/Paragraph';
 import DataGrid from '../DataGrid/DataGrid';
 import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
-import { isFaultSpecification } from '../../constants/variableTypes';
+import SelectTypePlugin from '@revolist/revogrid-column-select';
+import {
+    STUDY_VARIABLE_VALUE_MODE_OPTIONS,
+    STUDY_VARIABLE_VALUE_MODE_SCALAR,
+    normalizeStudyVariableValueMode,
+    isFaultSpecification
+} from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import { usePageTab } from '../../hooks/usePageWidth';
 import { OPERATING_CONDITION_SUGGESTIONS } from '../../constants/suggestionCatalog';
 import SuggestionStrip from '../Suggestions/SuggestionStrip';
+
+const plugins = { select: new SelectTypePlugin() };
 
 const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -34,23 +42,31 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
         if (!suggestion) return;
         addItem({
             name: suggestion.name || 'New Variable',
+            valueMode: suggestion.valueMode || STUDY_VARIABLE_VALUE_MODE_SCALAR,
             unit: suggestion.unit || '',
             description: suggestion.description || ''
         });
     }, [addItem]);
 
     const handleRowDataChange = useCallback((newRows) => {
+        const normalizedRows = (newRows || []).map((row) => ({
+            ...row,
+            valueMode: normalizeStudyVariableValueMode(row?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)
+        }));
         setStudyVariables(prevAll => {
             // Keep items that are NOT in this view (Fault Specifications)
             const otherItems = prevAll.filter(item => isFaultSpecification(item));
             // Combine with the new state of items in this view
-            return [...otherItems, ...newRows];
+            return [...otherItems, ...normalizedRows];
         });
     }, [setStudyVariables]);
 
     const variableGridConfig = useMemo(() => ({
         title: 'Operating Conditions',
-        rowData: operatingConditions,
+        rowData: operatingConditions.map((variable) => ({
+            ...variable,
+            valueMode: normalizeStudyVariableValueMode(variable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)
+        })),
         columnData: [],
         mappings: [],
         staticColumns: [
@@ -72,26 +88,21 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
                 cellTemplate: Template(BoldCell),
                 cellProperties: () => ({ style: { "border-right": "3px solid " } })
             },
-            // Type column removed or displayed as readonly text
-            // Requirement: "OF Operating conditions TYPE should NOT be a dropdown anymore and should be fixed to operating condition."
-            // We can just omit it to save space, or keep it strictly readonly.
-            // Let's keep it but make it readonly and maybe shorter since it's always the same.
-            /*
             {
-                prop: 'type',
-                name: 'Type',
-                size: 160,
-                readonly: true
-            },
-            */
-            // Actually, hiding it completely is cleaner as per user requirement "fixed to operating condition" (which implies user doesn't interact with it).
-            // But if I want to show it, I'll add it back. The prompt says "should NOT be a dropdown... fixed to operating condition".
-            // Showing it confirms to the user what they are looking at.
-             {
                 prop: 'type',
                 name: 'Type',
                 size: 200,
                 readonly: true
+            },
+            {
+                prop: 'valueMode',
+                name: 'Value Mode',
+                size: 140,
+                readonly: false,
+                columnType: 'select',
+                labelKey: 'label',
+                valueKey: 'value',
+                source: STUDY_VARIABLE_VALUE_MODE_OPTIONS
             },
             {
                 prop: 'unit',
@@ -167,6 +178,7 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
                         showControls={true}
                         showDebug={false}
                         onRowDataChange={handleRowDataChange}
+                        plugins={plugins}
                         height={"45vh"}
                         isActive={currentPage === pageIndex && selectedTab === 'grid-view'}
                     />

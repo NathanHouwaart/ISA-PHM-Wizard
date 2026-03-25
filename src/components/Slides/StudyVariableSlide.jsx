@@ -23,7 +23,12 @@ import FilePickerPlugin from '../DataGrid/FilePickerPlugin';
 import StudyVariableMappingPanel from '../Study/StudyVariableMappingPanel';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 
-import { isFaultSpecification, isOperatingCondition } from '../../constants/variableTypes';
+import {
+    STUDY_VARIABLE_VALUE_MODE_SCALAR,
+    isFaultSpecification,
+    isOperatingCondition,
+    normalizeStudyVariableValueMode
+} from '../../constants/variableTypes';
 
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
@@ -45,6 +50,12 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
     const faultSpecs = useMemo(() => studyVariables.filter(isFaultSpecification), [studyVariables]);
     const opConds = useMemo(() => studyVariables.filter(isOperatingCondition), [studyVariables]);
     const sortedVariables = useMemo(() => [...faultSpecs, ...opConds], [faultSpecs, opConds]);
+    const normalizedSortedVariables = useMemo(() => (
+        sortedVariables.map((variable) => ({
+            ...variable,
+            valueMode: normalizeStudyVariableValueMode(variable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)
+        }))
+    ), [sortedVariables]);
 
     const mappingsController = useMappingsController(
         'studyToStudyVariableMapping',
@@ -89,6 +100,12 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
             prop: 'unit',
             name: 'Unit',
             size: 120,
+            readonly: true
+        },
+        {
+            prop: 'valueMode',
+            name: 'Value Mode',
+            size: 140,
             readonly: true
         },
         {
@@ -233,7 +250,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     ]}
                 />
                 <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
-                    Each cell can contain either a literal value (e.g. a threshold) or the filename of a run-specific time-series dataset. Pick the approach that best documents the study.
+                    Value Mode controls expected input: use scalar values for <strong>Scalar</strong> rows and relative <code>.csv</code> paths for <strong>Timeseries</strong> rows.
                 </Paragraph>
 
                 <TabPanel isActive={selectedTab === 'simple-view'} unmountOnHide>
@@ -306,13 +323,13 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                             <DataGrid
                                                 {...{
                                                     ...singleRunGridConfig,
-                                                    rowData: sortedVariables
+                                                    rowData: normalizedSortedVariables
                                                 }}
                                                 showControls={true}
                                                 showDebug={false}
                                                 enableBulkFill={true}
                                                 onDataChange={handleSingleRunGridMappingsChange}
-                                                height={Math.min(600, (sortedVariables.length * 50) + 115)}
+                                                height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
                                                 isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
                                                 actionPlugins={[FilePickerPlugin]}
                                             />
@@ -381,12 +398,12 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                     className="border border-gray-200 rounded-lg"
                                                 >
                                                     <DataGrid
-                                                        {...{...baseGridConfig, rowData: sortedVariables}}
+                                                        {...{...baseGridConfig, rowData: normalizedSortedVariables}}
                                                         showControls={true}
                                                         showDebug={false}
                                                         enableBulkFill={true}
                                                         onDataChange={onGridMappingsChangeByStudyId[study.id]}
-                                                        height={Math.min(600, (sortedVariables.length * 50) + 115)}
+                                                        height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
                                                         isActive={currentPage === pageIndex && activeStudyId === study.id}
                                                         actionPlugins={[FilePickerPlugin]}
                                                     />

@@ -220,7 +220,7 @@ The wizard splits experiment variables into two flavours:
 
 On Slide 8 (Test Matrix) you assign a value for each variable to each experiment (or run). This is what makes each experiment description unique and machine-readable.
 
-> **Note (prognostic tests):** The ISA-PHM paper specifies that time-varying operating conditions in long-term degradation tests should be stored as separate time series files (one per variable per run), synchronised to a reference timestamp. The wizard currently captures operating conditions as scalar values only — time-varying file-based operating conditions are out of scope for this version.
+> **Note (prognostic tests):** The ISA-PHM paper specifies that time-varying operating conditions in long-term degradation tests should be stored as separate time series files (one per variable per run), synchronised to a reference timestamp. The wizard now supports this through **Value Mode** on Slides 6-7: set a variable to `Timeseries (.csv)` and provide a relative `.csv` path per run in Slide 8.
 
 ---
 

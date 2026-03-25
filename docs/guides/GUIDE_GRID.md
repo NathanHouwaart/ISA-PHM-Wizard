@@ -173,8 +173,8 @@ After exporting the JSON, place it at the same root level (`pump_bench/`) and zi
 
 | Slide | When |
 |---|---|
-| **8 — Test Matrix** | Prognostics projects only, for variable value cells |
+| **8 — Test Matrix** | Available when a dataset is indexed (primarily for variables set to `Timeseries (.csv)`) |
 | **10 — Raw Measurement Output** | Any project with a dataset indexed |
 | **11 — Processing Protocol Output** | Any project with a dataset indexed |
 
-For diagnostics test matrix cells (Slide 8), the file picker does not appear — enter values as plain text or numbers directly in the grid.
+For Slide 8 scalar rows, enter literal values (text/numbers). If you assign file-like paths into scalar rows, pre-export validation will flag them.

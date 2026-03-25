@@ -12,6 +12,8 @@ Before converting, confirm:
 - [ ] Every study has a measurement protocol selected (always required)
 - [ ] Every study with processed output has a processing protocol selected
 - [ ] All test matrix cells (Slide 8) are filled
+- [ ] Scalar test matrix rows contain literal values (not file paths)
+- [ ] Timeseries test matrix rows contain relative `.csv` paths (no absolute paths)
 - [ ] Raw file mappings are filled for studies where raw output is enabled
 - [ ] Processed file mappings are filled for studies where processed output is enabled
 

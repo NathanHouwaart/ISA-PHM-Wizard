@@ -37,6 +37,7 @@ Defines the fault-related variables that characterize your experiments. These be
 |---|---|---|
 | **Variable Name** | Short identifier used throughout the wizard | `Fault Type` |
 | **Type** | See table above | `Qualitative fault specification` |
+| **Value Mode** | Expected value format in Slide 8: literal scalar or file-based timeseries path | `Scalar` / `Timeseries (.csv)` |
 | **Unit** | Physical unit or blank for dimensionless | `mm` / `` |
 | **Description** | Longer description for documentation | `Type of fault introduced onto the bearing` |
 
@@ -70,7 +71,10 @@ Defines the fault-related variables that characterize your experiments. These be
 ## Tips
 
 - Keep names short — they appear as column headers in the Test Matrix.
+- Use **Scalar** for fixed values (e.g. `BPFO`, `0.2`) and **Timeseries (.csv)** when the factor is recorded as a per-run file.
 - You can add, edit, or delete variables at any time before exporting. Deleting a variable also removes its values from the Test Matrix.
+
+> `Value Mode` is a wizard-side input rule for Slide 8 and validation. It is not exported as a separate ISA-PHM factor property.
 
 ---
 

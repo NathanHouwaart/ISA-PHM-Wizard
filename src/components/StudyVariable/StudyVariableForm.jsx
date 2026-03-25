@@ -5,7 +5,12 @@ import FormField from '../Form/FormField';
 import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
-import { VARIABLE_TYPE_OPTIONS } from '../../constants/variableTypes';
+import {
+  VARIABLE_TYPE_OPTIONS,
+  STUDY_VARIABLE_VALUE_MODE_OPTIONS,
+  STUDY_VARIABLE_VALUE_MODE_SCALAR,
+  normalizeStudyVariableValueMode
+} from '../../constants/variableTypes';
 import generateId from '../../utils/generateId';
 import SuggestionStrip from '../Suggestions/SuggestionStrip';
 
@@ -39,6 +44,7 @@ const StudyVariableForm = ({
     id: item?.id || '',
     name: item?.name || 'New Variable',
     type: item?.type || lockedType || (allowedTypes ? allowedTypes[0] : VARIABLE_TYPE_OPTIONS[0]),
+    valueMode: normalizeStudyVariableValueMode(item?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR),
     unit: item?.unit || '',
     description: item?.description || ''
   });
@@ -134,6 +140,24 @@ const StudyVariableForm = ({
             ))}
           </select>
         )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Value Mode
+        </label>
+        <select
+          name="valueMode"
+          value={normalizeStudyVariableValueMode(formData.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {STUDY_VARIABLE_VALUE_MODE_OPTIONS.map((mode) => (
+            <option key={mode.value} value={mode.value}>
+              {mode.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <FormField

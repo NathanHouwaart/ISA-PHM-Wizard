@@ -7,6 +7,11 @@ import {
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
+import {
+  STUDY_VARIABLE_VALUE_MODE_SCALAR,
+  STUDY_VARIABLE_VALUE_MODE_TIMESERIES,
+  normalizeStudyVariableValueMode
+} from '../constants/variableTypes';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -35,6 +40,22 @@ const isAbsolutePath = (value) => {
 const hasCsvExtension = (value) => {
   if (typeof value !== 'string') return false;
   return /\.csv$/i.test(value.trim());
+};
+
+const hasLikelyFileExtension = (value) => {
+  if (typeof value !== 'string') return false;
+  return /\.[a-zA-Z0-9]{1,8}$/.test(value.trim());
+};
+
+const isLikelyRelativeFilePath = (value) => {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (/^\.{1,2}[\\/]/.test(trimmed)) return true;
+  if (trimmed.includes('/') || trimmed.includes('\\')) {
+    return hasLikelyFileExtension(trimmed);
+  }
+  return false;
 };
 
 const resolveRunMapping = (mappings = [], sensorId, run) => {
@@ -478,6 +499,9 @@ export function buildExportValidationReport({
   }
 
   const missingStudyVariableMappings = [];
+  const invalidScalarStudyVariableFileLikeValues = [];
+  const invalidTimeseriesStudyVariableAbsolutePaths = [];
+  const invalidTimeseriesStudyVariableNonCsvValues = [];
   let requiredStudyVariableMappings = 0;
 
   if (studyRuns.length > 0 && safeStudyVariables.length > 0) {
@@ -487,6 +511,39 @@ export function buildExportValidationReport({
         const mapping = resolveStudyVariableMapping(safeStudyVariableMappings, variable?.id, run);
         if (!hasFilledValue(mapping?.value)) {
           missingStudyVariableMappings.push(formatRunVariableLabel(run, variable));
+          return;
+        }
+
+        const valueMode = normalizeStudyVariableValueMode(
+          variable?.valueMode,
+          STUDY_VARIABLE_VALUE_MODE_SCALAR
+        );
+        const rawValue = String(mapping?.value ?? '').trim();
+
+        if (valueMode === STUDY_VARIABLE_VALUE_MODE_SCALAR) {
+          if (isAbsolutePath(rawValue) || hasCsvExtension(rawValue) || isLikelyRelativeFilePath(rawValue)) {
+            invalidScalarStudyVariableFileLikeValues.push(
+              `${rawValue} - ${formatRunVariableLabel(run, variable)}`
+            );
+          }
+          return;
+        }
+
+        if (valueMode !== STUDY_VARIABLE_VALUE_MODE_TIMESERIES) {
+          return;
+        }
+
+        const normalized = normalizePath(rawValue);
+        if (isAbsolutePath(rawValue)) {
+          invalidTimeseriesStudyVariableAbsolutePaths.push(
+            `${rawValue} - ${formatRunVariableLabel(run, variable)}`
+          );
+          return;
+        }
+        if (!hasCsvExtension(normalized)) {
+          invalidTimeseriesStudyVariableNonCsvValues.push(
+            `${rawValue} - ${formatRunVariableLabel(run, variable)}`
+          );
         }
       });
     });
@@ -500,6 +557,39 @@ export function buildExportValidationReport({
       description: `${missingStudyVariableMappings.length} required test matrix cells are empty.`,
       count: missingStudyVariableMappings.length,
       items: missingStudyVariableMappings,
+    });
+  }
+
+  if (invalidTimeseriesStudyVariableAbsolutePaths.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'absolute-test-matrix-file-values',
+      level: 'error',
+      title: 'Absolute file paths are not allowed in test matrix',
+      description: `${invalidTimeseriesStudyVariableAbsolutePaths.length} timeseries test matrix values use absolute paths.`,
+      count: invalidTimeseriesStudyVariableAbsolutePaths.length,
+      items: invalidTimeseriesStudyVariableAbsolutePaths,
+    });
+  }
+
+  if (invalidTimeseriesStudyVariableNonCsvValues.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'non-csv-test-matrix-file-values',
+      level: 'error',
+      title: 'Timeseries test matrix values must be relative .csv paths',
+      description: `${invalidTimeseriesStudyVariableNonCsvValues.length} timeseries test matrix values are not .csv files.`,
+      count: invalidTimeseriesStudyVariableNonCsvValues.length,
+      items: invalidTimeseriesStudyVariableNonCsvValues,
+    });
+  }
+
+  if (invalidScalarStudyVariableFileLikeValues.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'file-like-scalar-test-matrix-values',
+      level: 'error',
+      title: 'Scalar test matrix values cannot be file paths',
+      description: `${invalidScalarStudyVariableFileLikeValues.length} scalar test matrix values look like file paths. Switch variable mode to Timeseries or enter a scalar value.`,
+      count: invalidScalarStudyVariableFileLikeValues.length,
+      items: invalidScalarStudyVariableFileLikeValues,
     });
   }
 

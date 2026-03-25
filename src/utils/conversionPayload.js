@@ -14,6 +14,12 @@ const asObject = (value) => {
   return {};
 };
 
+const stripUiOnlyFieldsFromVariable = (variable) => {
+  if (!variable || typeof variable !== 'object' || Array.isArray(variable)) return variable;
+  const { valueMode: _valueMode, ...rest } = variable;
+  return rest;
+};
+
 const buildSelectionLookup = ({
   studyToMeasurementProtocolSelection = [],
   studyToProcessingProtocolSelection = [],
@@ -155,6 +161,7 @@ export const buildConversionPayload = ({
 }) => {
   const safeStudies = asArray(studies);
   const safeVariables = asArray(studyVariables);
+  const payloadStudyVariables = safeVariables.map(stripUiOnlyFieldsFromVariable);
   const safeSetups = asArray(testSetups);
   const safePublications = asArray(publications);
   const safeContacts = asArray(contacts);
@@ -190,7 +197,7 @@ export const buildConversionPayload = ({
     experiment_type: experimentType,
     publications: safePublications,
     contacts: safeContacts,
-    study_variables: safeVariables,
+    study_variables: payloadStudyVariables,
     measurement_protocols: selectedMeasurementProtocols,
     processing_protocols: selectedProcessingProtocols,
     studies: safeStudies.map((study) => {

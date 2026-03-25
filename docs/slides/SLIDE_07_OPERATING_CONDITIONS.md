@@ -27,6 +27,7 @@ All variables on this slide have the type **Operating condition** — this is fi
 | Field | Description | Example |
 |---|---|---|
 | **Variable Name** | Short identifier | `Rotational Speed` |
+| **Value Mode** | Expected value format in Slide 8: literal scalar or file-based timeseries path | `Scalar` / `Timeseries (.csv)` |
 | **Unit** | Physical unit | `RPM` |
 | **Description** | Longer description | `Rotational speed of the drivetrain or spindle.` |
 
@@ -77,6 +78,7 @@ Often both types of variables are needed: the fault condition describes *what* w
 
 - Add all conditions that were varied or controlled, even if they were constant across all experiments — constant conditions are still worth documenting for reproducibility.
 - Constant values across all experiments (e.g. load was always 50 N) are fine — just fill 50 in every cell of Slide 8.
+- Set **Timeseries (.csv)** when an operating condition varies during a run and is documented as a run-level CSV path in Slide 8.
 
 ---
 

@@ -25,7 +25,11 @@ The experiment type determines **how many columns appear per experiment**:
 - **Diagnostics**: one column per experiment
 - **Prognostics**: one column per run per experiment
 
-> **Note — fixed values vs. time series:** The number of columns is separate from what kind of value goes in each cell. Any factor row — in both diagnostics and prognostics — can hold either a **fixed scalar** (e.g. `"BPFO"`, `1300`) or a **file path to a time-series CSV** (e.g. `.../run_01_settings.csv`). Use file paths when that factor's value changes over time within a run and is recorded as a separate file.
+> **Note - fixed values vs. time series:** The number of columns is separate from what kind of value goes in each cell. The allowed value format is controlled by each variable's **Value Mode** (set on Slides 6-7):
+> - **Scalar**: enter literal values (e.g. `"BPFO"`, `1300`)
+> - **Timeseries (.csv)**: enter dataset-relative `.csv` paths (e.g. `./Case_01/Settings/time/run_01.csv`)
+>
+> Pre-export validation blocks file-like values in scalar rows, and blocks absolute or non-`.csv` paths in timeseries rows.
 >
 > **Expected file format for time-series factor files:** Two-column CSV — a `time` column followed by the factor value column:
 >
@@ -61,7 +65,7 @@ Each experiment appears as **one column**. Values are typically fixed scalars �
 
 ![Slide 8 — Test Matrix in Diagnostics mode, one column per experiment](../images/annotated/isa-questionnaire-slide-8.png)
 
-A diagnostics experiment can also use file paths if a fixed value cannot be guaranteed — for example, when a factor varies during a run and is logged to a file rather than captured as a single number.
+A diagnostics experiment can also use file paths if a fixed value cannot be guaranteed — for example, when a factor varies during a run and is logged to a file rather than captured as a single number. In that case, set the variable's Value Mode to `Timeseries (.csv)`.
 
 ### Prognostics experiment
 
@@ -99,13 +103,15 @@ The **file picker** (see below) helps you assign file paths without typing them 
 
 ---
 
-## File picker (Prognostics template)
+## File picker
 
-For prognostic experiments, variable values in the Test Matrix are often **file paths** to per-run settings files. If your project has a dataset indexed, a file picker button appears when you select cells — click it to browse and assign files instead of typing paths.
+If your project has a dataset indexed, a file picker button appears when you select grid cells - click it to browse and assign files instead of typing paths.
+
+This is most useful for rows configured as `Timeseries (.csv)` in Slides 6-7.
 
 ![SCREENSHOT: Slide 8 — file picker action button visible in a cell or row](../images/annotated/isa-questionnaire-slide-8-file-picker-button.png)
 
-> For diagnostics experiments, cell values are plain text or numbers — the file picker does not appear.
+> If you assign file paths into scalar rows, pre-export validation will flag those cells as errors.
 
 The file picker supports **bulk assignment**: select multiple cells first, then pick files. Files are assigned left to right in alphabetical filename order. If you pick fewer files than cells the remainder stay blank; if you pick more than cells the extras are ignored.
 
@@ -126,7 +132,7 @@ For full details on selection behaviour, file naming conventions, and root-folde
 ## Tips
 
 - Fill the matrix before moving to Slides 9–11. Output mapping slides show the same experiment/run rows.
-- Values are free text — enter numbers, strings, or codes as they appear in your raw data filenames or experiment log.
+- Match values to **Value Mode**: scalar rows should contain literal values, timeseries rows should contain relative `.csv` paths.
 - Constant operating conditions (same value for every experiment) are still filled for every row — copy-paste or grid undo/redo help here.
 
 ---

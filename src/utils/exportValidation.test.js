@@ -282,4 +282,65 @@ describe('buildExportValidationReport', () => {
 
     expect(report.blockingIssues.some((issue) => issue.id === 'invalid-study-run-count')).toBe(false);
   });
+
+  it('validates test matrix values as relative .csv only for timeseries-mode variables', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      studyVariables: [
+        { id: 'var-fault', name: 'Fault Type', type: 'Qualitative fault specification', valueMode: 'scalar' },
+        { id: 'var-op', name: 'Signal', type: 'Operating condition', valueMode: 'timeseries' },
+      ],
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'raw/r1_s1.csv' },
+        { studyRunId: run1, sensorId: 'sensor-2', value: 'raw/r1_s2.csv' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_s1.csv' },
+        { studyRunId: run2, sensorId: 'sensor-2', value: 'raw/r2_s2.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+      studyToStudyVariableMapping: [
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFO' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFI' },
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-op', value: 'C:\\dataset\\run1.txt' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-op', value: './runs/run2.txt' },
+      ],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'absolute-test-matrix-file-values')).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'non-csv-test-matrix-file-values')).toBe(true);
+  });
+
+  it('blocks file-like values for scalar-mode variables', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      studyVariables: [
+        { id: 'var-fault', name: 'Fault Type', type: 'Qualitative fault specification', valueMode: 'scalar' },
+        { id: 'var-op', name: 'Speed', type: 'Operating condition', valueMode: 'scalar' },
+      ],
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'raw/r1_s1.csv' },
+        { studyRunId: run1, sensorId: 'sensor-2', value: 'raw/r1_s2.csv' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_s1.csv' },
+        { studyRunId: run2, sensorId: 'sensor-2', value: 'raw/r2_s2.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+      studyToStudyVariableMapping: [
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-fault', value: './vars/fault_profile.csv' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFI' },
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-op', value: '1800' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-op', value: '1700' },
+      ],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'file-like-scalar-test-matrix-values')).toBe(true);
+  });
 });

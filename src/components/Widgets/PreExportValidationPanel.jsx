@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import TooltipButton from './TooltipButton';
 
 const issuePalette = {
   error: {
@@ -98,14 +99,14 @@ const PreExportValidationPanel = ({
           <p className="text-xs">{summaryText}</p>
         </div>
         {hasIssues ? (
-          <button
-            type="button"
+          <TooltipButton
+            tooltipText={expanded ? 'Hide validation details' : 'Show validation details'}
             onClick={onToggle}
-            className="inline-flex items-center gap-1 rounded-md border border-current/20 px-2 py-1 text-xs font-medium hover:bg-white/30"
+            className="inline-flex items-center gap-1 rounded-md border border-current/20 bg-transparent px-2 py-1 text-xs font-medium text-inherit hover:bg-white/30"
           >
             {expanded ? 'Hide details' : 'Show details'}
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          </button>
+          </TooltipButton>
         ) : null}
       </div>
 
