@@ -1,6 +1,6 @@
 # Guide — Working with the Grid
 
-The data grid is used on Slides 8, 9, and 10 to map variable values and file paths to experiments and runs. This guide covers navigation, the row toolbar actions, and the file picker for bulk file assignment.
+The data grid is used on Slides 8, 10, and 11 to map variable values and file paths to experiments and runs. This guide covers navigation, the row toolbar actions, and the file picker for bulk file assignment.
 
 ---
 
