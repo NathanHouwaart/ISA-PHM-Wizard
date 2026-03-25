@@ -7,6 +7,23 @@ import {
 } from './studyOutputMode';
 
 const makeBaseInput = () => ({
+  studyToStudyVariableMapping: [
+    { studyRunId: createStudyRunId('study-1', 1), studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFO' },
+    { studyRunId: createStudyRunId('study-1', 1), studyId: 'study-1', studyVariableId: 'var-op', value: '1800' },
+    { studyRunId: createStudyRunId('study-1', 2), studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFI' },
+    { studyRunId: createStudyRunId('study-1', 2), studyId: 'study-1', studyVariableId: 'var-op', value: '1700' },
+  ],
+  investigation: {
+    investigationTitle: 'Validation Test Project',
+    investigationDescription: 'Validation baseline payload',
+  },
+  contacts: [
+    { id: 'contact-1', firstName: 'Alex', lastName: 'Doe', email: 'alex@example.com' },
+  ],
+  studyVariables: [
+    { id: 'var-fault', name: 'Fault Type', type: 'Qualitative fault specification' },
+    { id: 'var-op', name: 'Speed', type: 'Operating condition' },
+  ],
   studies: [
     { id: 'study-1', name: 'Study 1', runCount: 2, outputMode: OUTPUT_MODE_RAW_ONLY },
   ],
@@ -132,5 +149,114 @@ describe('buildExportValidationReport', () => {
     expect(report.stats.requiredProcessedAssignments).toBe(0);
     expect(report.stats.missingMeasurement).toBe(0);
     expect(report.stats.missingProcessing).toBe(0);
+  });
+
+  it('reports missing project metadata and variable setup', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      investigation: {
+        investigationTitle: '',
+        investigationDescription: '',
+      },
+      contacts: [],
+      studies: [],
+      studyVariables: [],
+      studyToMeasurementProtocolSelection: [],
+      studyToSensorMeasurementMapping: [],
+      studyToSensorProcessingMapping: [],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-project-title')).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-studies')).toBe(true);
+    expect(report.warningIssues.some((issue) => issue.id === 'missing-project-description')).toBe(true);
+    expect(report.warningIssues.some((issue) => issue.id === 'missing-contacts')).toBe(true);
+    expect(report.warningIssues.some((issue) => issue.id === 'missing-fault-specifications')).toBe(true);
+    expect(report.warningIssues.some((issue) => issue.id === 'missing-operating-conditions')).toBe(true);
+  });
+
+  it('flags missing test matrix values as blocking errors', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'raw/r1_s1.csv' },
+        { studyRunId: run1, sensorId: 'sensor-2', value: 'raw/r1_s2.csv' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_s1.csv' },
+        { studyRunId: run2, sensorId: 'sensor-2', value: 'raw/r2_s2.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+      studyToStudyVariableMapping: [
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFO' },
+        { studyRunId: run1, studyId: 'study-1', studyVariableId: 'var-op', value: '1800' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-fault', value: '' },
+        { studyRunId: run2, studyId: 'study-1', studyVariableId: 'var-op', value: '1700' },
+      ],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-test-matrix-mappings')).toBe(true);
+    expect(report.stats.requiredStudyVariableMappings).toBe(4);
+    expect(report.stats.missingStudyVariableMappings).toBe(1);
+  });
+
+  it('flags missing test setup selection as blocking', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      selectedTestSetupId: null,
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-test-setup')).toBe(true);
+  });
+
+  it('warns on contact rows that violate required fields or email format', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      contacts: [
+        { id: 'contact-1', firstName: 'Alex', lastName: '', email: 'alex@example.com' },
+        { id: 'contact-2', firstName: 'Jamie', lastName: 'Doe', email: 'not-an-email' },
+      ],
+    });
+
+    expect(report.warningIssues.some((issue) => issue.id === 'incomplete-contacts')).toBe(true);
+    expect(report.warningIssues.some((issue) => issue.id === 'invalid-contact-emails')).toBe(true);
+  });
+
+  it('flags absolute and non-csv output mappings as blocking', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'C:\\dataset\\r1_s1.csv' },
+        { studyRunId: run1, sensorId: 'sensor-2', value: 'raw/r1_s2.txt' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_s1.csv' },
+        { studyRunId: run2, sensorId: 'sensor-2', value: 'raw/r2_s2.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'absolute-file-path-assignments')).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'non-csv-file-assignments')).toBe(true);
+  });
+
+  it('flags experiments with missing name or invalid run count', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      studies: [
+        { id: 'study-1', name: '', runCount: 0, outputMode: OUTPUT_MODE_RAW_ONLY },
+      ],
+    });
+
+    expect(report.hasBlockingErrors).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-study-name')).toBe(true);
+    expect(report.blockingIssues.some((issue) => issue.id === 'invalid-study-run-count')).toBe(true);
   });
 });

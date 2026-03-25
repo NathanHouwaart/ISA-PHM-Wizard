@@ -2,6 +2,12 @@ import { OPERATING_CONDITION_TYPE } from './variableTypes';
 
 export const FAULT_SPECIFICATION_SUGGESTIONS = [
     {
+        name: "RUL",
+        type: 'Quantitative fault specification',
+        unit: '',
+        description: 'Remaining useful life (RUL) of the component or system, typically expressed in time units or cycles until failure.'
+    },
+    {
         name: 'Fault Type',
         type: 'Qualitative fault specification',
         unit: '',

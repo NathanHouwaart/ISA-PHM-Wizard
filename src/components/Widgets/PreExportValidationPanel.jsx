@@ -89,14 +89,13 @@ const PreExportValidationPanel = ({
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">Pre-export validation</p>
           <p className="text-xs">
-            {summaryText}
+            Mappings:
             {' '}
-            Required mappings:
+            raw {safeReport?.stats?.mappedMeasurement || 0}/{safeReport?.stats?.requiredRawAssignments || 0},
             {' '}
-            raw {safeReport?.stats?.requiredRawAssignments || 0},
-            {' '}
-            processed {safeReport?.stats?.requiredProcessedAssignments || 0}.
+            processed {safeReport?.stats?.mappedProcessing || 0}/{safeReport?.stats?.requiredProcessedAssignments || 0}
           </p>
+          <p className="text-xs">{summaryText}</p>
         </div>
         {hasIssues ? (
           <button

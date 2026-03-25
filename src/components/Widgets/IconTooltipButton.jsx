@@ -17,6 +17,7 @@ import { TOOLTIP_DELAY_MS } from '../../constants/ui';
  * @param {() => void} [props.onClick] - Click handler
  * @param {string} props.tooltipText - Tooltip text (required for accessibility)
  * @param {string} [props.className] - Additional CSS classes
+ * @param {string} [props.iconClassName] - Additional icon CSS classes
  * @param {boolean} [props.disabled=false] - Whether button is disabled
  * @param {'button'|'submit'|'reset'} [props.type='button'] - Button type
  * @param {'md'|'sm'} [props.size='md'] - Size variant
@@ -28,6 +29,7 @@ export const IconToolTipButton = ({
     onClick,
     tooltipText,
     className,
+    iconClassName,
     disabled = false,
     type = 'button',
     size = 'md', // 'md' or 'sm'
@@ -70,6 +72,7 @@ export const IconToolTipButton = ({
                         >
                             <Icon className={cn(
                                 chosen.icon + ' text-gray-500 transition-colors duration-200',
+                                iconClassName,
                                 disabled ? '' : 'group-hover:text-blue-500'
                             )} />
                         </button>

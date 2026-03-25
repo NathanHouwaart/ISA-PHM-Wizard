@@ -20,7 +20,14 @@ import useSubmitData from '../hooks/useSubmitData';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import TooltipButton from '../components/Widgets/TooltipButton';
 import IconToolTipButton from '../components/Widgets/IconTooltipButton';
-import { Layers, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Layers,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle
+} from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 import Heading3 from '../components/Typography/Heading3';
@@ -50,10 +57,14 @@ export const IsaQuestionnaire = () => {
     explorerOpen,
     currentProjectId,
     projects,
+    investigation,
+    contacts,
+    studyVariables,
     selectedTestSetupId,
     testSetups,
     studies,
     selectedDataset,
+    studyToStudyVariableMapping,
     studyToMeasurementProtocolSelection,
     studyToProcessingProtocolSelection,
     studyToSensorMeasurementMapping,
@@ -65,6 +76,7 @@ export const IsaQuestionnaire = () => {
   // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
   const [isRemountingSlides, setIsRemountingSlides] = useState(false);
+  const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
   const [slidesKey, setSlidesKey] = useState(() => currentProjectId ? `slides-${currentProjectId}-${Date.now()}` : 'slides-none');
   const hasInitializedProjectRef = useRef(false);
@@ -160,6 +172,10 @@ export const IsaQuestionnaire = () => {
   }, [currentProjectId, childRefs]);
 
   const validationReport = useMemo(() => buildExportValidationReport({
+    investigation,
+    contacts,
+    studyVariables,
+    studyToStudyVariableMapping,
     studies,
     testSetups,
     selectedTestSetupId,
@@ -169,6 +185,10 @@ export const IsaQuestionnaire = () => {
     studyToSensorProcessingMapping,
     selectedDataset,
   }), [
+    investigation,
+    contacts,
+    studyVariables,
+    studyToStudyVariableMapping,
     studies,
     testSetups,
     selectedTestSetupId,
@@ -180,9 +200,38 @@ export const IsaQuestionnaire = () => {
   ]);
 
   const hasBlockingValidationIssues = validationReport?.hasBlockingErrors;
+  const validationSummaryErrors = Number(validationReport?.summary?.errors || 0);
+  const validationSummaryWarnings = Number(validationReport?.summary?.warnings || 0);
+
+  const validationStatusMeta = useMemo(() => {
+    if (validationSummaryErrors > 0) {
+      return {
+        icon: XCircle,
+        iconClassName: 'text-red-600',
+        tooltipText: `${validationSummaryErrors} blocking issue${validationSummaryErrors === 1 ? '' : 's'} found. Click to review.`
+      };
+    }
+
+    if (validationSummaryWarnings > 0) {
+      return {
+        icon: AlertTriangle,
+        iconClassName: 'text-yellow-600',
+        tooltipText: `${validationSummaryWarnings} warning${validationSummaryWarnings === 1 ? '' : 's'} found. Click to review.`
+      };
+    }
+
+    return {
+      icon: CheckCircle2,
+      iconClassName: 'text-emerald-600',
+      tooltipText: 'Pre-export checks are clean. Click to view summary.'
+    };
+  }, [validationSummaryErrors, validationSummaryWarnings]);
+
+  const ValidationStatusIcon = validationStatusMeta.icon;
 
   const handleSubmit = () => {
     if (hasBlockingValidationIssues) {
+      setShowValidationPanel(true);
       setShowValidationDetails(true);
       return;
     }
@@ -323,13 +372,15 @@ export const IsaQuestionnaire = () => {
           </div>
         </div>
 
-        <div className="mx-5">
-          <PreExportValidationPanel
-            report={validationReport}
-            expanded={showValidationDetails}
-            onToggle={() => setShowValidationDetails((value) => !value)}
-          />
-        </div>
+        {showValidationPanel ? (
+          <div className="mx-5">
+            <PreExportValidationPanel
+              report={validationReport}
+              expanded={showValidationDetails}
+              onToggle={() => setShowValidationDetails((value) => !value)}
+            />
+          </div>
+        ) : null}
 
         <div className="flex items-center justify-center space-x-4 mx-5">
           {/* Previous: always rendered but invisible/disabled on first page to reserve space */}
@@ -343,19 +394,46 @@ export const IsaQuestionnaire = () => {
             <span className='w-30'>&lt; Previous</span>
           </TooltipButton>
 
-          <TooltipButton
-            tooltipText={hasBlockingValidationIssues ? 'Resolve blocking validation issues before converting' : 'Submit the form'}
-            onClick={handleSubmit}
-            disabled={hasBlockingValidationIssues}
-            className={cn(
-              "py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg disabled:cursor-not-allowed disabled:opacity-70",
-              hasBlockingValidationIssues
-                ? "bg-gray-400 hover:bg-gray-400"
-                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
-            )}
-          >
-            <span className='w-md'>Convert to ISA-PHM</span>
-          </TooltipButton>
+          <div className="flex items-center gap-2">
+            <TooltipButton
+              tooltipText={hasBlockingValidationIssues ? 'Resolve blocking validation issues before converting' : 'Submit the form'}
+              onClick={handleSubmit}
+              disabled={hasBlockingValidationIssues}
+              className={cn(
+                "py-2 px-4 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg disabled:cursor-not-allowed disabled:opacity-70",
+                hasBlockingValidationIssues
+                  ? "bg-gray-400 hover:bg-gray-400"
+                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
+              )}
+            >
+              <span className='w-56 sm:w-72 md:w-[23rem] text-center'>Convert to ISA-PHM</span>
+            </TooltipButton>
+
+            <IconToolTipButton
+              icon={ValidationStatusIcon}
+              size="md"
+              tooltipText={validationStatusMeta.tooltipText}
+              onClick={() => {
+                setShowValidationPanel((isVisible) => {
+                  const nextVisible = !isVisible;
+                  if (nextVisible && hasBlockingValidationIssues) {
+                    setShowValidationDetails(true);
+                  }
+                  return nextVisible;
+                });
+              }}
+              className={cn(
+                "h-10 w-10 rounded-lg shadow-lg",
+                validationSummaryErrors > 0
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                  : validationSummaryWarnings > 0
+                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
+                    : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
+              )}
+              iconClassName="!text-white group-hover:!text-white"
+              aria-label="Toggle pre-export validation summary"
+            />
+          </div>
 
           {/* Next: always rendered but invisible/disabled on last page to reserve space */}
           <TooltipButton

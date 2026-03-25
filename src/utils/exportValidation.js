@@ -5,6 +5,7 @@ import {
   isRawOutputEnabled,
   resolveStudyOutputMode,
 } from './studyOutputMode';
+import { isValidEmail } from './validation';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -21,9 +22,33 @@ const normalizePath = (value) => {
   return next;
 };
 
+const isAbsolutePath = (value) => {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (/^[a-zA-Z]:[\\/]/.test(trimmed)) return true;
+  if (/^[\\/]/.test(trimmed)) return true;
+  return false;
+};
+
+const hasCsvExtension = (value) => {
+  if (typeof value !== 'string') return false;
+  return /\.csv$/i.test(value.trim());
+};
+
 const resolveRunMapping = (mappings = [], sensorId, run) => {
   return asArray(mappings).find((mapping) => {
     if (!mapping || String(mapping.sensorId) !== String(sensorId)) return false;
+    if (mapping.studyRunId) {
+      return String(mapping.studyRunId) === String(run.runId);
+    }
+    return String(mapping.studyId) === String(run.studyId);
+  }) || null;
+};
+
+const resolveStudyVariableMapping = (mappings = [], studyVariableId, run) => {
+  return asArray(mappings).find((mapping) => {
+    if (!mapping || String(mapping.studyVariableId) !== String(studyVariableId)) return false;
     if (mapping.studyRunId) {
       return String(mapping.studyRunId) === String(run.runId);
     }
@@ -50,6 +75,21 @@ const formatRunSensorLabel = (run, sensor) => {
   const runLabel = run?.runNumber ? `Run ${run.runNumber}` : 'Run ?';
   const sensorLabel = sensor?.alias || sensor?.name || sensor?.id || 'Unknown sensor';
   return `${studyLabel} / ${runLabel} / ${sensorLabel}`;
+};
+
+const formatRunVariableLabel = (run, variable) => {
+  const studyLabel = run?.studyName || run?.name || run?.studyId || 'Unknown study';
+  const runLabel = run?.runNumber ? `Run ${run.runNumber}` : 'Run ?';
+  const variableLabel = variable?.name || variable?.id || 'Unknown variable';
+  return `${studyLabel} / ${runLabel} / ${variableLabel}`;
+};
+
+const formatContactLabel = (contact, contactIndex) => {
+  const fullName = `${String(contact?.firstName || '').trim()} ${String(contact?.lastName || '').trim()}`.trim();
+  if (fullName) return fullName;
+  const email = String(contact?.email || '').trim();
+  if (email) return email;
+  return `Contact ${contactIndex + 1}`;
 };
 
 const resolveMappingContext = (mapping, lookup) => {
@@ -96,6 +136,10 @@ const buildSelectionLookup = ({
 };
 
 export function buildExportValidationReport({
+  investigation = {},
+  contacts = [],
+  studyVariables = [],
+  studyToStudyVariableMapping = [],
   studies = [],
   testSetups = [],
   selectedTestSetupId = null,
@@ -106,6 +150,9 @@ export function buildExportValidationReport({
   selectedDataset = null,
 } = {}) {
   const safeStudies = asArray(studies);
+  const safeContacts = asArray(contacts);
+  const safeStudyVariables = asArray(studyVariables);
+  const safeStudyVariableMappings = asArray(studyToStudyVariableMapping);
   const selectedSetup = asArray(testSetups).find((setup) => setup?.id === selectedTestSetupId) || null;
   const sensors = asArray(selectedSetup?.sensors);
   const studyRuns = expandStudiesIntoRuns(safeStudies);
@@ -116,6 +163,182 @@ export function buildExportValidationReport({
 
   const warningIssues = [];
   const errorIssues = [];
+
+  const investigationTitle = String(investigation?.investigationTitle || '').trim();
+  const investigationDescription = String(investigation?.investigationDescription || '').trim();
+
+  if (!investigationTitle) {
+    pushIssue(errorIssues, {
+      id: 'missing-project-title',
+      level: 'error',
+      title: 'Missing project title',
+      description: 'Project title is required before conversion.',
+      count: 1,
+      items: ['Slide 2 - Project Information: fill in Title'],
+    });
+  }
+
+  if (!investigationDescription) {
+    pushIssue(warningIssues, {
+      id: 'missing-project-description',
+      level: 'warning',
+      title: 'Missing project description',
+      description: 'Project description is empty. Add context to improve metadata quality.',
+      count: 1,
+      items: ['Slide 2 - Project Information: add Description'],
+    });
+  }
+
+  if (safeContacts.length === 0) {
+    pushIssue(warningIssues, {
+      id: 'missing-contacts',
+      level: 'warning',
+      title: 'No contacts defined',
+      description: 'At least one contact is recommended for traceability.',
+      count: 1,
+      items: ['Slide 3 - Contacts: add at least one contact'],
+    });
+  }
+
+  const contactsMissingName = safeContacts
+    .map((contact, index) => ({ contact, index }))
+    .filter(({ contact }) => (
+      !String(contact?.firstName || '').trim()
+      || !String(contact?.lastName || '').trim()
+    ));
+
+  if (contactsMissingName.length > 0) {
+    pushIssue(warningIssues, {
+      id: 'incomplete-contacts',
+      level: 'warning',
+      title: 'Contacts with missing required fields',
+      description: `${contactsMissingName.length} contacts are missing first name or last name.`,
+      count: contactsMissingName.length,
+      items: contactsMissingName.map(({ contact, index }) => formatContactLabel(contact, index)),
+    });
+  }
+
+  const contactsWithInvalidEmail = safeContacts
+    .map((contact, index) => ({ contact, index }))
+    .filter(({ contact }) => {
+      const email = String(contact?.email || '').trim();
+      return email && !isValidEmail(email);
+    });
+
+  if (contactsWithInvalidEmail.length > 0) {
+    pushIssue(warningIssues, {
+      id: 'invalid-contact-emails',
+      level: 'warning',
+      title: 'Contacts with invalid email format',
+      description: `${contactsWithInvalidEmail.length} contacts contain an invalid email address.`,
+      count: contactsWithInvalidEmail.length,
+      items: contactsWithInvalidEmail.map(({ contact, index }) => formatContactLabel(contact, index)),
+    });
+  }
+
+  if (safeStudies.length === 0) {
+    pushIssue(errorIssues, {
+      id: 'missing-studies',
+      level: 'error',
+      title: 'No experiments defined',
+      description: 'At least one experiment is required before conversion.',
+      count: 1,
+      items: ['Slide 5 - Experiment Descriptions: add at least one experiment'],
+    });
+  }
+
+  const studiesMissingName = safeStudies
+    .map((study, index) => ({ study, index }))
+    .filter(({ study }) => !String(study?.name || '').trim());
+
+  if (studiesMissingName.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'missing-study-name',
+      level: 'error',
+      title: 'Experiments missing name',
+      description: `${studiesMissingName.length} experiments are missing a name.`,
+      count: studiesMissingName.length,
+      items: studiesMissingName.map(({ study, index }) => formatStudyLabel(study, index)),
+    });
+  }
+
+  const studiesWithInvalidRunCount = safeStudies
+    .map((study, index) => ({ study, index }))
+    .filter(({ study }) => {
+      const runCount = Number(study?.runCount);
+      return !Number.isInteger(runCount) || runCount <= 0;
+    });
+
+  if (studiesWithInvalidRunCount.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'invalid-study-run-count',
+      level: 'error',
+      title: 'Invalid experiment run count',
+      description: `${studiesWithInvalidRunCount.length} experiments have an invalid run count. Use a positive integer.`,
+      count: studiesWithInvalidRunCount.length,
+      items: studiesWithInvalidRunCount.map(({ study, index }) => (
+        `${formatStudyLabel(study, index)} (runCount: ${String(study?.runCount ?? 'missing')})`
+      )),
+    });
+  }
+
+  if (!selectedTestSetupId) {
+    pushIssue(errorIssues, {
+      id: 'missing-test-setup',
+      level: 'error',
+      title: 'No test setup selected',
+      description: 'Select a test setup before conversion.',
+      count: 1,
+      items: ['Project settings: select a test setup'],
+    });
+  } else if (!selectedSetup) {
+    pushIssue(errorIssues, {
+      id: 'invalid-test-setup',
+      level: 'error',
+      title: 'Selected test setup is unavailable',
+      description: 'The selected test setup could not be found in the workspace.',
+      count: 1,
+      items: ['Project settings: re-select a valid test setup'],
+    });
+  } else if (sensors.length === 0) {
+    pushIssue(errorIssues, {
+      id: 'test-setup-without-sensors',
+      level: 'error',
+      title: 'Selected test setup has no sensors',
+      description: 'Add at least one sensor to the selected test setup before conversion.',
+      count: 1,
+      items: [selectedSetup?.name || 'Selected test setup'],
+    });
+  }
+
+  const operatingConditionVariables = safeStudyVariables.filter((variable) => (
+    String(variable?.type || '').trim() === 'Operating condition'
+  ));
+  const faultSpecificationVariables = safeStudyVariables.filter((variable) => (
+    String(variable?.type || '').trim() !== 'Operating condition'
+  ));
+
+  if (faultSpecificationVariables.length === 0) {
+    pushIssue(warningIssues, {
+      id: 'missing-fault-specifications',
+      level: 'warning',
+      title: 'No fault specifications defined',
+      description: 'No fault specification variables are configured.',
+      count: 1,
+      items: ['Slide 6 - Fault Specifications: add at least one variable'],
+    });
+  }
+
+  if (operatingConditionVariables.length === 0) {
+    pushIssue(warningIssues, {
+      id: 'missing-operating-conditions',
+      level: 'warning',
+      title: 'No operating conditions defined',
+      description: 'No operating condition variables are configured.',
+      count: 1,
+      items: ['Slide 7 - Operating Conditions: add at least one variable'],
+    });
+  }
 
   const runByRunId = new Map();
   const runByStudyId = new Map();
@@ -248,6 +471,32 @@ export function buildExportValidationReport({
     });
   }
 
+  const missingStudyVariableMappings = [];
+  let requiredStudyVariableMappings = 0;
+
+  if (studyRuns.length > 0 && safeStudyVariables.length > 0) {
+    studyRuns.forEach((run) => {
+      safeStudyVariables.forEach((variable) => {
+        requiredStudyVariableMappings += 1;
+        const mapping = resolveStudyVariableMapping(safeStudyVariableMappings, variable?.id, run);
+        if (!hasFilledValue(mapping?.value)) {
+          missingStudyVariableMappings.push(formatRunVariableLabel(run, variable));
+        }
+      });
+    });
+  }
+
+  if (missingStudyVariableMappings.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'missing-test-matrix-mappings',
+      level: 'error',
+      title: 'Incomplete test matrix values',
+      description: `${missingStudyVariableMappings.length} required test matrix cells are empty.`,
+      count: missingStudyVariableMappings.length,
+      items: missingStudyVariableMappings,
+    });
+  }
+
   const isMappingRelevant = (mapping, mappingType) => {
     if (!mapping) return false;
 
@@ -308,6 +557,7 @@ export function buildExportValidationReport({
       if (!normalized) return;
       allFileAssignments.push({
         mappingType,
+        rawPath: rawValue,
         path: normalized,
         context: resolveMappingContext(mapping, lookup),
       });
@@ -316,6 +566,33 @@ export function buildExportValidationReport({
 
   collectAssignments(measurementMappings, 'raw');
   collectAssignments(processingMappings, 'processed');
+
+  const absolutePathAssignments = allFileAssignments.filter((entry) => isAbsolutePath(entry.rawPath));
+  if (absolutePathAssignments.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'absolute-file-path-assignments',
+      level: 'error',
+      title: 'Absolute file paths are not allowed',
+      description: `${absolutePathAssignments.length} mappings use absolute file paths. Use dataset-relative paths only.`,
+      count: absolutePathAssignments.length,
+      items: absolutePathAssignments.map((entry) => `${entry.rawPath} (${entry.mappingType}) - ${entry.context}`),
+    });
+  }
+
+  const nonCsvAssignments = allFileAssignments.filter((entry) => {
+    if (directoryPaths.has(entry.path)) return false;
+    return !hasCsvExtension(entry.path);
+  });
+  if (nonCsvAssignments.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'non-csv-file-assignments',
+      level: 'error',
+      title: 'Only .csv files are allowed in output mappings',
+      description: `${nonCsvAssignments.length} mappings use a non-.csv file path.`,
+      count: nonCsvAssignments.length,
+      items: nonCsvAssignments.map((entry) => `${entry.path} (${entry.mappingType}) - ${entry.context}`),
+    });
+  }
 
   const duplicatesByPath = new Map();
   allFileAssignments.forEach((entry) => {
@@ -349,15 +626,23 @@ export function buildExportValidationReport({
     blockingIssues: errorIssues,
     warningIssues,
     stats: {
+      totalStudies: safeStudies.length,
       totalRuns: studyRuns.length,
       totalSensors: sensors.length,
+      totalContacts: safeContacts.length,
+      totalStudyVariables: safeStudyVariables.length,
+      totalFaultSpecifications: faultSpecificationVariables.length,
+      totalOperatingConditions: operatingConditionVariables.length,
       expectedAssignments: studyRuns.length * sensors.length,
       requiredRawAssignments,
       requiredProcessedAssignments,
+      requiredStudyVariableMappings,
       missingMeasurement: missingMeasurement.length,
       missingProcessing: missingProcessing.length,
+      missingStudyVariableMappings: missingStudyVariableMappings.length,
       mappedMeasurement: Math.max(0, requiredRawAssignments - missingMeasurement.length),
       mappedProcessing: Math.max(0, requiredProcessedAssignments - missingProcessing.length),
+      mappedStudyVariableMappings: Math.max(0, requiredStudyVariableMappings - missingStudyVariableMappings.length),
     },
   };
 }
