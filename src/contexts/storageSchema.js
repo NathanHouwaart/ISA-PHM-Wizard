@@ -1,6 +1,8 @@
 import { decodeJsonFromStorage, encodeJsonForStorage } from '../utils/storageCodec';
+import { expandStudiesIntoRuns, normalizeRunCount } from '../utils/studyRuns';
+import { resolveStudyOutputMode } from '../utils/studyOutputMode';
 
-const PROJECT_SCHEMA_VERSION = 1;
+const PROJECT_SCHEMA_VERSION = 2;
 const TEST_SETUPS_SCHEMA_VERSION = 1;
 
 const TEST_SETUPS_STORAGE_KEY = 'globalAppData_testSetups';
@@ -138,6 +140,136 @@ const normalizeStudyProtocolSelection = (entries) => {
     }
 
     return normalized;
+};
+
+const LEGACY_EXPERIMENT_TYPE_MAP = {
+    'diagnostic-single': 'diagnostic-experiment',
+    'rtf-single': 'diagnostic-experiment',
+    'diagnostic-multi': 'prognostics-experiment',
+    'rtf-multi': 'prognostics-experiment'
+};
+
+const normalizeExperimentTypeId = (value) => {
+    if (typeof value !== 'string') return '';
+    const normalized = value.trim();
+    if (!normalized) return '';
+    return LEGACY_EXPERIMENT_TYPE_MAP[normalized] || normalized;
+};
+
+const toProtocolLookup = (entries = []) => {
+    return normalizeStudyProtocolSelection(entries).reduce((accumulator, entry) => {
+        if (!entry?.studyId) return accumulator;
+        accumulator[String(entry.studyId)] = String(entry.protocolId || '');
+        return accumulator;
+    }, {});
+};
+
+const migrateStudiesForSchemaV2 = ({
+    studies = [],
+    studyToMeasurementProtocolSelection = [],
+    studyToProcessingProtocolSelection = [],
+    studyToSensorMeasurementMapping = [],
+    studyToSensorProcessingMapping = []
+}) => {
+    const safeStudies = Array.isArray(studies) ? studies : [];
+    const normalizedMeasurementSelection = normalizeStudyProtocolSelection(studyToMeasurementProtocolSelection);
+    const normalizedProcessingSelection = normalizeStudyProtocolSelection(studyToProcessingProtocolSelection);
+    const measurementByStudy = toProtocolLookup(normalizedMeasurementSelection);
+    const processingByStudy = toProtocolLookup(normalizedProcessingSelection);
+
+    const preNormalizedStudies = safeStudies.map((study) => {
+        if (!isPlainObject(study)) return study;
+        if (study.id === undefined || study.id === null) return study;
+
+        const studyId = String(study.id);
+        const measurementProtocolId = String(
+            study.measurementProtocolId
+            ?? measurementByStudy[studyId]
+            ?? ''
+        );
+        const processingProtocolId = String(
+            study.processingProtocolId
+            ?? processingByStudy[studyId]
+            ?? ''
+        );
+
+        return {
+            ...study,
+            runCount: normalizeRunCount(study.runCount),
+            measurementProtocolId,
+            processingProtocolId
+        };
+    });
+
+    const runsByStudyId = expandStudiesIntoRuns(preNormalizedStudies).reduce((accumulator, run) => {
+        const studyId = String(run?.studyId || '');
+        if (!studyId) return accumulator;
+        if (!accumulator[studyId]) {
+            accumulator[studyId] = [];
+        }
+        accumulator[studyId].push(run);
+        return accumulator;
+    }, {});
+
+    const migratedStudies = preNormalizedStudies.map((study) => {
+        if (!isPlainObject(study)) return study;
+        if (study.id === undefined || study.id === null) return study;
+
+        const studyId = String(study.id);
+        const selectedProcessingProtocolId = String(
+            study.processingProtocolId
+            ?? processingByStudy[studyId]
+            ?? ''
+        );
+
+        return {
+            ...study,
+            outputMode: resolveStudyOutputMode(study, {
+                studyRuns: runsByStudyId[studyId] || [],
+                measurementMappings: Array.isArray(studyToSensorMeasurementMapping)
+                    ? studyToSensorMeasurementMapping
+                    : [],
+                processingMappings: Array.isArray(studyToSensorProcessingMapping)
+                    ? studyToSensorProcessingMapping
+                    : [],
+                selectedProcessingProtocolId
+            })
+        };
+    });
+
+    const nextMeasurementByStudy = new Map(
+        normalizedMeasurementSelection.map((entry) => [String(entry.studyId), String(entry.protocolId || '')])
+    );
+    const nextProcessingByStudy = new Map(
+        normalizedProcessingSelection.map((entry) => [String(entry.studyId), String(entry.protocolId || '')])
+    );
+
+    migratedStudies.forEach((study) => {
+        if (!isPlainObject(study)) return;
+        if (study.id === undefined || study.id === null) return;
+
+        const studyId = String(study.id);
+        nextMeasurementByStudy.set(
+            studyId,
+            String(study.measurementProtocolId ?? measurementByStudy[studyId] ?? '')
+        );
+        nextProcessingByStudy.set(
+            studyId,
+            String(study.processingProtocolId ?? processingByStudy[studyId] ?? '')
+        );
+    });
+
+    return {
+        studies: migratedStudies,
+        studyToMeasurementProtocolSelection: [...nextMeasurementByStudy.entries()].map(([studyId, protocolId]) => ({
+            studyId,
+            protocolId
+        })),
+        studyToProcessingProtocolSelection: [...nextProcessingByStudy.entries()].map(([studyId, protocolId]) => ({
+            studyId,
+            protocolId
+        }))
+    };
 };
 
 const normalizeProjectState = (state, defaults) => {
@@ -310,6 +442,23 @@ export const loadProjectStateWithMigrations = ({
             migratedState.studyToProcessingProtocolSelection
         );
         schemaVersion = 1;
+    }
+
+    if (schemaVersion < 2) {
+        const migratedSchemaV2 = migrateStudiesForSchemaV2({
+            studies: migratedState.studies,
+            studyToMeasurementProtocolSelection: migratedState.studyToMeasurementProtocolSelection,
+            studyToProcessingProtocolSelection: migratedState.studyToProcessingProtocolSelection,
+            studyToSensorMeasurementMapping: migratedState.studyToSensorMeasurementMapping,
+            studyToSensorProcessingMapping: migratedState.studyToSensorProcessingMapping
+        });
+
+        migratedState = {
+            ...migratedState,
+            ...migratedSchemaV2,
+            experimentType: normalizeExperimentTypeId(migratedState.experimentType)
+        };
+        schemaVersion = 2;
     }
 
     const normalizedState = normalizeProjectState(migratedState, defaults);

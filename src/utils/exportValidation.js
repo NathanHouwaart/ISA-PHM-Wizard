@@ -6,6 +6,7 @@ import {
   resolveStudyOutputMode,
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
+import { getExperimentTypeConfig } from '../constants/experimentTypes';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -148,11 +149,14 @@ export function buildExportValidationReport({
   studyToSensorMeasurementMapping = [],
   studyToSensorProcessingMapping = [],
   selectedDataset = null,
+  experimentType = '',
 } = {}) {
   const safeStudies = asArray(studies);
   const safeContacts = asArray(contacts);
   const safeStudyVariables = asArray(studyVariables);
   const safeStudyVariableMappings = asArray(studyToStudyVariableMapping);
+  const experimentTypeConfig = getExperimentTypeConfig(experimentType);
+  const runCountRequired = Boolean(experimentTypeConfig?.supportsMultipleRuns);
   const selectedSetup = asArray(testSetups).find((setup) => setup?.id === selectedTestSetupId) || null;
   const sensors = asArray(selectedSetup?.sensors);
   const studyRuns = expandStudiesIntoRuns(safeStudies);
@@ -262,24 +266,26 @@ export function buildExportValidationReport({
     });
   }
 
-  const studiesWithInvalidRunCount = safeStudies
-    .map((study, index) => ({ study, index }))
-    .filter(({ study }) => {
-      const runCount = Number(study?.runCount);
-      return !Number.isInteger(runCount) || runCount <= 0;
-    });
+  if (runCountRequired) {
+    const studiesWithInvalidRunCount = safeStudies
+      .map((study, index) => ({ study, index }))
+      .filter(({ study }) => {
+        const runCount = Number(study?.runCount);
+        return !Number.isInteger(runCount) || runCount <= 0;
+      });
 
-  if (studiesWithInvalidRunCount.length > 0) {
-    pushIssue(errorIssues, {
-      id: 'invalid-study-run-count',
-      level: 'error',
-      title: 'Invalid experiment run count',
-      description: `${studiesWithInvalidRunCount.length} experiments have an invalid run count. Use a positive integer.`,
-      count: studiesWithInvalidRunCount.length,
-      items: studiesWithInvalidRunCount.map(({ study, index }) => (
-        `${formatStudyLabel(study, index)} (runCount: ${String(study?.runCount ?? 'missing')})`
-      )),
-    });
+    if (studiesWithInvalidRunCount.length > 0) {
+      pushIssue(errorIssues, {
+        id: 'invalid-study-run-count',
+        level: 'error',
+        title: 'Invalid experiment run count',
+        description: `${studiesWithInvalidRunCount.length} experiments have an invalid run count. Use a positive integer.`,
+        count: studiesWithInvalidRunCount.length,
+        items: studiesWithInvalidRunCount.map(({ study, index }) => (
+          `${formatStudyLabel(study, index)} (runCount: ${String(study?.runCount ?? 'missing')})`
+        )),
+      });
+    }
   }
 
   if (!selectedTestSetupId) {

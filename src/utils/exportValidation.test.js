@@ -247,9 +247,10 @@ describe('buildExportValidationReport', () => {
     expect(report.blockingIssues.some((issue) => issue.id === 'non-csv-file-assignments')).toBe(true);
   });
 
-  it('flags experiments with missing name or invalid run count', () => {
+  it('flags experiments with missing name or invalid run count in multi-run templates', () => {
     const report = buildExportValidationReport({
       ...makeBaseInput(),
+      experimentType: 'prognostics-experiment',
       studies: [
         { id: 'study-1', name: '', runCount: 0, outputMode: OUTPUT_MODE_RAW_ONLY },
       ],
@@ -258,5 +259,27 @@ describe('buildExportValidationReport', () => {
     expect(report.hasBlockingErrors).toBe(true);
     expect(report.blockingIssues.some((issue) => issue.id === 'missing-study-name')).toBe(true);
     expect(report.blockingIssues.some((issue) => issue.id === 'invalid-study-run-count')).toBe(true);
+  });
+
+  it('does not flag missing run count for single-run templates', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      experimentType: 'diagnostic-experiment',
+      studies: [
+        { id: 'study-1', name: 'Study 1', outputMode: OUTPUT_MODE_RAW_ONLY },
+      ],
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: createStudyRunId('study-1', 1), sensorId: 'sensor-1', value: 'raw/r1_s1.csv' },
+        { studyRunId: createStudyRunId('study-1', 1), sensorId: 'sensor-2', value: 'raw/r1_s2.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+      studyToStudyVariableMapping: [
+        { studyRunId: createStudyRunId('study-1', 1), studyId: 'study-1', studyVariableId: 'var-fault', value: 'BPFO' },
+        { studyRunId: createStudyRunId('study-1', 1), studyId: 'study-1', studyVariableId: 'var-op', value: '1800' },
+      ],
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'invalid-study-run-count')).toBe(false);
   });
 });

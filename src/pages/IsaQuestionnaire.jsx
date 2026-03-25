@@ -69,6 +69,7 @@ export const IsaQuestionnaire = () => {
     studyToProcessingProtocolSelection,
     studyToSensorMeasurementMapping,
     studyToSensorProcessingMapping,
+    experimentType,
   } = useProjectData();
   const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
@@ -184,6 +185,7 @@ export const IsaQuestionnaire = () => {
     studyToSensorMeasurementMapping,
     studyToSensorProcessingMapping,
     selectedDataset,
+    experimentType,
   }), [
     investigation,
     contacts,
@@ -197,6 +199,7 @@ export const IsaQuestionnaire = () => {
     studyToSensorMeasurementMapping,
     studyToSensorProcessingMapping,
     selectedDataset,
+    experimentType,
   ]);
 
   const hasBlockingValidationIssues = validationReport?.hasBlockingErrors;
