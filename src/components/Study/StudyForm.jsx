@@ -7,6 +7,7 @@ import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
+import { OUTPUT_MODE_RAW_ONLY, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
@@ -41,6 +42,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const studyData = {
       ...formData,
       runCount: normalizedRunCount,
+      outputMode: normalizeStudyOutputMode(item?.outputMode, OUTPUT_MODE_RAW_ONLY),
       id: isEditing && item.id ? item.id : generateId(), // Generate a new ID if not editing}`
     };
 

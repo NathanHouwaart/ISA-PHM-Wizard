@@ -25,6 +25,7 @@ const ProtocolOutputPanel = ({
   protocolLabel,
   selectedProtocolByStudy,
   onStudyProtocolChange,
+  fileFieldScope = 'raw',
   fileFieldLabel,
   studyRuns,
   mappings,
@@ -83,6 +84,7 @@ const ProtocolOutputPanel = ({
                 protocolOptions,
                 selectedProtocolByStudy,
                 onStudyProtocolChange,
+                fileFieldScope,
                 fileFieldLabel
               }}
             />

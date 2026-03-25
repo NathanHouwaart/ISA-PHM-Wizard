@@ -16,7 +16,7 @@
 
 ## Purpose
 
-Defines all experiments in the project. Each experiment becomes one ISA Study. The set of experiments you create here drives the rows in the Test Matrix (Slide 8) and the output mapping grids (Slides 9–10).
+Defines all experiments in the project. Each experiment becomes one ISA Study. The set of experiments you create here drives the rows in the Test Matrix (Slide 8) and the output mapping workflow (Output Mode + Slides 9-10).
 
 ---
 
@@ -30,6 +30,8 @@ Defines all experiments in the project. Each experiment becomes one ISA Study. T
 | **Publication Date** | No | When this experiment was published | `2023-12-17` |
 | **Configuration** | No | The test setup configuration that applies | `Faulted Bearing RC-002` |
 | **Number of Runs** | Prognostics only | How many sequential runs this experiment contains | `5` |
+
+> Output mode is configured on **Slide 9 - Study Output Mode**.
 
 ---
 
@@ -93,7 +95,7 @@ The **Experiment Type** set during project creation (Diagnostic / Prognostic) is
 
 The selected **Configuration** is written into the experiment's `materials.samples[].characteristics` — as the `Configuration Name` characteristic (the name you gave it) and the `Replaceable Component` characteristic (the replaceable component ID). This is how the wizard knows exactly what physical component was installed during each experiment.
 
-Measurement output entries (one per sensor, see Slides 9–10) are nested under each experiment in the output JSON and use the filename pattern `a_st{experiment_n}_se{sensor_n}`.
+Measurement output entries (one per sensor, see Slides 9–10) are nested under each experiment in the output JSON and use the filename pattern `se{sensor_n}` within each study.
 
 ---
 

@@ -8,6 +8,7 @@ export default function useGridClipboardHandlers({
     getFlatColumns,
     staticColumns,
     isEditableColumn,
+    canEditCell,
     getRowByIndex,
     fields,
     commitGridChanges,
@@ -60,9 +61,7 @@ export default function useGridClipboardHandlers({
                 for (const [columnProp, value] of Object.entries(rowDataObj)) {
                     const stringValue = normalizeCellValue(value);
                     const isStaticColumn = staticColumns.some((col) => col.prop === columnProp);
-                    const staticColumn = staticColumns.find((col) => col.prop === columnProp);
-
-                    if (staticColumn?.readonly) continue;
+                    if (!canEditCell(row, columnProp)) continue;
 
                     if (isStaticColumn) {
                         rowDataUpdates.push({
@@ -99,7 +98,7 @@ export default function useGridClipboardHandlers({
             if (DBG) console.error('[DataGrid] Error in clipboard paste operation:', error);
             return false;
         }
-    }, [staticColumns, isEditableColumn, getRowByIndex, fields, commitGridChanges, DBG]);
+    }, [staticColumns, isEditableColumn, canEditCell, getRowByIndex, fields, commitGridChanges, DBG]);
 
     const handleClipboardRangePaste = useCallback((event) => {
         if (DBG) console.log('[DataGrid] handleClipboardRangePaste:', event.detail);

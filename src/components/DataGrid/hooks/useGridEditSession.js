@@ -5,6 +5,7 @@ export default function useGridEditSession({
     isStandaloneGrid,
     staticColumns,
     isEditableColumn,
+    canEditCell,
     getRowByIndex,
     resolveEditValue,
     stableColumnDefsRef,
@@ -65,12 +66,9 @@ export default function useGridEditSession({
             columnProp = column?.prop;
         }
 
-        const isStaticColumn = staticColumns.some((col) => col.prop === columnProp);
-        const staticColumn = staticColumns.find((col) => col.prop === columnProp);
-
-        const canEdit = isStandaloneGrid
-            ? (isStaticColumn && !staticColumn?.readonly)
-            : (isEditableColumn(columnProp) || (isStaticColumn && !staticColumn?.readonly));
+        const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
+        const row = getRowByIndex(rowIndex);
+        const canEdit = canEditCell(row, columnProp);
 
         if (!canEdit) {
             event.preventDefault();
@@ -88,8 +86,6 @@ export default function useGridEditSession({
             }
         }
 
-        const rowIndex = detail.rowIndex ?? detail.rgRow ?? detail.model?.y ?? detail.y;
-        const row = getRowByIndex(rowIndex);
         const initialRawValue = resolveEditValue(detail, columnProp) ?? row?.[columnProp] ?? '';
 
         editSessionRef.current = {
@@ -98,9 +94,7 @@ export default function useGridEditSession({
             initialValue: normalizeCellValue(initialRawValue)
         };
     }, [
-        isStandaloneGrid,
-        staticColumns,
-        isEditableColumn,
+        canEditCell,
         getRowByIndex,
         resolveEditValue,
         stableColumnDefsRef
@@ -145,22 +139,16 @@ export default function useGridEditSession({
                     if (newValue === undefined || newValue === null) continue;
 
                     const isStaticColumn = staticColumns.some((col) => col.prop === columnProp);
-                    const staticColumn = staticColumns.find((col) => col.prop === columnProp);
-                    const isEditable = isEditableColumn(columnProp);
+                    const canEdit = canEditCell(row, columnProp);
 
                     if (DBG) {
                         console.log(
-                            `[DataGrid] Range edit - column: ${columnProp}, isStatic: ${isStaticColumn}, isEditable: ${isEditable}, readonly: ${staticColumn?.readonly}`
+                            `[DataGrid] Range edit - column: ${columnProp}, isStatic: ${isStaticColumn}, canEdit: ${canEdit}`
                         );
                     }
 
-                    if (staticColumn?.readonly) {
-                        if (DBG) console.log(`[DataGrid] Skipping ${columnProp} - readonly`);
-                        continue;
-                    }
-
-                    if (!isEditable && !isStaticColumn) {
-                        if (DBG) console.log(`[DataGrid] Skipping ${columnProp} - not editable and not static`);
+                    if (!canEdit) {
+                        if (DBG) console.log(`[DataGrid] Skipping ${columnProp} - not editable`);
                         continue;
                     }
 
@@ -215,6 +203,11 @@ export default function useGridEditSession({
             clearEditSession();
             return;
         }
+        if (!canEditCell(row, columnProp)) {
+            if (DBG) console.log('[DataGrid] Skipping single cell edit - cell not editable');
+            clearEditSession();
+            return;
+        }
 
         const stringValue = normalizeCellValue(newValue);
         const isStaticColumn = staticColumns.some((col) => col.prop === columnProp);
@@ -243,6 +236,7 @@ export default function useGridEditSession({
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
+        canEditCell,
         getRowByIndex,
         fields,
         commitGridChanges,

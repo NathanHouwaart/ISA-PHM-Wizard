@@ -51,6 +51,8 @@ const DataGrid = forwardRef(({
     isActive = true,        // Whether this grid is active (should respond to global undo/redo)
     enableBulkFill = false, // Show row bulk-fill helpers in controls
     historyScopeKey,        // Optional history context key (resets undo/redo when key changes)
+    isCellEditable,         // Optional callback to gate editing per row+column
+    mappingCellProperties,  // Optional callback for dynamic mapping cell styles
 
     // Event handlers
     onDataChange,           // Callback when mapping data changes
@@ -91,6 +93,7 @@ const DataGrid = forwardRef(({
         mappings,
         fieldMappings,
         staticColumns,
+        mappingCellProperties,
         onRowDataChange, // Pass the callback to the hook
         historyScopeKey
     });
@@ -119,16 +122,63 @@ const DataGrid = forwardRef(({
         });
     }, [applyTransaction, currentMappings]);
 
+    const canEditCell = useCallback((row, columnProp) => {
+        if (!row || !columnProp) return false;
+
+        const staticColumn = staticColumns.find((col) => col.prop === columnProp);
+        const isStaticColumn = Boolean(staticColumn);
+
+        let defaultCanEdit = false;
+        if (isStandaloneGrid) {
+            defaultCanEdit = isStaticColumn && !staticColumn?.readonly;
+        } else if (isStaticColumn) {
+            defaultCanEdit = !staticColumn?.readonly;
+        } else {
+            defaultCanEdit = isEditableColumn(columnProp);
+        }
+
+        if (!defaultCanEdit) return false;
+
+        if (typeof isCellEditable === 'function') {
+            return Boolean(isCellEditable({
+                row,
+                columnProp,
+                isStaticColumn,
+                staticColumn: staticColumn || null
+            }));
+        }
+
+        return true;
+    }, [staticColumns, isStandaloneGrid, isEditableColumn, isCellEditable]);
+
+    const rowLookupById = useMemo(() => {
+        const lookup = new Map();
+        (hookRowData || []).forEach((row) => {
+            const rowId = row?.[fields.rowId];
+            if (rowId !== undefined && rowId !== null) {
+                lookup.set(String(rowId), row);
+            }
+        });
+        return lookup;
+    }, [hookRowData, fields.rowId]);
+
     const updateMappingsBatch = useCallback((updates, reason = 'mapping-batch') => {
         if (!updates || updates.length === 0) return;
-        const nextMappings = applyMappingUpdates(currentMappings, updates, fields);
+        const filteredUpdates = updates.filter((update) => {
+            const row = rowLookupById.get(String(update?.rowId ?? ''));
+            return canEditCell(row, update?.columnId);
+        });
+
+        if (filteredUpdates.length === 0) return;
+
+        const nextMappings = applyMappingUpdates(currentMappings, filteredUpdates, fields);
         applyTransaction({
             nextRowData: hookRowData,
             nextMappings,
             reason,
             notifyRowData: false
         });
-    }, [applyTransaction, currentMappings, hookRowData, fields]);
+    }, [applyTransaction, currentMappings, hookRowData, fields, rowLookupById, canEditCell]);
 
     const commitGridChanges = useCallback(({
         rowDataUpdates = [],
@@ -230,6 +280,7 @@ const DataGrid = forwardRef(({
         isStandaloneGrid,
         staticColumns,
         isEditableColumn,
+        canEditCell,
         getRowByIndex,
         resolveEditValue,
         stableColumnDefsRef: stableColumnDefs,
@@ -247,6 +298,7 @@ const DataGrid = forwardRef(({
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
+        canEditCell,
         fields,
         commitGridChanges
     });
@@ -264,6 +316,7 @@ const DataGrid = forwardRef(({
         getFlatColumns,
         staticColumns,
         isEditableColumn,
+        canEditCell,
         getRowByIndex,
         fields,
         commitGridChanges,
@@ -310,6 +363,7 @@ const DataGrid = forwardRef(({
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
+        canEditCell,
         fields,
         commitGridChanges
     });
