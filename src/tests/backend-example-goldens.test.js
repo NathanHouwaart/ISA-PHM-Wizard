@@ -10,8 +10,8 @@ const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 
 const GOLDEN_CASES = [
   {
-    name: 'single-run-sietze',
-    inputPath: 'src/data/example-single-run-sietze.json',
+    name: 'single-run-nln-emp',
+    inputPath: 'src/data/example-single-run-nln-emp.json',
     goldenPath: 'src/tests/fixtures/golden/isa-phm-out-sietze.json',
   },
   {

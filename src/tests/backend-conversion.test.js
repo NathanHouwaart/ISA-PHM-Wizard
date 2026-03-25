@@ -61,7 +61,7 @@ async function loadInputFixture() {
   const candidates = [
     path.resolve(process.cwd(), 'src/tests/fixtures/isa-project-example.json'),
     path.resolve(process.cwd(), 'src/data/isa-project-example.json'),
-    path.resolve(process.cwd(), 'src/data/example-single-run-sietze.json'),
+    path.resolve(process.cwd(), 'src/data/example-single-run-nln-emp.json'),
     path.resolve(process.cwd(), 'src/data/example-multi-run-milling.json'),
     path.resolve(process.cwd(), 'data/isa-project-example.json'),
   ];
