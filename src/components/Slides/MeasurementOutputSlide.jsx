@@ -44,7 +44,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
   const {
     selectedProtocolByStudy: selectedMeasurementProtocolByStudy,
     updateStudyProtocol: updateStudyMeasurementProtocol,
-    handleGridRowDataChange
+    handleGridRowDataChange: handleMeasurementProtocolGridRowDataChange
   } = useStudyProtocolSelection({
     studies,
     setStudies,
@@ -61,12 +61,14 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
   const handleDataGridMappingsChange = useCallback((newMappings) => {
     mappingsController.setMappings(newMappings);
   }, [mappingsController]);
+  const handleGridRowDataChange = useCallback((nextRows) => {
+    handleMeasurementProtocolGridRowDataChange(nextRows);
+  }, [handleMeasurementProtocolGridRowDataChange]);
 
   const hierarchicalRows = useMemo(
     () => buildStudyRunRowData(studies, studyRuns),
     [studies, studyRuns]
   );
-
   const measurementOutputGridConfig = useMemo(() => ({
     title: 'Mappings for measurement output',
     rowData: hierarchicalRows,
@@ -152,6 +154,7 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
         protocolLabel="Measurement Protocol"
         selectedProtocolByStudy={selectedMeasurementProtocolByStudy}
         onStudyProtocolChange={updateStudyMeasurementProtocol}
+        fileFieldScope="raw"
         fileFieldLabel="Raw Measurement File"
         studyRuns={studyRuns}
         mappings={mappingsController.mappings}

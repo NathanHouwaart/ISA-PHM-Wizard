@@ -44,7 +44,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
   const {
     selectedProtocolByStudy: selectedProcessingProtocolByStudy,
     updateStudyProtocol: updateStudyProcessingProtocol,
-    handleGridRowDataChange
+    handleGridRowDataChange: handleProcessingProtocolGridRowDataChange
   } = useStudyProtocolSelection({
     studies,
     setStudies,
@@ -61,12 +61,14 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
   const handleDataGridMappingsChange = useCallback((newMappings) => {
     mappingsController.setMappings(newMappings);
   }, [mappingsController]);
+  const handleGridRowDataChange = useCallback((nextRows) => {
+    handleProcessingProtocolGridRowDataChange(nextRows);
+  }, [handleProcessingProtocolGridRowDataChange]);
 
   const hierarchicalRows = useMemo(
     () => buildStudyRunRowData(studies, studyRuns),
     [studies, studyRuns]
   );
-
   const processingOutputGridConfig = useMemo(() => ({
     title: 'Mappings for processing protocol output',
     rowData: hierarchicalRows,
@@ -152,6 +154,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
         protocolLabel="Processing Protocol"
         selectedProtocolByStudy={selectedProcessingProtocolByStudy}
         onStudyProtocolChange={updateStudyProcessingProtocol}
+        fileFieldScope="processed"
         fileFieldLabel="Processed Data File"
         studyRuns={studyRuns}
         mappings={mappingsController.mappings}
