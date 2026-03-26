@@ -1,6 +1,6 @@
 // src/hooks/useExampleProjects.jsx
 import { useEffect, useRef } from 'react';
-import exampleSingleRunSietse from "../data/example-single-run-nln-emp.json";
+import exampleSingleRunNlnEmp from "../data/example-single-run-nln-emp.json";
 import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
@@ -13,7 +13,7 @@ import {
 
 // Map of available example projects
 const EXAMPLE_PROJECTS = {
-    'example-single-run': exampleSingleRunSietse,
+    'example-single-run': exampleSingleRunNlnEmp,
     'example-multi-run': exampleMultiRunMilling,
 };
 
