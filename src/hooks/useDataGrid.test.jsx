@@ -98,16 +98,16 @@ describe('useDataGrid history model', () => {
 
   it('does not create history entries for no-op row-data transactions', () => {
     const rows = [{ id: 'study-1', name: 'Study 1', measurementProtocolId: 'proto-a' }];
+    const emptyColumns = [];
+    const emptyMappings = [];
+    const noopFieldMappings = { rowId: 'id', rowName: 'name' };
 
     const { result } = renderHook(() =>
       useDataGrid({
         rowData: rows,
-        columnData: [],
-        mappings: [],
-        fieldMappings: {
-          rowId: 'id',
-          rowName: 'name'
-        }
+        columnData: emptyColumns,
+        mappings: emptyMappings,
+        fieldMappings: noopFieldMappings
       })
     );
 
@@ -130,6 +130,7 @@ describe('useDataGrid history model', () => {
   it('adds external row-data updates to history and supports undo/redo', () => {
     const emptyColumns = [];
     const emptyMappings = [];
+    const externalRowFieldMappings = { rowId: 'id', rowName: 'name' };
 
     const { result, rerender } = renderHook(
       ({ rows }) =>
@@ -137,10 +138,7 @@ describe('useDataGrid history model', () => {
           rowData: rows,
           columnData: emptyColumns,
           mappings: emptyMappings,
-          fieldMappings: {
-            rowId: 'id',
-            rowName: 'name'
-          }
+          fieldMappings: externalRowFieldMappings
         }),
       {
         initialProps: {

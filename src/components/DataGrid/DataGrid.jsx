@@ -19,6 +19,8 @@ import DataGridControls from './components/DataGridControls';
 import DataGridViewport from './components/DataGridViewport';
 import "./DataGrid.css";
 
+const EMPTY_LIST = Object.freeze([]);
+
 /**
  * Generic DataGrid component that handles any type of data with optional mapping functionality.
  * 
@@ -32,9 +34,9 @@ import "./DataGrid.css";
  */
 const DataGrid = forwardRef(({
     // Data configuration
-    rowData = [],           // Array of row objects (e.g., studies, sensors)
-    columnData = [],        // Array of column objects (e.g., variables, protocols) - optional for standalone mode
-    mappings = [],          // Array of mapping objects between rows and columns - optional for standalone mode
+    rowData = EMPTY_LIST,   // Array of row objects (e.g., studies, sensors)
+    columnData = EMPTY_LIST, // Array of column objects (e.g., variables, protocols) - optional for standalone mode
+    mappings = EMPTY_LIST,  // Array of mapping objects between rows and columns - optional for standalone mode
 
     // Field mapping configuration for flexibility
     fieldMappings = {},     // Object mapping field names for different data structures
@@ -59,13 +61,13 @@ const DataGrid = forwardRef(({
     onRowDataChange,        // Callback when row data changes (standalone mode)
 
     // Custom actions for controls
-    customActions = [],     // Array of custom action buttons to add to controls
+    customActions = EMPTY_LIST, // Array of custom action buttons to add to controls
     hideClearAllMappings = false, // Optional: hide clear-all control (useful for standalone grids)
 
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
     // Action plugins rendered in the controls area (components or elements)
-    actionPlugins = [],         // optional array of plugin components/elements
+    actionPlugins = EMPTY_LIST, // optional array of plugin components/elements
 
     // Other props
     className = '',
@@ -86,7 +88,8 @@ const DataGrid = forwardRef(({
     mappings: currentMappings,
     isStandaloneGrid,
     fields,
-    rowData: hookRowData
+    rowData: hookRowData,
+    setInternalMappingsEmitted
     } = useDataGrid({
         rowData,
         columnData,
@@ -261,9 +264,19 @@ const DataGrid = forwardRef(({
         showDebug: DBG
     });
 
+    // Wrap onDataChange so the internal-emit flag is set synchronously before the
+    // parent's state update propagates back as a prop change. This lets useDataGrid's
+    // external-sync effect recognise the echo and skip the spurious second history
+    // entry that made a single edit require two undos.
+    const onDataChangeTracked = useCallback((nextMappings) => {
+        if (!onDataChange) return;
+        setInternalMappingsEmitted(true);
+        onDataChange(nextMappings);
+    }, [onDataChange, setInternalMappingsEmitted]);
+
     useGridMappingsEmitter({
         mappings: currentMappings,
-        onDataChange,
+        onDataChange: onDataChange ? onDataChangeTracked : undefined,
         fields
     });
 

@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
-const deepClone = (value) => JSON.parse(JSON.stringify(value ?? []));
-const deepEqual = (left, right) => JSON.stringify(left ?? []) === JSON.stringify(right ?? []);
+const asArray = (value) => (Array.isArray(value) ? value : []);
 
 export const useDataGrid = ({
   rowData = [],
@@ -56,39 +55,24 @@ export const useDataGrid = ({
     ...fieldMappings
   }), [fieldMappings]);
 
-  const normalizeMappingsForComparison = useCallback((list = []) => {
-    return (list || [])
-      .map((mapping) => ({
-        row: String(mapping?.[fields.mappingRowId] ?? ''),
-        col: String(mapping?.[fields.mappingColumnId] ?? ''),
-        value: JSON.stringify(mapping?.[fields.mappingValue] ?? '')
-      }))
-      .sort((a, b) => {
-        if (a.row !== b.row) return a.row.localeCompare(b.row);
-        if (a.col !== b.col) return a.col.localeCompare(b.col);
-        return a.value.localeCompare(b.value);
-      });
-  }, [fields.mappingRowId, fields.mappingColumnId, fields.mappingValue]);
-
-  const mappingsSemanticEqual = useCallback((left, right) => {
-    return deepEqual(
-      normalizeMappingsForComparison(left),
-      normalizeMappingsForComparison(right)
-    );
-  }, [normalizeMappingsForComparison]);
-
   const isStandaloneGrid = columnData.length === 0;
 
   const pruneMappings = useCallback((rows, columns, rawMappings) => {
     const allowedRowIds = new Set((rows || []).map((row) => row?.[fields.rowId]));
     const allowedColumnIds = new Set((columns || []).map((column) => column?.[fields.columnId]));
 
-    return (rawMappings || []).filter((mapping) => {
+    const list = rawMappings || [];
+    let pruned = false;
+    const filtered = list.filter((mapping) => {
       const rowOk = allowedRowIds.has(mapping?.[fields.mappingRowId]);
-      if (!rowOk) return false;
+      if (!rowOk) { pruned = true; return false; }
       if (isStandaloneGrid) return true;
-      return allowedColumnIds.has(mapping?.[fields.mappingColumnId]);
+      const colOk = allowedColumnIds.has(mapping?.[fields.mappingColumnId]);
+      if (!colOk) pruned = true;
+      return colOk;
     });
+    // Return original reference when nothing was removed to preserve reference equality.
+    return pruned ? filtered : list;
   }, [
     fields.rowId,
     fields.columnId,
@@ -97,9 +81,13 @@ export const useDataGrid = ({
     isStandaloneGrid
   ]);
 
-  const makeSnapshot = useCallback((rows, rawMappings, reason = 'edit') => {
-    const cleanedRows = deepClone(rows);
-    const cleanedMappings = deepClone(pruneMappings(cleanedRows, columnData, rawMappings));
+  const makeSnapshot = useCallback((rows, rawMappings, reason = 'edit', options = {}) => {
+    const { prune = false } = options;
+    const cleanedRows = asArray(rows);
+    const normalizedMappings = asArray(rawMappings);
+    const cleanedMappings = prune
+      ? pruneMappings(cleanedRows, columnData, normalizedMappings)
+      : normalizedMappings;
     return {
       rowData: cleanedRows,
       mappings: cleanedMappings,
@@ -108,9 +96,9 @@ export const useDataGrid = ({
     };
   }, [pruneMappings, columnData]);
 
-  const [currentRowData, setCurrentRowData] = useState(() => deepClone(rowData));
-  const [currentMappings, setCurrentMappings] = useState(() => deepClone(pruneMappings(rowData, columnData, mappings)));
-  const [history, setHistory] = useState(() => [makeSnapshot(rowData, mappings, 'init')]);
+  const [currentRowData, setCurrentRowData] = useState(() => asArray(rowData));
+  const [currentMappings, setCurrentMappings] = useState(() => pruneMappings(asArray(rowData), columnData, asArray(mappings)));
+  const [history, setHistory] = useState(() => [makeSnapshot(rowData, mappings, 'init', { prune: true })]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
   const currentRowDataRef = useRef(currentRowData);
@@ -118,9 +106,11 @@ export const useDataGrid = ({
   const historyRef = useRef(history);
   const historyIndexRef = useRef(historyIndex);
   const isInternalRowEmitRef = useRef(false);
+  const isInternalMappingsEmitRef = useRef(false);
   const scopeKeyRef = useRef(historyScopeKey);
-  const lastIncomingRowsRef = useRef(deepClone(rowData));
-  const lastIncomingMappingsRef = useRef(deepClone(pruneMappings(rowData, columnData, mappings)));
+  const lastIncomingRowsRef = useRef(asArray(rowData));
+  const lastIncomingMappingsRef = useRef(asArray(mappings));
+  const lastIncomingColumnDataRef = useRef(columnData);
 
   useEffect(() => { currentRowDataRef.current = currentRowData; }, [currentRowData]);
   useEffect(() => { currentMappingsRef.current = currentMappings; }, [currentMappings]);
@@ -128,11 +118,12 @@ export const useDataGrid = ({
   useEffect(() => { historyIndexRef.current = historyIndex; }, [historyIndex]);
 
   const resetFromProps = useCallback((reason = 'scope-change') => {
-    const snapshot = makeSnapshot(rowData, mappings, reason);
+    const snapshot = makeSnapshot(rowData, mappings, reason, { prune: true });
     currentRowDataRef.current = snapshot.rowData;
     currentMappingsRef.current = snapshot.mappings;
-    lastIncomingRowsRef.current = snapshot.rowData;
-    lastIncomingMappingsRef.current = snapshot.mappings;
+    lastIncomingRowsRef.current = asArray(rowData);
+    lastIncomingMappingsRef.current = asArray(mappings);
+    lastIncomingColumnDataRef.current = columnData;
     historyRef.current = [snapshot];
     historyIndexRef.current = 0;
 
@@ -140,7 +131,7 @@ export const useDataGrid = ({
     setCurrentMappings(snapshot.mappings);
     setHistory([snapshot]);
     setHistoryIndex(0);
-  }, [makeSnapshot, rowData, mappings]);
+  }, [makeSnapshot, rowData, mappings, columnData]);
 
   useEffect(() => {
     if (scopeKeyRef.current === historyScopeKey) return;
@@ -149,37 +140,71 @@ export const useDataGrid = ({
   }, [historyScopeKey, resetFromProps]);
 
   useEffect(() => {
-    const incomingRows = deepClone(rowData);
-    const incomingMappings = deepClone(pruneMappings(incomingRows, columnData, mappings));
-    const incomingRowsChangedFromLast = !deepEqual(incomingRows, lastIncomingRowsRef.current);
-    const incomingMappingsChangedFromLast = !mappingsSemanticEqual(incomingMappings, lastIncomingMappingsRef.current);
+    const incomingRows = asArray(rowData);
+    const incomingMappingsRaw = asArray(mappings);
+    const rowsChangedFromLast = incomingRows !== lastIncomingRowsRef.current;
+    const mappingsChangedFromLast = incomingMappingsRaw !== lastIncomingMappingsRef.current;
+    const columnsChangedFromLast = columnData !== lastIncomingColumnDataRef.current;
 
-    if (isInternalRowEmitRef.current) {
-      isInternalRowEmitRef.current = false;
-      lastIncomingRowsRef.current = incomingRows;
-      lastIncomingMappingsRef.current = incomingMappings;
-      // Only skip if the parent echoed back exactly what we emitted (echo-loop prevention).
-      // If the parent transformed the data further (e.g. propagating a value to more rows),
-      // allow the sync to proceed so the grid reflects those additional changes.
-      if (deepEqual(incomingRows, currentRowDataRef.current)) return;
-    }
-
-    if (!incomingRowsChangedFromLast && !incomingMappingsChangedFromLast) {
+    if (!rowsChangedFromLast && !mappingsChangedFromLast && !columnsChangedFromLast) {
       return;
     }
 
-    lastIncomingRowsRef.current = incomingRows;
-    lastIncomingMappingsRef.current = incomingMappings;
+    const shouldPruneMappings = rowsChangedFromLast || columnsChangedFromLast;
+    const incomingMappings = shouldPruneMappings
+      ? pruneMappings(incomingRows, columnData, incomingMappingsRaw)
+      : incomingMappingsRaw;
 
-    const rowsChanged = !deepEqual(incomingRows, currentRowDataRef.current);
-    const mappingsChanged = !mappingsSemanticEqual(incomingMappings, currentMappingsRef.current);
+    lastIncomingRowsRef.current = incomingRows;
+    lastIncomingMappingsRef.current = incomingMappingsRaw;
+    lastIncomingColumnDataRef.current = columnData;
+
+    if (isInternalRowEmitRef.current) {
+      isInternalRowEmitRef.current = false;
+      // Skip if parent echoed exactly what we emitted.
+      if (incomingRows === currentRowDataRef.current && incomingMappings === currentMappingsRef.current) {
+        return;
+      }
+    }
+
+    // When the grid emits onDataChange, the parent typically produces a new
+    // array ref (e.g., via mergeScopedMappings) that is semantically identical
+    // to what we just committed.  Guard against this echo creating a spurious
+    // second history entry so that a single user edit requires exactly one undo.
+    if (isInternalMappingsEmitRef.current && !rowsChangedFromLast && !columnsChangedFromLast) {
+      isInternalMappingsEmitRef.current = false;
+      // Accept the parent's canonical ref as the new baseline without pushing
+      // to history.  The grid keeps displaying M1 (already committed); the parent
+      // holds M2, semantically equal.  Future external changes will be compared
+      // against M2 (via lastIncomingMappingsRef which we already updated above).
+      return;
+    }
+    isInternalMappingsEmitRef.current = false;
+
+    const rowsChanged = incomingRows !== currentRowDataRef.current;
+    const mappingsChanged = incomingMappings !== currentMappingsRef.current;
     if (!rowsChanged && !mappingsChanged) return;
 
     const snapshot = makeSnapshot(incomingRows, incomingMappings, 'external-sync');
     const currentSnapshot = historyRef.current[historyIndexRef.current]
       || makeSnapshot(currentRowDataRef.current, currentMappingsRef.current, 'current');
-    const snapshotRowsChanged = !deepEqual(currentSnapshot.rowData, snapshot.rowData);
-    const snapshotMappingsChanged = !mappingsSemanticEqual(currentSnapshot.mappings, snapshot.mappings);
+    const snapshotRowsChanged = currentSnapshot.rowData !== snapshot.rowData;
+    // Compare mappings using only the tracked fields (mappingRowId, mappingColumnId,
+    // mappingValue) so that extra parent-side fields like protocolId are ignored
+    // and do not create spurious history entries.
+    const snapshotMappingsChanged = currentSnapshot.mappings !== snapshot.mappings && (() => {
+      const a = currentSnapshot.mappings;
+      const b = snapshot.mappings;
+      if (a.length !== b.length) return true;
+      return a.some((aMapping, i) => {
+        const bMapping = b[i];
+        return (
+          aMapping[fields.mappingRowId] !== bMapping[fields.mappingRowId] ||
+          aMapping[fields.mappingColumnId] !== bMapping[fields.mappingColumnId] ||
+          JSON.stringify(aMapping[fields.mappingValue]) !== JSON.stringify(bMapping[fields.mappingValue])
+        );
+      });
+    })();
 
     currentRowDataRef.current = snapshot.rowData;
     setCurrentRowData(snapshot.rowData);
@@ -205,9 +230,11 @@ export const useDataGrid = ({
     mappings,
     columnData,
     pruneMappings,
-    mappingsSemanticEqual,
     makeSnapshot,
-    maxHistorySize
+    maxHistorySize,
+    fields.mappingRowId,
+    fields.mappingColumnId,
+    fields.mappingValue
   ]);
 
   const commitSnapshot = useCallback(({
@@ -216,17 +243,19 @@ export const useDataGrid = ({
     reason = 'edit',
     notifyRowData = true
   } = {}) => {
+    const resolvedNextRows = nextRowData ?? currentRowDataRef.current;
+    const resolvedNextMappings = nextMappings ?? currentMappingsRef.current;
+    const rowChanged = resolvedNextRows !== currentRowDataRef.current
+      && JSON.stringify(resolvedNextRows) !== JSON.stringify(currentRowDataRef.current);
+    const mappingsChanged = resolvedNextMappings !== currentMappingsRef.current
+      && JSON.stringify(resolvedNextMappings) !== JSON.stringify(currentMappingsRef.current);
+    if (!rowChanged && !mappingsChanged) return false;
+
     const snapshot = makeSnapshot(
-      nextRowData ?? currentRowDataRef.current,
-      nextMappings ?? currentMappingsRef.current,
+      resolvedNextRows,
+      resolvedNextMappings,
       reason
     );
-
-    const currentSnapshot = historyRef.current[historyIndexRef.current]
-      || makeSnapshot(currentRowDataRef.current, currentMappingsRef.current, 'current');
-
-    const rowChanged = !deepEqual(currentSnapshot.rowData, snapshot.rowData);
-    const mappingsChanged = !mappingsSemanticEqual(currentSnapshot.mappings, snapshot.mappings);
 
     const previousRows = currentRowDataRef.current;
     currentRowDataRef.current = snapshot.rowData;
@@ -249,13 +278,13 @@ export const useDataGrid = ({
       setHistoryIndex(nextIndex);
     }
 
-    if (notifyRowData && onRowDataChange && !deepEqual(previousRows, snapshot.rowData)) {
+    if (notifyRowData && onRowDataChange && previousRows !== snapshot.rowData) {
       isInternalRowEmitRef.current = true;
       onRowDataChange(snapshot.rowData);
     }
 
     return rowChanged || mappingsChanged;
-  }, [makeSnapshot, mappingsSemanticEqual, maxHistorySize, onRowDataChange]);
+  }, [makeSnapshot, maxHistorySize, onRowDataChange]);
 
   const applyHistorySnapshot = useCallback((nextIndex) => {
     const snapshot = historyRef.current[nextIndex];
@@ -270,7 +299,7 @@ export const useDataGrid = ({
     currentMappingsRef.current = snapshot.mappings;
     setCurrentMappings(snapshot.mappings);
 
-    if (onRowDataChange && !deepEqual(previousRows, snapshot.rowData)) {
+    if (onRowDataChange && previousRows !== snapshot.rowData) {
       isInternalRowEmitRef.current = true;
       onRowDataChange(snapshot.rowData);
     }
@@ -492,6 +521,15 @@ export const useDataGrid = ({
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
+  // Stable setter - wraps the mutable ref in a useCallback so the returned
+  // reference never changes across renders.  DataGrid.jsx puts this in a
+  // useCallback dep array; an inline arrow in the return literal would create
+  // a new reference every render and cause onDataChangeTracked (and therefore
+  // useGridMappingsEmitter's effect) to re-register on every render.
+  const setInternalMappingsEmitted = useCallback((val) => {
+    isInternalMappingsEmitRef.current = val;
+  }, []); // ref never changes -> no deps needed
+
   return {
     rowData: activeRowData,
     columnData,
@@ -517,6 +555,7 @@ export const useDataGrid = ({
 
     fields,
     mappingLookup,
-    sanitizeValue
+    sanitizeValue,
+    setInternalMappingsEmitted
   };
 };

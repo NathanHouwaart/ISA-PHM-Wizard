@@ -1,35 +1,22 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function useGridMappingsEmitter({
     mappings,
     onDataChange,
-    fields
+    fields: _fields
 }) {
-    const lastEmittedMappingsSignatureRef = useRef('');
-
-    const getMappingsSignature = useCallback((mappingsList) => (
-        JSON.stringify(
-            (Array.isArray(mappingsList) ? mappingsList : [])
-                .map((mapping) => ({
-                    row: String(mapping?.[fields.mappingRowId] ?? ''),
-                    col: String(mapping?.[fields.mappingColumnId] ?? ''),
-                    value: JSON.stringify(mapping?.[fields.mappingValue] ?? '')
-                }))
-                .sort((a, b) => {
-                    if (a.row !== b.row) return a.row.localeCompare(b.row);
-                    if (a.col !== b.col) return a.col.localeCompare(b.col);
-                    return a.value.localeCompare(b.value);
-                })
-        )
-    ), [fields.mappingRowId, fields.mappingColumnId, fields.mappingValue]);
+    // Initialize with the current mappings so the emitter does NOT fire on mount.
+    // Firing on mount triggers the parent's onDataChange which (via mergeScopedMappings)
+    // always creates a new array ref, defeating the reference-equality guard in
+    // useMappingsController.setMappings and causing a Maximum-update-depth loop.
+    const lastEmittedMappingsRef = useRef(mappings);
 
     useEffect(() => {
         if (!onDataChange) return;
-        const signature = getMappingsSignature(mappings);
-        if (signature === lastEmittedMappingsSignatureRef.current) {
+        if (lastEmittedMappingsRef.current === mappings) {
             return;
         }
-        lastEmittedMappingsSignatureRef.current = signature;
+        lastEmittedMappingsRef.current = mappings;
         onDataChange(mappings);
-    }, [mappings, onDataChange, getMappingsSignature]);
+    }, [mappings, onDataChange]);
 }
