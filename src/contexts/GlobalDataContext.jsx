@@ -143,8 +143,8 @@ const loadFromLocalStorage = (key, initialValue) => {
 
 const quotaFailedKeys = new Set();
 
-// Helper to write JSON to localStorage
-const saveToLocalStorage = (key, value) => {
+// Helper to write JSON to localStorage immediately
+const saveToLocalStorageNow = (key, value) => {
     try {
         const payload = encodeJsonForStorage(value);
         localStorage.setItem(key, payload);
@@ -173,6 +173,149 @@ const saveToLocalStorage = (key, value) => {
 
 // Main Data Provider Component
 export const GlobalDataProvider = ({ children }) => {
+    const pendingStorageWritesRef = useRef(new Map());
+    const pendingStorageTimerRef = useRef(null);
+
+    // Web Worker for off-main-thread JSON serialization + LZString compression.
+    // Workers cannot access localStorage, so the worker encodes the value and
+    // posts the compressed string back; the main thread then calls setItem (fast).
+    const storageWorkerRef = useRef(null);
+    // Map<id, {key, value}> — items sent to the worker but not yet written to localStorage.
+    const inFlightStorageRef = useRef(new Map());
+    const storageIdCounterRef = useRef(0);
+
+    useEffect(() => {
+        let worker;
+        try {
+            worker = new Worker(
+                new URL('../workers/storageCompressWorker.js', import.meta.url),
+                { type: 'module' }
+            );
+            worker.onmessage = ({ data: { id, key, encoded } }) => {
+                inFlightStorageRef.current.delete(id);
+                if (encoded) {
+                    try {
+                        localStorage.setItem(key, encoded);
+                        quotaFailedKeys.delete(key);
+                    } catch (err) {
+                        if (!quotaFailedKeys.has(key)) {
+                            console.error('[GlobalDataContext] worker storage quota error', key, err);
+                            quotaFailedKeys.add(key);
+                        }
+                    }
+                }
+                // encoded === null means the worker failed; we accept the loss for
+                // that cycle — the next edit will retry via the debounce.
+            };
+            worker.onerror = (err) => {
+                console.warn('[GlobalDataContext] storage worker error, falling back to sync writes', err);
+                storageWorkerRef.current = null;
+            };
+            storageWorkerRef.current = worker;
+        } catch (err) {
+            console.warn('[GlobalDataContext] could not create storage worker, using sync writes', err);
+        }
+        return () => {
+            worker?.terminate();
+            storageWorkerRef.current = null;
+        };
+    }, []);
+
+    /**
+     * Flush all pending buffered writes.
+     *
+     * Normal path (forceSynchronous = false):
+     *   Sends values to the worker via postMessage (native structured clone —
+     *   much faster than JSON.stringify on the main thread). The worker compresses
+     *   and posts the encoded string back; the main thread then calls setItem.
+     *
+     * Forced-sync path (forceSynchronous = true, used for beforeunload / unmount):
+     *   Writes everything synchronously on the main thread so data is not lost.
+     *   Also drains any in-flight worker requests via the slow path.
+     */
+    const flushBufferedStorageWrites = useCallback((forceSynchronous = false) => {
+        if (pendingStorageTimerRef.current) {
+            clearTimeout(pendingStorageTimerRef.current);
+            pendingStorageTimerRef.current = null;
+        }
+
+        const pending = [...pendingStorageWritesRef.current.entries()];
+        pendingStorageWritesRef.current.clear();
+
+        const worker = storageWorkerRef.current;
+
+        if (!forceSynchronous && worker && pending.length > 0) {
+            // Async path: hand off to worker.  postMessage uses native structured
+            // clone which is far faster than JS JSON.stringify, keeping the main
+            // thread unblocked during the encode + compress phase.
+            pending.forEach(([key, value]) => {
+                const id = storageIdCounterRef.current++;
+                inFlightStorageRef.current.set(id, { key, value });
+                worker.postMessage({ id, key, value });
+            });
+            return;
+        }
+
+        // Synchronous fallback —————————————————————————————————————————————
+        // Before writing pending items, also synchronously flush anything still
+        // in-flight with the worker (not yet written to localStorage) so we
+        // don't lose data on beforeunload.
+        if (forceSynchronous && inFlightStorageRef.current.size > 0) {
+            inFlightStorageRef.current.forEach(({ key, value }) => {
+                saveToLocalStorageNow(key, value);
+            });
+            inFlightStorageRef.current.clear();
+        }
+
+        pending.forEach(([key, value]) => {
+            saveToLocalStorageNow(key, value);
+        });
+    }, []);
+
+    const shouldBufferStorageWrite = useCallback((key) => {
+        if (typeof key !== 'string' || !key.startsWith('globalAppData_')) {
+            return false;
+        }
+        if (
+            key === 'globalAppData_projects'
+            || key === 'globalAppData_currentProjectId'
+            || key === 'globalAppData_testSetups'
+        ) {
+            return false;
+        }
+        return PROJECT_STATE_KEYS.some((stateKey) => key.endsWith(`_${stateKey}`));
+    }, []);
+
+    const saveToLocalStorage = useCallback((key, value) => {
+        if (!shouldBufferStorageWrite(key)) {
+            return saveToLocalStorageNow(key, value);
+        }
+
+        pendingStorageWritesRef.current.set(key, value);
+        // Trailing-edge debounce: reset the timer on every write so we only
+        // flush after the last edit in a burst (better for rapid bulk-fills).
+        // A uniform 500 ms is sufficient for all buffered keys because the
+        // actual encode+compress work runs in the Web Worker off the main thread.
+        if (pendingStorageTimerRef.current) {
+            clearTimeout(pendingStorageTimerRef.current);
+        }
+        pendingStorageTimerRef.current = setTimeout(() => {
+            flushBufferedStorageWrites();
+        }, 500);
+        return true;
+    }, [flushBufferedStorageWrites, shouldBufferStorageWrite]);
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            flushBufferedStorageWrites(true);
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            flushBufferedStorageWrites(true);
+        };
+    }, [flushBufferedStorageWrites]);
 
     // Project catalog (ids + names + active project) is extracted into its own store hook.
     const {
@@ -416,6 +559,11 @@ export const GlobalDataProvider = ({ children }) => {
     // Switch active project and reload per-project state from storage
     function switchProject(id) {
         if (!id) return;
+        // Flush any buffered writes for the current project before reading the new
+        // project's state. Without this, a quick edit → switch → switch-back sequence
+        // would reload stale data from localStorage (the buffered write hasn't landed yet).
+        // Use forceSynchronous so in-flight worker writes are also drained.
+        flushBufferedStorageWrites(true);
         setCurrentProjectId(id);
         saveToLocalStorage('globalAppData_currentProjectId', id);
 

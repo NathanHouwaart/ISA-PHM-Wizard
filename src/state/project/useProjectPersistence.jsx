@@ -91,7 +91,20 @@ export default function useProjectPersistence({
 
     useEffect(() => {
         const previous = previousProjectScopedRef.current;
-        const switchedProject = previous.projectId !== currentProjectId;
+        const switchedProject =
+            previous.projectId !== undefined
+            && previous.projectId !== currentProjectId;
+
+        // On project switch we just loaded the new project's snapshot from storage.
+        // Avoid immediately writing the full snapshot back, which is expensive for
+        // large mapping arrays and does not change persisted data.
+        if (switchedProject) {
+            previousProjectScopedRef.current = {
+                projectId: currentProjectId,
+                values: projectScopedValues
+            };
+            return;
+        }
 
         PROJECT_SCOPED_ORDER.forEach((key) => {
             const nextValue = projectScopedValues[key];

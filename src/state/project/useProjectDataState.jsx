@@ -2,6 +2,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_EXPERIMENT_TYPE_ID, getExperimentTypeConfig } from '../../constants/experimentTypes';
 import { normalizeRunCount } from '../../utils/studyRuns';
 
+const PROGNOSTICS_EXPERIMENT_TYPE_ID = 'prognostics-experiment';
+
+const inferExperimentTypeFromState = (stateLike) => {
+    const explicitType = typeof stateLike?.experimentType === 'string'
+        ? stateLike.experimentType.trim()
+        : '';
+    if (explicitType) {
+        return explicitType;
+    }
+
+    const studies = Array.isArray(stateLike?.studies) ? stateLike.studies : [];
+    const hasMultiRun = studies.some((study) => normalizeRunCount(study?.runCount) > 1);
+    if (hasMultiRun) {
+        return PROGNOSTICS_EXPERIMENT_TYPE_ID;
+    }
+
+    return DEFAULT_EXPERIMENT_TYPE_ID;
+};
+
 export default function useProjectDataState({
     initialProjectState,
     initialTestSetupsState
@@ -17,7 +36,7 @@ export default function useProjectDataState({
     const [processingProtocols, setProcessingProtocols] = useState(() => initialProjectState.processingProtocols);
     const [studyToMeasurementProtocolSelection, setStudyToMeasurementProtocolSelection] = useState(() => initialProjectState.studyToMeasurementProtocolSelection);
     const [studyToProcessingProtocolSelection, setStudyToProcessingProtocolSelection] = useState(() => initialProjectState.studyToProcessingProtocolSelection);
-    const [experimentType, setExperimentType] = useState(() => initialProjectState.experimentType || DEFAULT_EXPERIMENT_TYPE_ID);
+    const [experimentType, setExperimentType] = useState(() => inferExperimentTypeFromState(initialProjectState));
 
     // Mappings
     const [studyToStudyVariableMapping, setStudyToStudyVariableMapping] = useState(() => initialProjectState.studyToStudyVariableMapping);
@@ -69,7 +88,7 @@ export default function useProjectDataState({
         setStudyVariables(nextState.studyVariables);
         setMeasurementProtocols(nextState.measurementProtocols);
         setProcessingProtocols(nextState.processingProtocols);
-        setExperimentType(nextState.experimentType || DEFAULT_EXPERIMENT_TYPE_ID);
+        setExperimentType(inferExperimentTypeFromState(nextState));
         setStudyToMeasurementProtocolSelection(nextState.studyToMeasurementProtocolSelection);
         setStudyToProcessingProtocolSelection(nextState.studyToProcessingProtocolSelection);
         setStudyToStudyVariableMapping(nextState.studyToStudyVariableMapping);

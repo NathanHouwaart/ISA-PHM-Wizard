@@ -149,11 +149,24 @@ const LEGACY_EXPERIMENT_TYPE_MAP = {
     'rtf-multi': 'prognostics-experiment'
 };
 
+const DIAGNOSTIC_EXPERIMENT_TYPE_ID = 'diagnostic-experiment';
+const PROGNOSTICS_EXPERIMENT_TYPE_ID = 'prognostics-experiment';
+
 const normalizeExperimentTypeId = (value) => {
     if (typeof value !== 'string') return '';
     const normalized = value.trim();
     if (!normalized) return '';
     return LEGACY_EXPERIMENT_TYPE_MAP[normalized] || normalized;
+};
+
+const inferExperimentTypeIdFromStudies = (studies, fallback = '') => {
+    const safeStudies = Array.isArray(studies) ? studies : [];
+    const hasMultiRun = safeStudies.some((study) => normalizeRunCount(study?.runCount) > 1);
+    if (hasMultiRun) return PROGNOSTICS_EXPERIMENT_TYPE_ID;
+
+    const normalizedFallback = normalizeExperimentTypeId(fallback);
+    if (normalizedFallback) return normalizedFallback;
+    return DIAGNOSTIC_EXPERIMENT_TYPE_ID;
 };
 
 const toProtocolLookup = (entries = []) => {
@@ -306,13 +319,10 @@ const normalizeProjectState = (state, defaults) => {
         }
 
         if (key === 'experimentType') {
-            if (typeof value === 'string' && value.trim() !== '') {
-                next[key] = value;
-            } else if (typeof fallback === 'string' && fallback.trim() !== '') {
-                next[key] = fallback;
-            } else {
-                next[key] = '';
-            }
+            const normalizedValue = normalizeExperimentTypeId(value);
+            const normalizedFallback = normalizeExperimentTypeId(fallback);
+            next[key] = normalizedValue
+                || inferExperimentTypeIdFromStudies(next.studies, normalizedFallback);
             return;
         }
 

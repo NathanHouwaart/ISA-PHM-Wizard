@@ -1,31 +1,19 @@
 import { useCallback, useRef } from 'react';
 import { useProjectData } from '../contexts/GlobalDataContext';
 
-const stableStringify = (value) => {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(',')}]`;
-  }
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-  }
-  return JSON.stringify(value);
-};
+const isShallowEqualObject = (left, right) => {
+  if (left === right) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
 
-const normalizeMappingsForComparison = (mappings, keyNames) => {
-  const { sourceKey, targetKey } = keyNames;
-  return (Array.isArray(mappings) ? mappings : [])
-    .map((mapping) => {
-      const source = String(mapping?.[sourceKey] ?? '');
-      const target = String(mapping?.[targetKey] ?? '');
-      return `${source}::${target}::${stableStringify(mapping ?? {})}`;
-    })
-    .sort();
-};
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) return false;
 
-const mappingsEqual = (left, right, keyNames) => {
-  const normalizedLeft = normalizeMappingsForComparison(left, keyNames);
-  const normalizedRight = normalizeMappingsForComparison(right, keyNames);
-  return JSON.stringify(normalizedLeft) === JSON.stringify(normalizedRight);
+  for (const key of leftKeys) {
+    if (!Object.prototype.hasOwnProperty.call(right, key)) return false;
+    if (!Object.is(left[key], right[key])) return false;
+  }
+  return true;
 };
 
 /**
@@ -50,7 +38,7 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
       const resolved = typeof next === 'function' ? next(base) : next;
       const nextValue = Array.isArray(resolved) ? resolved : [];
 
-      if (mappingsEqual(nextValue, base, keyNames)) {
+      if (nextValue === base) {
         lastRef.current = base;
         return base; // no-op when identical
       }
@@ -58,7 +46,7 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
       lastRef.current = nextValue;
       return nextValue;
     });
-  }, [setMappingsState, keyNames]);
+  }, [setMappingsState]);
 
   // updateMappingValue supports two signatures for backward compatibility:
   // 1) updateMappingValue(itemIndex, mappingObj, value)  (old)
@@ -79,8 +67,9 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
     const { sourceKey, targetKey } = keyNames;
 
     setMappingsState(prev => {
-      const copy = Array.isArray(prev) ? prev.slice() : [];
-      const idx = copy.findIndex(m => String(m[sourceKey]) === String(mappingObj[sourceKey]) && String(m[targetKey]) === String(mappingObj[targetKey]));
+      const base = Array.isArray(prev) ? prev : [];
+      const idx = base.findIndex(m => String(m[sourceKey]) === String(mappingObj[sourceKey]) && String(m[targetKey]) === String(mappingObj[targetKey]));
+      const copy = base.slice();
       const merged = {
         ...copy[idx],
         ...mappingObj,
@@ -90,14 +79,13 @@ export default function useMappingsController(mappingKey = 'studyToStudyVariable
       };
 
       if (idx >= 0) {
+        if (isShallowEqualObject(copy[idx], merged)) {
+          lastRef.current = prev;
+          return prev;
+        }
         copy[idx] = merged;
       } else {
         copy.push(merged);
-      }
-
-      if (mappingsEqual(copy, prev, keyNames)) {
-        lastRef.current = prev;
-        return prev;
       }
 
       lastRef.current = copy;
