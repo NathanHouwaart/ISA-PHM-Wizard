@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { loadTree, clearTree, saveTree } from '../utils/indexedTreeStore';
 import { useFileSystem } from './useFileSystem';
 import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
+import { decodeJsonFromStorage } from '../utils/storageCodec';
 import {
   ensureProjectDatasetStats,
   setProjectDatasetStats,
@@ -96,8 +97,7 @@ export function useProjectDataset(projectId) {
       let setupName = null;
       
       if (setupId) {
-        const setupsRaw = localStorage.getItem(`globalAppData_testSetups`);
-        const setups = setupsRaw ? JSON.parse(setupsRaw) : null;
+        const { value: setups } = decodeJsonFromStorage(localStorage.getItem(`globalAppData_testSetups`));
         if (Array.isArray(setups)) {
           const s = setups.find((x) => x.id === setupId);
           setupName = s ? s.name : null;

@@ -6,6 +6,12 @@ import { useProjectData } from '../contexts/GlobalDataContext';
 import Heading3 from './Typography/Heading3';
 import Paragraph from './Typography/Paragraph';
 import useStudyRuns from '../hooks/useStudyRuns';
+import {
+  OUTPUT_MODE_RAW_ONLY,
+  normalizeStudyOutputMode,
+  isRawOutputEnabled,
+  isProcessedOutputEnabled
+} from '../utils/studyOutputMode';
 
 const StudyMeasurementMappingCard = ({
   item,
@@ -16,6 +22,7 @@ const StudyMeasurementMappingCard = ({
   protocolOptions = [],
   selectedProtocolByStudy = {},
   onStudyProtocolChange,
+  fileFieldScope = 'raw',
   fileFieldLabel = 'Measurement File'
 }) => {
   const { selectedTestSetupId, testSetups } = useProjectData();
@@ -26,6 +33,14 @@ const StudyMeasurementMappingCard = ({
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
   const activeStudyId = activeRun?.studyId || item?.studyId || item?.id;
   const selectedProtocolId = selectedProtocolByStudy?.[activeStudyId] || '';
+  const selectedOutputMode = normalizeStudyOutputMode(
+    activeRun?.outputMode,
+    OUTPUT_MODE_RAW_ONLY
+  );
+  const rawEnabled = isRawOutputEnabled(selectedOutputMode);
+  const processedEnabled = isProcessedOutputEnabled(selectedOutputMode);
+  const fileFieldEnabled = fileFieldScope === 'processed' ? processedEnabled : rawEnabled;
+  const protocolFieldEnabled = fileFieldScope === 'processed' ? processedEnabled : true;
 
   if (!selectedTestSetupId) {
     return (
@@ -64,9 +79,15 @@ const StudyMeasurementMappingCard = ({
               value={selectedProtocolId}
               tags={protocolOptions}
               placeholder={`Select ${protocolLabel.toLowerCase()}`}
+              disabled={!protocolFieldEnabled}
               onChange={(e) => onStudyProtocolChange(activeStudyId, e.target.value)}
             />
           </div>
+        )}
+        {!protocolFieldEnabled && (
+          <Paragraph className="text-xs text-gray-500 mt-2">
+            Processing protocol is disabled because this study is set to raw-only output mode.
+          </Paragraph>
         )}
       </div>
 
@@ -99,6 +120,7 @@ const StudyMeasurementMappingCard = ({
                 name={`sensor-${sensor.id}`}
                 value={mapping.value}
                 commitOnBlur
+                disabled={!fileFieldEnabled}
                 onChange={(e) =>
                   handleInputChange(
                     0,
@@ -110,7 +132,7 @@ const StudyMeasurementMappingCard = ({
                     e.target.value
                   )
                 }
-                placeholder="Enter filename or value"
+                placeholder={fileFieldEnabled ? 'Enter filename or value' : 'Disabled for selected output mode'}
               />
             </div>
           );
@@ -120,4 +142,4 @@ const StudyMeasurementMappingCard = ({
   );
 };
 
-export default StudyMeasurementMappingCard;;
+export default StudyMeasurementMappingCard;

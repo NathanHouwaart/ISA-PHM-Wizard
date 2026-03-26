@@ -9,8 +9,8 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
 const FIXTURE_CASES = [
   {
-    name: 'example-single-run-sietze',
-    path: 'src/data/example-single-run-sietze.json',
+    name: 'example-single-run-nln-emp',
+    path: 'src/data/example-single-run-nln-emp.json',
   },
   {
     name: 'example-multi-run-milling',
@@ -47,6 +47,24 @@ const readProjectValue = (localStorageState, projectId, key, fallback) => {
     if (hasOwn(localStorageState, storageKey)) {
       return parseJsonValue(localStorageState[storageKey], fallback);
     }
+  }
+
+  // Fallback for fixtures where projectId was renamed but embedded
+  // localStorage keys still use an older project namespace.
+  const suffixes = [`_${key}`];
+  if (key === 'investigation') {
+    suffixes.push('_investigations');
+  }
+
+  const dynamicKey = Object.keys(localStorageState || {}).find((storageKey) => {
+    if (candidates.includes(storageKey)) return false;
+    if (!storageKey.startsWith('globalAppData_')) return false;
+    if (storageKey.startsWith('globalAppData_default_')) return false;
+    return suffixes.some((suffix) => storageKey.endsWith(suffix));
+  });
+
+  if (dynamicKey) {
+    return parseJsonValue(localStorageState[dynamicKey], fallback);
   }
 
   return fallback;

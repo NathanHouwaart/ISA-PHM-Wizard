@@ -18,37 +18,63 @@ ISA-PHM is a standardized format that captures all of this metadata alongside th
 
 ## The ISA Hierarchy
 
-ISA-PHM organizes everything into three levels:
+ISA-PHM builds on the **ISA** (Investigation–Study–Assay) framework, a metadata standard originally developed for life sciences (genomics, metabolomics) and widely adopted for structured research data. ISA-PHM adapts it for PHM experiments.
+
+The wizard uses PHM-friendly language throughout its UI. The output JSON uses the original ISA terminology. **This table is the definitive translation between the two:**
+
+| Wizard / PHM term | ISA term | JSON key | What it represents |
+|---|---|---|---|
+| Project | Investigation | top-level object | The whole dataset — title, contacts, publications, dates |
+| Experiment | Study | `studies[]` | One test case — one fault condition or configuration variant |
+| Measurement / Processing Output | Assay | `study.assays[]` | One sensor channel's data file for one run |
+| Fault Spec / Operating Condition | Study Factor | `study.factors[]` | A variable that distinguishes experiments from each other |
+| Test Matrix value | Factor Value | `samples[].factorValues[]` | The value of a factor for a specific experiment or run |
+| Configuration | Sample | `study.materials.samples[]` | The physical component installed in the rig |
+| Characteristics | Study Design Descriptor | `study.studyDesignDescriptors[]` | Fixed properties of the test rig, constant across all experiments |
+
+The three-level hierarchy in the output JSON:
 
 ```
-Investigation  ← the whole project (title, description, contacts, publications)
-  └── Study      ← one experiment or test case (one fault condition, one setup variant)
-        └── Assay  ← the actual measurement or processed output file, linked to a sensor
+Investigation  (= Project)     ← title, contacts, publications
+  └── Study    (= Experiment)  ← one fault condition or configuration variant
+        └── Assay (= Measurement Output)  ← one sensor channel's data file
 ```
 
-### Investigation
+---
 
-The top-level container. One project = one investigation. It holds:
+### Project — *ISA: Investigation*
+
+The top-level container for your entire dataset. One dataset = one project = one ISA Investigation. It holds:
 - Project title and description
 - License
 - Dates (data collection, public release)
 - Contact list and publication list
 
-### Study
+In the output JSON this is the root object, with keys like `title`, `description`, `people`, and `publications`. See the [Export guide](./GUIDE_EXPORT.md#project-isa-investigation) for the full key list.
 
-Each distinct experiment within the project. In PHM terms, a study typically represents one fault condition or one configuration variant tested. Examples:
+---
+
+### Experiment — *ISA: Study*
+
+Each distinct test case within the project. An experiment represents one fault condition with one configuration variant — the thing that makes it different from all other experiments in the same project. Examples:
 - Bearing with BPFO fault, severity level 1
 - Milling pass at 200 RPM, fresh tool
 
-A study can have one run (diagnostic template) or multiple sequential runs (prognostic template).
+An experiment can have one run (diagnostic template) or multiple sequential runs (prognostic template).
 
-### Assay
+In the output JSON, each experiment is one entry in `studies[]`. Its fault specifications and operating conditions appear in `study.factors[]`, and its test matrix values appear in `study.materials.samples[].factorValues[]`.
 
-The measurements linked to a study. Each assay represents the output of **one sensor channel** for **one run**.
+---
 
-> **Key rule:** An assay data file always has **exactly two columns** — a timestamp column and a **single measurement value** column. One sensor channel → one assay file.
+### Measurement Output — *ISA: Assay*
 
-**Multi-axis sensors must be split into separate entries.** A tri-axis accelerometer (X, Y, Z) produces **three assays** — one per axis. In the wizard this means registering three separate sensor entries in the test setup, not one.
+The data files linked to an experiment. Each measurement output represents the recorded signal from **one sensor channel** for **one run**.
+
+> **Key rule:** A measurement output data file always has **exactly two columns** — a timestamp column and a **single measurement value** column. One sensor channel → one file.
+
+**Multi-axis sensors must be split into separate entries.** A tri-axis accelerometer (X, Y, Z) produces **three measurement output files** — one per axis. In the wizard this means registering three separate sensor entries in the test setup, not one.
+
+In the output JSON, each measurement output is one entry in `study.assays[]`. It contains the sensor metadata, the measurement and processing protocols used, and the file paths to the raw and processed data files.
 
 <details>
 <summary>Example — tri-axis accelerometer</summary>
@@ -67,7 +93,7 @@ Define **three** sensor entries, one per axis:
 | `acc_y` | Accelerometer |
 | `acc_z` | Accelerometer |
 
-Each will generate its own two-column assay file in the output JSON:
+Each will generate its own two-column measurement output file in the output JSON:
 
 ```
 timestamp, acc_x
@@ -85,25 +111,25 @@ timestamp, acc_y
 
 </details>
 
-Assays are constructed automatically from the study–sensor–run mappings you fill in on Slides 9 and 10. **One populated cell in that grid = one assay entry** in the output JSON.
+Measurement outputs are constructed automatically from the experiment–sensor–run mappings you fill in on Slides 10 and 11. **One populated cell in that grid = one measurement output entry** in the output JSON.
 
 ---
 
 ## The Test Setup
 
-Before (or alongside) filling in the ISA hierarchy, you define a **Test Setup** — the reusable description of your physical lab bench. It contains:
+Before (or alongside) filling in your project structure, you define a **Test Setup** — the reusable description of your physical lab bench. It contains:
 
 - **Characteristics** — fixed hardware properties of the rig that are the same across all experiments (motor model, rated power, shaft geometry)
 - **Sensors** — every measurement channel (alias, model, type)
-- **Configurations** — each specific physical component installed in the rig for testing (the ISA-PHM "Sample")
+- **Configurations** — Variants of the setup containing different physical hardware components or test articles (e.g. changed bearings, impellers, tool pieces, etc.)
 - **Measurement Protocols** — how raw signals were acquired (sample rate, filter settings, etc.)
 - **Processing Protocols** — how raw signals were turned into features (FFT, windowing, etc.)
 
 Test setups are shared across projects. Once you have defined a setup for a lab bench, any future project on the same bench reuses it rather than re-entering everything.
 
-### What is a Configuration?
+### What is a Configuration? — *ISA: Sample*
 
-A Configuration is the ISA-PHM **Sample** — it identifies **which specific physical component was installed** in the rig for a given experiment. This is not just a health label; it is a distinct physical object.
+A Configuration identifies **which specific physical component was installed** in the rig for a given experiment. In the ISA schema this is called a **Sample** — it appears in the output JSON as an entry in `study.materials.samples[]`. This is not just a health label; it is a distinct physical object.
 
 > **Key rule:** Two experiments that use the same component *type* but a **different physical unit** should each have their own Configuration.
 
@@ -125,7 +151,7 @@ This matters for traceability: if a bearing's failure mode differs from the othe
 | | Characteristics | Configurations |
 |---|---|---|
 | What it describes | The fixed rig itself (same for all experiments) | The specific component swapped in per experiment |
-| ISA-PHM entity | Study Design Descriptor | Sample |
+| ISA-PHM entity | Study Design Descriptor (ISA term) | Sample (ISA term) |
 | Changes per experiment? | No | Yes (different unit, different fault, different specimen) |
 | Example | Motor rated power = 11 kW | Bearing unit 03 — outer race fault |
 
@@ -133,16 +159,18 @@ This matters for traceability: if a bearing's failure mode differs from the othe
 
 ## Single-Run vs. Multi-Run Templates
 
+In the app, these templates are labelled **Diagnostic Experiment** and **Prognostics Experiment**.
+
 The wizard supports two templates, chosen once per project:
 
-| Template | When to use | Paper equivalent |
+| Template | When to use | ISA-PHM schema equivalent |
 |---|---|---|
-| **Diagnostic Experiment** | Short tests with stable, injected faults — each study produces one file set | One row per Study in the ISA-PHM Study file |
-| **Prognostics Experiment** | Degradation / run-to-failure — same study has multiple sequential trajectories | Multiple rows per Study, one per run |
+| **Diagnostic Experiment** | Short tests with stable, injected faults — each experiment produces one file set | One row per Study (ISA term) in the output |
+| **Prognostics Experiment** | Degradation / run-to-failure — same experiment has one or more sequential trajectories | One or multiple rows per Study, one per run |
 
-Choose **Diagnostic** for bearing seeded-fault datasets, freeze-profile tests, or any experiment where each condition is measured once.
+Choose **Diagnostic** for bearing seeded-fault datasets, freeze-profile tests, or any experiment where each (fixed) fault + operating condition is measured once.
 
-Choose **Prognostics** for milling tool wear, accelerated degradation, or any experiment where the same sample is measured repeatedly over time.
+Choose **Prognostics** for milling tool wear, accelerated degradation, or any experiment where the same sample is measured during a longer time period, or repeatedly over time.
 
 ### Decision Flowchart
 
@@ -150,26 +178,15 @@ Not sure which template applies to your experiment? Work through the questions b
 
 ```mermaid
 flowchart TD
-    A([Start]) --> B{Do you measure the\nsame component or sample\nrepeatedly over time?}
-
-    B -- No --> C{Is each fault condition\ncaptured in one\nmeasurement snapshot?}
-    C -- Yes --> DIAG
-    C -- No --> D{Can you split into\nseparate conditions,\none snapshot each?}
+    A([Start]) --> B{Same specimen measured repeatedly over time?}
+    B -- No --> C{One snapshot per condition?}
+    C -- Yes --> DIAG([Diagnostic Experiment])
+    C -- No --> D{Can conditions be split into separate snapshots?}
     D -- Yes --> DIAG
-    D -- No --> RECONSIDER([Reconsider your\nexperiment structure])
-
-    B -- Yes --> E{Is the measurement\nsequence time-ordered\nfor the same sample?}
-    E -- Yes --> F{Goal: estimate RUL\nor track degradation\nover time?}
-    F -- Yes --> PROG
-    F -- No --> G{Are runs ordered &\non the same sample\nwith changing health?}
-    G -- Yes --> PROG
-    G -- No --> DIAG
-
+    D -- No --> R([Reconsider experiment structure])
+    B -- Yes --> E{Time-ordered sequence for same specimen?}
+    E -- Yes --> PROG([Prognostics Experiment])
     E -- No --> DIAG
-
-    DIAG(["✅ Diagnostic Experiment\n─────────────────────\nTemplate: Diagnostic\nRuns per study: 1\nGoal: fault detection\nor classification\n─────────────────────\nExample: Bearing seeded-\nfault dataset, one capture\nper fault condition"])
-
-    PROG(["✅ Prognostics Experiment\n─────────────────────\nTemplate: Prognostics\nRuns per study: N\nGoal: RUL estimation\nor degradation tracking\n─────────────────────\nExample: Milling tool wear,\nmeasured every N passes\nuntil tool failure"])
 ```
 
 #### Quick rules of thumb
@@ -178,7 +195,7 @@ flowchart TD
 |---|---|
 | Fault **seeded** (known size, known location) measured **once** per condition | Diagnostic |
 | Fault **injected artificially** at different severity levels | Diagnostic |
-| Same component measured at **regular intervals** as it wears/ages | Prognostics |
+| Same component measured at **regular intervals** as it wears/ages (naturally or accelerated) | Prognostics |
 | Test ends at **failure** (run-to-failure) | Prognostics |
 | Dataset has a **RUL label** per sample | Prognostics |
 | Dataset has a **fault class label** per sample | Diagnostic |
@@ -186,39 +203,43 @@ flowchart TD
 The template choice affects:
 - Slide 5 (Experiment Descriptions) — shows a `Number of runs` field only for prognostics
 - Slide 8 (Test Matrix) — columns multiply per run for prognostics
-- Slides 9 & 10 (Output mapping) — rows multiply per run
+- Slides 10 & 11 (Output mapping) — rows multiply per run
 
 ---
 
-## How Study Variables Work
+## How Experiment Variables Work — *ISA: Study Factors*
 
-Study variables are the conditions that differ between studies. They come in two flavours:
+Experiment variables are the conditions that differ between experiments. In the ISA schema these are called **Study Factors**, stored in `study.factors[]`. The value assigned to a factor for a specific experiment or run is a **Factor Value**, stored in `study.materials.samples[].factorValues[]`.
+
+The wizard splits experiment variables into two flavours:
 
 | Flavour | Slide | Type options | Example |
 |---|---|---|---|
 | **Fault Specifications** | Slide 6 | Qualitative fault spec, Quantitative fault spec, Damage, RUL, Other | Fault Type = BPFO, Fault Severity = 2 |
 | **Operating Conditions** | Slide 7 | Operating condition | Motor Speed = 1300 RPM, Load = 50 N |
 
-On Slide 8 (Test Matrix) you assign a value for each variable to each study (or run). This is what makes each study description unique and machine-readable.
+On Slide 8 (Test Matrix) you assign a value for each variable to each experiment (or run). This is what makes each experiment description unique and machine-readable.
 
-> **Note (prognostic tests):** The ISA-PHM paper specifies that time-varying operating conditions in long-term degradation tests should be stored as separate time series files (one per variable per run), synchronised to a reference timestamp. The wizard currently captures operating conditions as scalar values only — time-varying file-based operating conditions are out of scope for this version.
+> **Note (prognostic tests):** The ISA-PHM paper specifies that time-varying operating conditions in long-term degradation tests should be stored as separate time series files (one per variable per run), synchronised to a reference timestamp. The wizard now supports this through **Value Mode** on Slides 6-7: set a variable to `Timeseries (.csv)` and provide a relative `.csv` path per run in Slide 8.
 
 ---
 
 ## The Export
 
-Pressing **Convert to ISA-PHM** sends your metadata to a backend conversion service. It returns a `.json` file containing the full ISA-PHM structured metadata, including the investigation, all studies, and all assays.
+Pressing **Convert to ISA-PHM** sends your metadata to a backend conversion service. It returns a `.json` file containing the full ISA-PHM structured metadata, including the project details, all experiments, and all measurement outputs.
 
-This file can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant.
+This file can be deposited alongside your raw data in a data repository to make the dataset FAIR-compliant. Additionally, further software tools can read the `.json` file to automatically and consistently label a dataset for model training and testing purposes.
 
 ---
 
 ## Dependency Chain
 
-Many things in the wizard depend on other things existing first. The correct order is:
+Many things in the wizard depend on other things existing first. The correct order for building a dataset documentation file is:
 
 ```
 1. Create Test Setup
+   ├─ Add basic info
+   ├─ Add characteristics
    ├─ Add sensors
    ├─ Add configurations
    ├─ Add measurement protocols (after sensors)
@@ -228,12 +249,13 @@ Many things in the wizard depend on other things existing first. The correct ord
    └─ Link it to the test setup
 
 3. Fill Questionnaire
-   ├─ Slides 2–4: investigation-level metadata (independent)
+   ├─ Slides 2–4: project-level metadata (independent)
    ├─ Slide 5: experiments (requires configurations from test setup)
-   ├─ Slides 6–7: study variables (independent)
-   ├─ Slide 8: test matrix (requires studies + variables)
-   ├─ Slide 9: raw output mapping (requires studies + sensors + measurement protocols)
-   └─ Slide 10: processed output mapping (requires studies + sensors + processing protocols)
+   ├─ Slides 6–7: experiment variables — fault specifications & operating conditions (independent)
+   ├─ Slide 8: test matrix (requires experiments + variables)
+   ├─ Slide 9: study output mode (required before output mapping)
+   ├─ Slide 10: raw output mapping (requires experiments + sensors + measurement protocols)
+   └─ Slide 11: processed output mapping (requires experiments + sensors + processing protocols)
 
 4. Convert to ISA-PHM
 ```
@@ -247,4 +269,4 @@ If a dropdown on a later slide is empty, something earlier in this chain is miss
 - [Quick Start — first project from blank to export](./GUIDE_QUICKSTART.md)
 - [Project Management — create, configure, import, export](./GUIDE_PROJECT_MANAGEMENT.md)
 - [Test Setups — build your lab bench description](./GUIDE_TEST_SETUPS.md)
-- [Questionnaire — fill all 10 slides](./GUIDE_QUESTIONNAIRE.md)
+- [Questionnaire — fill all 11 slides](./GUIDE_QUESTIONNAIRE.md)

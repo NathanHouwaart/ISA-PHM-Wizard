@@ -9,6 +9,7 @@ export const useDataGrid = ({
   mappings = [],
   fieldMappings = {},
   staticColumns = [],
+  mappingCellProperties,
   maxHistorySize = 50,
   onRowDataChange,
   historyScopeKey
@@ -355,10 +356,33 @@ export const useDataGrid = ({
             readonly: false,
             cellProperties: (props) => {
               const model = props?.model;
+              const baseStyle = {};
+
               if (model?.isLastRunInStudy) {
-                return { style: { 'border-bottom': '3px solid black' } };
+                baseStyle['border-bottom'] = '3px solid black';
               }
-              return {};
+
+              if (typeof mappingCellProperties !== 'function') {
+                return Object.keys(baseStyle).length > 0 ? { style: baseStyle } : {};
+              }
+
+              const customCellProps = mappingCellProperties({
+                ...props,
+                row: model,
+                column,
+                columnId: column?.[fields.columnId],
+                columnName: column?.[fields.columnName],
+              }) || {};
+
+              const customStyle = customCellProps?.style || {};
+
+              return {
+                ...customCellProps,
+                style: {
+                  ...baseStyle,
+                  ...customStyle,
+                }
+              };
             }
           });
         }
@@ -366,7 +390,7 @@ export const useDataGrid = ({
     }
 
     return columns;
-  }, [columnData, staticColumns, fields]);
+  }, [columnData, staticColumns, fields, mappingCellProperties]);
 
   const gridData = useMemo(() => {
     return activeRowData.map((row) => {

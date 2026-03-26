@@ -18,7 +18,13 @@ import DataGrid from '../DataGrid/DataGrid';
 import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
-import { FAULT_SPEC_TYPES, isOperatingCondition } from '../../constants/variableTypes';
+import {
+    FAULT_SPEC_TYPES,
+    STUDY_VARIABLE_VALUE_MODE_OPTIONS,
+    STUDY_VARIABLE_VALUE_MODE_SCALAR,
+    normalizeStudyVariableValueMode,
+    isOperatingCondition
+} from '../../constants/variableTypes';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import { usePageTab } from '../../hooks/usePageWidth';
 import { FAULT_SPECIFICATION_SUGGESTIONS } from '../../constants/suggestionCatalog';
@@ -38,17 +44,22 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
         addItem({
             name: suggestion.name || 'New Variable',
             type: suggestion.type || FAULT_SPEC_TYPES[0],
+            valueMode: suggestion.valueMode || STUDY_VARIABLE_VALUE_MODE_SCALAR,
             unit: suggestion.unit || '',
             description: suggestion.description || ''
         });
     }, [addItem]);
 
     const handleRowDataChange = useCallback((newRows) => {
+        const normalizedRows = (newRows || []).map((row) => ({
+            ...row,
+            valueMode: normalizeStudyVariableValueMode(row?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)
+        }));
         setStudyVariables(prevAll => {
             // Keep items that are NOT in this view (Operating conditions)
             const otherItems = prevAll.filter(item => isOperatingCondition(item));
             // Combine with the new state of items in this view
-            return [...otherItems, ...newRows];
+            return [...otherItems, ...normalizedRows];
         });
     }, [setStudyVariables]);
 
@@ -56,10 +67,17 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
         () => FAULT_SPEC_TYPES.map((type) => ({ label: type, value: type })),
         []
     );
+    const valueModeOptions = useMemo(
+        () => STUDY_VARIABLE_VALUE_MODE_OPTIONS,
+        []
+    );
 
     const variableGridConfig = useMemo(() => ({
         title: 'Fault Specifications',
-        rowData: faultSpecs,
+        rowData: faultSpecs.map((variable) => ({
+            ...variable,
+            valueMode: normalizeStudyVariableValueMode(variable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR)
+        })),
         columnData: [],
         mappings: [],
         staticColumns: [
@@ -92,6 +110,16 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                 source: typeOptions
             },
             {
+                prop: 'valueMode',
+                name: 'Value Mode',
+                size: 140,
+                readonly: false,
+                columnType: 'select',
+                labelKey: 'label',
+                valueKey: 'value',
+                source: valueModeOptions
+            },
+            {
                 prop: 'unit',
                 name: 'Unit',
                 size: 120,
@@ -112,7 +140,7 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                 title: 'Add a new fault specification'
             }
         ]
-    }), [faultSpecs, addItem, typeOptions]);
+    }), [faultSpecs, addItem, typeOptions, valueModeOptions]);
 
     return (
         <div ref={combinedRef}>

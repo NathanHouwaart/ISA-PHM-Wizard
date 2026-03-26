@@ -1,9 +1,20 @@
 # Quick Start — First ISA-PHM Project
 
-This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple invented scenario so every field has a concrete example value.
+This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple artificial scenario so every field has a concrete example value.
 
 **Scenario used in this guide:** A single-run bearing diagnostics test on a small motor-pump bench.  
 For real-world filled examples, see [Example: Sietze (single-run)](../examples/EXAMPLE_SIETZE.md) and [Example: Milling (multi-run)](../examples/EXAMPLE_MILLING.md).
+
+## Minimal path (if you are in a hurry)
+
+1. Create one test setup with at least: 1 sensor, 1 configuration, 1 measurement protocol, 1 processing protocol.
+2. Create a project in Project Sessions, select **Diagnostic Experiment**, and link the test setup.
+3. Fill Slides 2–5 (project info, contacts, experiments).
+4. Add at least one fault specification (Slide 6) and one operating condition (Slide 7).
+5. Fill Test Matrix values (Slide 8), set output mode (Slide 9), then raw/processed file mappings (Slides 10–11).
+6. Click **Convert to ISA-PHM**.
+
+If you want the full field-by-field walkthrough, continue below.
 
 ---
 
@@ -70,19 +81,19 @@ Document the fixed hardware properties of your test rig — anything that doesn'
 
 ![SCREENSHOT: Sensors tab — three sensor rows filled in](../images/annotated/example-test-setup-sensors.png)
 
-> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 9 & 10).
+> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 10 & 11).
 
 ### 1d — Configurations tab
 
-A configuration is the **specific physical component installed** in the rig for a given experiment — the ISA-PHM "Sample". Include the component designation and its condition, not just a health label.
+A configuration defines the rig with the **specific physical components installed** for a given experiment - the ISA-PHM "Sample". For example, in a bearing test bench it is important to know which specific bearing (ID) is used, even if the introduced fault is the same.  Include the component designation and a unique ID, to unambiguously describe the used set-up.
 
 1. Click **+ Add Configuration**.
 2. Add two configurations:
 
 | Name | Replaceable Component ID |
 |---|---|
-| `6309.C4 — No fault (baseline)` | `RC-001` |
-| `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` | `RC-002` |
+| `Bearing #101 - 6309.C4` | `RC-001` |
+| `Bearing #201 - 6309.C4` | `RC-002` |
 
 ![SCREENSHOT: Configurations tab — two configurations listed](../images/annotated/example-test-setup-configurations.png)
 
@@ -131,8 +142,8 @@ Select the template that matches your experiment:
 
 | Option | When to use |
 |---|---|
-| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
-| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+| **Diagnostic Experiment** | Each experiment is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each experiment spans a longer duration measurement, consisting of one or multiple sequential runs (degradation / run-to-failure) |
 
 Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
 
@@ -142,7 +153,7 @@ For this guide, select **Diagnostic Experiment**.
 
 ### 2c — Dataset indexation *(skippable)*
 
-If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects).
+If you have a local dataset folder, index it here to enable the file picker on Slides 10–11 (and Slide 8 for prognostics projects).
 
 > **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
 > 
@@ -166,7 +177,7 @@ After confirming, click **Select** on the project card to make it the active pro
 
 ## Step 3 — Fill the Questionnaire
 
-You are now inside the 10-slide questionnaire.
+You are now inside the 11-slide questionnaire.
 
 ![SCREENSHOT: Slide 1 Introduction — fresh blank project](../images/annotated/isa-questionnaire-slide-1.png)
 
@@ -209,12 +220,12 @@ Click **Next**.
 
 ### Slide 5 — Experiment Descriptions
 
-Click **Add** (or **+**) to add two experiments. For each experiment, give it a name and select its **Configuration** from the dropdown:
+Click **Add** (or **+**) to add two experiments. For each experiment, give it a name and select its **Configuration** (may be the same for the two experiments) from the dropdown:
 
 | Name | Configuration |
 |---|---|
-| Healthy Baseline | `6309.C4 — No fault (baseline)` |
-| BPFO Fault Test | `6309.C4 — Outer race fault (BPFO), 0.5 mm notch` |
+| Healthy Baseline | `Bearing #101 - 6309.C4` |
+| BPFO Fault Test | `Bearing #201 - 6309.C4` |
 
 > **Note:** The **Configuration** dropdown is populated from the configurations you defined in the test setup (Step 1d). If the dropdown is empty, go back to the test setup editor → **Configurations** tab and add at least one configuration.
 
@@ -228,6 +239,8 @@ Click the suggestion chips to add:
 - **Fault Type** (Qualitative fault specification)
 - **Fault Severity** (Quantitative fault specification)
 
+Keep **Value Mode** as `Scalar` for these fixed labels. Use `Timeseries (.csv)` only when that factor is logged as a run-level CSV file.
+
 ![SCREENSHOT: Slide 6 — two fault specification rows added via suggestion chips](../images/annotated/isa-questionnaire-slide-6.png)
 
 Click **Next**.
@@ -238,43 +251,59 @@ Click the suggestion chips to add:
 - **Rotational Speed** (RPM)
 - **Load** (N)
 
+For fixed setpoints, keep **Value Mode** as `Scalar`.
+
 ![SCREENSHOT: Slide 7 — two operating condition rows](../images/annotated/isa-questionnaire-slide-7.png)
 
 Click **Next**.
 
 ### Slide 8 — Test Matrix
 
-For each study and each variable, enter the value that applies to that run:
+For each experiment and each variable, enter the value that applies to that run:
 
-| Study | Fault Type | Fault Severity | Rotational Speed | Load |
+| Experiment *(ISA: Study)* | Fault Type | Fault Severity | Rotational Speed | Load |
 |---|---|---|---|---|
 | Healthy Baseline | None | 0 | 1500 | 50 |
 | BPFO Fault Test | BPFO | 1 | 1500 | 50 |
 
-Click a cell in the grid and type the value, or use simple view to fill study by study.
+Click a cell in the grid and type the value, or use simple view to fill experiment by experiment.
 
-> **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many studies and variables.
+If a variable uses `Timeseries (.csv)` mode, enter a dataset-relative `.csv` path (for example `./Case_01/Settings/speed/run_01.csv`) instead of a scalar value.
+
+> **Tip:** In grid view, Tab moves to the next cell and Enter confirms. This is the fastest way to fill the matrix when you have many experiments and variables.
 
 ![SCREENSHOT: Slide 8 grid view — cells filled with the values above](../images/annotated/isa-questionnaire-slide-8.png)
 
 Click **Next**.
 
-### Slide 9 — Raw Measurement Output
+### Slide 9 — Study Output Mode
 
-1. For each study/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
+Set each study to `Raw only`, `Processed only`, or `Raw + processed`.
+
+For this walkthrough, set both studies to **Raw + processed**.
+
+Click **Next**.
+
+### Slide 10 — Raw Measurement Output
+
+1. For each experiment/run, select a **Measurement Protocol** from the dropdown (e.g. `Standard Acquisition`).
 2. Fill in the file names (or values) per sensor and per run:
    - Healthy Baseline / vib_ch1: `healthy_run1_ch1.csv`
    - BPFO Fault Test / vib_ch1: `bpfo_sev1_ch1.csv`
 
-![SCREENSHOT: Slide 9 — protocol selected per study and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
+> **Required file format:** Each mapped raw file should contain exactly two columns: `time` + one sensor measurement column.
+
+![SCREENSHOT: Slide 10 — protocol selected per experiment and file names in sensor columns](../images/annotated/isa-questionnaire-slide-9.png)
 
 Click **Next**.
 
-### Slide 10 — Processing Protocol Output
+### Slide 11 — Processing Protocol Output
 
-Same pattern as Slide 9, using **Processing Protocol** (`Processing Protocol 1`).
+Same pattern as Slide 10, using **Processing Protocol** (`Processing Protocol 1`).
 
-![SCREENSHOT: Slide 10 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
+> **Required file format:** Each mapped processed file should contain exactly two columns: `time` (or index/frequency) + one processed value column.
+
+![SCREENSHOT: Slide 11 — protocol selected and processed file names filled](../images/annotated/isa-questionnaire-slide-10.png)
 
 ---
 
@@ -294,7 +323,7 @@ The wizard sends your metadata to the backend service and returns a downloadable
 
 ## What you created
 
-A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — investigation details, study descriptions, factor values, and assay entries with links to your data files (the relative paths you filled in on Slides 9–10).
+A single **`isa-phm.json`** file containing the full ISA-PHM structured metadata for your project — project details, experiment descriptions, variable values (fault specifications and operating conditions), and measurement output entries with links to your data files (the relative paths you filled in on Slides 10–11).
 
 This file is the metadata companion to your dataset. Place it in the root of your dataset folder alongside your `.csv` data files, then zip and deposit everything together to make the dataset FAIR-compliant.
 

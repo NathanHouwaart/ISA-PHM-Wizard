@@ -2,7 +2,7 @@
 // src/context/GlobalDataContext.js
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 
-import { clearTree } from '../utils/indexedTreeStore';
+import { clearTree, loadTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import generateId from '../utils/generateId';
 import { DEFAULT_EXPERIMENT_TYPE_ID } from '../constants/experimentTypes';
@@ -274,8 +274,28 @@ export const GlobalDataProvider = ({ children }) => {
     const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore(currentProjectId);
     const { explorerOpen, setExplorerOpen, openExplorer, closeExplorer, resolveExplorerSelection } = useExplorerController();
 
-    // Initialize example projects using hook
-    useExampleProjects(setTestSetups, loadFromLocalStorage);
+    // Initialize example projects using hook.
+    // A forced reseed is versioned in useExampleProjects; when it happens for
+    // the currently active example project we refresh in-memory state/dataset.
+    useExampleProjects(setTestSetups, loadFromLocalStorage, async (reseededProjectIds = []) => {
+        if (!Array.isArray(reseededProjectIds) || reseededProjectIds.length === 0) return;
+        if (!currentProjectId || !reseededProjectIds.includes(currentProjectId)) return;
+
+        try {
+            switchProjectRef.current?.(currentProjectId);
+            const root = await loadTree(currentProjectId);
+            if (root) {
+                setProjectDatasetName(currentProjectId, root.rootName || root.name || null);
+                setProjectDatasetStats(currentProjectId, root);
+            } else {
+                clearProjectDatasetName(currentProjectId);
+                clearProjectDatasetStats(currentProjectId);
+            }
+            try { setSelectedDataset(root || null); } catch (e) { /* ignore */ }
+        } catch (err) {
+            console.error('[GlobalDataContext] reseed example project refresh error', err);
+        }
+    });
 
     // Project management helpers
     function createProject(name = 'Untitled Project', initialExperimentType = DEFAULT_EXPERIMENT_TYPE_ID) {
@@ -462,7 +482,9 @@ export const GlobalDataProvider = ({ children }) => {
                     setProjectDatasetName,
                     setProjectDatasetStats,
                     clearProjectDatasetName,
-                    clearProjectDatasetStats
+                    clearProjectDatasetStats,
+                    setTestSetups,
+                    loadFromLocalStorage
                 });
 
                 // Refresh in-memory app state from the newly written localStorage keys
@@ -474,7 +496,7 @@ export const GlobalDataProvider = ({ children }) => {
             }
         })();
         return () => { mounted = false; };
-    }, [currentProjectId, initHydrated, selectedDataset, setSelectedDataset]);
+    }, [currentProjectId, initHydrated, selectedDataset, setSelectedDataset, setTestSetups]);
 
     // submission logic intentionally removed from context; use `useSubmitData` hook instead
 

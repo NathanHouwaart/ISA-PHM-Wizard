@@ -13,7 +13,7 @@
 
 ## Purpose
 
-Documents how raw signal data is transformed into processed outputs (features, spectra, statistics). This captures the processing lineage needed for reproducible feature engineering. On Questionnaire Slide 10, each study is linked to one processing protocol variant.
+Documents how raw signal data is transformed into processed outputs (features, spectra, statistics). This captures the processing lineage needed for reproducible feature engineering. On Questionnaire Slide 11, each experiment *(ISA: Study)* is linked to one processing protocol variant.
 
 The structure is identical to the Measurement Protocols tab — the difference is that processing protocols describe *transformation* rather than *acquisition*.
 
@@ -70,7 +70,7 @@ Add separate variants for significantly different processing pipelines applied t
 - Variant A: `Time-Domain RMS` — extracts RMS per window
 - Variant B: `FFT Envelope` — applies Hilbert transform then FFT
 
-Each study on Slide 10 selects one variant.
+Each experiment *(ISA: Study)* on Slide 11 selects one variant.
 
 ![Processing Protocols tab — two protocol variants in the list](../images/annotated/test-setup-processing-pr-multiple-protocols.png)
 
@@ -81,14 +81,14 @@ Each study on Slide 10 selects one variant.
 | | Measurement Protocols | Processing Protocols |
 |---|---|---|
 | Describes | Raw signal acquisition settings | Signal transformation / feature extraction |
-| Linked in questionnaire | Slide 9 | Slide 10 |
+| Linked in questionnaire | Slide 10 | Slide 11 |
 | Assay type in output | Raw data acquisition | Derived data |
 
 ---
 
 ## Downstream use
 
-The selected processing protocol on Slide 10 is serialized into `isa-phm.json` as the Assay Measurement Type for the processing assay. Its parameters and per-sensor values appear as Protocol Parameter rows within that file.
+The selected processing protocol on Slide 11 is serialized into `isa-phm.json` in each assay's second process: `processSequence[1].executesProtocol`. Its parameters and per-sensor values appear as protocol parameter values for that processing step.
 
 ---
 

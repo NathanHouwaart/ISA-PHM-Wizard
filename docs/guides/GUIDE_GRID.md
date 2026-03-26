@@ -1,6 +1,6 @@
 # Guide — Working with the Grid
 
-The data grid is used on Slides 8, 9, and 10 to map variable values and file paths to studies and runs. This guide covers navigation, the row toolbar actions, and the file picker for bulk file assignment.
+The data grid is used on Slides 8, 10, and 11 to map variable values and file paths to experiments and runs. This guide covers navigation, the row toolbar actions, and the file picker for bulk file assignment.
 
 ---
 
@@ -10,12 +10,12 @@ Most mapping slides offer two view modes toggled by a button in the header:
 
 | Mode | Best for |
 |---|---|
-| **Grid view** | Seeing and editing many studies at once in a table layout |
-| **Simple view** | Focusing on one study at a time with labelled fields |
+| **Grid view** | Seeing and editing many experiments at once in a table layout |
+| **Simple view** | Focusing on one experiment at a time with labelled fields |
 
 <table><tr>
   <td><img src="../images/annotated/isa-questionnaire-slide-8.png" alt="Grid view — Test Matrix" /></td>
-  <td><img src="../images/annotated/isa-questionnaire-slide-8-edit-simple.png" alt="Simple view — one study selected" /></td>
+  <td><img src="../images/annotated/isa-questionnaire-slide-8-edit-simple.png" alt="Simple view — one experiment selected" /></td>
 </tr>
 <tr>
   <td align="center"><em>Grid view</em></td>
@@ -38,7 +38,7 @@ Both views write to the same underlying data — switching between them at any p
 | **Ctrl + Z** | Undo the last cell edit (within the session) |
 | **Ctrl + Y** | Redo |
 
-> **Tip:** Tab through all cells in a row to fill one full study/run, then continue to the next.
+> **Tip:** Tab through all cells in a row to fill one full experiment/run, then continue to the next.
 
 ![Grid view — editing a cell in the Test Matrix](../images/annotated/isa-questionnaire-slide-8-edit-cell.png)
 
@@ -173,8 +173,8 @@ After exporting the JSON, place it at the same root level (`pump_bench/`) and zi
 
 | Slide | When |
 |---|---|
-| **8 — Test Matrix** | Prognostics projects only, for factor value cells |
-| **9 — Raw Measurement Output** | Any project with a dataset indexed |
-| **10 — Processing Protocol Output** | Any project with a dataset indexed |
+| **8 — Test Matrix** | Available when a dataset is indexed (primarily for variables set to `Timeseries (.csv)`) |
+| **10 — Raw Measurement Output** | Any project with a dataset indexed |
+| **11 — Processing Protocol Output** | Any project with a dataset indexed |
 
-For diagnostics test matrix cells (Slide 8), the file picker does not appear — enter values as plain text or numbers directly in the grid.
+For Slide 8 scalar rows, enter literal values (text/numbers). If you assign file-like paths into scalar rows, pre-export validation will flag them.

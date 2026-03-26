@@ -10,7 +10,7 @@ For the pre-loaded real-world examples, see [Example: Sietze](./EXAMPLE_SIETZE.m
 
 **Experiment:** Outer-race bearing fault diagnostics on a motor-pump test bench.  
 **Template:** Diagnostic Experiment (single-run)  
-**Studies:** 3 — Healthy, BPFO Severity 1, BPFO Severity 2  
+**Experiments:** 3 — Healthy, BPFO Severity 1, BPFO Severity 2  
 **Sensors:** 2 vibration accelerometers (ch1, ch2)  
 **Variables:** Fault Type, Fault Severity (fault specs) + Motor Speed, Load (operating conditions)
 
@@ -202,7 +202,7 @@ Click **Next**.
 
 Fill the grid:
 
-| Study | Fault Type | Fault Severity | Rotational Speed | Load |
+| Experiment | Fault Type | Fault Severity | Rotational Speed | Load |
 |---|---|---|---|---|
 | Healthy Run | None | 0 | 1500 | 50 |
 | BPFO Severity 1 | BPFO | 1 | 1500 | 50 |
@@ -214,35 +214,43 @@ Click a cell and type. Tab moves to the next cell.
 
 Click **Next**.
 
-### Slide 9 — Raw Measurement Output
+### Slide 9 — Study Output Mode
 
-For each study, select **Measurement Protocol**: `Standard Acquisition`.
+Set each experiment to **Raw + processed**.
+
+[SCREENSHOT: Slide 9 — output mode set to Raw + processed for all experiments]
+
+Click **Next**.
+
+### Slide 10 — Raw Measurement Output
+
+For each experiment, select **Measurement Protocol**: `Standard Acquisition`.
 
 Fill file names:
 
-| Study | vib_ch1 | vib_ch2 |
+| Experiment | vib_ch1 | vib_ch2 |
 |---|---|---|
 | Healthy Run | `healthy_ch1.csv` | `healthy_ch2.csv` |
 | BPFO Severity 1 | `bpfo_sev1_ch1.csv` | `bpfo_sev1_ch2.csv` |
 | BPFO Severity 2 | `bpfo_sev2_ch1.csv` | `bpfo_sev2_ch2.csv` |
 
-[SCREENSHOT: Slide 9 — grid with protocols and file names filled]
+[SCREENSHOT: Slide 10 — grid with protocols and file names filled]
 
 Click **Next**.
 
-### Slide 10 — Processing Protocol Output
+### Slide 11 — Processing Protocol Output
 
-For each study, select **Processing Protocol**: `FFT Envelope`.
+For each experiment, select **Processing Protocol**: `FFT Envelope`.
 
 Fill file names:
 
-| Study | vib_ch1 | vib_ch2 |
+| Experiment | vib_ch1 | vib_ch2 |
 |---|---|---|
 | Healthy Run | `healthy_envelope_ch1.csv` | `healthy_envelope_ch2.csv` |
 | BPFO Severity 1 | `bpfo_sev1_envelope_ch1.csv` | `bpfo_sev1_envelope_ch2.csv` |
 | BPFO Severity 2 | `bpfo_sev2_envelope_ch1.csv` | `bpfo_sev2_envelope_ch2.csv` |
 
-[SCREENSHOT: Slide 10 — grid filled]
+[SCREENSHOT: Slide 11 — grid filled]
 
 ---
 
@@ -256,9 +264,9 @@ Click **Convert to ISA-PHM**.
 
 Download the `.json` file. It contains the full ISA-PHM metadata for your project, including:
 
-- The **investigation** (title, contacts, publications, dates)
-- One **study** entry per experiment (Healthy Run, BPFO Severity 1, BPFO Severity 2) with study factors and test matrix values
-- One **assay** entry per sensor per study for raw measurements, and one per sensor per study for processed outputs
+- The **project** (title, contacts, publications, dates)
+- One **experiment** entry per test case (Healthy Run, BPFO Severity 1, BPFO Severity 2) with fault specifications, operating conditions, and test matrix values
+- One **measurement output** entry per sensor per experiment, with Slide 10 providing raw-file/process data and Slide 11 adding processing-file/process data to the same output entry
 
 ---
 
@@ -266,9 +274,9 @@ Download the `.json` file. It contains the full ISA-PHM metadata for your projec
 
 - Test setups must be built before creating projects
 - Configurations from the test setup populate the Slide 5 dropdown
-- Study variables (Slides 6–7) become columns in the Test Matrix (Slide 8)
-- Sensors from the test setup become columns in Slides 9–10
-- The protocol selected per study determines the acquisition/processing parameters in the assay files
+- Experiment variables (Slides 6–7) become columns in the Test Matrix (Slide 8)
+- Sensors from the test setup become columns in Slides 10–11
+- The protocol selected per experiment determines the acquisition/processing parameters in the measurement output files
 
 ---
 

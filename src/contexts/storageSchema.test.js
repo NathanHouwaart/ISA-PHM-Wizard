@@ -18,7 +18,7 @@ const DEFAULTS = {
     processingProtocols: [],
     studyToMeasurementProtocolSelection: [],
     studyToProcessingProtocolSelection: [],
-    experimentType: 'diagnostic-single',
+    experimentType: 'diagnostic-experiment',
     studyToStudyVariableMapping: [],
     sensorToMeasurementProtocolMapping: [],
     studyToSensorMeasurementMapping: [],
@@ -87,6 +87,67 @@ describe('storageSchema', () => {
         ]);
         expect(result.state.studyToProcessingProtocolSelection).toEqual([
             { studyId: 'study-c', protocolId: '2' }
+        ]);
+    });
+
+    it('migrates legacy study shape for runCount, outputMode, protocol selections, and experiment type', () => {
+        localStorage.setItem(
+            'globalAppData_project-legacy_experimentType',
+            JSON.stringify('diagnostic-multi')
+        );
+        localStorage.setItem(
+            'globalAppData_project-legacy_studies',
+            JSON.stringify([
+                {
+                    id: 'study-1',
+                    name: 'Study 1',
+                    runCount: '3',
+                    measurementProtocolId: 'mp-1',
+                    processingProtocolId: 'pp-1'
+                },
+                {
+                    id: 'study-2',
+                    name: 'Study 2'
+                }
+            ])
+        );
+        localStorage.setItem(
+            'globalAppData_project-legacy_studyToSensorMeasurementMapping',
+            JSON.stringify([
+                { studyId: 'study-1', sensorId: 'sensor-1', value: 'raw-a.csv' }
+            ])
+        );
+        localStorage.setItem(
+            'globalAppData_project-legacy_studyToSensorProcessingMapping',
+            JSON.stringify([
+                { studyId: 'study-1', sensorId: 'sensor-1', value: 'proc-a.csv' },
+                { studyId: 'study-2', sensorId: 'sensor-1', value: 'proc-b.csv' }
+            ])
+        );
+
+        const result = loadProjectStateWithMigrations({
+            projectId: 'project-legacy',
+            resolveDefaultValue: getDefault
+        });
+
+        expect(result.schemaVersion).toBe(PROJECT_SCHEMA_VERSION);
+        expect(result.state.experimentType).toBe('prognostics-experiment');
+
+        const study1 = result.state.studies.find((study) => study.id === 'study-1');
+        const study2 = result.state.studies.find((study) => study.id === 'study-2');
+
+        expect(study1.runCount).toBe(3);
+        expect(study1.outputMode).toBe('raw_and_processed');
+        expect(study2.runCount).toBe(1);
+        expect(study2.outputMode).toBe('processed_only');
+
+        expect(result.state.studyToMeasurementProtocolSelection).toEqual([
+            { studyId: 'study-1', protocolId: 'mp-1' },
+            { studyId: 'study-2', protocolId: '' }
+        ]);
+        expect(result.state.studyToProcessingProtocolSelection).toEqual([
+            { studyId: 'study-1', protocolId: 'pp-1' },
+            { studyId: 'study-2', protocolId: '' }
         ]);
     });
 

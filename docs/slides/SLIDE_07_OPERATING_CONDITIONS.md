@@ -1,6 +1,6 @@
 # Slide 7 — Operating Conditions
 
-**ISA-PHM hierarchy level:** Study (factor variables)  
+**ISA-PHM hierarchy level:** Experiment *(ISA: Study)* — Operating Condition *(ISA: Study Factor)*  
 **Dependencies:** None
 
 ---
@@ -16,7 +16,7 @@
 
 ## Purpose
 
-Defines the environmental and operational variables that were controlled or recorded during the experiments. Like fault specifications (Slide 6), these become factor columns in the Study files and Test Matrix columns (Slide 8, right section).
+Defines the environmental and operational variables that were controlled or recorded during the experiments. Like fault specifications (Slide 6), these become factor columns in the experiment entries and Test Matrix columns (Slide 8, right section).
 
 All variables on this slide have the type **Operating condition** — this is fixed and cannot be changed.
 
@@ -27,6 +27,7 @@ All variables on this slide have the type **Operating condition** — this is fi
 | Field | Description | Example |
 |---|---|---|
 | **Variable Name** | Short identifier | `Rotational Speed` |
+| **Value Mode** | Expected value format in Slide 8: literal scalar or file-based timeseries path | `Scalar` / `Timeseries (.csv)` |
 | **Unit** | Physical unit | `RPM` |
 | **Description** | Longer description | `Rotational speed of the drivetrain or spindle.` |
 
@@ -76,7 +77,8 @@ Often both types of variables are needed: the fault condition describes *what* w
 ## Tips
 
 - Add all conditions that were varied or controlled, even if they were constant across all experiments — constant conditions are still worth documenting for reproducibility.
-- Constant values across all studies (e.g. load was always 50 N) are fine — just fill 50 in every cell of Slide 8.
+- Constant values across all experiments (e.g. load was always 50 N) are fine — just fill 50 in every cell of Slide 8.
+- Set **Timeseries (.csv)** when an operating condition varies during a run and is documented as a run-level CSV path in Slide 8.
 
 ---
 
@@ -94,8 +96,8 @@ Each operating condition becomes a `study.factors[]` entry in the exported `isa-
 Sietze example factors from this slide: `Motor Speed`, `Discharge Pressure`, `Flow`.  
 Milling example factors from this slide: `Cutting Speed`, `Depth of Cut`, `Feed`, `Material`.
 
-The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one entry per variable per sample row, referencing the factor by `@id`. This is the same mechanism as Slide 6.
+The values you fill in on Slide 8 end up in `study.materials.samples[].factorValues[]` — one entry per variable per configuration row (ISA: sample), referencing the factor by `@id`. This is the same mechanism as Slide 6.
 
 ---
 
-[← Slide 6](./SLIDE_06_FAULT_SPECIFICATIONS.md) | [Next: Slide 8 →](./SLIDE_08_TEST_MATRIX.md)
+[← Slide 6](./SLIDE_06_FAULT_SPECIFICATIONS.md) | [Next: Slide 8 →](./SLIDE_08_TEST_MATRIX.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

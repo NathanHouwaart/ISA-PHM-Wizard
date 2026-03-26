@@ -1,6 +1,6 @@
 // src/hooks/useExampleProjects.jsx
-import { useEffect } from 'react';
-import exampleSingleRunSietse from "../data/example-single-run-sietze.json";
+import { useEffect, useRef } from 'react';
+import exampleSingleRunNlnEmp from "../data/example-single-run-nln-emp.json";
 import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
@@ -13,8 +13,71 @@ import {
 
 // Map of available example projects
 const EXAMPLE_PROJECTS = {
-    'example-single-run': exampleSingleRunSietse,
+    'example-single-run': exampleSingleRunNlnEmp,
     'example-multi-run': exampleMultiRunMilling,
+};
+
+const EXAMPLE_SEED_VERSION = 2;
+
+const getExampleSeedFlagKey = (projectId) => `globalAppData_${projectId}_seeded_v${EXAMPLE_SEED_VERSION}`;
+
+const clearProjectScopedLocalStorage = (projectId) => {
+    const prefix = `globalAppData_${projectId}_`;
+    const keysToRemove = [];
+    try {
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index);
+            if (key && key.startsWith(prefix)) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+        console.warn('[useExampleProjects] clearProjectScopedLocalStorage error', error);
+    }
+};
+
+const mergeExampleTestSetup = (currentSetups = [], exampleSetup = null) => {
+    if (!exampleSetup || !exampleSetup.id) {
+        return Array.isArray(currentSetups) ? currentSetups : [];
+    }
+
+    const nextSetups = Array.isArray(currentSetups) ? [...currentSetups] : [];
+    const existingIndex = nextSetups.findIndex((setup) => (
+        setup?.id === exampleSetup.id || setup?.name === exampleSetup.name
+    ));
+
+    if (existingIndex >= 0) {
+        nextSetups[existingIndex] = exampleSetup;
+    } else {
+        nextSetups.push(exampleSetup);
+    }
+
+    return nextSetups;
+};
+
+const upsertExampleTestSetup = ({
+    exampleData,
+    loadFromLocalStorage,
+    setTestSetups
+}) => {
+    const exampleSetup = exampleData?.selectedTestSetup;
+    if (!exampleSetup) return;
+
+    const currentSetups = typeof loadFromLocalStorage === 'function'
+        ? loadFromLocalStorage('globalAppData_testSetups', [])
+        : [];
+    const mergedSetups = mergeExampleTestSetup(currentSetups, exampleSetup);
+
+    try {
+        localStorage.setItem('globalAppData_testSetups', JSON.stringify(mergedSetups));
+    } catch (error) {
+        console.warn('[useExampleProjects] unable to persist merged example test setup', error);
+    }
+
+    if (typeof setTestSetups === 'function') {
+        setTestSetups(mergedSetups);
+    }
 };
 
 // Helper to check if a project is an example project
@@ -32,22 +95,38 @@ export const getExampleProjectData = (projectId) => EXAMPLE_PROJECTS[projectId];
  * Hook to manage example project initialization and operations
  * @param {Function} setTestSetups - React state setter for test setups
  * @param {Function} loadFromLocalStorage - Function to load from localStorage
+ * @param {Function|null} onProjectsReseeded - Optional callback with reseeded project IDs
  */
-export const useExampleProjects = (setTestSetups, loadFromLocalStorage) => {
+export const useExampleProjects = (setTestSetups, loadFromLocalStorage, onProjectsReseeded = null) => {
+    const onProjectsReseededRef = useRef(onProjectsReseeded);
+    useEffect(() => {
+        onProjectsReseededRef.current = onProjectsReseeded;
+    }, [onProjectsReseeded]);
+
     // Initialize all example projects on app start (seeds IndexedDB and localStorage)
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
+                const reseededProjectIds = [];
                 for (const projectId of Object.keys(EXAMPLE_PROJECTS)) {
-                    const seedFlagKey = `globalAppData_${projectId}_seeded_v1`;
+                    const seedFlagKey = getExampleSeedFlagKey(projectId);
                     if (!localStorage.getItem(seedFlagKey)) {
                         const exampleData = EXAMPLE_PROJECTS[projectId];
                         if (exampleData) {
-                            console.debug(`[useExampleProjects] initializing example project ${projectId}`);
+                            console.debug(`[useExampleProjects] force-initializing example project ${projectId}`);
                             try {
-                                await importProject(exampleData, projectId);
+                                clearProjectScopedLocalStorage(projectId);
+                                await clearTree(projectId);
+                                upsertExampleTestSetup({
+                                    exampleData,
+                                    loadFromLocalStorage,
+                                    setTestSetups
+                                });
+                                await importProject(exampleData, projectId, { skipConflictCheck: true });
                                 localStorage.setItem(seedFlagKey, '1');
+                                localStorage.removeItem(`globalAppData_${projectId}_seeded_v1`);
+                                reseededProjectIds.push(projectId);
                             } catch (e) {
                                 console.warn(`[useExampleProjects] failed to initialize ${projectId}`, e);
                             }
@@ -59,6 +138,16 @@ export const useExampleProjects = (setTestSetups, loadFromLocalStorage) => {
                 if (mounted) {
                     const updatedTestSetups = loadFromLocalStorage('globalAppData_testSetups', []);
                     setTestSetups(updatedTestSetups);
+                    if (
+                        reseededProjectIds.length > 0
+                        && typeof onProjectsReseededRef.current === 'function'
+                    ) {
+                        try {
+                            await onProjectsReseededRef.current(reseededProjectIds);
+                        } catch (callbackError) {
+                            console.warn('[useExampleProjects] onProjectsReseeded callback failed', callbackError);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error('[useExampleProjects] initialize example projects error', err);
@@ -112,6 +201,8 @@ export const resetExampleProject = async (projectId, options = {}) => {
             return fallback;
         };
 
+        clearProjectScopedLocalStorage(projectId);
+
         // Restore example project's test setup by merging with current global test setups
         if (exampleProjectData?.selectedTestSetup) {
             const exampleTestSetup = exampleProjectData.selectedTestSetup;
@@ -156,10 +247,11 @@ export const resetExampleProject = async (projectId, options = {}) => {
         clearProjectDatasetStats(projectId);
 
         // Re-import the compressed nodes into IndexedDB
-        const seedFlagKey = `globalAppData_${projectId}_seeded_v1`;
+        const seedFlagKey = getExampleSeedFlagKey(projectId);
         try {
-            await importProject(exampleProjectData, projectId);
+            await importProject(exampleProjectData, projectId, { skipConflictCheck: true });
             try { localStorage.setItem(seedFlagKey, '1'); } catch (e) { /* ignore */ }
+            try { localStorage.removeItem(`globalAppData_${projectId}_seeded_v1`); } catch (e) { /* ignore */ }
             
             // Load the tree and set in-memory dataset
             try {
@@ -202,13 +294,21 @@ export const resetExampleProject = async (projectId, options = {}) => {
  * @returns {Promise<void>}
  */
 export const seedExampleProject = async (projectId, options = {}) => {
-    const { setSelectedDataset, setProjectDatasetName, setProjectDatasetStats, clearProjectDatasetName, clearProjectDatasetStats } = options;
+    const {
+        setSelectedDataset,
+        setProjectDatasetName,
+        setProjectDatasetStats,
+        clearProjectDatasetName,
+        clearProjectDatasetStats,
+        setTestSetups,
+        loadFromLocalStorage
+    } = options;
 
     if (!isExampleProject(projectId)) {
         return;
     }
 
-    const seedFlagKey = `globalAppData_${projectId}_seeded_v1`;
+    const seedFlagKey = getExampleSeedFlagKey(projectId);
     if (localStorage.getItem(seedFlagKey)) {
         return; // Already seeded
     }
@@ -220,8 +320,16 @@ export const seedExampleProject = async (projectId, options = {}) => {
 
     console.debug(`[useExampleProjects] seeding example project ${projectId}`);
     try {
-        await importProject(exampleData, projectId);
+        clearProjectScopedLocalStorage(projectId);
+        await clearTree(projectId);
+        upsertExampleTestSetup({
+            exampleData,
+            loadFromLocalStorage,
+            setTestSetups
+        });
+        await importProject(exampleData, projectId, { skipConflictCheck: true });
         localStorage.setItem(seedFlagKey, '1');
+        localStorage.removeItem(`globalAppData_${projectId}_seeded_v1`);
     } catch (e) {
         console.warn('[useExampleProjects] example project import failed', e);
         throw e;

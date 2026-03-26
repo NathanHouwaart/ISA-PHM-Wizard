@@ -8,6 +8,9 @@ export default function useGridInputHandlers({
     getEditableElementCurrentValue,
     isTextUndoCapableEditor,
     handleClearCell,
+    handleClipboardCopyShortcut,
+    handleClipboardPasteShortcut,
+    enableClipboardFallback = false,
     undo,
     redo
 }) {
@@ -80,8 +83,11 @@ export default function useGridInputHandlers({
     const handleShortcutKeyDown = useCallback((event, { forceGridContext = false } = {}) => {
         const hasModifier = event.ctrlKey || event.metaKey;
         const key = String(event.key || '').toLowerCase();
+        const code = String(event.code || '');
         const isUndo = hasModifier && key === 'z' && !event.shiftKey;
         const isRedo = hasModifier && (key === 'y' || (key === 'z' && event.shiftKey));
+        const isCopy = hasModifier && (key === 'c' || code === 'KeyC');
+        const isPaste = hasModifier && (key === 'v' || code === 'KeyV');
         const isDelete = event.key === 'Delete' || event.key === 'Backspace';
         const isEscape = event.key === 'Escape';
         const hasActiveEditSession = Boolean(editSessionRef.current);
@@ -144,6 +150,17 @@ export default function useGridInputHandlers({
             return true;
         }
 
+        if (enableClipboardFallback && !isEditingCell && (isCopy || isPaste)) {
+            const action = isCopy ? handleClipboardCopyShortcut : handleClipboardPasteShortcut;
+            if (typeof action === 'function') {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                void action();
+                return true;
+            }
+        }
+
         if (isDelete && !isEditingCell) {
             event.preventDefault();
             event.stopPropagation();
@@ -161,6 +178,9 @@ export default function useGridInputHandlers({
         isLikelyRevoGridEditorElement,
         getEditableElementCurrentValue,
         isTextUndoCapableEditor,
+        enableClipboardFallback,
+        handleClipboardCopyShortcut,
+        handleClipboardPasteShortcut,
         clearEditSession,
         undo,
         redo,

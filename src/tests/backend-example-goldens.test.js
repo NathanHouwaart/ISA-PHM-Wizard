@@ -10,8 +10,8 @@ const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 
 const GOLDEN_CASES = [
   {
-    name: 'single-run-sietze',
-    inputPath: 'src/data/example-single-run-sietze.json',
+    name: 'single-run-nln-emp',
+    inputPath: 'src/data/example-single-run-nln-emp.json',
     goldenPath: 'src/tests/fixtures/golden/isa-phm-out-sietze.json',
   },
   {
@@ -50,6 +50,24 @@ const readProjectValue = (localStorageState, projectId, key, fallback) => {
     if (hasOwn(localStorageState, storageKey)) {
       return parseJsonValue(localStorageState[storageKey], fallback);
     }
+  }
+
+  // Fallback for fixtures where projectId was renamed but embedded
+  // localStorage keys still use an older project namespace.
+  const suffixes = [`_${key}`];
+  if (key === 'investigation') {
+    suffixes.push('_investigations');
+  }
+
+  const dynamicKey = Object.keys(localStorageState || {}).find((storageKey) => {
+    if (candidates.includes(storageKey)) return false;
+    if (!storageKey.startsWith('globalAppData_')) return false;
+    if (storageKey.startsWith('globalAppData_default_')) return false;
+    return suffixes.some((suffix) => storageKey.endsWith(suffix));
+  });
+
+  if (dynamicKey) {
+    return parseJsonValue(localStorageState[dynamicKey], fallback);
   }
 
   return fallback;

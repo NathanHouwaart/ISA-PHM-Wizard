@@ -9,6 +9,7 @@ export default function useGridClearHandlers({
     staticColumns,
     isStandaloneGrid,
     isEditableColumn,
+    canEditCell,
     fields,
     commitGridChanges
 }) {
@@ -44,10 +45,7 @@ export default function useGridClearHandlers({
                             if (!row) continue;
 
                             const isStaticColumn = staticColumns.some((col) => col.prop === column.prop);
-                            const staticColumn = staticColumns.find((col) => col.prop === column.prop);
-
-                            if (isStaticColumn && staticColumn?.readonly) continue;
-                            if (!isStandaloneGrid && !isEditableColumn(column.prop) && !isStaticColumn) continue;
+                            if (!canEditCell(row, column.prop)) continue;
 
                             if (isStaticColumn) {
                                 rowDataUpdates.push({
@@ -91,6 +89,7 @@ export default function useGridClearHandlers({
                 if (!row) return false;
 
                 const isStaticColumn = staticColumns.some((col) => col.prop === column.prop);
+                if (!canEditCell(row, column.prop)) return false;
 
                 if (isStaticColumn) {
                     return commitGridChanges({
@@ -128,6 +127,7 @@ export default function useGridClearHandlers({
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
+        canEditCell,
         fields,
         commitGridChanges
     ]);

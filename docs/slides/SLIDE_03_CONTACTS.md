@@ -1,6 +1,6 @@
 # Slide 3 — Contacts
 
-**ISA-PHM hierarchy level:** Investigation  
+**ISA-PHM hierarchy level:** Project *(ISA: Investigation)*  
 **Dependencies:** None (but contacts must exist before adding publications that link to a corresponding author)
 
 ---
@@ -73,4 +73,4 @@ An internal `comments[name="author_id"].value` UUID is also written per person �
 
 ---
 
-[← Slide 2](./SLIDE_02_PROJECT_INFORMATION.md) | [Next: Slide 4 →](./SLIDE_04_PUBLICATIONS.md)
+[← Slide 2](./SLIDE_02_PROJECT_INFORMATION.md) | [Next: Slide 4 →](./SLIDE_04_PUBLICATIONS.md) | [Troubleshooting](../guides/TROUBLESHOOTING.md)

@@ -79,7 +79,20 @@ jobs:
           PY
           )"
 
-          nohup python -m uvicorn main:app --host 127.0.0.1 --port "${BACKEND_PORT}" > "${RUNNER_TEMP}/backend.log" 2>&1 &
+          if [ -f "app/main.py" ]; then
+            BACKEND_APP_MODULE="app.main:app"
+          elif [ -f "main.py" ]; then
+            BACKEND_APP_MODULE="main:app"
+          elif [ -f "src/main.py" ]; then
+            BACKEND_APP_MODULE="src.main:app"
+          else
+            echo "Could not determine ASGI module. Expected app/main.py, main.py, or src/main.py"
+            find . -maxdepth 3 -type f -name "main.py" -print || true
+            exit 1
+          fi
+
+          echo "Starting backend with module ${BACKEND_APP_MODULE}"
+          nohup python -m uvicorn "${BACKEND_APP_MODULE}" --host 127.0.0.1 --port "${BACKEND_PORT}" > "${RUNNER_TEMP}/backend.log" 2>&1 &
           echo $! > "${RUNNER_TEMP}/backend.pid"
 
           # Wait for backend readiness.

@@ -322,7 +322,6 @@ const useProtocolSections = ({ formData, setFormData }) => {
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
       { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
-      { prop: 'unit', name: 'Unit', size: 130, readonly: false },
       {
         prop: 'description',
         name: 'Description',
@@ -386,7 +385,6 @@ const useProtocolSections = ({ formData, setFormData }) => {
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
       { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
-      { prop: 'unit', name: 'Unit', size: 130, readonly: false },
       {
         prop: 'description',
         name: 'Description',

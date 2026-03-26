@@ -42,24 +42,26 @@ Select the template that matches your experiment:
 
 | Option | When to use |
 |---|---|
-| **Diagnostic Experiment** | Each study is one measurement snapshot (one fault condition, one run) |
-| **Prognostics Experiment** | Each study contains multiple sequential runs (degradation / run-to-failure) |
+| **Diagnostic Experiment** | Each experiment is one measurement snapshot (one fault condition, one run) |
+| **Prognostics Experiment** | Each experiment contains multiple sequential runs (degradation / run-to-failure) |
 
 Not sure which applies? → [Decision flowchart in ISA-PHM Concepts](./GUIDE_CONCEPTS.md#decision-flowchart)
 
 ![Project Sessions — experiment type selection](../images/annotated/project-sessions-project-type.png)
 
-This choice affects the Test Matrix (Slide 8) and Output mapping slides (9 & 10). **You can change it later** from the project card, but doing so resets run-level mappings.
+This choice affects the Test Matrix (Slide 8) and Output mapping slides (10 & 11). **You can change it later** from the project card, but doing so resets run-level mappings.
+
+<a id="step-3--dataset-indexation-skippable"></a>
 
 ### Step 3 — Dataset indexation *(skippable)*
 
-If you have a local dataset folder, index it here to enable the file picker on Slides 9–10 (and Slide 8 for prognostics projects). See **[Working with the Grid](./GUIDE_GRID.md#assign-files-file-picker)** for how bulk assignment, left-to-right fill, and blank/truncate behaviour work.
+If you have a local dataset folder, index it here to enable the file picker on Slides 10–11 (and Slide 8 for prognostics projects). See **[Working with the Grid](./GUIDE_GRID.md#assign-files-file-picker)** for how bulk assignment, left-to-right fill, and blank/truncate behaviour work.
 
 > **Important — pick the root of your dataset.** The relative file paths written into the output JSON are relative to the folder you index here. After downloading the JSON, you place it in that same root folder alongside your data files. When the dataset is zipped and shared, whoever extracts it will have the JSON at the root with all file paths correctly resolving to the data files beneath it.
 >
 > **Example:** If your dataset root is `pump_bench/` and a file lives at `pump_bench/vibration/run1_ch1.csv`, the path written into the JSON will be `./vibration/run1_ch1.csv`. That path is only correct if the JSON lives at `pump_bench/`.
 
-Skip this step if you prefer to type file paths manually on Slides 9–10.
+Skip this step if you prefer to type file paths manually on Slides 10–11.
 
 ![Project Sessions — dataset indexation](../images/annotated/project-sessions-dataset-selection.png)
 
@@ -87,7 +89,7 @@ From left to right:
 
 | Icon | Button | Description |
 |---|---|---|
-| 📁 | **Dataset** | Index a local dataset folder to enable the file picker on Slides 9–10. File paths in the output JSON will be relative to this folder. |
+| 📁 | **Dataset** | Index a local dataset folder to enable the file picker on Slides 10–11. File paths in the output JSON will be relative to this folder. |
 | 🔄 | **Experiment** | Change the experiment type (Diagnostic or Prognostics). Changing this resets run-level mappings. |
 | 🧪 | **Test Setup** | Switch the test setup linked to this project. The selected setup's sensors, configurations, and protocols become available throughout the questionnaire. |
 | ✏️ | **Rename** | Rename the project display name (not exported). |
@@ -164,6 +166,6 @@ If you want to start completely fresh — removing all projects, test setups, an
 
 ## Related guides
 
-- [ISA-PHM Concepts](./GUIDE_CONCEPTS.md) — understanding Investigation/Study/Assay and why setup comes first
+- [ISA-PHM Concepts](./GUIDE_CONCEPTS.md) — understanding the Project/Experiment/Measurement Output hierarchy *(ISA: Investigation/Study/Assay)* and why setup comes first
 - [Test Setups](./GUIDE_TEST_SETUPS.md) — creating the test setup before linking it to a project
 - [Export Guide](./GUIDE_EXPORT.md) — what happens after Convert to ISA-PHM

@@ -4,6 +4,7 @@ import StudyVariableCard from '../components/StudyVariable/StudyVariableCard';
 import StudyVariableForm from '../components/StudyVariable/StudyVariableForm';
 import { 
     VARIABLE_TYPE_OPTIONS,
+    STUDY_VARIABLE_VALUE_MODE_SCALAR,
     OPERATING_CONDITION_TYPE,
     isFaultSpecification,
     isOperatingCondition
@@ -23,6 +24,7 @@ export const useVariables = () => {
             id: generateId(),
             name: 'New Variable',
             type: VARIABLE_TYPE_OPTIONS[0],
+            valueMode: STUDY_VARIABLE_VALUE_MODE_SCALAR,
             unit: '',
             description: '',
             ...overrideData

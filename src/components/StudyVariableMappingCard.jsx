@@ -7,6 +7,10 @@ import useStudyRuns from '../hooks/useStudyRuns';
 import ItemSelector from './Selectors/ItemSelector';
 import { TabPanel } from './TabSwitcher';
 import { useProjectData } from '../contexts/GlobalDataContext';
+import {
+    STUDY_VARIABLE_VALUE_MODE_SCALAR,
+    normalizeStudyVariableValueMode
+} from '../constants/variableTypes';
 
 const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange, singleRunMode = false }) => {
     const studyRuns = useStudyRuns();
@@ -15,6 +19,13 @@ const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange
     // When singleRunMode is true, item is the active run passed from DualSidebarStudyRunPanel
     // In that case, we just display that single run's mapping
     const activeVariable = singleRunMode ? studyVariables[itemIndex] : item;
+    const activeValueMode = normalizeStudyVariableValueMode(activeVariable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR);
+    const activeValueModeLabel = activeValueMode === 'timeseries' ? 'Timeseries' : 'Scalar';
+    const getInputPlaceholder = (variable) => (
+        normalizeStudyVariableValueMode(variable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR) === 'timeseries'
+            ? 'Enter relative .csv path (e.g. ./Case_01/Settings/time/run_01.csv)'
+            : 'Enter scalar value'
+    );
 
 
     const runsByStudy = useMemo(() => {
@@ -82,6 +93,7 @@ const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange
             <div className="flex justify-between items-center text-sm font-medium text-gray-600 bg-gray-50 px-4 py-2 rounded-md mb-6 border border-gray-200">
                 <span>Type: <span className="font-semibold text-gray-800">{activeVariable?.type}</span></span>
                 {activeVariable?.unit && <span>Unit: <span className="font-semibold text-gray-800">{activeVariable?.unit}</span></span>}
+                <span>Value Mode: <span className="font-semibold text-gray-800">{activeValueModeLabel}</span></span>
             </div>
 
             {singleRunMode ? (
@@ -120,10 +132,10 @@ const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange
                                                 studyRunId: item.runId || item.id,
                                                 studyId: item.studyId
                                             },
-                                            e.target.value
+                                                    e.target.value
                                         )
                                     }
-                                    placeholder="Enter mapped value"
+                                    placeholder={getInputPlaceholder(variable)}
                                 />
                             </div>
                         );
@@ -195,7 +207,7 @@ const StudyVariableMappingCard = ({ item, itemIndex, mappings, handleInputChange
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="Enter mapped value"
+                                                    placeholder={getInputPlaceholder(item)}
                                                 />
                                             </div>
                                         );

@@ -29,6 +29,7 @@ import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
+import { OUTPUT_MODE_RAW_ONLY } from '../../utils/studyOutputMode';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -62,14 +63,15 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             submissionDate: "",
             publicationDate: "", 
             configurationId: '',
-            runCount: 1
+            runCount: 1,
+            outputMode: OUTPUT_MODE_RAW_ONLY
         };
         setStudies([...studies, newStudy]);
     };
 
     // Handle study data changes from the grid
     const handleStudyDataChange = (newStudyData) => {
-        setStudies(newStudyData);
+        setStudies(newStudyData || []);
     };
 
     // Get configurations from selected test setup for dropdown

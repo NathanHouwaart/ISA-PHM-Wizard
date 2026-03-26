@@ -11,12 +11,12 @@ Open it by loading the ISA Questionnaire and selecting **Multi Run Milling** fro
 | | Single Run Sietze | Multi Run Milling |
 |---|---|---|
 | Template | Diagnostic Experiment | Prognostics Experiment |
-| Each study has | 1 run | Multiple sequential runs |
-| Test Matrix | 1 row per study | N rows per study (N = run count) |
-| Output Slides | 1 row per study | N rows per study |
+| Each experiment has | 1 run | Multiple sequential runs |
+| Test Matrix | 1 column per experiment | N run-columns per experiment (N = run count) |
+| Output Slides | 1 row per experiment | N rows per experiment |
 | ISA-PHM equivalence | Independent tests | Repeated observations on same degrading specimen |
 
-In the paper's terminology: milling tool wear is a **prognostic scenario**. The same tool is measured at regular intervals (e.g. every 10 passes), producing multiple runs per experiment that must remain grouped within one Study.
+In the paper's terminology: milling tool wear is a **prognostic scenario**. The same tool is measured at regular intervals (e.g. every 10 passes), producing multiple runs per experiment that must remain grouped within one experiment.
 
 ---
 
@@ -26,7 +26,7 @@ In the paper's terminology: milling tool wear is a **prognostic scenario**. The 
 |---|---|
 | Template | Prognostics Experiment (multi-run) |
 | Test setup | Milling Lab |
-| Studies | Several, each with multiple runs |
+| Experiments | Several, each with multiple runs |
 | Sensors | Multiple vibration/force channels |
 | Fault specs | VB (wear land width in mm) |
 | Operating conditions | Spindle Speed, Feed Rate, Depth of Cut |
@@ -60,11 +60,11 @@ Each experiment includes a **Number of runs** field. This represents how many me
 
 ### Slide 8 — Test Matrix (multi-run)
 
-[SCREENSHOT: Slide 8 — Milling project — grid view showing study/run rows, VB column with increasing values]
+[SCREENSHOT: Slide 8 — Milling project — grid view showing experiment/run rows, VB column with increasing values]
 
-The grid now shows sub-rows for each run within each study:
+The Test Matrix grid uses one column per run within each experiment. For readability, the values are summarized below as one row per run:
 
-| Study | Run | VB (mm) | Spindle Speed | Feed Rate |
+| Experiment | Run | VB (mm) | Spindle Speed | Feed Rate |
 |---|---|---|---|---|
 | Milling Run A | Run 1 | 0.0 | 710 | 1270 |
 | Milling Run A | Run 2 | 0.08 | 710 | 1270 |
@@ -73,11 +73,15 @@ The grid now shows sub-rows for each run within each study:
 
 The VB (wear land width) value increases across runs — this is the **degradation trajectory**. Operating conditions stay constant because the same settings were used throughout.
 
-This contrasts with Sietze where operating conditions vary between studies (different fault conditions) and each study has only one value.
+This contrasts with Sietze where operating conditions vary between experiments (different fault conditions) and each experiment has only one value.
 
-### Slides 9 & 10 — Output Mapping (multi-run)
+### Slide 9 — Study Output Mode (multi-run)
 
-[SCREENSHOT: Slide 9 — Milling project, grid view showing study+run rows and sensor columns]
+Set the study output mode to **Raw + processed**.
+
+### Slides 10 & 11 — Output Mapping (multi-run)
+
+[SCREENSHOT: Slide 10 — Milling project, grid view showing experiment+run rows and sensor columns]
 
 Each run gets its own row. For each run and each sensor, you provide the file recorded at that measurement interval.
 
@@ -85,11 +89,11 @@ Each run gets its own row. For each run and each sensor, you provide the file re
 
 ## Key lessons from this example
 
-1. **Multi-run = one row per run**, not per study. A study with 10 runs has 10 rows in the Test Matrix and output grids.
-2. **Degradation is captured in the variable values per run.** VB increases across runs of the same study — this is what makes the data prognostic.
-3. **Operating conditions are typically constant** across all runs of a prognostic study (same recipe, same machine settings). The degradation itself is the variable.
+1. **Multi-run = one row per run**, not per experiment. An experiment with 10 runs has 10 rows in the Test Matrix and output grids.
+2. **Degradation is captured in the variable values per run.** VB increases across runs of the same experiment — this is what makes the data prognostic.
+3. **Operating conditions are typically constant** across all runs of a prognostic experiment (same recipe, same machine settings). The degradation itself is the variable.
 4. **File names per run** often encode the run number or inspection index: `milling_runA_pass4_ch1.csv`.
-5. The **same study can be compared run-to-run** in the output files because runs stay group within one Study in the ISA hierarchy.
+5. The **same experiment can be compared run-to-run** in the output files because runs stay grouped within one experiment.
 
 ---
 
@@ -97,12 +101,12 @@ Each run gets its own row. For each run and each sensor, you provide the file re
 
 | Scenario | Correct modelling |
 |---|---|
-| Same tool, measured 10 times as it wears | Multi-run: one study, 10 runs |
-| 10 different tools each measured once | Single-run: 10 separate studies |
-| Same bearing, measured at 5 load conditions | Single-run: 5 separate studies (different conditions = different experiments) |
-| Same bearing, measured at intervals over a run-to-failure | Multi-run: one study, N runs |
+| Same tool, measured 10 times as it wears | Multi-run: one experiment, 10 runs |
+| 10 different tools each measured once | Single-run: 10 separate experiments |
+| Same bearing, measured at 5 load conditions | Single-run: 5 separate experiments (different conditions = different experiments) |
+| Same bearing, measured at intervals over a run-to-failure | Multi-run: one experiment, N runs |
 
-If the **same specimen** is observed **over time** (degrading), that's multi-run. If **different specimens** or **different conditions** are tested, those are separate studies.
+If the **same specimen** is observed **over time** (degrading), that's multi-run. If **different specimens** or **different conditions** are tested, those are separate experiments.
 
 ---
 

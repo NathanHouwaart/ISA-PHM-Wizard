@@ -16,6 +16,7 @@ export default function useGridBulkFillActions({
     staticColumns,
     isStandaloneGrid,
     isEditableColumn,
+    canEditCell,
     fields,
     commitGridChanges
 }) {
@@ -190,6 +191,9 @@ export default function useGridBulkFillActions({
 
             let sequenceIndex = 0;
             editableColumns.forEach(({ column, isStaticColumn }) => {
+                if (!canEditCell(row, column.prop)) {
+                    return;
+                }
                 const value = fillPlan.resolveValue(sequenceIndex);
                 sequenceIndex += 1;
 
@@ -224,6 +228,7 @@ export default function useGridBulkFillActions({
         editableColumns,
         requestFillPlan,
         getRowByIndex,
+        canEditCell,
         fields.rowId,
         commitGridChanges
     ]);

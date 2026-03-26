@@ -5,6 +5,10 @@ import AvatarInitials from '../Widgets/AvatarInitials';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
+import {
+  STUDY_VARIABLE_VALUE_MODE_SCALAR,
+  normalizeStudyVariableValueMode
+} from '../../constants/variableTypes';
 
 /**
  * StudyVariableCard Component
@@ -25,6 +29,8 @@ import TooltipButton from '../Widgets/TooltipButton';
  */
 const StudyVariableCard = ({ item, onEdit, onRemove }) => {
   const variable = item;
+  const valueMode = normalizeStudyVariableValueMode(variable?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR);
+  const valueModeLabel = valueMode === 'timeseries' ? 'Timeseries' : 'Scalar';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -53,6 +59,10 @@ const StudyVariableCard = ({ item, onEdit, onRemove }) => {
               <div className="flex items-center space-x-2">
                 <Paragraph className="font-bold flex-none">Unit -</Paragraph>
                 <span className="flex-1 min-w-0 truncate">{(variable?.unit && String(variable.unit).trim()) ? variable.unit : 'N/A'}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Paragraph className="font-bold flex-none">Value Mode -</Paragraph>
+                <span className="flex-1 min-w-0 truncate">{valueModeLabel}</span>
               </div>
             </div>
           </div>

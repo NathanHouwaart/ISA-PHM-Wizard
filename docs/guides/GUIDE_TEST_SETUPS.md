@@ -8,10 +8,10 @@ This guide covers the full creation workflow. For per-tab field details, see the
 
 ## Why test setups come first
 
-The questionnaire (Slides 5, 9, 10) depends on data that lives in the test setup:
-- Slide 5 (Experiments) pulls **configurations** to let you link each study to a hardware state
-- Slide 9 (Raw Output) pulls **sensors** and **measurement protocols**
-- Slide 10 (Processed Output) pulls **sensors** and **processing protocols**
+The questionnaire (Slides 5, 10, 11) depends on data that lives in the test setup:
+- Slide 5 (Experiments) pulls **configurations** to let you link each experiment to a hardware state
+- Slide 10 (Raw Output) pulls **sensors** and **measurement protocols**
+- Slide 11 (Processed Output) pulls **sensors** and **processing protocols**
 
 Empty dropdowns on those slides almost always mean the linked test setup is missing data. Build the setup completely before starting the questionnaire.
 
@@ -99,7 +99,7 @@ Examples:
 - Alias: `vib_ch1`, Model: `PCB 352C33`, Type: `Accelerometer`, Measurement: `Vibration`
 - Alias: `curr_phase_a`, Model: `LEM LA55-P`, Type: `Current sensor`, Measurement: `Current`
 
-> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 9 & 10).
+> **Why this matters:** Every sensor you define here becomes a column in the measurement and processing output mapping grids (Slides 10 & 11).
 
 Full details: [TAB_SENSORS.md](../test-setup-tabs/TAB_SENSORS.md)
 
