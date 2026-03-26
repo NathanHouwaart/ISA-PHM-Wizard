@@ -49,6 +49,24 @@ const readProjectValue = (localStorageState, projectId, key, fallback) => {
     }
   }
 
+  // Fallback for fixtures where projectId was renamed but embedded
+  // localStorage keys still use an older project namespace.
+  const suffixes = [`_${key}`];
+  if (key === 'investigation') {
+    suffixes.push('_investigations');
+  }
+
+  const dynamicKey = Object.keys(localStorageState || {}).find((storageKey) => {
+    if (candidates.includes(storageKey)) return false;
+    if (!storageKey.startsWith('globalAppData_')) return false;
+    if (storageKey.startsWith('globalAppData_default_')) return false;
+    return suffixes.some((suffix) => storageKey.endsWith(suffix));
+  });
+
+  if (dynamicKey) {
+    return parseJsonValue(localStorageState[dynamicKey], fallback);
+  }
+
   return fallback;
 };
 
