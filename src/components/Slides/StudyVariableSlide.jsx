@@ -30,6 +30,8 @@ import {
     normalizeStudyVariableValueMode
 } from '../../constants/variableTypes';
 
+const ALL_STUDIES_ID = 'all-studies';
+
 const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
     const resizeRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeRef);
@@ -62,29 +64,42 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         { sourceKey: 'studyVariableId', targetKey: 'studyRunId' }
     );
 
-    const [activeStudyId, setActiveStudyId] = useState(() => studies?.[0]?.id || null);
+    const [activeStudyId, setActiveStudyId] = useState(() => (studies?.length > 0 ? ALL_STUDIES_ID : null));
+    const [activeGridScopeId, setActiveGridScopeId] = useState(() => {
+        if (!studies?.length) return null;
+        return isSingleRunTemplate ? ALL_STUDIES_ID : (studies[0]?.id || null);
+    });
 
     useEffect(() => {
         if (studies.length === 0) {
             setActiveStudyId(null);
+            setActiveGridScopeId(null);
             return;
         }
 
         if (isSingleRunTemplate) {
-            setActiveStudyId('all-studies');
+            setActiveStudyId(ALL_STUDIES_ID);
+            setActiveGridScopeId(ALL_STUDIES_ID);
             return;
         }
 
-        if (!activeStudyId || !studies.some(study => study.id === activeStudyId)) {
-            setActiveStudyId(studies[0].id);
+        if (activeStudyId !== ALL_STUDIES_ID && (!activeStudyId || !studies.some(study => study.id === activeStudyId))) {
+            setActiveStudyId(ALL_STUDIES_ID);
         }
+
+        setActiveGridScopeId((previous) => {
+            if (previous && previous !== ALL_STUDIES_ID && studies.some((study) => study.id === previous)) {
+                return previous;
+            }
+            return studies[0]?.id || null;
+        });
     }, [studies, activeStudyId, isSingleRunTemplate]);
 
     const staticColumns = useMemo(() => ([
         {
             prop: 'name',
             name: 'Variable',
-            size: 220,
+            size: 180,
             readonly: true,
             pin: 'colPinStart',
             cellTemplate: Template(BoldCell),
@@ -93,25 +108,25 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
         {
             prop: 'type',
             name: 'Type',
-            size: 160,
+            size: 120,
             readonly: true
         },
         {
             prop: 'unit',
             name: 'Unit',
-            size: 120,
+            size: 90,
             readonly: true
         },
         {
             prop: 'valueMode',
             name: 'Value Mode',
-            size: 140,
+            size: 110,
             readonly: true
         },
         {
             prop: 'description',
             name: 'Description',
-            size: 360,
+            size: 260,
             readonly: true
         }
     ]), []);
@@ -167,6 +182,22 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 return scopeSet.has(runId);
             });
 
+            // Reference-equality fast-path: if every in-scope item is the same object in the
+            // same position as what's already in `previous`, the merge result would be
+            // semantically identical. Return the original array reference so that
+            // useMappingsController.setMappings bails out (nextValue === base) and avoids
+            // triggering a re-render -> re-emit -> re-merge infinite loop.
+            const prevScopeItems = previous.filter(
+                (m) => scopeSet.has(String(m?.studyRunId ?? ''))
+            );
+            if (
+                normalizedIncomingScope.length === prevScopeItems.length
+                && preservedOutsideScope.length === previous.length - prevScopeItems.length
+                && normalizedIncomingScope.every((item, i) => item === prevScopeItems[i])
+            ) {
+                return previous;
+            }
+
             return [...preservedOutsideScope, ...normalizedIncomingScope];
         });
     }, [mappingsController]);
@@ -182,6 +213,10 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
 
     const scopeRunIdsByStudyId = useMemo(() => {
         const lookup = {};
+        lookup[ALL_STUDIES_ID] = studyRuns
+            .map((run) => run?.runId || run?.id)
+            .filter(Boolean);
+
         studies.forEach((study) => {
             const runsForStudy = groupedRuns.get(study.id) || [];
             lookup[study.id] = runsForStudy
@@ -189,22 +224,38 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                 .filter(Boolean);
         });
         return lookup;
-    }, [studies, groupedRuns]);
+    }, [studies, groupedRuns, studyRuns]);
 
     const onGridMappingsChangeByStudyId = useMemo(() => {
         const handlers = {};
-        studies.forEach((study) => {
-            const scopeRunIds = scopeRunIdsByStudyId[study.id] || [];
-            handlers[study.id] = (incomingMappings) => {
+        const scopeIds = [ALL_STUDIES_ID, ...studies.map((study) => study.id)];
+        scopeIds.forEach((scopeId) => {
+            const scopeRunIds = scopeRunIdsByStudyId[scopeId] || [];
+            handlers[scopeId] = (incomingMappings) => {
                 mergeScopedMappings(incomingMappings, scopeRunIds);
             };
         });
         return handlers;
     }, [studies, scopeRunIdsByStudyId, mergeScopedMappings]);
 
-    const handleGridFocus = useCallback((studyId) => {
-        setActiveStudyId(studyId);
+    const handleGridFocus = useCallback((scopeId) => {
+        setActiveGridScopeId(scopeId);
     }, []);
+
+    const handleScopeChange = useCallback((event) => {
+        const nextScopeId = event.target.value;
+        setActiveStudyId(nextScopeId);
+        if (nextScopeId === ALL_STUDIES_ID) {
+            setActiveGridScopeId((previous) => {
+                if (previous && previous !== ALL_STUDIES_ID && studies.some((study) => study.id === previous)) {
+                    return previous;
+                }
+                return studies[0]?.id || null;
+            });
+            return;
+        }
+        setActiveGridScopeId(nextScopeId);
+    }, [studies]);
 
     const singleRunGridConfig = useMemo(() => {
         if (!isSingleRunTemplate) {
@@ -246,7 +297,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                     onTabChange={setSelectedTab}
                     tabs={[
                         { id: 'simple-view', label: 'Simple View', tooltip: 'Work variable by variable with per-run tabs' },
-                        { id: 'grid-view', label: 'Grid View', tooltip: isSingleRunTemplate ? 'See mappings per study in a single grid' : 'See mappings per study/run in stacked grids' }
+                        { id: 'grid-view', label: 'Grid View', tooltip: isSingleRunTemplate ? 'See mappings per study in a single grid' : 'See mappings for one study/run set at a time' }
                     ]}
                 />
                 <Paragraph className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
@@ -317,7 +368,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                     {/* Combined Grid */}
                                     {sortedVariables.length > 0 && (
                                         <div 
-                                            onPointerDown={() => handleGridFocus('all-studies')}
+                                            onPointerDown={() => handleGridFocus(ALL_STUDIES_ID)}
                                             className="border border-gray-200 rounded-lg"
                                         >
                                             <DataGrid
@@ -330,7 +381,7 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                 enableBulkFill={true}
                                                 onDataChange={handleSingleRunGridMappingsChange}
                                                 height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
-                                                isActive={currentPage === pageIndex && activeStudyId === 'all-studies'}
+                                                isActive={currentPage === pageIndex && activeGridScopeId === ALL_STUDIES_ID}
                                                 actionPlugins={[FilePickerPlugin]}
                                             />
                                         </div>
@@ -342,87 +393,163 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                     </>
                                 )}
                             </section>
-                        ) : (
-                            studies.map((study) => {
-                                const runsForStudy = groupedRuns.get(study.id) || [];
-                                const hasRuns = runsForStudy.length > 0;
+                        ) : (() => {
+                            const selectedScopeId = (
+                                activeStudyId === ALL_STUDIES_ID
+                                || studies.some((study) => study.id === activeStudyId)
+                            )
+                                ? activeStudyId
+                                : ALL_STUDIES_ID;
+                            const showingAllStudies = selectedScopeId === ALL_STUDIES_ID;
+                            const activeStudy = showingAllStudies
+                                ? null
+                                : (studies.find((study) => study.id === selectedScopeId) || null);
+                            const activeStudyLabel = activeStudy?.name || 'All experiments';
+                            const runsForSelectedScope = showingAllStudies
+                                ? studyRuns
+                                : (groupedRuns.get(activeStudy?.id) || []);
+                            const hasRuns = runsForSelectedScope.length > 0;
+                            const studiesInScope = showingAllStudies
+                                ? studies
+                                : (activeStudy ? [activeStudy] : []);
+                            const activeGridStudy = studies.find((study) => study.id === activeGridScopeId) || null;
+                            const focusedGridLabel = activeGridStudy?.name || 'None';
+                            const experimentCount = studiesInScope.length;
+                            const buildGridConfig = (runsForStudy) => ({
+                                title: null,
+                                columnData: runsForStudy,
+                                mappings: mappingsController.mappings,
+                                fieldMappings: {
+                                    rowId: 'id',
+                                    rowName: 'name',
+                                    columnId: 'runId',
+                                    columnName: 'shortLabel',
+                                    columnParentId: 'studyId',
+                                    columnParentName: 'studyName',
+                                    columnChildNameFormatter: (run) => run?.shortLabel || `Run ${run?.runNumber}`,
+                                    enableColumnGroups: true,
+                                    mappingRowId: 'studyVariableId',
+                                    mappingColumnId: 'studyRunId',
+                                    mappingValue: 'value'
+                                },
+                                staticColumns,
+                                customActions: []
+                            });
 
-                                const baseGridConfig = {
-                                    title: null,
-                                    columnData: runsForStudy,
-                                    mappings: mappingsController.mappings,
-                                    fieldMappings: {
-                                        rowId: 'id',
-                                        rowName: 'name',
-                                        columnId: 'runId',
-                                        columnName: 'shortLabel',
-                                        columnParentId: 'studyId',
-                                        columnParentName: 'studyName',
-                                        columnChildNameFormatter: (run) => run?.shortLabel || `Run ${run?.runNumber}`,
-                                        enableColumnGroups: true,
-                                        mappingRowId: 'studyVariableId',
-                                        mappingColumnId: 'studyRunId',
-                                        mappingValue: 'value'
-                                    },
-                                    staticColumns,
-                                    customActions: []
-                                };
-
-                                return (
-                                    <section
-                                        key={study.id}
-                                        className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-6"
-                                    >
-                                        <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                                            <Heading3 className="text-lg font-semibold text-gray-900">
-                                                Test Matrix - {study.name}
-                                            </Heading3>
-                                            {hasRuns && (
-                                                <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                    {runsForStudy.length} run{runsForStudy.length > 1 ? 's' : ''}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {!hasRuns && (
-                                            <Paragraph className="text-sm text-gray-500">
-                                                This experiment has no runs defined yet.
-                                            </Paragraph>
-                                        )}
-
-                                        {hasRuns ? (
-                                            <>
-                                            {/* Combined Grid */}
-                                            {sortedVariables.length > 0 && (
-                                                <div
-                                                    onPointerDown={() => handleGridFocus(study.id)}
-                                                    className="border border-gray-200 rounded-lg"
+                            return (
+                                <section
+                                    key={selectedScopeId || 'all'}
+                                    className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-6"
+                                >
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+                                        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                                            <div className="w-full xl:max-w-md space-y-1">
+                                                <label className="text-xs uppercase tracking-wide font-semibold text-blue-700">
+                                                    Active experiment scope
+                                                </label>
+                                                <select
+                                                    value={selectedScopeId || ALL_STUDIES_ID}
+                                                    onChange={handleScopeChange}
+                                                    className="w-full px-3 py-2 border border-blue-300 rounded-md bg-white text-sm text-gray-900 shadow-sm"
                                                 >
-                                                    <DataGrid
-                                                        {...{...baseGridConfig, rowData: normalizedSortedVariables}}
-                                                        showControls={true}
-                                                        showDebug={false}
-                                                        enableBulkFill={true}
-                                                        onDataChange={onGridMappingsChangeByStudyId[study.id]}
-                                                        height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
-                                                        isActive={currentPage === pageIndex && activeStudyId === study.id}
-                                                        actionPlugins={[FilePickerPlugin]}
-                                                    />
+                                                    <option value={ALL_STUDIES_ID}>All experiments</option>
+                                                    {studies.map((study) => (
+                                                        <option key={study.id} value={study.id}>
+                                                            {study.name || 'Untitled study'}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 xl:justify-end">
+                                                <div className="rounded-md border border-gray-200 bg-white px-3 py-2 min-w-[120px]">
+                                                    <p className="text-[11px] uppercase tracking-wide text-gray-500">Scope</p>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[170px]">{activeStudyLabel}</p>
                                                 </div>
-                                            )}
+                                                <div className="rounded-md border border-gray-200 bg-white px-3 py-2 min-w-[110px]">
+                                                    <p className="text-[11px] uppercase tracking-wide text-gray-500">Experiments</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{experimentCount}</p>
+                                                </div>
+                                                <div className="rounded-md border border-gray-200 bg-white px-3 py-2 min-w-[90px]">
+                                                    <p className="text-[11px] uppercase tracking-wide text-gray-500">Runs</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{runsForSelectedScope.length}</p>
+                                                </div>
+                                                {showingAllStudies && (
+                                                    <div className="rounded-md border border-gray-200 bg-white px-3 py-2 min-w-[150px]">
+                                                        <p className="text-[11px] uppercase tracking-wide text-gray-500">Focused Grid</p>
+                                                        <p className="text-sm font-semibold text-gray-900 truncate max-w-[170px]">{focusedGridLabel}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
 
+                                    {!hasRuns && (
+                                        <Paragraph className="text-sm text-gray-500">
+                                            This experiment scope has no runs defined yet.
+                                        </Paragraph>
+                                    )}
+
+                                    {hasRuns ? (
+                                        <>
                                             {sortedVariables.length === 0 && (
                                                 <Paragraph className="text-sm text-gray-500 italic">No variables defined.</Paragraph>
                                             )}
-                                            </>
-                                        ) : (
-                                            <Paragraph className="text-sm text-gray-500 italic">
-                                                Add runs to this experiment to enable variable mappings.
-                                            </Paragraph>
-                                        )}
-                                    </section>
-                                );
-                            })
-                        )}
+
+                                            {sortedVariables.length > 0 && (
+                                                <div className="space-y-4">
+                                                    {studiesInScope.map((study, studyIndex) => {
+                                                        const runsForStudy = groupedRuns.get(study.id) || [];
+                                                        const hasStudyRuns = runsForStudy.length > 0;
+                                                        const studyLabel = study?.name || `Untitled study ${studyIndex + 1}`;
+                                                        return (
+                                                            <section
+                                                                key={study.id || `study-${studyIndex}`}
+                                                                className="rounded-lg border border-gray-200 bg-white p-3 space-y-3"
+                                                            >
+                                                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                                                    <Heading3 className="text-base font-semibold text-gray-900">
+                                                                        {studyLabel}
+                                                                    </Heading3>
+                                                                    <span className="text-xs uppercase tracking-wide text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                                        {runsForStudy.length} run{runsForStudy.length === 1 ? '' : 's'}
+                                                                    </span>
+                                                                </div>
+
+                                                                {!hasStudyRuns ? (
+                                                                    <Paragraph className="text-sm text-gray-500 italic">
+                                                                        No runs defined for this experiment.
+                                                                    </Paragraph>
+                                                                ) : (
+                                                                    <div
+                                                                        onPointerDown={() => handleGridFocus(study.id)}
+                                                                        className="border border-gray-200 rounded-lg"
+                                                                    >
+                                                                        <DataGrid
+                                                                            {...{ ...buildGridConfig(runsForStudy), rowData: normalizedSortedVariables }}
+                                                                            showControls={true}
+                                                                            showDebug={false}
+                                                                            enableBulkFill={true}
+                                                                            onDataChange={onGridMappingsChangeByStudyId[study.id]}
+                                                                            height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
+                                                                            isActive={currentPage === pageIndex && activeGridScopeId === study.id}
+                                                                            actionPlugins={[FilePickerPlugin]}
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </section>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Paragraph className="text-sm text-gray-500 italic">
+                                            Add runs to this experiment scope to enable variable mappings.
+                                        </Paragraph>
+                                    )}
+                                </section>
+                            );
+                        })()}
                     </div>
                 </TabPanel>
             </div>
