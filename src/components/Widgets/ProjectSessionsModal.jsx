@@ -23,6 +23,7 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import generateId from '../../utils/generateId';
 import { DEFAULT_EXPERIMENT_TYPE_ID } from '../../constants/experimentTypes';
+import { normalizeRunCount } from '../../utils/studyRuns';
 import ProjectConfigurationWizard from './ProjectConfigurationWizard';
 import ProjectNameDialog from '../ProjectConfiguration/ProjectNameDialog';
 import ProjectTemplateDialog from '../ProjectConfiguration/ProjectTemplateDialog';
@@ -74,6 +75,29 @@ const resolveImportedProjectName = (requestedName, existingProjects = []) => {
     index += 1;
   }
   return `${baseName} (${index})`;
+};
+
+const PROGNOSTICS_EXPERIMENT_TYPE_ID = 'prognostics-experiment';
+
+const inferImportExperimentType = (pkg) => {
+  const direct = typeof pkg?.experimentType === 'string' ? pkg.experimentType.trim() : '';
+  if (direct) return direct;
+
+  const projectId = typeof pkg?.projectId === 'string' ? pkg.projectId : '';
+  if (projectId && pkg?.localStorage && typeof pkg.localStorage === 'object') {
+    const experimentTypeKey = `globalAppData_${projectId}_experimentType`;
+    const { value } = decodeJsonFromStorage(pkg.localStorage[experimentTypeKey]);
+    const fromLocalStorage = typeof value === 'string' ? value.trim() : '';
+    if (fromLocalStorage) return fromLocalStorage;
+
+    const studiesKey = `globalAppData_${projectId}_studies`;
+    const studiesDecoded = decodeJsonFromStorage(pkg.localStorage[studiesKey]);
+    const studies = Array.isArray(studiesDecoded?.value) ? studiesDecoded.value : [];
+    const hasMultiRun = studies.some((study) => normalizeRunCount(study?.runCount) > 1);
+    if (hasMultiRun) return PROGNOSTICS_EXPERIMENT_TYPE_ID;
+  }
+
+  return DEFAULT_EXPERIMENT_TYPE_ID;
 };
 
 const ProjectActionToolbar = ({
@@ -215,13 +239,19 @@ export default function ProjectSessionsModal({ onClose }) {
   }, []);
 
   const handleSelect = useCallback((id) => {
+    const shouldSwitchProject = id && id !== currentProjectId;
     // animate out then switch
     setShow(false);
     setTimeout(() => {
-      switchProject(id);
       onClose && onClose();
+      if (shouldSwitchProject) {
+        // Defer heavy project hydration until after modal close paint.
+        setTimeout(() => {
+          switchProject(id);
+        }, 0);
+      }
     }, 240);
-  }, [switchProject, onClose]);
+  }, [switchProject, onClose, currentProjectId]);
 
   const openWizardForProject = useCallback((projectId, initialStep = 0) => {
     if (!projectId) return;
@@ -339,7 +369,7 @@ export default function ProjectSessionsModal({ onClose }) {
       const importName = resolveImportedProjectName(requestedName, projects);
       const newId = createProject(
         importName,
-        pkg?.experimentType || DEFAULT_EXPERIMENT_TYPE_ID
+        inferImportExperimentType(pkg)
       );
       
       // Attempt import - this may return a conflict

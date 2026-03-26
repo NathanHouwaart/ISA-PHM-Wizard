@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'; // Import useEffect
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 
 import "../styles.css";
 
@@ -26,7 +26,8 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Loader2
 } from 'lucide-react';
 import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
@@ -79,11 +80,12 @@ export const IsaQuestionnaire = () => {
   const [isRemountingSlides, setIsRemountingSlides] = useState(false);
   const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
+  const [isFullValidationPending, setIsFullValidationPending] = useState(true);
   const [slidesKey, setSlidesKey] = useState(() => currentProjectId ? `slides-${currentProjectId}-${Date.now()}` : 'slides-none');
   const hasInitializedProjectRef = useRef(false);
   const overlayTimeoutRef = useRef(null);
   const keyUpdateTimeoutRef = useRef(null);
-  const MIN_OVERLAY_DURATION = 700;
+  const MIN_OVERLAY_DURATION = 250;
   
   // Handler: Close project sessions modal
   const handleSessionsModalClose = () => {
@@ -172,41 +174,169 @@ export const IsaQuestionnaire = () => {
     };
   }, [currentProjectId, childRefs]);
 
-  const validationReport = useMemo(() => buildExportValidationReport({
-    investigation,
-    contacts,
-    studyVariables,
-    studyToStudyVariableMapping,
-    studies,
-    testSetups,
-    selectedTestSetupId,
-    studyToMeasurementProtocolSelection,
-    studyToProcessingProtocolSelection,
-    studyToSensorMeasurementMapping,
-    studyToSensorProcessingMapping,
-    selectedDataset,
-    experimentType,
+  const deferredInvestigation = useDeferredValue(investigation);
+  const deferredContacts = useDeferredValue(contacts);
+  const deferredStudyVariables = useDeferredValue(studyVariables);
+  const deferredStudyVariableMappings = useDeferredValue(studyToStudyVariableMapping);
+  const deferredStudies = useDeferredValue(studies);
+  const deferredTestSetups = useDeferredValue(testSetups);
+  const deferredSelectedTestSetupId = useDeferredValue(selectedTestSetupId);
+  const deferredMeasurementProtocolSelection = useDeferredValue(studyToMeasurementProtocolSelection);
+  const deferredProcessingProtocolSelection = useDeferredValue(studyToProcessingProtocolSelection);
+  const deferredRawMappings = useDeferredValue(studyToSensorMeasurementMapping);
+  const deferredProcessedMappings = useDeferredValue(studyToSensorProcessingMapping);
+  const deferredSelectedDataset = useDeferredValue(selectedDataset);
+  const deferredExperimentType = useDeferredValue(experimentType);
+
+  const fastValidationReport = useMemo(() => buildExportValidationReport({
+    investigation: deferredInvestigation,
+    contacts: deferredContacts,
+    studyVariables: deferredStudyVariables,
+    studyToStudyVariableMapping: deferredStudyVariableMappings,
+    studies: deferredStudies,
+    testSetups: deferredTestSetups,
+    selectedTestSetupId: deferredSelectedTestSetupId,
+    studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection: deferredProcessingProtocolSelection,
+    studyToSensorMeasurementMapping: deferredRawMappings,
+    studyToSensorProcessingMapping: deferredProcessedMappings,
+    selectedDataset: deferredSelectedDataset,
+    experimentType: deferredExperimentType,
+  }, {
+    // Keep per-edit checks fast; expensive dataset path/duplicate checks run
+    // when opening details or converting.
+    includePathChecks: false
   }), [
-    investigation,
-    contacts,
-    studyVariables,
-    studyToStudyVariableMapping,
-    studies,
-    testSetups,
-    selectedTestSetupId,
-    studyToMeasurementProtocolSelection,
-    studyToProcessingProtocolSelection,
-    studyToSensorMeasurementMapping,
-    studyToSensorProcessingMapping,
-    selectedDataset,
-    experimentType,
+    deferredInvestigation,
+    deferredContacts,
+    deferredStudyVariables,
+    deferredStudyVariableMappings,
+    deferredStudies,
+    deferredTestSetups,
+    deferredSelectedTestSetupId,
+    deferredMeasurementProtocolSelection,
+    deferredProcessingProtocolSelection,
+    deferredRawMappings,
+    deferredProcessedMappings,
+    deferredSelectedDataset,
+    deferredExperimentType,
   ]);
 
-  const hasBlockingValidationIssues = validationReport?.hasBlockingErrors;
-  const validationSummaryErrors = Number(validationReport?.summary?.errors || 0);
-  const validationSummaryWarnings = Number(validationReport?.summary?.warnings || 0);
+  const [fullValidationReport, setFullValidationReport] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId = null;
+
+    setIsFullValidationPending(true);
+
+    const compute = () => {
+      if (cancelled) return;
+      const nextReport = buildExportValidationReport({
+        investigation: deferredInvestigation,
+        contacts: deferredContacts,
+        studyVariables: deferredStudyVariables,
+        studyToStudyVariableMapping: deferredStudyVariableMappings,
+        studies: deferredStudies,
+        testSetups: deferredTestSetups,
+        selectedTestSetupId: deferredSelectedTestSetupId,
+        studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
+        studyToProcessingProtocolSelection: deferredProcessingProtocolSelection,
+        studyToSensorMeasurementMapping: deferredRawMappings,
+        studyToSensorProcessingMapping: deferredProcessedMappings,
+        selectedDataset: deferredSelectedDataset,
+        experimentType: deferredExperimentType,
+      }, {
+        includePathChecks: true
+      });
+      if (!cancelled) {
+        setFullValidationReport(nextReport);
+        setIsFullValidationPending(false);
+      }
+    };
+
+    timeoutId = setTimeout(
+      compute,
+      showValidationPanel ? 0 : 350
+    );
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [
+    showValidationPanel,
+    deferredInvestigation,
+    deferredContacts,
+    deferredStudyVariables,
+    deferredStudyVariableMappings,
+    deferredStudies,
+    deferredTestSetups,
+    deferredSelectedTestSetupId,
+    deferredMeasurementProtocolSelection,
+    deferredProcessingProtocolSelection,
+    deferredRawMappings,
+    deferredProcessedMappings,
+    deferredSelectedDataset,
+    deferredExperimentType
+  ]);
+
+  const expandedValidationReport = useMemo(() => {
+    if (!showValidationPanel) return fullValidationReport || fastValidationReport;
+    return fullValidationReport || buildExportValidationReport({
+      investigation: deferredInvestigation,
+      contacts: deferredContacts,
+      studyVariables: deferredStudyVariables,
+      studyToStudyVariableMapping: deferredStudyVariableMappings,
+      studies: deferredStudies,
+      testSetups: deferredTestSetups,
+      selectedTestSetupId: deferredSelectedTestSetupId,
+      studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
+      studyToProcessingProtocolSelection: deferredProcessingProtocolSelection,
+      studyToSensorMeasurementMapping: deferredRawMappings,
+      studyToSensorProcessingMapping: deferredProcessedMappings,
+      selectedDataset: deferredSelectedDataset,
+      experimentType: deferredExperimentType,
+    }, {
+      includePathChecks: true
+    });
+  }, [
+    showValidationPanel,
+    fullValidationReport,
+    fastValidationReport,
+    deferredInvestigation,
+    deferredContacts,
+    deferredStudyVariables,
+    deferredStudyVariableMappings,
+    deferredStudies,
+    deferredTestSetups,
+    deferredSelectedTestSetupId,
+    deferredMeasurementProtocolSelection,
+    deferredProcessingProtocolSelection,
+    deferredRawMappings,
+    deferredProcessedMappings,
+    deferredSelectedDataset,
+    deferredExperimentType
+  ]);
+
+  const statusValidationReport = fullValidationReport || fastValidationReport;
+  const hasBlockingValidationIssues = statusValidationReport?.hasBlockingErrors;
+  const validationSummaryErrors = Number(statusValidationReport?.summary?.errors || 0);
+  const validationSummaryWarnings = Number(statusValidationReport?.summary?.warnings || 0);
 
   const validationStatusMeta = useMemo(() => {
+    if (
+      isFullValidationPending
+      && validationSummaryErrors === 0
+      && validationSummaryWarnings === 0
+    ) {
+      return {
+        icon: Loader2,
+        iconClassName: 'text-blue-600 animate-spin',
+        tooltipText: 'Refreshing pre-export checks...'
+      };
+    }
+
     if (validationSummaryErrors > 0) {
       return {
         icon: XCircle,
@@ -228,12 +358,30 @@ export const IsaQuestionnaire = () => {
       iconClassName: 'text-emerald-600',
       tooltipText: 'Pre-export checks are clean. Click to view summary.'
     };
-  }, [validationSummaryErrors, validationSummaryWarnings]);
+  }, [isFullValidationPending, validationSummaryErrors, validationSummaryWarnings]);
 
   const ValidationStatusIcon = validationStatusMeta.icon;
 
   const handleSubmit = () => {
-    if (hasBlockingValidationIssues) {
+    const liveValidationReport = buildExportValidationReport({
+      investigation,
+      contacts,
+      studyVariables,
+      studyToStudyVariableMapping,
+      studies,
+      testSetups,
+      selectedTestSetupId,
+      studyToMeasurementProtocolSelection,
+      studyToProcessingProtocolSelection,
+      studyToSensorMeasurementMapping,
+      studyToSensorProcessingMapping,
+      selectedDataset,
+      experimentType,
+    }, {
+      includePathChecks: true
+    });
+
+    if (liveValidationReport?.hasBlockingErrors) {
       setShowValidationPanel(true);
       setShowValidationDetails(true);
       return;
@@ -378,7 +526,7 @@ export const IsaQuestionnaire = () => {
         {showValidationPanel ? (
           <div className="mx-5">
             <PreExportValidationPanel
-              report={validationReport}
+              report={expandedValidationReport}
               expanded={showValidationDetails}
               onToggle={() => setShowValidationDetails((value) => !value)}
             />
@@ -427,7 +575,9 @@ export const IsaQuestionnaire = () => {
               }}
               className={cn(
                 "h-10 w-10 rounded-lg shadow-lg",
-                validationSummaryErrors > 0
+                isFullValidationPending && validationSummaryErrors === 0 && validationSummaryWarnings === 0
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                  : validationSummaryErrors > 0
                   ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
                   : validationSummaryWarnings > 0
                     ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'

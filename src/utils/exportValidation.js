@@ -3,7 +3,10 @@ import {
   hasFilledValue,
   isProcessedOutputEnabled,
   isRawOutputEnabled,
-  resolveStudyOutputMode,
+  normalizeStudyOutputMode,
+  OUTPUT_MODE_RAW_ONLY,
+  OUTPUT_MODE_PROCESSED_ONLY,
+  OUTPUT_MODE_RAW_AND_PROCESSED,
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
@@ -58,24 +61,50 @@ const isLikelyRelativeFilePath = (value) => {
   return false;
 };
 
-const resolveRunMapping = (mappings = [], sensorId, run) => {
-  return asArray(mappings).find((mapping) => {
-    if (!mapping || String(mapping.sensorId) !== String(sensorId)) return false;
-    if (mapping.studyRunId) {
-      return String(mapping.studyRunId) === String(run.runId);
+const buildScopedMappingLookup = (mappings = [], sourceKey, runByRunId = new Map()) => {
+  const byRun = new Map();
+  const byStudy = new Map();
+  const filledStudyIds = new Set();
+
+  asArray(mappings).forEach((mapping) => {
+    const sourceId = String(mapping?.[sourceKey] || '');
+    if (!sourceId) return;
+
+    const runId = mapping?.studyRunId ? String(mapping.studyRunId) : '';
+    const derivedStudyId = runId ? String(runByRunId.get(runId)?.studyId || '') : '';
+    const studyId = String(mapping?.studyId || derivedStudyId || '');
+
+    if (runId) {
+      byRun.set(`${runId}::${sourceId}`, mapping);
+    } else if (studyId) {
+      byStudy.set(`${studyId}::${sourceId}`, mapping);
     }
-    return String(mapping.studyId) === String(run.studyId);
-  }) || null;
+
+    if (studyId && hasFilledValue(mapping?.value)) {
+      filledStudyIds.add(studyId);
+    }
+  });
+
+  return { byRun, byStudy, filledStudyIds };
 };
 
-const resolveStudyVariableMapping = (mappings = [], studyVariableId, run) => {
-  return asArray(mappings).find((mapping) => {
-    if (!mapping || String(mapping.studyVariableId) !== String(studyVariableId)) return false;
-    if (mapping.studyRunId) {
-      return String(mapping.studyRunId) === String(run.runId);
-    }
-    return String(mapping.studyId) === String(run.studyId);
-  }) || null;
+const resolveScopedMapping = (lookup, sourceId, run) => {
+  const safeSourceId = String(sourceId || '');
+  if (!safeSourceId || !lookup) return null;
+
+  const runId = String(run?.runId || '');
+  if (runId) {
+    const runMapping = lookup.byRun.get(`${runId}::${safeSourceId}`);
+    if (runMapping) return runMapping;
+  }
+
+  const studyId = String(run?.studyId || '');
+  if (studyId) {
+    const studyMapping = lookup.byStudy.get(`${studyId}::${safeSourceId}`);
+    if (studyMapping) return studyMapping;
+  }
+
+  return null;
 };
 
 const collectDirectoryPaths = (nodes = [], target = new Set()) => {
@@ -90,6 +119,17 @@ const collectDirectoryPaths = (nodes = [], target = new Set()) => {
     }
   });
   return target;
+};
+
+const directoryPathCache = new WeakMap();
+
+const getCachedDirectoryPaths = (tree) => {
+  if (!tree || typeof tree !== 'object') return new Set();
+  const cached = directoryPathCache.get(tree);
+  if (cached) return cached;
+  const computed = collectDirectoryPaths(tree, new Set());
+  directoryPathCache.set(tree, computed);
+  return computed;
 };
 
 const formatRunSensorLabel = (run, sensor) => {
@@ -171,6 +211,8 @@ export function buildExportValidationReport({
   studyToSensorProcessingMapping = [],
   selectedDataset = null,
   experimentType = '',
+} = {}, {
+  includePathChecks = true,
 } = {}) {
   const safeStudies = asArray(studies);
   const safeContacts = asArray(contacts);
@@ -385,6 +427,21 @@ export function buildExportValidationReport({
 
   const measurementMappings = asArray(studyToSensorMeasurementMapping);
   const processingMappings = asArray(studyToSensorProcessingMapping);
+  const studyVariableMappingsLookup = buildScopedMappingLookup(
+    safeStudyVariableMappings,
+    'studyVariableId',
+    runByRunId
+  );
+  const measurementMappingsLookup = buildScopedMappingLookup(
+    measurementMappings,
+    'sensorId',
+    runByRunId
+  );
+  const processingMappingsLookup = buildScopedMappingLookup(
+    processingMappings,
+    'sensorId',
+    runByRunId
+  );
 
   const modeByStudyId = new Map();
   const missingMeasurementProtocols = [];
@@ -394,15 +451,23 @@ export function buildExportValidationReport({
     if (!study?.id) return;
 
     const studyId = String(study.id);
-    const studyRunsForMode = runsByStudyId.get(studyId) || [];
     const selectedMeasurementProtocolId = study?.measurementProtocolId || selectionLookup.measurement[study.id] || '';
     const selectedProcessingProtocolId = study?.processingProtocolId || selectionLookup.processing[study.id] || '';
-    const outputMode = resolveStudyOutputMode(study, {
-      studyRuns: studyRunsForMode,
-      measurementMappings,
-      processingMappings,
-      selectedProcessingProtocolId,
-    });
+    const explicitOutputMode = normalizeStudyOutputMode(study?.outputMode, '');
+    let outputMode = explicitOutputMode;
+    if (!outputMode) {
+      const hasRaw = measurementMappingsLookup.filledStudyIds.has(studyId);
+      const hasProcessed = processingMappingsLookup.filledStudyIds.has(studyId);
+      const hasProcessingProtocol = String(selectedProcessingProtocolId || '').trim() !== '';
+
+      if (hasProcessed && !hasRaw) {
+        outputMode = OUTPUT_MODE_PROCESSED_ONLY;
+      } else if (hasProcessed || hasProcessingProtocol) {
+        outputMode = hasRaw ? OUTPUT_MODE_RAW_AND_PROCESSED : OUTPUT_MODE_PROCESSED_ONLY;
+      } else {
+        outputMode = OUTPUT_MODE_RAW_ONLY;
+      }
+    }
 
     const rawEnabled = isRawOutputEnabled(outputMode);
     const processedEnabled = isProcessedOutputEnabled(outputMode);
@@ -456,8 +521,8 @@ export function buildExportValidationReport({
       const processedRequired = Boolean(modeInfo?.processedEnabled);
 
       sensors.forEach((sensor) => {
-        const measurement = resolveRunMapping(measurementMappings, sensor?.id, run);
-        const processing = resolveRunMapping(processingMappings, sensor?.id, run);
+        const measurement = resolveScopedMapping(measurementMappingsLookup, sensor?.id, run);
+        const processing = resolveScopedMapping(processingMappingsLookup, sensor?.id, run);
 
         if (rawRequired) {
           requiredRawAssignments += 1;
@@ -508,7 +573,7 @@ export function buildExportValidationReport({
     studyRuns.forEach((run) => {
       safeStudyVariables.forEach((variable) => {
         requiredStudyVariableMappings += 1;
-        const mapping = resolveStudyVariableMapping(safeStudyVariableMappings, variable?.id, run);
+        const mapping = resolveScopedMapping(studyVariableMappingsLookup, variable?.id, run);
         if (!hasFilledValue(mapping?.value)) {
           missingStudyVariableMappings.push(formatRunVariableLabel(run, variable));
           return;
@@ -611,105 +676,107 @@ export function buildExportValidationReport({
     return modeInfo.rawEnabled;
   };
 
-  const directoryPaths = collectDirectoryPaths(selectedDataset?.tree || []);
-  if (directoryPaths.size > 0) {
-    const directoryHits = [];
-    const pushDirectoryHits = (mappings = [], mappingType = 'raw') => {
+  if (includePathChecks) {
+    const directoryPaths = getCachedDirectoryPaths(selectedDataset?.tree || null);
+    if (directoryPaths.size > 0) {
+      const directoryHits = [];
+      const pushDirectoryHits = (mappings = [], mappingType = 'raw') => {
+        mappings.forEach((mapping) => {
+          if (!isMappingRelevant(mapping, mappingType)) return;
+          const rawValue = String(mapping?.value ?? '');
+          const normalized = normalizePath(rawValue);
+          if (!normalized) return;
+          if (!directoryPaths.has(normalized)) return;
+          directoryHits.push({
+            mappingType,
+            path: normalized,
+            context: resolveMappingContext(mapping, lookup),
+          });
+        });
+      };
+
+      pushDirectoryHits(measurementMappings, 'raw');
+      pushDirectoryHits(processingMappings, 'processed');
+
+      if (directoryHits.length > 0) {
+        pushIssue(errorIssues, {
+          id: 'directory-assignment',
+          level: 'error',
+          title: 'Folder paths assigned instead of files',
+          description: `${directoryHits.length} mappings reference a folder path. Use file paths only.`,
+          count: directoryHits.length,
+          items: directoryHits.map((entry) => `${entry.path} (${entry.mappingType}) - ${entry.context}`),
+        });
+      }
+    }
+
+    const allFileAssignments = [];
+    const collectAssignments = (mappings = [], mappingType = 'raw') => {
       mappings.forEach((mapping) => {
         if (!isMappingRelevant(mapping, mappingType)) return;
-        const rawValue = String(mapping?.value ?? '');
+        const rawValue = String(mapping?.value ?? '').trim();
         const normalized = normalizePath(rawValue);
         if (!normalized) return;
-        if (!directoryPaths.has(normalized)) return;
-        directoryHits.push({
+        allFileAssignments.push({
           mappingType,
+          rawPath: rawValue,
           path: normalized,
           context: resolveMappingContext(mapping, lookup),
         });
       });
     };
 
-    pushDirectoryHits(measurementMappings, 'raw');
-    pushDirectoryHits(processingMappings, 'processed');
+    collectAssignments(measurementMappings, 'raw');
+    collectAssignments(processingMappings, 'processed');
 
-    if (directoryHits.length > 0) {
+    const absolutePathAssignments = allFileAssignments.filter((entry) => isAbsolutePath(entry.rawPath));
+    if (absolutePathAssignments.length > 0) {
       pushIssue(errorIssues, {
-        id: 'directory-assignment',
+        id: 'absolute-file-path-assignments',
         level: 'error',
-        title: 'Folder paths assigned instead of files',
-        description: `${directoryHits.length} mappings reference a folder path. Use file paths only.`,
-        count: directoryHits.length,
-        items: directoryHits.map((entry) => `${entry.path} (${entry.mappingType}) - ${entry.context}`),
+        title: 'Absolute file paths are not allowed',
+        description: `${absolutePathAssignments.length} mappings use absolute file paths. Use dataset-relative paths only.`,
+        count: absolutePathAssignments.length,
+        items: absolutePathAssignments.map((entry) => `${entry.rawPath} (${entry.mappingType}) - ${entry.context}`),
       });
     }
-  }
 
-  const allFileAssignments = [];
-  const collectAssignments = (mappings = [], mappingType = 'raw') => {
-    mappings.forEach((mapping) => {
-      if (!isMappingRelevant(mapping, mappingType)) return;
-      const rawValue = String(mapping?.value ?? '').trim();
-      const normalized = normalizePath(rawValue);
-      if (!normalized) return;
-      allFileAssignments.push({
-        mappingType,
-        rawPath: rawValue,
-        path: normalized,
-        context: resolveMappingContext(mapping, lookup),
+    const nonCsvAssignments = allFileAssignments.filter((entry) => {
+      if (directoryPaths.has(entry.path)) return false;
+      return !hasCsvExtension(entry.path);
+    });
+    if (nonCsvAssignments.length > 0) {
+      pushIssue(errorIssues, {
+        id: 'non-csv-file-assignments',
+        level: 'error',
+        title: 'Only .csv files are allowed in output mappings',
+        description: `${nonCsvAssignments.length} mappings use a non-.csv file path.`,
+        count: nonCsvAssignments.length,
+        items: nonCsvAssignments.map((entry) => `${entry.path} (${entry.mappingType}) - ${entry.context}`),
       });
+    }
+
+    const duplicatesByPath = new Map();
+    allFileAssignments.forEach((entry) => {
+      const bucket = duplicatesByPath.get(entry.path) || [];
+      bucket.push(entry);
+      duplicatesByPath.set(entry.path, bucket);
     });
-  };
 
-  collectAssignments(measurementMappings, 'raw');
-  collectAssignments(processingMappings, 'processed');
+    const duplicateSummaries = [...duplicatesByPath.entries()]
+      .filter(([, entries]) => entries.length > 1)
+      .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
 
-  const absolutePathAssignments = allFileAssignments.filter((entry) => isAbsolutePath(entry.rawPath));
-  if (absolutePathAssignments.length > 0) {
-    pushIssue(errorIssues, {
-      id: 'absolute-file-path-assignments',
-      level: 'error',
-      title: 'Absolute file paths are not allowed',
-      description: `${absolutePathAssignments.length} mappings use absolute file paths. Use dataset-relative paths only.`,
-      count: absolutePathAssignments.length,
-      items: absolutePathAssignments.map((entry) => `${entry.rawPath} (${entry.mappingType}) - ${entry.context}`),
-    });
-  }
-
-  const nonCsvAssignments = allFileAssignments.filter((entry) => {
-    if (directoryPaths.has(entry.path)) return false;
-    return !hasCsvExtension(entry.path);
-  });
-  if (nonCsvAssignments.length > 0) {
-    pushIssue(errorIssues, {
-      id: 'non-csv-file-assignments',
-      level: 'error',
-      title: 'Only .csv files are allowed in output mappings',
-      description: `${nonCsvAssignments.length} mappings use a non-.csv file path.`,
-      count: nonCsvAssignments.length,
-      items: nonCsvAssignments.map((entry) => `${entry.path} (${entry.mappingType}) - ${entry.context}`),
-    });
-  }
-
-  const duplicatesByPath = new Map();
-  allFileAssignments.forEach((entry) => {
-    const bucket = duplicatesByPath.get(entry.path) || [];
-    bucket.push(entry);
-    duplicatesByPath.set(entry.path, bucket);
-  });
-
-  const duplicateSummaries = [...duplicatesByPath.entries()]
-    .filter(([, entries]) => entries.length > 1)
-    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
-
-  if (duplicateSummaries.length > 0) {
-    pushIssue(warningIssues, {
-      id: 'duplicate-file-assignments',
-      level: 'warning',
-      title: 'Duplicate file assignments',
-      description: `${duplicateSummaries.length} files are assigned more than once.`,
-      count: duplicateSummaries.length,
-      items: duplicateSummaries.map(([path, entries]) => `${path} (${entries.length} assignments)`),
-    });
+    if (duplicateSummaries.length > 0) {
+      pushIssue(warningIssues, {
+        id: 'duplicate-file-assignments',
+        level: 'warning',
+        title: 'Duplicate file assignments',
+        description: `${duplicateSummaries.length} files are assigned more than once.`,
+        count: duplicateSummaries.length,
+        items: duplicateSummaries.map(([path, entries]) => `${path} (${entries.length} assignments)`),
+      });
+    }
   }
 
   return {
