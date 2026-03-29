@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { buildConversionPayload } from '../utils/conversionPayload';
+import { shouldRunBackendIntegration } from './backendIntegrationGate';
 
-const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
+const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;

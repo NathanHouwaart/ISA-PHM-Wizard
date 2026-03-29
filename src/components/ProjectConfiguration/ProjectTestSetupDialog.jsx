@@ -5,7 +5,7 @@ import { useProjectActions } from '../../contexts/GlobalDataContext';
 import { getProjectTestSetupId } from '../../utils/projectMetadata';
 
 const ProjectTestSetupDialog = ({ projectId, isOpen, onClose, onProjectMetaChange }) => {
-  const { setSelectedTestSetupId } = useProjectActions();
+  const { updateProjectTestSetupSelection } = useProjectActions();
   const currentId = useMemo(() => getProjectTestSetupId(projectId), [projectId]);
   const [selection, setSelection] = useState(currentId);
 
@@ -16,13 +16,7 @@ const ProjectTestSetupDialog = ({ projectId, isOpen, onClose, onProjectMetaChang
   }, [isOpen, currentId]);
 
   const handleConfirm = () => {
-    setSelectedTestSetupId?.(selection ?? null);
-    const storageKey = `globalAppData_${projectId}_selectedTestSetupId`;
-    if (selection) {
-      localStorage.setItem(storageKey, JSON.stringify(selection));
-    } else {
-      localStorage.removeItem(storageKey);
-    }
+    updateProjectTestSetupSelection?.(projectId, selection ?? null);
     onProjectMetaChange?.(projectId);
     onClose?.();
   };

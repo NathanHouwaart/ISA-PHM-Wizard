@@ -1,11 +1,12 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import {
     GlobalDataProvider,
     useProjectActions,
     useProjectData
 } from './GlobalDataContext';
+import { decodeJsonFromStorage } from '../utils/storageCodec';
 
 vi.mock('../hooks/useDatasetStore', () => ({
     default: () => ({
@@ -87,13 +88,20 @@ const EXPECTED_ACTION_KEYS = [
     'renameProject',
     'switchProject',
     'resetProject',
-    'updateProjectExperimentType'
+    'updateProjectExperimentType',
+    'updateProjectTestSetupSelection'
 ];
 
 const wrapper = ({ children }) => (
     <GlobalDataProvider>
         {children}
     </GlobalDataProvider>
+);
+
+const waitForBufferedWrites = (ms = 650) => (
+    new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    })
 );
 
 describe('GlobalDataContext contract hooks', () => {
@@ -130,5 +138,53 @@ describe('GlobalDataContext contract hooks', () => {
         });
 
         expect(result.current.resolveExplorer).toBe(result.current.resolveExplorerSelection);
+    });
+
+    it('project-scoped test setup updates do not mutate active project selection', async () => {
+        const { result } = renderHook(() => ({
+            ...useProjectData(),
+            ...useProjectActions()
+        }), { wrapper });
+
+        const activeProjectId = result.current.currentProjectId;
+        const initialSelectedSetupId = result.current.selectedTestSetupId;
+        const otherProjectId = `${activeProjectId}-non-active`;
+
+        act(() => {
+            result.current.updateProjectTestSetupSelection(otherProjectId, 'setup-non-active');
+        });
+
+        expect(result.current.selectedTestSetupId).toBe(initialSelectedSetupId);
+        await act(async () => {
+            await waitForBufferedWrites();
+        });
+        const persisted = decodeJsonFromStorage(
+            localStorage.getItem(`globalAppData_${otherProjectId}_selectedTestSetupId`)
+        );
+        expect(persisted.exists).toBe(true);
+        expect(persisted.value).toBe('setup-non-active');
+    });
+
+    it('project-scoped test setup updates mutate in-memory selection for active project', async () => {
+        const { result } = renderHook(() => ({
+            ...useProjectData(),
+            ...useProjectActions()
+        }), { wrapper });
+
+        const activeProjectId = result.current.currentProjectId;
+
+        act(() => {
+            result.current.updateProjectTestSetupSelection(activeProjectId, 'setup-active');
+        });
+
+        expect(result.current.selectedTestSetupId).toBe('setup-active');
+        await act(async () => {
+            await waitForBufferedWrites();
+        });
+        const persisted = decodeJsonFromStorage(
+            localStorage.getItem(`globalAppData_${activeProjectId}_selectedTestSetupId`)
+        );
+        expect(persisted.exists).toBe(true);
+        expect(persisted.value).toBe('setup-active');
     });
 });

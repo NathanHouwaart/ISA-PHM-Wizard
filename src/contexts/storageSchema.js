@@ -1,32 +1,16 @@
 import { decodeJsonFromStorage, encodeJsonForStorage } from '../utils/storageCodec';
 import { expandStudiesIntoRuns, normalizeRunCount } from '../utils/studyRuns';
 import { resolveStudyOutputMode } from '../utils/studyOutputMode';
+import {
+    PROJECT_STATE_KEYS,
+    buildProjectScopedStorageKey
+} from './storageKeyPolicy';
 
 const PROJECT_SCHEMA_VERSION = 2;
 const TEST_SETUPS_SCHEMA_VERSION = 1;
 
 const TEST_SETUPS_STORAGE_KEY = 'globalAppData_testSetups';
 const TEST_SETUPS_SCHEMA_VERSION_KEY = `${TEST_SETUPS_STORAGE_KEY}_schemaVersion`;
-
-const PROJECT_STATE_KEYS = [
-    'studies',
-    'investigation',
-    'contacts',
-    'publications',
-    'selectedTestSetupId',
-    'studyVariables',
-    'measurementProtocols',
-    'processingProtocols',
-    'studyToMeasurementProtocolSelection',
-    'studyToProcessingProtocolSelection',
-    'experimentType',
-    'studyToStudyVariableMapping',
-    'sensorToMeasurementProtocolMapping',
-    'studyToSensorMeasurementMapping',
-    'sensorToProcessingProtocolMapping',
-    'studyToSensorProcessingMapping',
-    'pageTabStates'
-];
 
 const PROJECT_ARRAY_KEYS = new Set([
     'studies',
@@ -68,7 +52,7 @@ const getStorage = (storage) => {
     return null;
 };
 
-const projectKey = (projectId, key) => `globalAppData_${projectId}_${key}`;
+const projectKey = (projectId, key) => buildProjectScopedStorageKey(projectId, key);
 const projectSchemaVersionKey = (projectId) => projectKey(projectId, 'schemaVersion');
 
 const parseSchemaVersion = (value) => {

@@ -123,6 +123,9 @@ describe('useProjectDataset', () => {
     expect(indexedTreeStore.saveTree).toHaveBeenCalledWith(mockTree, mockProjectId);
     expect(result.current.tree).toEqual(mockTree);
     expect(result.current.error).toBe(null);
+    const lastEditedRaw = localStorage.getItem(`globalAppData_${mockProjectId}_lastEdited`);
+    expect(lastEditedRaw).not.toBeNull();
+    expect(() => new Date(JSON.parse(lastEditedRaw))).not.toThrow();
   });
 
   it('handles user cancellation during indexing', async () => {
@@ -192,6 +195,7 @@ describe('useProjectDataset', () => {
   it('deletes dataset successfully', async () => {
     indexedTreeStore.loadTree.mockResolvedValue(mockTree);
     indexedTreeStore.clearTree.mockResolvedValue();
+    localStorage.setItem(`globalAppData_${mockProjectId}_lastEdited`, JSON.stringify(new Date().toISOString()));
 
     const { result } = renderHook(() => useProjectDataset(mockProjectId));
 
@@ -209,6 +213,7 @@ describe('useProjectDataset', () => {
     expect(indexedTreeStore.clearTree).toHaveBeenCalledWith(mockProjectId);
     expect(result.current.tree).toBe(null);
     expect(result.current.error).toBe(null);
+    expect(localStorage.getItem(`globalAppData_${mockProjectId}_lastEdited`)).toBeNull();
   });
 
   it('handles delete errors', async () => {

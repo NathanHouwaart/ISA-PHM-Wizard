@@ -187,13 +187,27 @@ export const resetExampleProject = async (projectId, options = {}) => {
         const exampleProjectData = EXAMPLE_PROJECTS[projectId];
         const baselineLS = exampleProjectData.localStorage;
 
+        // The JSON file's localStorage keys use the source project ID (e.g.
+        // "example-multi-run-milling") which can differ from the runtime project
+        // ID (e.g. "example-multi-run"). Try the source ID first, then fall back
+        // to the runtime ID so lookups always find the baseline data.
+        const sourceProjectId = exampleProjectData.projectId || projectId;
+
         const getResetValue = (key) => {
             const fallback = getKeyFallback(key);
-            const canonicalKey = `globalAppData_${projectId}_${key}`;
-            const legacyInvestigationKey = `globalAppData_${projectId}_investigations`;
-            const rawValue = key === 'investigation'
-                ? (baselineLS[canonicalKey] ?? baselineLS[legacyInvestigationKey])
-                : baselineLS[canonicalKey];
+            const canonicalKey = `globalAppData_${sourceProjectId}_${key}`;
+            const canonicalKeyRuntime = `globalAppData_${projectId}_${key}`;
+            const legacyInvestigationKey = `globalAppData_${sourceProjectId}_investigations`;
+            const legacyInvestigationKeyRuntime = `globalAppData_${projectId}_investigations`;
+            let rawValue;
+            if (key === 'investigation') {
+                rawValue = baselineLS[canonicalKey]
+                    ?? baselineLS[legacyInvestigationKey]
+                    ?? baselineLS[canonicalKeyRuntime]
+                    ?? baselineLS[legacyInvestigationKeyRuntime];
+            } else {
+                rawValue = baselineLS[canonicalKey] ?? baselineLS[canonicalKeyRuntime];
+            }
 
             if (rawValue) {
                 try { return JSON.parse(rawValue); } catch (e) { return fallback; }

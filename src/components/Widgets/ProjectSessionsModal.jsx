@@ -358,6 +358,7 @@ export default function ProjectSessionsModal({ onClose }) {
   }, [setTestSetups]);
 
   const handleImportFile = useCallback(async (file) => {
+    let createdProjectId = null;
     try {
       const text = await file.text();
       const pkg = JSON.parse(text);
@@ -371,6 +372,7 @@ export default function ProjectSessionsModal({ onClose }) {
         importName,
         inferImportExperimentType(pkg)
       );
+      createdProjectId = newId;
       
       // Attempt import - this may return a conflict
       const result = await importProject(pkg, newId);
@@ -384,6 +386,13 @@ export default function ProjectSessionsModal({ onClose }) {
       // No conflict - complete the import
       await completeImport(newId);
     } catch (err) {
+      if (createdProjectId) {
+        try {
+          deleteProject(createdProjectId);
+        } catch (rollbackErr) {
+          console.error('[ProjectSessionsModal] import rollback error', rollbackErr);
+        }
+      }
       console.error('[ProjectSessionsModal] import error', err);
       showDialog({
         tone: 'danger',
@@ -396,7 +405,7 @@ export default function ProjectSessionsModal({ onClose }) {
         onConfirm: () => handleImportFile(file),
       });
     }
-  }, [createProject, completeImport, projects]);
+  }, [createProject, completeImport, projects, deleteProject]);
 
   async function handleConflictResolution(resolution) {
     if (!pendingImport) return;
