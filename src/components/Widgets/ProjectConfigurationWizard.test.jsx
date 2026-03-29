@@ -20,13 +20,13 @@ describe('ProjectConfigurationWizard', () => {
   const mockOnComplete = vi.fn();
   const mockRenameProject = vi.fn();
   const mockUpdateType = vi.fn();
-  const mockSetTestSetup = vi.fn();
+  const mockUpdateProjectTestSetupSelection = vi.fn();
 
   const baseContext = {
     projects: [{ id: 'proj-1', name: 'Existing Project' }],
     renameProject: mockRenameProject,
     updateProjectExperimentType: mockUpdateType,
-    setSelectedTestSetupId: mockSetTestSetup,
+    updateProjectTestSetupSelection: mockUpdateProjectTestSetupSelection,
   };
 
   const baseDataset = {
@@ -39,6 +39,7 @@ describe('ProjectConfigurationWizard', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     useProjectData.mockReturnValue(baseContext);
     useProjectActions.mockReturnValue(baseContext);
     useProjectDataset.mockReturnValue(baseDataset);
@@ -93,7 +94,7 @@ describe('ProjectConfigurationWizard', () => {
     renderWizard({ initialStep: 3 });
     fireEvent.click(screen.getByText('Finish'));
     expect(mockUpdateType).toHaveBeenCalled();
-    expect(mockSetTestSetup).toHaveBeenCalled();
+    expect(mockUpdateProjectTestSetupSelection).toHaveBeenCalledWith('proj-1', null);
     expect(mockOnComplete).toHaveBeenCalledTimes(1);
   });
 });

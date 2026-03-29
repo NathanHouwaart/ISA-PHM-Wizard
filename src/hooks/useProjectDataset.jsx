@@ -8,7 +8,9 @@ import {
   setProjectDatasetStats,
   clearProjectDatasetStats,
   setProjectDatasetName,
-  clearProjectDatasetName
+  clearProjectDatasetName,
+  setProjectLastEdited,
+  clearProjectLastEdited
 } from '../utils/projectMetadata';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
@@ -153,6 +155,7 @@ export function useProjectDataset(projectId) {
           } else {
             clearProjectDatasetName(projectId);
             clearProjectDatasetStats(projectId);
+            clearProjectLastEdited(projectId);
           }
         }
       } catch (err) {
@@ -161,6 +164,7 @@ export function useProjectDataset(projectId) {
           setTree(null);
           clearProjectDatasetName(projectId);
           clearProjectDatasetStats(projectId);
+          clearProjectLastEdited(projectId);
         }
       } finally {
         if (mounted) {
@@ -234,6 +238,7 @@ export function useProjectDataset(projectId) {
       setTree(dataset);
       setProjectDatasetName(projectId, dataset?.rootName || dataset?.name || null);
       setProjectDatasetStats(projectId, dataset);
+      setProjectLastEdited(projectId, new Date().toISOString());
 
       // If this is the currently active project, update the global selectedDataset
       if (projectId === currentProjectId) {
@@ -302,6 +307,7 @@ export function useProjectDataset(projectId) {
       setTree(null);
       clearProjectDatasetName(projectId);
       clearProjectDatasetStats(projectId);
+      clearProjectLastEdited(projectId);
       debugLog('[useProjectDataset] Dataset deleted for project:', projectId);
 
     } catch (err) {
@@ -343,6 +349,7 @@ export function useProjectDataset(projectId) {
       } else {
         clearProjectDatasetName(projectId);
         clearProjectDatasetStats(projectId);
+        clearProjectLastEdited(projectId);
       }
     } catch (err) {
       console.error('[useProjectDataset] Error refreshing dataset for project', projectId, err);

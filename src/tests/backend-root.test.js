@@ -2,7 +2,9 @@
 // Disabled by default to keep local/unit test runs hermetic.
 // Enable with: RUN_BACKEND_INTEGRATION=1 npm test
 
-const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
+import { shouldRunBackendIntegration } from './backendIntegrationGate';
+
+const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationTest = RUN_BACKEND_INTEGRATION ? test : test.skip;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 

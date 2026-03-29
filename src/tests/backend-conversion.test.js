@@ -3,6 +3,7 @@ import expectedOutput from './isa-phm-out.json';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { shouldRunBackendIntegration } from './backendIntegrationGate';
 
 
 /**
@@ -28,7 +29,7 @@ import path from 'node:path';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
-const RUN_BACKEND_INTEGRATION = process.env.RUN_BACKEND_INTEGRATION === '1';
+const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
 const UUID_V4_LIKE_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DEFAULT_PERF_LIMIT_MS = 15000;

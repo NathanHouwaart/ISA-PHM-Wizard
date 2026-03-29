@@ -27,6 +27,7 @@ const readCollectionCount = (key) => {
 
 const datasetNameKey = (projectId) => `globalAppData_${projectId}_datasetName`;
 const datasetStatsKey = (projectId) => `globalAppData_${projectId}_datasetStats`;
+const lastEditedKey = (projectId) => `globalAppData_${projectId}_lastEdited`;
 
 const toSafeCount = (value) => {
   const parsed = Number(value);
@@ -144,6 +145,31 @@ export const clearProjectDatasetStats = (projectId) => {
   }
 };
 
+export const setProjectLastEdited = (projectId, value = new Date().toISOString()) => {
+  if (!projectId) return null;
+
+  const normalized = value instanceof Date
+    ? value.toISOString()
+    : (typeof value === 'string' ? value : new Date().toISOString());
+
+  try {
+    localStorage.setItem(lastEditedKey(projectId), JSON.stringify(normalized));
+    return normalized;
+  } catch (err) {
+    console.warn('[projectMetadata] Failed to persist last edited timestamp', err);
+    return null;
+  }
+};
+
+export const clearProjectLastEdited = (projectId) => {
+  if (!projectId) return;
+  try {
+    localStorage.removeItem(lastEditedKey(projectId));
+  } catch (err) {
+    console.warn('[projectMetadata] Failed to clear last edited timestamp', err);
+  }
+};
+
 export const getProjectDatasetName = (projectId) => {
   if (!projectId) return null;
   return readJson(`globalAppData_${projectId}_datasetName`);
@@ -151,7 +177,7 @@ export const getProjectDatasetName = (projectId) => {
 
 export const getProjectLastEdited = (projectId) => {
   if (!projectId) return null;
-  const value = readJson(`globalAppData_${projectId}_lastEdited`);
+  const value = readJson(lastEditedKey(projectId));
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;

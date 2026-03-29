@@ -21,6 +21,11 @@ import {
     writeProjectStateSnapshot
 } from './storageSchema';
 import {
+    getProjectScopedPrefix,
+    removeOrphanProjectScopedKeys,
+    removeProjectScopedKeys
+} from './storageKeyPolicy';
+import {
     decodeJsonFromStorage,
     encodeJsonForStorage,
     isQuotaExceededError
@@ -36,6 +41,7 @@ import useProjectCatalog from '../state/session/useProjectCatalog';
 import {
     DEFAULT_PROJECT_ID,
     DEFAULT_PROJECT_NAME,
+    EXAMPLE_PROJECT_SHELLS,
     MULTI_RUN_EXAMPLE_PROJECT_ID,
     getKeyFallback
 } from '../state/session/projectSessionConfig';
@@ -125,7 +131,8 @@ export const useProjectActions = () => {
         renameProject: context.renameProject,
         switchProject: context.switchProject,
         resetProject: context.resetProject,
-        updateProjectExperimentType: context.updateProjectExperimentType
+        updateProjectExperimentType: context.updateProjectExperimentType,
+        updateProjectTestSetupSelection: context.updateProjectTestSetupSelection
     };
 };
 
@@ -192,15 +199,22 @@ export const GlobalDataProvider = ({ children }) => {
                 { type: 'module' }
             );
             worker.onmessage = ({ data: { id, key, encoded } }) => {
+                const inFlight = inFlightStorageRef.current.get(id);
+                if (!inFlight) {
+                    // This id was already flushed synchronously or intentionally dropped.
+                    return;
+                }
                 inFlightStorageRef.current.delete(id);
                 if (encoded) {
                     try {
-                        localStorage.setItem(key, encoded);
-                        quotaFailedKeys.delete(key);
+                        const resolvedKey = inFlight.key || key;
+                        localStorage.setItem(resolvedKey, encoded);
+                        quotaFailedKeys.delete(resolvedKey);
                     } catch (err) {
-                        if (!quotaFailedKeys.has(key)) {
-                            console.error('[GlobalDataContext] worker storage quota error', key, err);
-                            quotaFailedKeys.add(key);
+                        const resolvedKey = inFlight.key || key;
+                        if (!quotaFailedKeys.has(resolvedKey)) {
+                            console.error('[GlobalDataContext] worker storage quota error', resolvedKey, err);
+                            quotaFailedKeys.add(resolvedKey);
                         }
                     }
                 }
@@ -272,6 +286,23 @@ export const GlobalDataProvider = ({ children }) => {
         });
     }, []);
 
+    const dropBufferedStorageWritesForProject = useCallback((projectId) => {
+        if (!projectId) return;
+        const prefix = getProjectScopedPrefix(projectId);
+
+        pendingStorageWritesRef.current.forEach((_, key) => {
+            if (key && key.startsWith(prefix)) {
+                pendingStorageWritesRef.current.delete(key);
+            }
+        });
+
+        inFlightStorageRef.current.forEach((entry, id) => {
+            if (entry?.key && entry.key.startsWith(prefix)) {
+                inFlightStorageRef.current.delete(id);
+            }
+        });
+    }, []);
+
     const shouldBufferStorageWrite = useCallback((key) => {
         if (typeof key !== 'string' || !key.startsWith('globalAppData_')) {
             return false;
@@ -325,6 +356,33 @@ export const GlobalDataProvider = ({ children }) => {
         setCurrentProjectId,
         initialCurrentProjectId
     } = useProjectCatalog({ loadFromLocalStorage });
+
+    const startupSweepCompleteRef = useRef(false);
+
+    useEffect(() => {
+        if (startupSweepCompleteRef.current) return;
+        startupSweepCompleteRef.current = true;
+
+        try {
+            const allowedProjectIds = new Set(
+                (Array.isArray(projects) ? projects : [])
+                    .map((project) => project?.id)
+                    .filter((projectId) => typeof projectId === 'string' && projectId.length > 0)
+            );
+            EXAMPLE_PROJECT_SHELLS.forEach((project) => {
+                if (project?.id) {
+                    allowedProjectIds.add(project.id);
+                }
+            });
+
+            removeOrphanProjectScopedKeys({
+                allowedProjectIds: [...allowedProjectIds],
+                includeTransient: true
+            });
+        } catch (error) {
+            console.warn('[GlobalDataContext] startup orphan storage sweep failed', error);
+        }
+    }, [projects]);
 
     // helper to construct per-project storage keys
     const projectKey = useCallback(
@@ -473,12 +531,43 @@ export const GlobalDataProvider = ({ children }) => {
         }
     };
 
+    const updateProjectTestSetupSelection = (projectId, nextSelection = null) => {
+        if (!projectId) return;
+
+        const normalizedSelection = (
+            nextSelection === null
+            || nextSelection === undefined
+            || nextSelection === ''
+        )
+            ? null
+            : String(nextSelection);
+
+        try {
+            saveToLocalStorage(projectKey('selectedTestSetupId', projectId), normalizedSelection);
+        } catch (err) {
+            console.warn('[GlobalDataContext] unable to persist selected test setup for project', projectId, err);
+        }
+
+        if (projectId === currentProjectId) {
+            setSelectedTestSetupId(normalizedSelection);
+        }
+    };
+
     function deleteProject(id) {
         // Protect the example projects from deletion
         if (isExampleProject(id)) {
             console.warn('Example projects cannot be deleted. You can reset them to their original state instead.');
             return false;
         }
+
+        dropBufferedStorageWritesForProject(id);
+        removeProjectScopedKeys({ projectId: id, knownOnly: false });
+        clearProjectDatasetName(id);
+        clearProjectDatasetStats(id);
+        clearTree(id).catch((error) => {
+            console.warn('[GlobalDataContext] deleteProject: clearTree failed', error);
+        });
+
         setProjects((prev) => {
             const next = prev.filter((p) => p.id !== id);
             saveToLocalStorage('globalAppData_projects', next);
@@ -709,6 +798,7 @@ export const GlobalDataProvider = ({ children }) => {
     value.switchProject = switchProject;
     value.resetProject = resetProject;
     value.updateProjectExperimentType = updateProjectExperimentType;
+    value.updateProjectTestSetupSelection = updateProjectTestSetupSelection;
     value.DEFAULT_PROJECT_ID = DEFAULT_PROJECT_ID;
     value.DEFAULT_PROJECT_NAME = DEFAULT_PROJECT_NAME;
     return (
@@ -717,4 +807,3 @@ export const GlobalDataProvider = ({ children }) => {
         </GlobalDataContext.Provider>
     );
 };
-

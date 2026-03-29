@@ -35,7 +35,7 @@ const ProjectConfigurationWizard = ({
   onProjectMetaChange
 }) => {
   const { projects = [] } = useProjectData();
-  const { renameProject, updateProjectExperimentType, setSelectedTestSetupId } = useProjectActions();
+  const { renameProject, updateProjectExperimentType, updateProjectTestSetupSelection } = useProjectActions();
 
   const targetProject = useMemo(
     () => projects.find((p) => p.id === projectId),
@@ -81,13 +81,7 @@ const ProjectConfigurationWizard = ({
       renameProject?.(projectId, nameDraft.trim());
     }
     updateProjectExperimentType?.(projectId, templateDraft || DEFAULT_EXPERIMENT_TYPE_ID);
-    setSelectedTestSetupId?.(setupDraft ?? null);
-    const storageKey = `globalAppData_${projectId}_selectedTestSetupId`;
-    if (setupDraft) {
-      localStorage.setItem(storageKey, JSON.stringify(setupDraft));
-    } else {
-      localStorage.removeItem(storageKey);
-    }
+    updateProjectTestSetupSelection?.(projectId, setupDraft ?? null);
     onProjectMetaChange?.(projectId);
     onComplete?.();
   };

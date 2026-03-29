@@ -22,6 +22,10 @@ import Dexie from 'dexie';
 import LZString from 'lz-string';
 import { hasContentChanged } from './testSetupUtils';
 import { decodeJsonFromStorage } from './storageCodec';
+import {
+  buildProjectScopedStorageKey,
+  getImportableProjectSuffixFromStorageKey
+} from '../contexts/storageKeyPolicy';
 
 // DB name and initialization: assume a clean slate - no migration from older DBs.
 const DB_NAME = 'isa_phm_tree_db_v2';
@@ -57,7 +61,113 @@ function decompress(compressed) {
 // Normalize path: root is '' ; ensure no leading slash
 function normPath(p) {
   if (!p) return '';
-  return p.replace(/^\/+/, '');
+  return String(p).replace(/^\/+|\/+$/g, '');
+}
+
+function parentPathOf(path) {
+  const normalized = normPath(path);
+  if (!normalized) return '';
+  const lastSlash = normalized.lastIndexOf('/');
+  if (lastSlash === -1) return '';
+  return normalized.slice(0, lastSlash);
+}
+
+function isValidSchemaVersionPayload(rawValue) {
+  const { exists, value } = decodeJsonFromStorage(rawValue);
+  if (!exists) return false;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0;
+}
+
+function collectImportableProjectLocalStorageWrites(pkg, targetProjectId) {
+  const writes = [];
+  if (!pkg?.localStorage || typeof pkg.localStorage !== 'object') {
+    return writes;
+  }
+
+  const sourceProjectId = typeof pkg.projectId === 'string' ? pkg.projectId : '';
+
+  for (const key of Object.keys(pkg.localStorage)) {
+    const suffix = getImportableProjectSuffixFromStorageKey(key, sourceProjectId);
+    if (!suffix) continue;
+
+    const rawValue = pkg.localStorage[key];
+    if (typeof rawValue !== 'string') continue;
+
+    if (suffix === 'schemaVersion' && !isValidSchemaVersionPayload(rawValue)) {
+      continue;
+    }
+
+    writes.push({
+      key: buildProjectScopedStorageKey(targetProjectId, suffix),
+      value: rawValue
+    });
+  }
+
+  return writes;
+}
+
+function buildSelectedTestSetupWrite(selectedTestSetup) {
+  if (!selectedTestSetup || !selectedTestSetup.id) return null;
+
+  const { value: decodedSetups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
+  const setups = Array.isArray(decodedSetups) ? decodedSetups : [];
+  const exists = setups.some((setup) => setup && setup.id === selectedTestSetup.id);
+  if (exists) return null;
+
+  const merged = [...setups, selectedTestSetup];
+  return {
+    key: 'globalAppData_testSetups',
+    value: JSON.stringify(merged)
+  };
+}
+
+function applyLocalStorageWritesWithRollback(entries = []) {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return () => {};
+  }
+
+  const previousValues = new Map();
+  const touchedKeys = [];
+
+  const capturePreviousValue = (key) => {
+    if (previousValues.has(key)) return;
+    previousValues.set(key, localStorage.getItem(key));
+    touchedKeys.push(key);
+  };
+
+  const rollback = () => {
+    for (let index = touchedKeys.length - 1; index >= 0; index -= 1) {
+      const key = touchedKeys[index];
+      const previous = previousValues.get(key);
+      if (previous === null || previous === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, previous);
+      }
+    }
+  };
+
+  try {
+    entries.forEach(({ key, value }) => {
+      if (typeof key !== 'string' || key.length === 0) return;
+      capturePreviousValue(key);
+      if (value === null || value === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, value);
+      }
+    });
+  } catch (err) {
+    try {
+      rollback();
+    } catch (rollbackErr) {
+      console.warn('[indexedTreeStore] import localStorage rollback error', rollbackErr);
+    }
+    throw err;
+  }
+
+  return rollback;
 }
 
 // saveTree: write the root node and create lightweight directory stubs for children
@@ -73,15 +183,34 @@ export async function saveTree(rootNode, projectId = 'example-project') {
     await db.transaction('rw', 'nodes', async () => {
       const rootPath = '';
       const now = Date.now();
-      await db.nodes.put({ projectId, path: rootPath, compressed: compress(rootNode), updatedAt: now, meta: { childrenLoaded: true } });
+      await db.nodes.put({
+        projectId,
+        path: rootPath,
+        parentPath: '',
+        compressed: compress(rootNode),
+        updatedAt: now,
+        meta: { childrenLoaded: true }
+      });
 
       if (Array.isArray(rootNode.children)) {
         const ops = [];
         for (const child of rootNode.children) {
-          const childPath = child.relPath || child.name || null;
+          const childPath = normPath(child.relPath || child.name || null);
           if (!childPath) continue;
-          const stub = { name: child.name, relPath: child.relPath, isDirectory: !!child.isDirectory, childrenLoaded: false };
-          ops.push(db.nodes.put({ projectId, path: normPath(child.relPath), compressed: compress(stub), updatedAt: now, meta: { childrenLoaded: false } }));
+          const stub = {
+            name: child.name,
+            relPath: childPath,
+            isDirectory: !!child.isDirectory,
+            childrenLoaded: false
+          };
+          ops.push(db.nodes.put({
+            projectId,
+            path: childPath,
+            parentPath: parentPathOf(childPath),
+            compressed: compress(stub),
+            updatedAt: now,
+            meta: { childrenLoaded: false }
+          }));
         }
         await Promise.all(ops);
       }
@@ -129,26 +258,45 @@ export async function loadSubtree(path, projectId = 'example-project') {
     const node = decompress(rec.compressed);
 
     if (node.isDirectory && node.childrenLoaded === false) {
-      const prefix = p === '' ? '' : p + '/';
-      // load all nodes for this project and filter
-      const all = await db.nodes.where({ projectId }).toArray();
+      let childRecords = await db.nodes
+        .where('parentPath')
+        .equals(p)
+        .and((record) => record.projectId === projectId)
+        .toArray();
+      childRecords = childRecords.filter((record) => record.path !== p);
+
+      // Backward-compat fallback for records created before parentPath was populated.
+      if (childRecords.length === 0) {
+        const prefix = p === '' ? '' : `${p}/`;
+        const all = await db.nodes.where({ projectId }).toArray();
+        childRecords = all.filter((record) => {
+          if (!record.path) return false;
+          if (record.path === p) return false;
+          if (record.path.indexOf(prefix) !== 0) return false;
+          const rest = prefix === '' ? record.path : record.path.slice(prefix.length);
+          return rest.indexOf('/') === -1;
+        });
+      }
+
       const children = [];
-      for (const r of all) {
-        if (!r.path) continue;
-        if (r.path === p) continue;
-        if (r.path.indexOf(prefix) !== 0) continue;
-        const rest = prefix === '' ? r.path : r.path.slice(prefix.length);
-        if (rest.indexOf('/') !== -1) continue;
+      for (const record of childRecords) {
         try {
-          const childNode = decompress(r.compressed);
+          const childNode = decompress(record.compressed);
           children.push(childNode);
         } catch (err) {
-          console.warn('[indexedTreeStore] skipping child decompress error', r.path, err);
+          console.warn('[indexedTreeStore] skipping child decompress error', record.path, err);
         }
       }
       node.children = children;
       node.childrenLoaded = true;
-      await db.nodes.put({ projectId, path: p, compressed: compress(node), updatedAt: Date.now(), meta: { childrenLoaded: true } });
+      await db.nodes.put({
+        projectId,
+        path: p,
+        parentPath: parentPathOf(p),
+        compressed: compress(node),
+        updatedAt: Date.now(),
+        meta: { childrenLoaded: true }
+      });
     }
 
     return node;
@@ -295,7 +443,16 @@ export async function importProject(pkg, targetProjectId, options = {}) {
   }
   
   // No conflict - proceed with import
+  let rollbackLocalStorage = null;
   try {
+    const localStorageWrites = collectImportableProjectLocalStorageWrites(pkg, targetProjectId);
+    const selectedTestSetupWrite = buildSelectedTestSetupWrite(pkg.selectedTestSetup);
+    if (selectedTestSetupWrite) {
+      localStorageWrites.push(selectedTestSetupWrite);
+    }
+
+    rollbackLocalStorage = applyLocalStorageWritesWithRollback(localStorageWrites);
+
     await db.transaction('rw', 'nodes', async () => {
       const ops = [];
       for (const n of pkg.nodes) {
@@ -305,36 +462,15 @@ export async function importProject(pkg, targetProjectId, options = {}) {
       await Promise.all(ops);
     });
 
-    // restore per-project localStorage keys (if provided). We prefix them with the new project id.
-    if (pkg.localStorage && typeof pkg.localStorage === 'object') {
-      try {
-        for (const key of Object.keys(pkg.localStorage)) {
-          try {
-            const suffix = key.replace(`globalAppData_${pkg.projectId}_`, '');
-            const newKey = `globalAppData_${targetProjectId}_${suffix}`;
-            localStorage.setItem(newKey, pkg.localStorage[key]);
-          } catch (e) { /* ignore individual key errors */ }
-        }
-      } catch (e) { console.warn('[indexedTreeStore] importProject localStorage error', e); }
-    }
-
-    // Append the imported selectedTestSetup to the global testSetups list (already checked for duplicates above)
-    if (pkg.selectedTestSetup && pkg.selectedTestSetup.id && !conflict) {
-      try {
-        const { value: decodedSetups } = decodeJsonFromStorage(localStorage.getItem('globalAppData_testSetups'));
-        const setups = Array.isArray(decodedSetups) ? decodedSetups : [];
-        const exists = setups.some((s) => s && s.id === pkg.selectedTestSetup.id);
-        if (!exists) {
-          setups.push(pkg.selectedTestSetup);
-          localStorage.setItem('globalAppData_testSetups', JSON.stringify(setups));
-        }
-      } catch (e) {
-        console.warn('[indexedTreeStore] importProject append test setup error', e);
-      }
-    }
-
     return { success: true, targetProjectId };
   } catch (err) {
+    if (rollbackLocalStorage) {
+      try {
+        rollbackLocalStorage();
+      } catch (rollbackErr) {
+        console.warn('[indexedTreeStore] importProject rollback error', rollbackErr);
+      }
+    }
     console.error('[indexedTreeStore] importProject error', err);
     throw err;
   }
