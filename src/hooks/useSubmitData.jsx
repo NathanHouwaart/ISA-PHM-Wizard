@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useProjectData } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
+import { waitForNextPaint } from '../utils/waitForNextPaint';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
@@ -53,6 +54,7 @@ export default function useSubmitData() {
     setIsSubmitting(true);
     setMessage('Preparing data...');
     setError(null);
+    await waitForNextPaint();
 
     try {
       const jsonData = buildConversionPayload({

@@ -34,6 +34,7 @@ import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 import Heading3 from '../components/Typography/Heading3';
 import PreExportValidationPanel from '../components/Widgets/PreExportValidationPanel';
 import { buildExportValidationReport } from '../utils/exportValidation';
+import { waitForNextPaint } from '../utils/waitForNextPaint';
 
 export const IsaQuestionnaire = () => {
   const totalPages = slides.length;
@@ -78,6 +79,7 @@ export const IsaQuestionnaire = () => {
   // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
   const [isRemountingSlides, setIsRemountingSlides] = useState(false);
+  const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
   const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
   const [isFullValidationPending, setIsFullValidationPending] = useState(true);
@@ -362,40 +364,55 @@ export const IsaQuestionnaire = () => {
 
   const ValidationStatusIcon = validationStatusMeta.icon;
 
-  const handleSubmit = () => {
-    const liveValidationReport = buildExportValidationReport({
-      investigation,
-      contacts,
-      studyVariables,
-      studyToStudyVariableMapping,
-      studies,
-      testSetups,
-      selectedTestSetupId,
-      studyToMeasurementProtocolSelection,
-      studyToProcessingProtocolSelection,
-      studyToSensorMeasurementMapping,
-      studyToSensorProcessingMapping,
-      selectedDataset,
-      experimentType,
-    }, {
-      includePathChecks: true
-    });
-
-    if (liveValidationReport?.hasBlockingErrors) {
-      setShowValidationPanel(true);
-      setShowValidationDetails(true);
+  const handleSubmit = async () => {
+    if (isPreparingSubmit || isSubmitting) {
       return;
     }
 
-    submitData().catch(() => {
-      // errors are displayed in overlay message; no additional alert needed
-    });
+    setIsPreparingSubmit(true);
+    try {
+      await waitForNextPaint();
+
+      const liveValidationReport = buildExportValidationReport({
+        investigation,
+        contacts,
+        studyVariables,
+        studyToStudyVariableMapping,
+        studies,
+        testSetups,
+        selectedTestSetupId,
+        studyToMeasurementProtocolSelection,
+        studyToProcessingProtocolSelection,
+        studyToSensorMeasurementMapping,
+        studyToSensorProcessingMapping,
+        selectedDataset,
+        experimentType,
+      }, {
+        includePathChecks: true
+      });
+
+      if (liveValidationReport?.hasBlockingErrors) {
+        setShowValidationPanel(true);
+        setShowValidationDetails(true);
+        return;
+      }
+
+      submitData().catch(() => {
+        // errors are displayed in overlay message; no additional alert needed
+      });
+    } finally {
+      setIsPreparingSubmit(false);
+    }
   };
+
+  const isSubmitOverlayVisible = isPreparingSubmit || isSubmitting;
+  const submitOverlayMessage = isPreparingSubmit ? 'Checking pre-export validation...' : message;
+  const submitOverlayCancel = isSubmitting ? cancel : null;
 
   return (
     <PageWrapper>
       {/* All overlays follow consistent conditional rendering pattern with explicit handlers */}
-      {isSubmitting && <LoadingOverlay message={message} onCancel={cancel} />}
+      {isSubmitOverlayVisible && <LoadingOverlay message={submitOverlayMessage} onCancel={submitOverlayCancel} />}
       {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
       {showSessionsModal && <ProjectSessionsModal onClose={handleSessionsModalClose} />}
       {explorerOpen && <InAppExplorer onClose={handleExplorerClose} onSelect={handleExplorerSelect} />}
@@ -549,10 +566,10 @@ export const IsaQuestionnaire = () => {
             <TooltipButton
               tooltipText={hasBlockingValidationIssues ? 'Resolve blocking validation issues before converting' : 'Submit the form'}
               onClick={handleSubmit}
-              disabled={hasBlockingValidationIssues}
+              disabled={hasBlockingValidationIssues || isPreparingSubmit || isSubmitting}
               className={cn(
                 "py-2 px-4 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg disabled:cursor-not-allowed disabled:opacity-70",
-                hasBlockingValidationIssues
+                hasBlockingValidationIssues || isPreparingSubmit || isSubmitting
                   ? "bg-gray-400 hover:bg-gray-400"
                   : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:ring-4 focus:ring-blue-200 hover:shadow-xl"
               )}
