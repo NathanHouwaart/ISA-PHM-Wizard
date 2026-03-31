@@ -1,7 +1,5 @@
 // src/hooks/useExampleProjects.jsx
 import { useEffect, useRef } from 'react';
-import exampleSingleRunNlnEmp from "../data/example-single-run-nln-emp.json";
-import exampleMultiRunMilling from "../data/example-multi-run-milling.json";
 
 import { clearTree, importProject, loadTree } from '../utils/indexedTreeStore';
 import {
@@ -11,10 +9,49 @@ import {
     clearProjectDatasetStats
 } from '../utils/projectMetadata';
 
-// Map of available example projects
-const EXAMPLE_PROJECTS = {
-    'example-single-run': exampleSingleRunNlnEmp,
-    'example-multi-run': exampleMultiRunMilling,
+// Map of available example project loaders (lazy-loaded to keep entry bundle lean)
+const EXAMPLE_PROJECT_LOADERS = {
+    'example-single-run': () => import('../data/example-single-run-nln-emp.json'),
+    'example-multi-run': () => import('../data/example-multi-run-milling.json')
+};
+
+const EXAMPLE_PROJECT_CACHE = new Map();
+const EXAMPLE_PROJECT_PENDING = new Map();
+
+const normalizeExampleProjectModule = (moduleValue) => (
+    moduleValue && typeof moduleValue === 'object' && 'default' in moduleValue
+        ? moduleValue.default
+        : moduleValue
+);
+
+const loadExampleProjectData = async (projectId) => {
+    if (!projectId || !Object.prototype.hasOwnProperty.call(EXAMPLE_PROJECT_LOADERS, projectId)) {
+        return null;
+    }
+    if (EXAMPLE_PROJECT_CACHE.has(projectId)) {
+        return EXAMPLE_PROJECT_CACHE.get(projectId);
+    }
+    if (EXAMPLE_PROJECT_PENDING.has(projectId)) {
+        return EXAMPLE_PROJECT_PENDING.get(projectId);
+    }
+
+    const loader = EXAMPLE_PROJECT_LOADERS[projectId];
+    const pending = loader()
+        .then((moduleValue) => {
+            const data = normalizeExampleProjectModule(moduleValue);
+            if (data) {
+                EXAMPLE_PROJECT_CACHE.set(projectId, data);
+            }
+            EXAMPLE_PROJECT_PENDING.delete(projectId);
+            return data || null;
+        })
+        .catch((error) => {
+            EXAMPLE_PROJECT_PENDING.delete(projectId);
+            throw error;
+        });
+
+    EXAMPLE_PROJECT_PENDING.set(projectId, pending);
+    return pending;
 };
 
 const EXAMPLE_SEED_VERSION = 2;
@@ -82,14 +119,14 @@ const upsertExampleTestSetup = ({
 
 // Helper to check if a project is an example project
 export const isExampleProject = (projectId) => {
-    return projectId && Object.prototype.hasOwnProperty.call(EXAMPLE_PROJECTS, projectId);
+    return projectId && Object.prototype.hasOwnProperty.call(EXAMPLE_PROJECT_LOADERS, projectId);
 };
 
 // Get example project IDs
-export const getExampleProjectIds = () => Object.keys(EXAMPLE_PROJECTS);
+export const getExampleProjectIds = () => Object.keys(EXAMPLE_PROJECT_LOADERS);
 
-// Get example project data
-export const getExampleProjectData = (projectId) => EXAMPLE_PROJECTS[projectId];
+// Get example project data if already loaded (sync accessor used by state fallback logic)
+export const getExampleProjectData = (projectId) => EXAMPLE_PROJECT_CACHE.get(projectId) || null;
 
 /**
  * Hook to manage example project initialization and operations
@@ -109,10 +146,10 @@ export const useExampleProjects = (setTestSetups, loadFromLocalStorage, onProjec
         (async () => {
             try {
                 const reseededProjectIds = [];
-                for (const projectId of Object.keys(EXAMPLE_PROJECTS)) {
+                for (const projectId of getExampleProjectIds()) {
                     const seedFlagKey = getExampleSeedFlagKey(projectId);
                     if (!localStorage.getItem(seedFlagKey)) {
-                        const exampleData = EXAMPLE_PROJECTS[projectId];
+                        const exampleData = await loadExampleProjectData(projectId);
                         if (exampleData) {
                             console.debug(`[useExampleProjects] force-initializing example project ${projectId}`);
                             try {
@@ -184,7 +221,10 @@ export const resetExampleProject = async (projectId, options = {}) => {
     }
 
     try {
-        const exampleProjectData = EXAMPLE_PROJECTS[projectId];
+        const exampleProjectData = await loadExampleProjectData(projectId);
+        if (!exampleProjectData) {
+            throw new Error(`Example project data not found for ${projectId}`);
+        }
         const baselineLS = exampleProjectData.localStorage;
 
         // The JSON file's localStorage keys use the source project ID (e.g.
@@ -327,7 +367,7 @@ export const seedExampleProject = async (projectId, options = {}) => {
         return; // Already seeded
     }
 
-    const exampleData = EXAMPLE_PROJECTS[projectId];
+    const exampleData = await loadExampleProjectData(projectId);
     if (!exampleData) {
         return;
     }
