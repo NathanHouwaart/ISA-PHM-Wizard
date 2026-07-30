@@ -7,7 +7,7 @@ import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
-import { OUTPUT_MODE_RAW_ONLY, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
+import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
@@ -25,6 +25,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     publicationDate: item?.publicationDate || '',
     runCount: item?.runCount ?? 1,
     configurationId: item?.configurationId || '',
+    outputMode: normalizeStudyOutputMode(item?.outputMode, OUTPUT_MODE_RAW_ONLY),
   });
   const [formError, setFormError] = useState('');
 
@@ -42,7 +43,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const studyData = {
       ...formData,
       runCount: normalizedRunCount,
-      outputMode: normalizeStudyOutputMode(item?.outputMode, OUTPUT_MODE_RAW_ONLY),
+      outputMode: normalizeStudyOutputMode(formData.outputMode, OUTPUT_MODE_RAW_ONLY),
       id: isEditing && item.id ? item.id : generateId(), // Generate a new ID if not editing}`
     };
 
@@ -170,6 +171,16 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             })()}
             explanation="Select which configuration of the test setup was used for this study"
             disabled={!selectedTestSetupId}
+          />
+
+          <FormField
+            name={"outputMode"}
+            onChange={handleChange}
+            value={formData.outputMode}
+            label="Data Types"
+            type='select'
+            tags={OUTPUT_MODE_OPTIONS}
+            explanation="Specify whether this experiment contains raw data, processed data, or both."
           />
 
         </div>

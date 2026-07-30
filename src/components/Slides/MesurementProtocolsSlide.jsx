@@ -26,6 +26,7 @@ import useMappingsController from '../../hooks/useMappingsController';
 import EntityMappingPanel from '../EntityMappingPanel';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import generateId from '../../utils/generateId';
+import { isSensorApplicable } from '../../utils/protocolApplicability';
 
 export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPage, pageIndex }, ref) => {
 
@@ -139,6 +140,17 @@ export const MeasurementProtocolSlide = forwardRef(({ onHeightChange, currentPag
                 title: 'Add a new protocol'
             }
         ],
+        isCellEditable: ({ row, isStaticColumn, columnProp }) => {
+            if (isStaticColumn) return true;
+            const sensorId = columnProp?.replace(/_spec$|_unit$/, '');
+            return isSensorApplicable(row, sensorId);
+        },
+        mappingCellProperties: ({ row, columnId }) => {
+            if (!isSensorApplicable(row, columnId)) {
+                return { style: { background: '#f3f4f6', color: '#9ca3af' } };
+            }
+            return {};
+        },
     };
 
     return (

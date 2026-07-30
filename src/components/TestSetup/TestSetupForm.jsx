@@ -595,6 +595,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             onAddItem={addMeasurementProtocol}
             onRemoveItem={removeMeasurementProtocol}
             onUpdateItemField={updateMeasurementProtocol}
+            onUpdateApplicableSensors={(protocolId, ids) => updateMeasurementProtocol(protocolId, 'applicableSensorIds', ids)}
             addButtonTooltip="Add Measurement Protocol"
             removeButtonTooltip="Remove measurement protocol"
             accentDotClassName="bg-indigo-500"
@@ -623,6 +624,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             onAddItem={addProcessingProtocol}
             onRemoveItem={removeProcessingProtocol}
             onUpdateItemField={updateProcessingProtocol}
+            onUpdateApplicableSensors={(protocolId, ids) => updateProcessingProtocol(protocolId, 'applicableSensorIds', ids)}
             addButtonTooltip="Add Processing Protocol"
             removeButtonTooltip="Remove processing protocol"
             accentDotClassName="bg-orange-500"

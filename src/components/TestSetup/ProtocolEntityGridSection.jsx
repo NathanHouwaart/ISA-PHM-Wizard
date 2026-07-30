@@ -6,6 +6,7 @@ import FormField from '../Form/FormField';
 import DataGrid from '../DataGrid/DataGrid';
 import IconTooltipButton from '../Widgets/IconTooltipButton';
 import SuggestionStrip from '../Suggestions/SuggestionStrip';
+import SensorApplicabilityChips from '../SensorApplicabilityChips';
 
 const ProtocolEntityGridSection = ({
   title,
@@ -17,6 +18,7 @@ const ProtocolEntityGridSection = ({
   onAddItem,
   onRemoveItem,
   onUpdateItemField,
+  onUpdateApplicableSensors,
   addButtonTooltip,
   removeButtonTooltip,
   accentDotClassName,
@@ -118,6 +120,16 @@ const ProtocolEntityGridSection = ({
                     placeholder="Optional notes for this protocol variant"
                     className="min-h-20"
                   />
+
+                  {sensors.length > 0 && (
+                    <SensorApplicabilityChips
+                      sensors={sensors}
+                      protocol={item}
+                      onProtocolChange={(updatedProtocol) =>
+                        onUpdateApplicableSensors?.(item.id, updatedProtocol.applicableSensorIds)
+                      }
+                    />
+                  )}
 
                   <SuggestionStrip
                     title="Suggested parameters"

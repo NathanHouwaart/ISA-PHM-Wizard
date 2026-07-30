@@ -9,14 +9,23 @@ import {
   OUTPUT_MODE_RAW_AND_PROCESSED,
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
+import { isSensorApplicable } from './protocolApplicability';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
 import {
   STUDY_VARIABLE_VALUE_MODE_SCALAR,
+  STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV,
   STUDY_VARIABLE_VALUE_MODE_TIMESERIES,
   normalizeStudyVariableValueMode
 } from '../constants/variableTypes';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+// Wraps isSensorApplicable so that a missing protocol (no protocol selected yet)
+// is treated as "all sensors applicable" rather than blocking the check.
+const isSensorApplicableForProtocol = (protocol, sensorId) => {
+  if (!protocol) return true;
+  return isSensorApplicable(protocol, sensorId);
+};
 
 const normalizePath = (value) => {
   if (typeof value !== 'string') return '';
@@ -514,27 +523,49 @@ export function buildExportValidationReport({
   let requiredRawAssignments = 0;
   let requiredProcessedAssignments = 0;
 
+  // Build protocol lookup maps from the selected test setup so we can check
+  // applicableSensorIds per study when validating file mapping requirements.
+  const measurementProtocolById = new Map(
+    asArray(selectedSetup?.measurementProtocols).map((p) => [String(p?.id || ''), p])
+  );
+  const processingProtocolById = new Map(
+    asArray(selectedSetup?.processingProtocols).map((p) => [String(p?.id || ''), p])
+  );
+
   if (studyRuns.length > 0 && sensors.length > 0) {
     studyRuns.forEach((run) => {
       const modeInfo = modeByStudyId.get(String(run?.studyId || ''));
       const rawRequired = Boolean(modeInfo?.rawEnabled);
       const processedRequired = Boolean(modeInfo?.processedEnabled);
 
+      const measurementProtocol = measurementProtocolById.get(
+        String(modeInfo?.selectedMeasurementProtocolId || '')
+      ) || null;
+      const processingProtocol = processingProtocolById.get(
+        String(modeInfo?.selectedProcessingProtocolId || '')
+      ) || null;
+
       sensors.forEach((sensor) => {
+        const sensorId = String(sensor?.id || '');
+
+        // Check sensor applicability for the selected protocols
+        const rawApplicable = isSensorApplicableForProtocol(measurementProtocol, sensorId);
+        const processedApplicable = isSensorApplicableForProtocol(processingProtocol, sensorId);
+
         const measurement = resolveScopedMapping(measurementMappingsLookup, sensor?.id, run);
         const processing = resolveScopedMapping(processingMappingsLookup, sensor?.id, run);
 
-        if (rawRequired) {
+        if (rawRequired && rawApplicable) {
           requiredRawAssignments += 1;
         }
-        if (processedRequired) {
+        if (processedRequired && processedApplicable) {
           requiredProcessedAssignments += 1;
         }
 
-        if (rawRequired && !hasFilledValue(measurement?.value)) {
+        if (rawRequired && rawApplicable && !hasFilledValue(measurement?.value)) {
           missingMeasurement.push(formatRunSensorLabel(run, sensor));
         }
-        if (processedRequired && !hasFilledValue(processing?.value)) {
+        if (processedRequired && processedApplicable && !hasFilledValue(processing?.value)) {
           missingProcessing.push(formatRunSensorLabel(run, sensor));
         }
       });
@@ -594,7 +625,7 @@ export function buildExportValidationReport({
           return;
         }
 
-        if (valueMode !== STUDY_VARIABLE_VALUE_MODE_TIMESERIES) {
+        if (valueMode !== STUDY_VARIABLE_VALUE_MODE_TIMESERIES && valueMode !== STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV) {
           return;
         }
 

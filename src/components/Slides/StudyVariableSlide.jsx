@@ -379,6 +379,8 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                 showControls={true}
                                                 showDebug={false}
                                                 enableBulkFill={true}
+                                                enableColFilter={true}
+                                                enableRowFilter={true}
                                                 onDataChange={handleSingleRunGridMappingsChange}
                                                 height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
                                                 isActive={currentPage === pageIndex && activeGridScopeId === ALL_STUDIES_ID}
@@ -529,6 +531,8 @@ const StudyVariableSlide = forwardRef(({ onHeightChange, currentPage, pageIndex 
                                                                             showControls={true}
                                                                             showDebug={false}
                                                                             enableBulkFill={true}
+                                                                            enableColFilter={true}
+                                                                            enableRowFilter={true}
                                                                             onDataChange={onGridMappingsChangeByStudyId[study.id]}
                                                                             height={Math.min(600, (normalizedSortedVariables.length * 50) + 115)}
                                                                             isActive={currentPage === pageIndex && activeGridScopeId === study.id}

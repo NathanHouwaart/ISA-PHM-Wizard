@@ -5,6 +5,7 @@ import AvatarInitials from '../Widgets/AvatarInitials';
 import TooltipButton from '../Widgets/TooltipButton';
 import { useProjectData } from '../../contexts/GlobalDataContext';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
+import { OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
 
 /**
  * StudyCard Component
@@ -36,6 +37,10 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
   const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
   const configuration = selectedSetup?.configurations?.find(c => c.id === study.configurationId);
   const configurationName = configuration?.name || 'Not selected';
+
+  const outputModeLabel = OUTPUT_MODE_OPTIONS.find(
+    o => o.value === normalizeStudyOutputMode(study?.outputMode)
+  )?.label || 'Raw only';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -89,6 +94,10 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
                   <span>{normalizedRunCount}</span>
                 </div>
               )}
+              <div className="flex items-center space-x-1">
+                <p className='font-bold'>Data Types - </p>
+                <span>{outputModeLabel}</span>
+              </div>
             </div>
           </div>
         </div>

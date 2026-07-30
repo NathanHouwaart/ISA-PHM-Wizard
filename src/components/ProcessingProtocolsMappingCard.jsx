@@ -9,6 +9,8 @@ import Heading2 from './Typography/Heading2';
 import Paragraph from './Typography/Paragraph';
 import TooltipButton from './Widgets/TooltipButton';
 import AnimatedTooltip, { AnimatedTooltipExample, AnimatedTooltipExplanation } from './Tooltip/AnimatedTooltipProvider';
+import SensorApplicabilityChips from './SensorApplicabilityChips';
+import { isSensorApplicable } from '../utils/protocolApplicability';
 
 const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, handleInputChange, removeParameter, openEdit, onOpenHandled}) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -125,18 +127,29 @@ const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, han
                                 </div>
                             </AnimatedTooltipExample>
                         </AnimatedTooltip>
+                        <SensorApplicabilityChips
+                            sensors={sensors}
+                            protocol={item}
+                            onProtocolChange={onSave}
+                        />
                     </div>
 
                     {/* mappings Grid - specification + unit per sensor */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {filteredMappings.map(({ sensor, mapping }, index) => {
                             const val = mapping.value || {};
+                            const applicable = isSensorApplicable(item, sensor.id);
                             return (
                                 <div
                                     key={sensor.id}
-                                    className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
+                                    className={applicable
+                                        ? 'bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm'
+                                        : 'bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm opacity-50'
+                                    }
                                 >
-                                    <div className="mb-2 font-semibold text-gray-700">{sensor.alias || sensor.name || `Sensor ${String(index + 1).padStart(2, '0')}`}</div>
+                                    <div className={`mb-2 font-semibold ${applicable ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
+                                        {sensor.alias || sensor.name || `Sensor ${String(index + 1).padStart(2, '0')}`}
+                                    </div>
                                     <div className="flex gap-3">
                                         <div className="flex-1">
                                             <FormField
@@ -144,8 +157,9 @@ const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, han
                                                 name={`specification`}
                                                 value={val.specification || ''}
                                                 commitOnBlur={true}
+                                                disabled={!applicable}
                                                 onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), specification: e.target.value })}
-                                                placeholder="Enter specification"
+                                                placeholder={applicable ? 'Enter specification' : 'Not applicable'}
                                             />
                                         </div>
                                         <div className="w-32">
@@ -154,8 +168,9 @@ const ProcessingProtocolsMappingCard = ({ item, itemIndex, mappings, onSave, han
                                                 name={`unit`}
                                                 value={val.unit || ''}
                                                 commitOnBlur={true}
+                                                disabled={!applicable}
                                                 onChange={(e) => handleInputChange(itemIndex, { sourceId: sensor.id, targetId: item.id }, { ...(val || {}), unit: e.target.value })}
-                                                placeholder="Enter unit"
+                                                placeholder={applicable ? 'Enter unit' : ''}
                                             />
                                         </div>
                                     </div>

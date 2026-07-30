@@ -12,6 +12,7 @@ import { studyCellTemplate, runCellTemplate, studyCellProperties, runCellPropert
 import useStudyProtocolSelection from '../../hooks/useStudyProtocolSelection';
 import { OUTPUT_MODE_RAW_ONLY, isProcessedOutputEnabled, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
 import ProtocolOutputPanel from './ProtocolOutputPanel';
+import { isSensorApplicable } from '../../utils/protocolApplicability';
 
 const normalizeMappingPath = (value) => {
   if (typeof value !== 'string') return '';
@@ -119,6 +120,21 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     });
     return lookup;
   }, [hierarchicalRows]);
+
+  // Build a map from protocolId → protocol object for applicability checks
+  const processingProtocolById = useMemo(() => {
+    const map = new Map();
+    (selectedTestSetup?.processingProtocols || []).forEach((p) => { if (p?.id) map.set(String(p.id), p); });
+    return map;
+  }, [selectedTestSetup]);
+
+  // Helper: is a sensor applicable to the processing protocol selected for a study?
+  const isSensorApplicableForStudy = useCallback((studyId, sensorId) => {
+    const protocolId = selectedProcessingProtocolByStudy[String(studyId)];
+    if (!protocolId) return true;
+    const protocol = processingProtocolById.get(String(protocolId));
+    return isSensorApplicable(protocol, sensorId);
+  }, [selectedProcessingProtocolByStudy, processingProtocolById]);
   const duplicateProcessedCellKeys = useMemo(() => {
     const keysByPath = new Map();
 
@@ -220,13 +236,20 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
         return isProcessedEnabledForStudy(row?.studyId);
       }
       if (sensorIdSet.has(String(columnProp))) {
-        return isProcessedEnabledForStudy(row?.studyId);
+        if (!isProcessedEnabledForStudy(row?.studyId)) return false;
+        if (!isSensorApplicableForStudy(row?.studyId, columnProp)) return false;
+        return true;
       }
       return true;
     },
     mappingCellProperties: ({ row, columnId }) => {
       const style = {};
       if (!isProcessedEnabledForStudy(row?.studyId)) {
+        style.background = '#f3f4f6';
+        style.color = '#9ca3af';
+        return { style };
+      }
+      if (sensorIdSet.has(String(columnId)) && !isSensorApplicableForStudy(row?.studyId, columnId)) {
         style.background = '#f3f4f6';
         style.color = '#9ca3af';
         return { style };
@@ -244,8 +267,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     selectedTestSetup,
     mappingsController.mappings,
     processingProtocolOptions,
-    isProcessedEnabledForStudy,
-    sensorIdSet,
+    isProcessedEnabledForStudy,    isSensorApplicableForStudy,    sensorIdSet,
     duplicateProcessedCellKeys
   ]);
 

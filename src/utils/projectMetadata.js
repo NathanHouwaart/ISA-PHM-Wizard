@@ -1,8 +1,11 @@
+import { decodeJsonFromStorage } from './storageCodec';
+
 const readJson = (key, fallback = null) => {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
-    return JSON.parse(raw);
+    const { value } = decodeJsonFromStorage(raw);
+    return value !== undefined ? value : fallback;
   } catch {
     return fallback;
   }
@@ -12,12 +15,9 @@ const readCollectionCount = (key) => {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return 0;
-    const data = JSON.parse(raw);
+    const { value: data } = decodeJsonFromStorage(raw);
     if (Array.isArray(data)) {
       return data.length;
-    }
-    if (data && typeof data === 'object') {
-      return Object.keys(data).length;
     }
     return 0;
   } catch {

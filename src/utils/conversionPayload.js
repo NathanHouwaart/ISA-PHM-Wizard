@@ -4,6 +4,7 @@ import {
   isRawOutputEnabled,
   resolveStudyOutputMode,
 } from './studyOutputMode';
+import { isSensorApplicable } from './protocolApplicability';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -90,12 +91,21 @@ const buildAssayDetails = ({
   outputMode = 'raw_only',
   selectedMeasurementProtocolId = '',
   selectedProcessingProtocolId = '',
+  selectedMeasurementProtocol = null,
+  selectedProcessingProtocol = null,
   measurementMappings = [],
   processingMappings = [],
   studyToSensorMeasurementMapping = [],
   studyToSensorProcessingMapping = [],
 }) => {
-  const safeSensors = asArray(sensors);
+  // Only include sensors that are applicable for at least one of the selected protocols.
+  // isSensorApplicable uses the opt-out model: if no protocol is selected (null) or
+  // applicableSensorIds is absent, the sensor is included.
+  const safeSensors = asArray(sensors).filter(
+    (sensor) =>
+      isSensorApplicable(selectedMeasurementProtocol, sensor.id) ||
+      isSensorApplicable(selectedProcessingProtocol, sensor.id)
+  );
   const rawEnabled = isRawOutputEnabled(outputMode);
   const processedEnabled = isProcessedOutputEnabled(outputMode);
 
@@ -108,12 +118,14 @@ const buildAssayDetails = ({
       const rawMapping = resolveRunMapping(studyToSensorMeasurementMapping, sensor.id, run);
       const processingMapping = resolveRunMapping(studyToSensorProcessingMapping, sensor.id, run);
 
+      const rawFileName = rawEnabled ? (rawMapping?.value || '') : '';
+      const processedFileName = processedEnabled ? (processingMapping?.value || '') : '';
       return {
         run_number: run.runNumber,
         study_run_id: run.runId,
         study_id: run.studyId,
-        raw_file_name: rawEnabled ? (rawMapping?.value || '') : '',
-        processed_file_name: processedEnabled ? (processingMapping?.value || '') : '',
+        ...(rawFileName ? { raw_file_name: rawFileName } : {}),
+        ...(processedFileName ? { processed_file_name: processedFileName } : {}),
       };
     });
 
@@ -200,6 +212,7 @@ export const buildConversionPayload = ({
     study_variables: payloadStudyVariables,
     measurement_protocols: selectedMeasurementProtocols,
     processing_protocols: selectedProcessingProtocols,
+    test_setup: selectedSetup,
     studies: safeStudies.map((study) => {
       const studyRuns = getRunsForStudy(study);
       const selectedMeasurementProtocolId = study?.measurementProtocolId || selectionLookup.measurement[study.id] || '';
@@ -217,11 +230,8 @@ export const buildConversionPayload = ({
         ...study,
         runCount: normalizedRunCount,
         total_runs: totalRuns,
-        publications: safePublications,
-        contacts: safeContacts,
         selectedMeasurementProtocolId,
         selectedProcessingProtocolId,
-        used_setup: selectedSetup,
         study_to_study_variable_mapping: asArray(studyRuns).flatMap((run) => (
           asArray(studyToStudyVariableMapping)
             .filter((mapping) => {
@@ -248,6 +258,12 @@ export const buildConversionPayload = ({
           outputMode,
           selectedMeasurementProtocolId,
           selectedProcessingProtocolId,
+          selectedMeasurementProtocol: selectedMeasurementProtocols.find(
+            (p) => p?.id === selectedMeasurementProtocolId
+          ) ?? null,
+          selectedProcessingProtocol: selectedProcessingProtocols.find(
+            (p) => p?.id === selectedProcessingProtocolId
+          ) ?? null,
           measurementMappings,
           processingMappings,
           studyToSensorMeasurementMapping,

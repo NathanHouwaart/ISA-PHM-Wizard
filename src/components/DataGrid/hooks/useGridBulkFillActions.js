@@ -18,7 +18,8 @@ export default function useGridBulkFillActions({
     isEditableColumn,
     canEditCell,
     fields,
-    commitGridChanges
+    commitGridChanges,
+    visibleColumnProps = null  // Optional Set<string> — when set, limits fill to visible columns
 }) {
     const DBG = !!showDebug;
     const selectionSnapshotRef = useRef(null);
@@ -92,6 +93,8 @@ export default function useGridBulkFillActions({
 
         return flatColumns
             .filter((column) => column && typeof column.prop === 'string' && column.prop.length > 0)
+            // Restrict to visible columns when a column filter is active
+            .filter((column) => !visibleColumnProps || visibleColumnProps.has(column.prop))
             .map((column) => {
                 const staticColumn = staticColumnMap.get(column.prop);
                 const isStaticColumn = !!staticColumn;
@@ -120,7 +123,7 @@ export default function useGridBulkFillActions({
                 };
             })
             .filter((entry) => entry.canEdit);
-    }, [getFlatColumns, isStandaloneGrid, isEditableColumn, staticColumnMap]);
+    }, [getFlatColumns, isStandaloneGrid, isEditableColumn, staticColumnMap, visibleColumnProps]);
 
     const requestFillPlan = useCallback((mode) => {
         if (typeof window === 'undefined') return null;

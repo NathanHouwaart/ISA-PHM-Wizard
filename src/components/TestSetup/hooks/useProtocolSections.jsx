@@ -6,6 +6,7 @@ import {
   MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS,
   PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS
 } from '../../../constants/suggestionCatalog';
+import { isSensorApplicable } from '../../../utils/protocolApplicability';
 
 const useProtocolSections = ({ formData, setFormData }) => {
   const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
@@ -311,6 +312,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
         name: '',
         size: 70,
         readonly: true,
+        pin: 'colPinStart',
         cellTemplate: Template(DeleteRowCellTemplate),
         cellProperties: () => ({ style: { 'text-align': 'center' } })
       },
@@ -319,9 +321,10 @@ const useProtocolSections = ({ formData, setFormData }) => {
         name: 'Identifier',
         size: 150,
         readonly: true,
+        pin: 'colPinStart',
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
-      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false, pin: 'colPinStart' },
       {
         prop: 'description',
         name: 'Description',
@@ -341,7 +344,18 @@ const useProtocolSections = ({ formData, setFormData }) => {
         onClick: addMeasurementProtocolParameter,
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
-    ]
+    ],
+    isCellEditable: ({ isStaticColumn, columnProp }) => {
+      if (isStaticColumn) return true;
+      const sensorId = columnProp?.replace(/_spec$|_unit$/, '');
+      return isSensorApplicable(activeMeasurementProtocol, sensorId);
+    },
+    mappingCellProperties: ({ columnId }) => {
+      if (!isSensorApplicable(activeMeasurementProtocol, columnId)) {
+        return { style: { background: '#f3f4f6', color: '#9ca3af' } };
+      }
+      return {};
+    },
   }), [
     activeMeasurementProtocol,
     activeMeasurementProtocolRows,
@@ -374,6 +388,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
         name: '',
         size: 70,
         readonly: true,
+        pin: 'colPinStart',
         cellTemplate: Template(DeleteRowCellTemplate),
         cellProperties: () => ({ style: { 'text-align': 'center' } })
       },
@@ -382,9 +397,10 @@ const useProtocolSections = ({ formData, setFormData }) => {
         name: 'Identifier',
         size: 150,
         readonly: true,
+        pin: 'colPinStart',
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Parameter P' })
       },
-      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false },
+      { prop: 'name', name: 'Parameter Name', size: 240, readonly: false, pin: 'colPinStart' },
       {
         prop: 'description',
         name: 'Description',
@@ -404,7 +420,18 @@ const useProtocolSections = ({ formData, setFormData }) => {
         onClick: addProcessingProtocolParameter,
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
-    ]
+    ],
+    isCellEditable: ({ isStaticColumn, columnProp }) => {
+      if (isStaticColumn) return true;
+      const sensorId = columnProp?.replace(/_spec$|_unit$/, '');
+      return isSensorApplicable(activeProcessingProtocol, sensorId);
+    },
+    mappingCellProperties: ({ columnId }) => {
+      if (!isSensorApplicable(activeProcessingProtocol, columnId)) {
+        return { style: { background: '#f3f4f6', color: '#9ca3af' } };
+      }
+      return {};
+    },
   }), [
     activeProcessingProtocol,
     activeProcessingProtocolRows,

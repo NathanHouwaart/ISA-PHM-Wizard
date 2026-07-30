@@ -1,5 +1,6 @@
 // src/pages/StudyPage.js
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 // Import the single global provider
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
@@ -11,7 +12,8 @@ import Collection, {
     CollectionAddButtonText,
     CollectionEmptyStateTitle,
     CollectionEmptyStateSubtitle,
-    CollectionEmptyStateAddButtonText
+    CollectionEmptyStateAddButtonText,
+    CollectionExtraActions
 } from '../Collection';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
@@ -29,7 +31,7 @@ import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
-import { OUTPUT_MODE_RAW_ONLY } from '../../utils/studyOutputMode';
+import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS } from '../../utils/studyOutputMode';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -69,6 +71,30 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         setStudies([...studies, newStudy]);
     };
 
+    // Bulk add
+    const [showBulkAdd, setShowBulkAdd] = useState(false);
+    const [bulkAddInput, setBulkAddInput] = useState('10');
+    const bulkInputRef = useRef(null);
+
+    const bulkAddStudies = () => {
+        const count = parseInt(bulkAddInput, 10);
+        if (!count || count < 1) return;
+        const base = studies.length;
+        const newStudies = Array.from({ length: count }, (_, i) => ({
+            id: generateId(),
+            name: `New Experiment ${base + i + 1}`,
+            description: 'Enter description...',
+            submissionDate: '',
+            publicationDate: '',
+            configurationId: '',
+            runCount: 1,
+            outputMode: OUTPUT_MODE_RAW_ONLY
+        }));
+        setStudies([...studies, ...newStudies]);
+        setShowBulkAdd(false);
+        setBulkAddInput('10');
+    };
+
     // Handle study data changes from the grid
     const handleStudyDataChange = (newStudyData) => {
         setStudies(newStudyData || []);
@@ -95,6 +121,12 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 onClick: addNewStudy,
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
                 title: 'Add a new experiment'
+            },
+            {
+                label: '+ Add X Experiments',
+                onClick: () => setShowBulkAdd(true),
+                className: 'px-3 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100',
+                title: 'Bulk-add multiple experiments at once'
             }
         ],
             staticColumns: [
@@ -159,11 +191,22 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 name: 'Number of runs',
                 size: 160,
                 readonly: false,
-            }] : [])
+            }] : []),
+            {
+                prop: 'outputMode',
+                name: 'Data Types',
+                size: 180,
+                readonly: false,
+                columnType: 'select',
+                labelKey: 'label',
+                valueKey: 'value',
+                source: OUTPUT_MODE_OPTIONS
+            }
         ]
     };
     
     return (
+        <>
         <div ref={combinedRef}>
 
             <SlidePageTitle>
@@ -197,6 +240,15 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                             <CollectionEmptyStateTitle>No Experiments Found</CollectionEmptyStateTitle>
                             <CollectionEmptyStateSubtitle>Get started by adding your first Experiment</CollectionEmptyStateSubtitle>
                             <CollectionEmptyStateAddButtonText>Add Experiment Now</CollectionEmptyStateAddButtonText>
+                            <CollectionExtraActions>
+                                <button
+                                    onClick={() => setShowBulkAdd(true)}
+                                    title="Bulk-add multiple experiments at once"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100"
+                                >
+                                    + Add X Experiments
+                                </button>
+                            </CollectionExtraActions>
                         </Collection>
                     </div>
                 </TabPanel>
@@ -206,6 +258,9 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         {...studiesGridConfig}
                         showControls={true}
                         showDebug={false}
+                        enableBulkFill={true}
+                        enableColFilter={true}
+                        enableRowFilter={true}
                         onRowDataChange={handleStudyDataChange}
                         plugins={plugins}
                         height={"45vh"}
@@ -214,6 +269,51 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 </TabPanel>
             </div>
         </div>
+
+        {/* Bulk Add Dialog */}
+        {showBulkAdd && createPortal(
+            <div
+                className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                onClick={() => setShowBulkAdd(false)}
+            >
+                <div
+                    className="bg-white rounded-lg shadow-xl p-6 w-80"
+                    onClick={e => e.stopPropagation()}
+                >
+                    <h3 className="text-base font-semibold text-gray-800 mb-1">Bulk Add Experiments</h3>
+                    <p className="text-sm text-gray-500 mb-3">How many experiments would you like to add?</p>
+                    <input
+                        ref={bulkInputRef}
+                        type="number"
+                        min="1"
+                        max="2000"
+                        value={bulkAddInput}
+                        onChange={e => setBulkAddInput(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        autoFocus
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') bulkAddStudies();
+                            if (e.key === 'Escape') setShowBulkAdd(false);
+                        }}
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => setShowBulkAdd(false)}
+                            className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={bulkAddStudies}
+                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Add {parseInt(bulkAddInput, 10) > 0 ? parseInt(bulkAddInput, 10) : ''} Experiments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        , document.body)}
+        </>
     );
 });
 

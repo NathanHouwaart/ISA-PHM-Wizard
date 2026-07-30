@@ -1,4 +1,4 @@
-import React, { useCallback, forwardRef, useMemo } from 'react';
+import React, { useCallback, forwardRef, useMemo, useState } from 'react';
 import { useDataGrid } from '../../hooks/useDataGrid';
 import {
     applyRowUpdates,
@@ -20,6 +20,33 @@ import DataGridViewport from './components/DataGridViewport';
 import "./DataGrid.css";
 
 const EMPTY_LIST = Object.freeze([]);
+
+/**
+ * Filter column defs by a regex, always keeping pinned columns visible.
+ * Handles both flat columns and grouped columns (with children).
+ */
+function filterColumnsByRegex(columns, regex) {
+    return columns.reduce((acc, column) => {
+        if (column.pin === 'colPinStart' || column.pin === 'colPinEnd') {
+            acc.push(column);
+            return acc;
+        }
+        if (column.children && Array.isArray(column.children)) {
+            const filteredChildren = column.children.filter((child) => {
+                if (child.pin === 'colPinStart' || child.pin === 'colPinEnd') return true;
+                const haystack = `${child.name ?? ''} ${child.prop ?? ''}`;
+                return regex.test(haystack);
+            });
+            if (filteredChildren.length > 0) {
+                acc.push({ ...column, children: filteredChildren });
+            }
+        } else {
+            const haystack = `${column.name ?? ''} ${column.prop ?? ''}`;
+            if (regex.test(haystack)) acc.push(column);
+        }
+        return acc;
+    }, []);
+}
 
 /**
  * Generic DataGrid component that handles any type of data with optional mapping functionality.
@@ -63,6 +90,8 @@ const DataGrid = forwardRef(({
     // Custom actions for controls
     customActions = EMPTY_LIST, // Array of custom action buttons to add to controls
     hideClearAllMappings = false, // Optional: hide clear-all control (useful for standalone grids)
+    enableColFilter = false, // Show a regex column-filter button in the toolbar
+    enableRowFilter = false, // Show a regex row-filter button in the toolbar
 
     // Plugins for RevoGrid
     plugins = {},           // Plugins to enhance grid functionality
@@ -280,6 +309,70 @@ const DataGrid = forwardRef(({
         fields
     });
 
+    // ── Column filter ───────────────────────────────────────────────────────
+    const [colFilterText, setColFilterText] = useState('');
+    const [colFilterOpen, setColFilterOpen] = useState(false);
+
+    const colFilterRegex = useMemo(() => {
+        if (!colFilterText) return null;
+        try { return new RegExp(colFilterText, 'i'); }
+        catch { return null; }
+    }, [colFilterText]);
+
+    const visibleColumns = useMemo(() => {
+        if (!enableColFilter || !colFilterRegex) return appliedColumns;
+        return filterColumnsByRegex(appliedColumns, colFilterRegex);
+    }, [enableColFilter, appliedColumns, colFilterRegex]);
+
+    const visibleColumnProps = useMemo(() => {
+        if (!enableColFilter || !colFilterRegex) return null;
+        const props = new Set();
+        visibleColumns.forEach((column) => {
+            if (column.children) {
+                column.children.forEach((child) => { if (child.prop) props.add(child.prop); });
+            } else if (column.prop) {
+                props.add(column.prop);
+            }
+        });
+        return props;
+    }, [enableColFilter, colFilterRegex, visibleColumns]);
+
+    // ── Row filter ───────────────────────────────────────────────────────────
+    const [rowFilterText, setRowFilterText] = useState('');
+    const [rowFilterOpen, setRowFilterOpen] = useState(false);
+
+    const rowFilterRegex = useMemo(() => {
+        if (!rowFilterText) return null;
+        try { return new RegExp(rowFilterText, 'i'); }
+        catch { return null; }
+    }, [rowFilterText]);
+
+    const { visibleGridData, filteredRowIndices } = useMemo(() => {
+        if (!enableRowFilter || !rowFilterRegex) {
+            return { visibleGridData: gridData, filteredRowIndices: null };
+        }
+        const indices = [];
+        const visible = gridData.filter((row, index) => {
+            const haystack = Object.values(row)
+                .map((v) => (v !== null && v !== undefined ? String(v) : ''))
+                .join(' ');
+            if (rowFilterRegex.test(haystack)) {
+                indices.push(index);
+                return true;
+            }
+            return false;
+        });
+        return { visibleGridData: visible, filteredRowIndices: indices };
+    }, [enableRowFilter, gridData, rowFilterRegex]);
+
+    // Remapped getRowByIndex — translates visible-grid indices back to original data.
+    const remappedGetRowByIndex = useCallback((visibleIndex) => {
+        if (!filteredRowIndices) return getRowByIndex(visibleIndex);
+        const originalIndex = filteredRowIndices[visibleIndex];
+        return originalIndex !== undefined ? getRowByIndex(originalIndex) : undefined;
+    }, [filteredRowIndices, getRowByIndex]);
+    // ─────────────────────────────────────────────────────────────────────────
+
     const {
         editSessionRef,
         clearEditSession,
@@ -294,7 +387,7 @@ const DataGrid = forwardRef(({
         staticColumns,
         isEditableColumn,
         canEditCell,
-        getRowByIndex,
+        getRowByIndex: remappedGetRowByIndex,
         resolveEditValue,
         stableColumnDefsRef: stableColumnDefs,
         fields,
@@ -307,7 +400,7 @@ const DataGrid = forwardRef(({
         gridRef,
         translateRangeCoordinates,
         getFlatColumns,
-        getRowByIndex,
+        getRowByIndex: remappedGetRowByIndex,
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
@@ -330,7 +423,7 @@ const DataGrid = forwardRef(({
         staticColumns,
         isEditableColumn,
         canEditCell,
-        getRowByIndex,
+        getRowByIndex: remappedGetRowByIndex,
         fields,
         commitGridChanges,
         handleClearCell
@@ -364,6 +457,7 @@ const DataGrid = forwardRef(({
         hookRowData,
         fields,
         updateMappingsBatch,
+        canEditCell,
         showDebug
     });
 
@@ -372,13 +466,14 @@ const DataGrid = forwardRef(({
         gridRef,
         translateRangeCoordinates,
         getFlatColumns,
-        getRowByIndex,
+        getRowByIndex: remappedGetRowByIndex,
         staticColumns,
         isStandaloneGrid,
         isEditableColumn,
         canEditCell,
         fields,
-        commitGridChanges
+        commitGridChanges,
+        visibleColumnProps
     });
 
     const controlsActions = useMemo(() => {
@@ -404,14 +499,34 @@ const DataGrid = forwardRef(({
                 onDebugSelection={handleDebugSelection}
                 actionPlugins={actionPlugins}
                 pluginApi={pluginApi}
+                enableColFilter={enableColFilter}
+                colFilterText={colFilterText}
+                colFilterOpen={colFilterOpen}
+                onToggleColFilter={() => {
+                    setColFilterOpen((prev) => {
+                        if (prev) setColFilterText('');
+                        return !prev;
+                    });
+                }}
+                onColFilterChange={setColFilterText}
+                enableRowFilter={enableRowFilter}
+                rowFilterText={rowFilterText}
+                rowFilterOpen={rowFilterOpen}
+                onToggleRowFilter={() => {
+                    setRowFilterOpen((prev) => {
+                        if (prev) setRowFilterText('');
+                        return !prev;
+                    });
+                }}
+                onRowFilterChange={setRowFilterText}
             />
 
             <DataGridViewport
                 gridKey={gridKey}
                 setGridRef={setGridRef}
-                gridData={gridData}
+                gridData={visibleGridData}
                 rowsize={rowsize}
-                appliedColumns={appliedColumns}
+                appliedColumns={visibleColumns}
                 handleBeforeEdit={handleBeforeEdit}
                 handleAfterEdit={handleAfterEdit}
                 handleBeforeRangeEdit={handleBeforeRangeEdit}
