@@ -1,11 +1,28 @@
 import React from 'react';
-import { Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle, Layers } from 'lucide-react';
+import { Download, Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle, Layers } from 'lucide-react';
 import TooltipButton from '../Widgets/TooltipButton';
 import AvatarInitials from '../Widgets/AvatarInitials';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
+import {
+  createTestSetupExportPackage,
+  getTestSetupExportFileName
+} from '../../utils/testSetupExport';
 
 const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
+  const handleExport = () => {
+    const exportPackage = createTestSetupExportPackage(item);
+    const blob = new Blob([JSON.stringify(exportPackage, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = getTestSetupExportFileName(item);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   // Get unique measurement types from sensors
   const getMeasurementTypes = (sensors) => {
     if (!sensors || sensors.length === 0) return [];
@@ -96,6 +113,14 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
                 className="bg-transparent p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 <Edit2 className="w-4 h-4" />
+              </TooltipButton>
+
+              <TooltipButton
+                tooltipText="Export test setup"
+                onClick={(event) => { event.stopPropagation(); handleExport(); }}
+                className="bg-transparent p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
               </TooltipButton>
 
               <TooltipButton
