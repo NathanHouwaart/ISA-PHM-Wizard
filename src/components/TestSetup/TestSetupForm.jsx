@@ -17,7 +17,6 @@ import {
 import ProtocolEntityGridSection from './ProtocolEntityGridSection';
 import CharacteristicsEditor from './editors/CharacteristicsEditor';
 import SensorsEditor from './editors/SensorsEditor';
-import ConfigurationsEditor from './editors/ConfigurationsEditor';
 import BasicInfoSection from './sections/BasicInfoSection';
 import EntityGridTabPanel from './sections/EntityGridTabPanel';
 import useProtocolSections from './hooks/useProtocolSections';
@@ -94,7 +93,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
   const [sensorsView, setSensorsView] = useState('simple-view');
-  const [configurationsView, setConfigurationsView] = useState('simple-view');
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(buildFormState(item)));
 
@@ -102,7 +100,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   // Calculate number of sensors from sensors array
   const numberOfSensors = formData.sensors.length;
   const numberOfCharacteristics = formData.characteristics.length;
-  const numberOfConfigurations = formData.configurations.length;
   const numberOfMeasurementProtocols = formData.measurementProtocols.length;
   const numberOfProcessingProtocols = formData.processingProtocols.length;
 
@@ -111,7 +108,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const isGridActive = 
       (selectedTab === 'characteristics' && characteristicsView === 'grid-view') ||
       (selectedTab === 'sensors' && sensorsView === 'grid-view') ||
-      (selectedTab === 'configurations' && configurationsView === 'grid-view') ||
       selectedTab === 'measurement-protocols' ||
       selectedTab === 'processing-protocols';
     setScreenWidth(isGridActive ? 'max-w-[100rem]' : 'max-w-5xl');
@@ -124,7 +120,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     selectedTab,
     characteristicsView,
     sensorsView,
-    configurationsView,
     setScreenWidth
   ]);
 
@@ -398,69 +393,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     ]
   }), [sensorRows, addSensorRow]);
 
-  const configurationRows = useMemo(() => {
-    return formData.configurations.map((c) => ({
-      ...c,
-      detailsCount: Array.isArray(c?.details) ? c.details.length : 0,
-      detailsHint: Array.isArray(c?.details) && c.details.length > 0
-        ? c.details.map((d) => `${d.name}: ${d.value}`).join(', ')
-        : 'No details'
-    }));
-  }, [formData.configurations]);
-
-  const addConfigurationRow = useCallback(() => {
-    setFormData((prev) => ({
-      ...prev,
-      configurations: [
-        ...prev.configurations,
-        {
-          id: uuid4(),
-          name: '',
-          replaceableComponentId: '',
-          details: [],
-          detailsCount: 0,
-          detailsHint: 'No details'
-        }
-      ]
-    }));
-  }, []);
-
-  const configurationGridConfig = useMemo(() => ({
-    title: 'Configurations',
-    rowData: configurationRows,
-    columnData: [],
-    mappings: [],
-    staticColumns: [
-      {
-        prop: 'actions',
-        name: '',
-        size: 70,
-        readonly: true,
-        cellTemplate: Template(DeleteRowCellTemplate),
-        cellProperties: () => ({ style: { 'text-align': 'center' } })
-      },
-      {
-        prop: 'pattern',
-        name: 'Identifier',
-        size: 150,
-        readonly: true,
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Config C' })
-      },
-      { prop: 'name', name: 'Name', size: 200, readonly: false },
-      { prop: 'replaceableComponentId', name: 'Replaceable Component ID', size: 200, readonly: false },
-      { prop: 'detailsCount', name: 'Details (#)', size: 140, readonly: true },
-      { prop: 'detailsHint', name: 'Details', size: 300, readonly: true },
-    ],
-    customActions: [
-      {
-        label: '+ Add configuration',
-        title: 'Add configuration row',
-        onClick: addConfigurationRow,
-        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-      }
-    ]
-  }), [configurationRows, addConfigurationRow]);
-
   const handleCharacteristicRowsChange = useCallback((nextRows) => {
     setFormData((prev) => ({
       ...prev,
@@ -486,22 +418,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           ...existing,
           ...row,
           additionalInfo: existing.additionalInfo || row.additionalInfo || []
-        };
-      })
-    }));
-  }, []);
-
-  const handleConfigurationRowsChange = useCallback((nextRows) => {
-    setFormData((prev) => ({
-      ...prev,
-      configurations: nextRows.map((row) => {
-        const existing = prev.configurations.find((c) => c.id === row.id) || {};
-        return {
-          ...existing,
-          ...row,
-          details: existing.details || row.details || [],
-          detailsCount: undefined,
-          detailsHint: undefined
         };
       })
     }));
@@ -559,7 +475,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             { id: 'basic-info', label: 'Basic Info', tooltip: 'Basic Information about the test setup' },
             { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
             { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
-            { id: 'configurations', label: `Configurations (${numberOfConfigurations})`, tooltip: 'Manage test setup configurations' },
             { id: 'measurement-protocols', label: `Measurement (${numberOfMeasurementProtocols})`, tooltip: 'Define raw data acquisition protocol variants and parameter values' },
             { id: 'processing-protocols', label: `Processing (${numberOfProcessingProtocols})`, tooltip: 'Define processing protocol variants and parameter values' },
           ]}
@@ -609,25 +524,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           onRowDataChange={handleSensorRowsChange}
         />
 
-        <EntityGridTabPanel
-          isActive={selectedTab === 'configurations'}
-          selectedView={configurationsView}
-          onViewChange={setConfigurationsView}
-          simpleViewTooltip="Edit configurations with collapsible cards"
-          gridViewTooltip="Edit configurations inline in a grid"
-          simpleContent={
-            <ConfigurationsEditor
-              configurations={formData.configurations}
-              onConfigurationsChange={(configurations) =>
-                setFormData((prev) => ({ ...prev, configurations }))
-              }
-            />
-          }
-          gridConfig={configurationGridConfig}
-          historyScopeKey={`${historyScopeBase}:configurations`}
-          isGridActive={selectedTab === 'configurations' && configurationsView === 'grid-view'}
-          onRowDataChange={handleConfigurationRowsChange}
-        />
         <TabPanel isActive={selectedTab === 'measurement-protocols'}>
           <ProtocolEntityGridSection
             title="Measurement Protocols"

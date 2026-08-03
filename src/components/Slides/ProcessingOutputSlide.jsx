@@ -223,7 +223,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
             style['border-bottom'] = '3px solid black';
           }
           if (!isProcessedEnabledForStudy(model?.studyId)) {
-            style.background = '#f3f4f6';
+            style.background = '#d1d5db';
             style.color = '#6b7280';
           }
           return { style };
@@ -245,12 +245,12 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     mappingCellProperties: ({ row, columnId }) => {
       const style = {};
       if (!isProcessedEnabledForStudy(row?.studyId)) {
-        style.background = '#f3f4f6';
+        style.background = '#d1d5db';
         style.color = '#9ca3af';
         return { style };
       }
       if (sensorIdSet.has(String(columnId)) && !isSensorApplicableForStudy(row?.studyId, columnId)) {
-        style.background = '#f3f4f6';
+        style.background = '#d1d5db';
         style.color = '#9ca3af';
         return { style };
       }

@@ -241,12 +241,12 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     mappingCellProperties: ({ row, columnId }) => {
       const style = {};
       if (!isRawEnabledForStudy(row?.studyId)) {
-        style.background = '#f3f4f6';
+        style.background = '#d1d5db';
         style.color = '#9ca3af';
         return { style };
       }
       if (sensorIdSet.has(String(columnId)) && !isSensorApplicableForStudy(row?.studyId, columnId)) {
-        style.background = '#f3f4f6';
+        style.background = '#d1d5db';
         style.color = '#9ca3af';
         return { style };
       }
