@@ -12,7 +12,7 @@ import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } f
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
+  const { experimentType, configurations, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 
@@ -161,16 +161,18 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             name={"configurationId"}
             onChange={handleChange}
             value={formData.configurationId}
-            label="Test Setup Configuration"
+            label="Configuration"
             type='select'
             placeholder='No configuration selected'
             tags={(() => {
               const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-              const configs = selectedSetup?.configurations || [];
+              const projectConfigs = (configurations || []).filter(
+                (configuration) => !configuration.testSetupId || configuration.testSetupId === selectedTestSetupId
+              );
+              const configs = projectConfigs.length ? projectConfigs : (selectedSetup?.configurations || []);
               return configs.map(c => ({ value: c.id, label: c.name || 'Unnamed' }));
             })()}
-            explanation="Select which configuration of the test setup was used for this study"
-            disabled={!selectedTestSetupId}
+            explanation="Select the project configuration used for this experiment"
           />
 
           <FormField

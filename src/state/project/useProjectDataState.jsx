@@ -30,6 +30,8 @@ export default function useProjectDataState({
     const [investigation, setInvestigation] = useState(() => initialProjectState.investigation);
     const [contacts, setContacts] = useState(() => initialProjectState.contacts);
     const [publications, setPublications] = useState(() => initialProjectState.publications);
+    const [configurations, setConfigurations] = useState(() => initialProjectState.configurations);
+    const [configurationTypes, setConfigurationTypes] = useState(() => initialProjectState.configurationTypes);
     const [selectedTestSetupId, setSelectedTestSetupId] = useState(() => initialProjectState.selectedTestSetupId);
     const [studyVariables, setStudyVariables] = useState(() => initialProjectState.studyVariables);
     const [measurementProtocols, setMeasurementProtocols] = useState(() => initialProjectState.measurementProtocols);
@@ -84,6 +86,8 @@ export default function useProjectDataState({
         setInvestigation(nextState.investigation);
         setContacts(nextState.contacts);
         setPublications(nextState.publications);
+        setConfigurations(nextState.configurations);
+        setConfigurationTypes(nextState.configurationTypes);
         setSelectedTestSetupId(nextState.selectedTestSetupId);
         setStudyVariables(nextState.studyVariables);
         setMeasurementProtocols(nextState.measurementProtocols);
@@ -104,6 +108,8 @@ export default function useProjectDataState({
         investigation: setInvestigation,
         contacts: setContacts,
         publications: setPublications,
+        configurations: setConfigurations,
+        configurationTypes: setConfigurationTypes,
         selectedTestSetupId: setSelectedTestSetupId,
         studyVariables: setStudyVariables,
         measurementProtocols: setMeasurementProtocols,
@@ -125,6 +131,8 @@ export default function useProjectDataState({
         testSetups: [testSetups, setTestSetups],
         investigation: [investigation, setInvestigation],
         publications: [publications, setPublications],
+        configurations: [configurations, setConfigurations],
+        configurationTypes: [configurationTypes, setConfigurationTypes],
         selectedTestSetupId: [selectedTestSetupId, setSelectedTestSetupId],
         studyVariables: [studyVariables, setStudyVariables],
         measurementProtocols: [measurementProtocols, setMeasurementProtocols],
@@ -145,6 +153,8 @@ export default function useProjectDataState({
         testSetups,
         investigation,
         publications,
+        configurations,
+        configurationTypes,
         selectedTestSetupId,
         studyVariables,
         measurementProtocols,
@@ -170,6 +180,10 @@ export default function useProjectDataState({
         setContacts,
         publications,
         setPublications,
+        configurations,
+        setConfigurations,
+        configurationTypes,
+        setConfigurationTypes,
         selectedTestSetupId,
         setSelectedTestSetupId,
         studyVariables,

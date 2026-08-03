@@ -6,7 +6,7 @@ import {
     buildProjectScopedStorageKey
 } from './storageKeyPolicy';
 
-const PROJECT_SCHEMA_VERSION = 2;
+const PROJECT_SCHEMA_VERSION = 3;
 const TEST_SETUPS_SCHEMA_VERSION = 1;
 
 const TEST_SETUPS_STORAGE_KEY = 'globalAppData_testSetups';
@@ -16,6 +16,8 @@ const PROJECT_ARRAY_KEYS = new Set([
     'studies',
     'contacts',
     'publications',
+    'configurations',
+    'configurationTypes',
     'studyVariables',
     'measurementProtocols',
     'processingProtocols',
@@ -453,6 +455,26 @@ export const loadProjectStateWithMigrations = ({
             experimentType: normalizeExperimentTypeId(migratedState.experimentType)
         };
         schemaVersion = 2;
+    }
+
+    if (schemaVersion < 3) {
+        const pageTabStates = isPlainObject(migratedState.pageTabStates)
+            ? Object.entries(migratedState.pageTabStates).reduce((next, [key, value]) => {
+                const pageIndex = Number(key);
+                const nextIndex = Number.isInteger(pageIndex) && pageIndex >= 4
+                    ? pageIndex + 1
+                    : key;
+                next[nextIndex] = value;
+                return next;
+            }, {})
+            : migratedState.pageTabStates;
+        migratedState = {
+            ...migratedState,
+            configurations: Array.isArray(migratedState.configurations) ? migratedState.configurations : [],
+            configurationTypes: Array.isArray(migratedState.configurationTypes) ? migratedState.configurationTypes : [],
+            pageTabStates
+        };
+        schemaVersion = 3;
     }
 
     const normalizedState = normalizeProjectState(migratedState, defaults);

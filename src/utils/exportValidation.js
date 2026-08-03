@@ -338,7 +338,46 @@ export function buildExportValidationReport({
     });
   }
 
+  const studiesMissingConfiguration = safeStudies
+    .map((study, index) => ({ study, index }))
+    .filter(({ study }) => !String(study?.configurationId || '').trim());
+
+  if (studiesMissingConfiguration.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'missing-study-configuration',
+      level: 'error',
+      title: 'Experiments missing configuration',
+      description: `${studiesMissingConfiguration.length} experiments are not linked to a configuration.`,
+      count: studiesMissingConfiguration.length,
+      items: studiesMissingConfiguration.map(({ study, index }) => formatStudyLabel(study, index)),
+    });
+  }
+
   if (runCountRequired) {
+    const configurationAssignments = new Map();
+    safeStudies.forEach((study, index) => {
+      const configurationId = String(study?.configurationId || '').trim();
+      if (!configurationId) return;
+      const assignments = configurationAssignments.get(configurationId) || [];
+      assignments.push({ study, index });
+      configurationAssignments.set(configurationId, assignments);
+    });
+    const duplicateConfigurationAssignments = [...configurationAssignments.entries()]
+      .filter(([, assignments]) => assignments.length > 1);
+
+    if (duplicateConfigurationAssignments.length > 0) {
+      pushIssue(errorIssues, {
+        id: 'duplicate-prognostics-configurations',
+        level: 'error',
+        title: 'Configurations assigned to multiple experiments',
+        description: 'A prognostics configuration can only be assigned to one experiment.',
+        count: duplicateConfigurationAssignments.length,
+        items: duplicateConfigurationAssignments.map(([, assignments]) => (
+          assignments.map(({ study, index }) => formatStudyLabel(study, index)).join(', ')
+        )),
+      });
+    }
+
     const studiesWithInvalidRunCount = safeStudies
       .map((study, index) => ({ study, index }))
       .filter(({ study }) => {

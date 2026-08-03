@@ -1,5 +1,5 @@
 // src/pages/StudyPage.js
-import React, { forwardRef, useState, useRef } from 'react';
+import React, { forwardRef, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 // Import the single global provider
@@ -32,6 +32,7 @@ import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
 import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS } from '../../utils/studyOutputMode';
+import { getDuplicateConfigurationIds, isPrognosticsExperiment } from '../../utils/studyConfigurationValidation';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -47,6 +48,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     // Access global context
     const {
         studies,
+        configurations,
         experimentType,
         testSetups,
         selectedTestSetupId
@@ -100,9 +102,21 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         setStudies(newStudyData || []);
     };
 
-    // Get configurations from selected test setup for dropdown
+    const duplicateConfigurationIds = useMemo(
+        () => isPrognosticsExperiment(experimentType)
+            ? getDuplicateConfigurationIds(studies)
+            : new Set(),
+        [experimentType, studies]
+    );
+
+    // Prefer project-scoped configurations; retain legacy test-setup records as a fallback.
     const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-    const configurationOptions = (selectedSetup?.configurations || []).map(c => ({
+    const projectConfigurations = (Array.isArray(configurations) ? configurations : []).filter(
+        (configuration) => !configuration.testSetupId || configuration.testSetupId === selectedTestSetupId
+    );
+    const legacyConfigurations = selectedSetup?.configurations || [];
+    const availableConfigurations = projectConfigurations.length > 0 ? projectConfigurations : legacyConfigurations;
+    const configurationOptions = availableConfigurations.map(c => ({
         value: c.id,
         label: (c.name || c.replaceableComponentId)
             ? [c.name, c.replaceableComponentId].filter(Boolean).join(' - ')
@@ -184,7 +198,12 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 columnType: 'select',
                 labelKey: 'label',
                 valueKey: 'value',
-                source: configurationOptions
+                source: configurationOptions,
+                cellProperties: (props) => (
+                    duplicateConfigurationIds.has(props?.model?.configurationId)
+                        ? { style: { background: '#ffedd5', color: '#9a3412' } }
+                        : {}
+                )
             },
             ...(experimentConfig.supportsMultipleRuns ? [{
                 prop: 'runCount',

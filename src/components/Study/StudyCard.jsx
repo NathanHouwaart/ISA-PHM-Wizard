@@ -28,14 +28,15 @@ import { OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/study
 const StudyCard = ({ item, onEdit, onRemove }) => {
 
   const study = item;
-  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
+  const { experimentType, configurations, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
   const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;
 
   // Get configuration name
   const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-  const configuration = selectedSetup?.configurations?.find(c => c.id === study.configurationId);
+  const configuration = configurations?.find(c => c.id === study.configurationId)
+    || selectedSetup?.configurations?.find(c => c.id === study.configurationId);
   const configurationName = configuration?.name || 'Not selected';
 
   const outputModeLabel = OUTPUT_MODE_OPTIONS.find(

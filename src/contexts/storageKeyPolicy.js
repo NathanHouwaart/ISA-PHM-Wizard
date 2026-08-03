@@ -12,6 +12,8 @@ const PROJECT_STATE_KEYS = Object.freeze([
     'investigation',
     'contacts',
     'publications',
+    'configurations',
+    'configurationTypes',
     'selectedTestSetupId',
     'studyVariables',
     'measurementProtocols',

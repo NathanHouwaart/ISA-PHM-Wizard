@@ -130,7 +130,7 @@ describe('buildExportValidationReport', () => {
     const report = buildExportValidationReport({
       ...makeBaseInput(),
       studies: [
-        { id: 'study-1', name: 'Study 1', runCount: 2, outputMode: OUTPUT_MODE_RAW_ONLY },
+        { id: 'study-1', name: 'Study 1', runCount: 2, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
       ],
       studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
       studyToSensorMeasurementMapping: [
@@ -173,6 +173,28 @@ describe('buildExportValidationReport', () => {
     expect(report.warningIssues.some((issue) => issue.id === 'missing-contacts')).toBe(true);
     expect(report.warningIssues.some((issue) => issue.id === 'missing-fault-specifications')).toBe(true);
     expect(report.warningIssues.some((issue) => issue.id === 'missing-operating-conditions')).toBe(true);
+  });
+
+  it('blocks export when an experiment has no configuration', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      experimentType: 'diagnostic-experiment',
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-study-configuration')).toBe(true);
+  });
+
+  it('blocks duplicate configuration assignments for prognostics experiments', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      experimentType: 'prognostics-experiment',
+      studies: [
+        { id: 'study-1', name: 'Experiment 1', runCount: 1, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
+        { id: 'study-2', name: 'Experiment 2', runCount: 1, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
+      ],
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'duplicate-prognostics-configurations')).toBe(true);
   });
 
   it('flags missing test matrix values as blocking errors', () => {
