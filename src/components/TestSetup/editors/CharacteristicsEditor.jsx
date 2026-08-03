@@ -6,6 +6,7 @@ import IconTooltipButton from '../../Widgets/IconTooltipButton';
 import TableTooltip from '../../Widgets/TableTooltip';
 import Paragraph from '../../Typography/Paragraph';
 import CharacteristicCard from './CharacteristicCard';
+import { setCharacteristicReplaceable } from '../../../utils/testSetupCharacteristics';
 
 const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => {
   const [expandedItems, setExpandedItems] = useState(new Set());
@@ -17,6 +18,8 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
       category: '',
       value: '',
       unit: '',
+      description: '',
+      isReplaceable: false,
       comments: []
     };
     const newCharacteristics = [...characteristics, newCharacteristic];
@@ -59,6 +62,13 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
   const updateComments = (charIndex, comments) => {
     updateCharacteristic(charIndex, 'comments', comments);
+  };
+
+  const updateReplaceable = (charIndex, isReplaceable) => {
+    const updatedCharacteristics = characteristics.map((characteristic, index) => (
+      index === charIndex ? setCharacteristicReplaceable(characteristic, isReplaceable) : characteristic
+    ));
+    onCharacteristicsChange(updatedCharacteristics);
   };
 
   return (
@@ -119,6 +129,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
             onToggle={() => toggleExpanded(index)}
             onRemove={() => removeCharacteristic(index)}
             onUpdateField={(field, value) => updateCharacteristic(index, field, value)}
+            onReplaceableChange={(isReplaceable) => updateReplaceable(index, isReplaceable)}
             onCommentsChange={(comments) => updateComments(index, comments)}
           />
         ))}

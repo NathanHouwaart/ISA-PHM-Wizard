@@ -9,7 +9,11 @@ import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import Paragraph from '../Typography/Paragraph';
 import { Template } from '@revolist/react-datagrid';
-import { DeleteRowCellTemplate, PatternCellTemplate } from '../DataGrid/CellTemplates';
+import {
+  BooleanCheckboxCellTemplate,
+  DeleteRowCellTemplate,
+  PatternCellTemplate
+} from '../DataGrid/CellTemplates';
 import ProtocolEntityGridSection from './ProtocolEntityGridSection';
 import CharacteristicsEditor from './editors/CharacteristicsEditor';
 import SensorsEditor from './editors/SensorsEditor';
@@ -17,6 +21,10 @@ import ConfigurationsEditor from './editors/ConfigurationsEditor';
 import BasicInfoSection from './sections/BasicInfoSection';
 import EntityGridTabPanel from './sections/EntityGridTabPanel';
 import useProtocolSections from './hooks/useProtocolSections';
+import {
+  isReplaceableCharacteristic,
+  normalizeCharacteristic
+} from '../../utils/testSetupCharacteristics';
 
 const normalizeForDirtyCheck = (value) => {
   if (Array.isArray(value)) {
@@ -68,7 +76,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       experimentPreparationProtocolName: sourceItem.experimentPreparationProtocolName || '',
       testSpecimenName: sourceItem.testSpecimenName || '',
       description: sourceItem.description || '',
-      characteristics: sourceItem.characteristics || [],
+      characteristics: (sourceItem.characteristics || []).map(normalizeCharacteristic),
       sensors: sourceItem.sensors || [],
       configurations: sourceItem.configurations || [],
       measurementProtocols: sourceItem.measurementProtocols || [],
@@ -187,6 +195,20 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       setFormError('Please fill in all required fields (Name, Location, Experiment Preparation Protocol Name, Set-up or test specimen-name).');
       return false;
     }
+
+    const replaceableCharacteristics = formData.characteristics.filter((characteristic) => (
+      isReplaceableCharacteristic(characteristic.isReplaceable)
+    ));
+    if (replaceableCharacteristics.length === 0) {
+      setFormError('Please add at least one replaceable component in the Characteristics tab.');
+      return false;
+    }
+    if (replaceableCharacteristics.some((characteristic) => (
+      !(characteristic.category || '').trim() || !(characteristic.description || '').trim()
+    ))) {
+      setFormError('Each replaceable component requires a category and description.');
+      return false;
+    }
     setFormError('');
 
     const testSetupData = {
@@ -254,6 +276,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           category: '',
           value: '',
           unit: '',
+          description: '',
+          isReplaceable: false,
           comments: [],
           commentsCount: 0,
           commentHint: 'Manage comments in Simple View'
@@ -302,8 +326,24 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         cellTemplate: Template(PatternCellTemplate, { prefix: 'Characteristic C' })
       },
       { prop: 'category', name: 'Category', size: 180, readonly: false },
-      { prop: 'value', name: 'Value', size: 200, readonly: false },
-      { prop: 'unit', name: 'Unit', size: 120, readonly: false },
+      {
+        prop: 'isReplaceable',
+        name: 'Replaceable',
+        size: 120,
+        readonly: false,
+        cellTemplate: Template(BooleanCheckboxCellTemplate)
+      },
+      { prop: 'value', name: 'Value', size: 200, readonly: false, cellProperties: ({ model }) => model?.isReplaceable ? { style: { background: '#f3f4f6', color: '#9ca3af' } } : {} },
+      { prop: 'unit', name: 'Unit', size: 120, readonly: false, cellProperties: ({ model }) => model?.isReplaceable ? { style: { background: '#f3f4f6', color: '#9ca3af' } } : {} },
+      {
+        prop: 'description',
+        name: 'Replaceable Component Description',
+        size: 280,
+        readonly: false,
+        cellProperties: ({ model }) => !model?.isReplaceable
+          ? { style: { background: '#f3f4f6', color: '#9ca3af' } }
+          : {}
+      },
       { prop: 'commentsCount', name: 'Comments (#)', size: 140, readonly: true },
       { prop: 'commentHint', name: 'Comments', size: 200, readonly: true },
     ],
@@ -314,7 +354,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         onClick: addCharacteristicRow,
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
-    ]
+    ],
+    isCellEditable: ({ row, columnProp }) => {
+      if (row?.isReplaceable) return columnProp !== 'value' && columnProp !== 'unit';
+      return columnProp !== 'description';
+    }
   }), [characteristicRows, addCharacteristicRow]);
 
   const sensorGridConfig = useMemo(() => ({
@@ -422,13 +466,13 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       ...prev,
       characteristics: nextRows.map((row) => {
         const existing = prev.characteristics.find((c) => c.id === row.id) || {};
-        return {
+        return normalizeCharacteristic({
           ...existing,
           ...row,
           comments: existing.comments || row.comments || [],
           commentsCount: undefined,
           commentHint: undefined
-        };
+        });
       })
     }));
   }, []);

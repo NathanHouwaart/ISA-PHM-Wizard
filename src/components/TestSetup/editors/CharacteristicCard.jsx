@@ -3,6 +3,7 @@ import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import FormField from '../../Form/FormField';
 import IconTooltipButton from '../../Widgets/IconTooltipButton';
 import CommentEditor from './CommentEditor';
+import ToggleField from '../../Form/ToggleField';
 
 const CharacteristicCard = ({
   characteristic,
@@ -11,9 +12,13 @@ const CharacteristicCard = ({
   onToggle,
   onRemove,
   onUpdateField,
+  onReplaceableChange,
   onCommentsChange,
 }) => {
-  const summary = `${characteristic.value || 'No value'} ${characteristic.unit || ''}`.trim();
+  const isReplaceable = characteristic.isReplaceable === true;
+  const summary = isReplaceable
+    ? characteristic.description || 'No description'
+    : `${characteristic.value || 'No value'} ${characteristic.unit || ''}`.trim();
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -32,6 +37,11 @@ const CharacteristicCard = ({
             <span className="font-bold">{characteristic.category || 'No category'}: </span>
             {summary}
           </span>
+          {isReplaceable && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+              Replaceable
+            </span>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-xs text-gray-500">
@@ -69,24 +79,50 @@ const CharacteristicCard = ({
                 placeholder="Enter category"
               />
 
-              <FormField
-                name={`characteristic-${index}-value`}
-                value={characteristic.value}
-                onChange={(e) => onUpdateField('value', e.target.value)}
-                label="Value"
-                type="text"
-                placeholder="Enter value"
+              <ToggleField
+                label="Replaceable"
+                description="Define values and types in the dedicated screen."
+                checked={isReplaceable}
+                onCheckedChange={onReplaceableChange}
+                ariaLabel={`Mark characteristic ${index + 1} as replaceable`}
+                className="md:col-span-2"
               />
 
-              <FormField
-                name={`characteristic-${index}-unit`}
-                value={characteristic.unit}
-                onChange={(e) => onUpdateField('unit', e.target.value)}
-                label="Unit"
-                type="text"
-                placeholder="Enter unit (optional)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {isReplaceable ? (
+                <div className="md:col-span-3">
+                  <FormField
+                    name={`characteristic-${index}-description`}
+                    value={characteristic.description || ''}
+                    onChange={(e) => onUpdateField('description', e.target.value)}
+                    label="Replaceable Component Description"
+                    type="textarea"
+                    placeholder="Describe the component that can be replaced"
+                    rows={3}
+                    required
+                  />
+                </div>
+              ) : (
+                <>
+                  <FormField
+                    name={`characteristic-${index}-value`}
+                    value={characteristic.value}
+                    onChange={(e) => onUpdateField('value', e.target.value)}
+                    label="Value"
+                    type="text"
+                    placeholder="Enter value"
+                  />
+
+                  <FormField
+                    name={`characteristic-${index}-unit`}
+                    value={characteristic.unit}
+                    onChange={(e) => onUpdateField('unit', e.target.value)}
+                    label="Unit"
+                    type="text"
+                    placeholder="Enter unit (optional)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </>
+              )}
             </div>
           </div>
 
