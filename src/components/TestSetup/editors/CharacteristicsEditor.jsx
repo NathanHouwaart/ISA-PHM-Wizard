@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { HelpCircle, Plus, Settings2, Trash2 } from 'lucide-react';
+import { HelpCircle, MessageSquare, Plus, Settings2, Trash2 } from 'lucide-react';
 import { v4 as uuid4 } from 'uuid';
 import FormField from '../../Form/FormField';
 import ToggleField from '../../Form/ToggleField';
@@ -31,6 +31,21 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
     [characteristics, selectedId]
   );
   const selectedCharacteristic = selectedIndex >= 0 ? characteristics[selectedIndex] : null;
+  const sidebarCharacteristics = useMemo(() => (
+    characteristics
+      .map((characteristic, index) => ({
+        characteristic,
+        index,
+        id: getCharacteristicKey(characteristic, index),
+        isReplaceable: isReplaceableCharacteristic(characteristic.isReplaceable)
+      }))
+      .sort((first, second) => {
+        if (first.isReplaceable !== second.isReplaceable) {
+          return first.isReplaceable ? -1 : 1;
+        }
+        return first.index - second.index;
+      })
+  ), [characteristics]);
 
   useEffect(() => {
     const hasSelectedCharacteristic = characteristics.some((characteristic, index) => (
@@ -94,13 +109,23 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
               Specify the test set-up characteristics and identify replaceable components.
             </Paragraph>
           </div>
-          <TooltipButton
-            onClick={() => setActiveTooltip((visible) => !visible)}
-            tooltipText="Show characteristic field guidance"
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </TooltipButton>
+          <div className="flex items-center gap-2">
+            <TooltipButton
+              onClick={addCharacteristic}
+              tooltipText="Add characteristic"
+              className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+            >
+              <Plus className="h-4 w-4" />
+            </TooltipButton>
+            <TooltipButton
+              onClick={() => setActiveTooltip((visible) => !visible)}
+              tooltipText="Show characteristic field guidance"
+              aria-label="Show characteristic field guidance"
+              className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+            >
+              <HelpCircle className="h-4 w-4 text-white" />
+            </TooltipButton>
+          </div>
         </div>
 
         <TableTooltip
@@ -119,46 +144,45 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
         <div className="flex min-h-[28rem] flex-col md:flex-row">
           <aside className="w-full shrink-0 border-b border-gray-200 bg-white md:w-72 md:border-b-0 md:border-r">
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <Heading3 className="text-base">Characteristics ({characteristics.length})</Heading3>
-              <TooltipButton
-                onClick={addCharacteristic}
-                tooltipText="Add characteristic"
-                className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
-              >
-                <Plus className="h-4 w-4" />
-              </TooltipButton>
-            </div>
-
             <div className="max-h-56 space-y-1 overflow-y-auto p-2 md:max-h-[32rem]">
-              {characteristics.map((characteristic, index) => {
-                const characteristicId = getCharacteristicKey(characteristic, index);
-                const replaceable = isReplaceableCharacteristic(characteristic.isReplaceable);
+              {sidebarCharacteristics.map(({ characteristic, index, id: characteristicId, isReplaceable: replaceable }) => {
+                const commentCount = characteristic.comments?.length || 0;
 
                 return (
                   <button
                     key={characteristicId}
                     type="button"
                     onClick={() => setSelectedId(characteristicId)}
-                    className={`w-full rounded-md px-3 py-2 text-left text-sm ${
+                    className={`w-full rounded-md border px-3 py-2.5 text-left text-sm transition-colors ${
                       characteristicId === selectedId
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'border-blue-200 bg-blue-50 text-blue-900'
+                        : 'border-transparent text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <span className="block truncate font-medium">
-                      {characteristic.category || `Characteristic ${index + 1}`}
-                    </span>
-                    <span className="block truncate text-xs text-gray-500">
-                      {getCharacteristicSummary(characteristic)}
-                    </span>
-                    <span className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${replaceable ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {characteristic.category || `Characteristic ${index + 1}`}
+                      </span>
                       {replaceable && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700">
+                        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                           Replaceable
                         </span>
                       )}
-                      <span>{characteristic.comments?.length || 0} comments</span>
+                    </span>
+                    <span className="mt-1 flex items-center gap-2 pl-4 text-xs text-gray-500">
+                      <span className="min-w-0 flex-1 truncate">
+                      {getCharacteristicSummary(characteristic)}
+                      </span>
+                      {commentCount > 0 && (
+                        <span
+                          className="inline-flex shrink-0 items-center gap-1 text-gray-400"
+                          aria-label={`${commentCount} comment${commentCount === 1 ? '' : 's'}`}
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          <span>{commentCount}</span>
+                        </span>
+                      )}
                     </span>
                   </button>
                 );
