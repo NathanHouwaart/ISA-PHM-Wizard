@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { HelpCircle, MessageSquare, Plus, Settings2, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, HelpCircle, MessageSquare, Plus, Settings2, Trash2 } from 'lucide-react';
 import { v4 as uuid4 } from 'uuid';
 import FormField from '../../Form/FormField';
-import ToggleField from '../../Form/ToggleField';
 import Heading3 from '../../Typography/Heading3';
 import Paragraph from '../../Typography/Paragraph';
+import { Switch } from '../../ui/Switch';
 import TableTooltip from '../../Widgets/TableTooltip';
 import TooltipButton from '../../Widgets/TooltipButton';
 import CommentEditor from './CommentEditor';
@@ -23,6 +23,7 @@ const getCharacteristicSummary = (characteristic) => {
 const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [activeTooltip, setActiveTooltip] = useState(false);
+  const [areCommentsExpanded, setAreCommentsExpanded] = useState(false);
 
   const selectedIndex = useMemo(
     () => characteristics.findIndex((characteristic, index) => (
@@ -68,6 +69,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
     };
     onCharacteristicsChange([...characteristics, characteristic]);
     setSelectedId(characteristic.id);
+    setAreCommentsExpanded(false);
   };
 
   const updateCharacteristic = (field, value) => {
@@ -95,6 +97,12 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
     const nextSelected = nextCharacteristics[selectedIndex] || nextCharacteristics[selectedIndex - 1];
     onCharacteristicsChange(nextCharacteristics);
     setSelectedId(nextSelected ? getCharacteristicKey(nextSelected, Math.min(selectedIndex, nextCharacteristics.length - 1)) : null);
+    setAreCommentsExpanded(false);
+  };
+
+  const selectCharacteristic = (characteristicId) => {
+    setSelectedId(characteristicId);
+    setAreCommentsExpanded(false);
   };
 
   const isReplaceable = isReplaceableCharacteristic(selectedCharacteristic?.isReplaceable);
@@ -142,9 +150,9 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
           ]}
         />
 
-        <div className="flex min-h-[28rem] flex-col md:flex-row">
-          <aside className="w-full shrink-0 border-b border-gray-200 bg-white md:w-72 md:border-b-0 md:border-r">
-            <div className="max-h-56 space-y-1 overflow-y-auto p-2 md:max-h-[32rem]">
+        <div className="flex min-h-[28rem] flex-col md:h-[45rem] md:flex-row md:items-stretch">
+          <aside className="w-full shrink-0 border-b border-gray-200 bg-white md:flex md:w-72 md:self-stretch md:flex-col md:border-b-0 md:border-r">
+            <div className="max-h-56 space-y-1 overflow-y-auto p-2 md:max-h-none md:min-h-0 md:flex-1">
               {sidebarCharacteristics.map(({ characteristic, index, id: characteristicId, isReplaceable: replaceable }) => {
                 const commentCount = characteristic.comments?.length || 0;
 
@@ -152,7 +160,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                   <button
                     key={characteristicId}
                     type="button"
-                    onClick={() => setSelectedId(characteristicId)}
+                    onClick={() => selectCharacteristic(characteristicId)}
                     className={`w-full rounded-md border px-3 py-2.5 text-left text-sm transition-colors ${
                       characteristicId === selectedId
                         ? 'border-blue-200 bg-blue-50 text-blue-900'
@@ -196,7 +204,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
             </div>
           </aside>
 
-          <main className="min-w-0 flex-1 p-5">
+          <main className="min-w-0 flex-1 p-5 md:min-h-0 md:overflow-y-auto">
             {!selectedCharacteristic ? (
               <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
                 <Settings2 className="mb-4 h-14 w-14 text-gray-300" />
@@ -214,102 +222,106 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                 </TooltipButton>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Heading3 className="text-xl">Edit Characteristic</Heading3>
-                    {isReplaceable && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                        Replaceable component
-                      </span>
-                    )}
-                  </div>
+                  <Heading3 className="text-xl">Edit Characteristic</Heading3>
                   <TooltipButton
                     onClick={removeSelectedCharacteristic}
                     tooltipText="Remove characteristic"
-                    className="p-2 bg-rose-600 text-white hover:bg-rose-700 rounded-md"
+                    aria-label="Remove characteristic"
+                    className="rounded-md bg-none bg-transparent p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
                   >
                     <Trash2 className="h-4 w-4" />
                   </TooltipButton>
                 </div>
 
-                <section className="rounded-lg border border-gray-200 bg-white">
-                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                    <Heading3 className="text-base">Characteristic Details</Heading3>
-                    <Paragraph className="mt-1 text-sm text-gray-600">
-                      Name the characteristic and indicate whether it is replaceable.
-                    </Paragraph>
-                  </div>
-                  <div className="grid gap-4 p-4 md:grid-cols-3">
-                    <FormField
-                      name={`characteristic-${selectedIndex}-category`}
-                      value={selectedCharacteristic.category || ''}
-                      onChange={(event) => updateCharacteristic('category', event.target.value)}
-                      label="Category"
-                      type="text"
-                      placeholder="Enter category"
-                      className="md:col-span-2"
-                    />
-                    <ToggleField
-                      label="Replaceable"
-                      description="Define values and types in the questionnaire."
-                      checked={isReplaceable}
-                      onCheckedChange={updateReplaceable}
-                      ariaLabel={`Mark characteristic ${selectedIndex + 1} as replaceable`}
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-lg border border-gray-200 bg-white">
-                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                    <Heading3 className="text-base">
-                      {isReplaceable ? 'Replaceable Component' : 'Characteristic Value'}
-                    </Heading3>
-                    <Paragraph className="mt-1 text-sm text-gray-600">
-                      {isReplaceable
-                        ? 'Describe the component that can be replaced.'
-                        : 'Enter the measured or specified value and its unit.'}
-                    </Paragraph>
-                  </div>
-                  <div className="p-4">
-                    {isReplaceable ? (
-                      <FormField
-                        name={`characteristic-${selectedIndex}-description`}
-                        value={selectedCharacteristic.description || ''}
-                        onChange={(event) => updateCharacteristic('description', event.target.value)}
-                        label="Replaceable Component Description"
-                        type="textarea"
-                        placeholder="Describe the component that can be replaced"
-                        rows={3}
-                        required
-                      />
-                    ) : (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <FormField
-                          name={`characteristic-${selectedIndex}-value`}
-                          value={selectedCharacteristic.value || ''}
-                          onChange={(event) => updateCharacteristic('value', event.target.value)}
-                          label="Value"
-                          type="text"
-                          placeholder="Enter value"
-                        />
-                        <FormField
-                          name={`characteristic-${selectedIndex}-unit`}
-                          value={selectedCharacteristic.unit || ''}
-                          onChange={(event) => updateCharacteristic('unit', event.target.value)}
-                          label="Unit"
-                          type="text"
-                          placeholder="Enter unit (optional)"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </section>
-
-                <CommentEditor
-                  comments={selectedCharacteristic.comments || []}
-                  onCommentsChange={(comments) => updateCharacteristic('comments', comments)}
+                <FormField
+                  name={`characteristic-${selectedIndex}-category`}
+                  value={selectedCharacteristic.category || ''}
+                  onChange={(event) => updateCharacteristic('category', event.target.value)}
+                  label="Category"
+                  type="text"
+                  placeholder="Enter category"
                 />
+
+                <div className="flex items-start justify-between gap-4 border-y border-gray-200 py-4">
+                  <div>
+                    <Heading3 className="text-sm font-semibold text-gray-800">Replaceable component</Heading3>
+                    <Paragraph className="mt-1 text-sm text-gray-600">
+                      This component can be changed between experiments.
+                    </Paragraph>
+                  </div>
+                  <Switch
+                    checked={isReplaceable}
+                    onCheckedChange={updateReplaceable}
+                    aria-label={`Mark characteristic ${selectedIndex + 1} as replaceable`}
+                    className="mt-1 data-[state=checked]:bg-amber-500 data-[state=checked]:hover:bg-amber-600"
+                  />
+                </div>
+
+                {isReplaceable ? (
+                  <FormField
+                    name={`characteristic-${selectedIndex}-description`}
+                    value={selectedCharacteristic.description || ''}
+                    onChange={(event) => updateCharacteristic('description', event.target.value)}
+                    label="Component description"
+                    type="textarea"
+                    placeholder="Describe the component that can be replaced"
+                    rows={3}
+                    required
+                  />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-12">
+                    <div className="md:col-span-8">
+                      <FormField
+                        name={`characteristic-${selectedIndex}-value`}
+                        value={selectedCharacteristic.value || ''}
+                        onChange={(event) => updateCharacteristic('value', event.target.value)}
+                        label="Value"
+                        type="text"
+                        placeholder="Enter value"
+                      />
+                    </div>
+                    <div className="md:col-span-4">
+                      <FormField
+                        name={`characteristic-${selectedIndex}-unit`}
+                        value={selectedCharacteristic.unit || ''}
+                        onChange={(event) => updateCharacteristic('unit', event.target.value)}
+                        label="Unit"
+                        type="text"
+                        placeholder="Unit (optional)"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-gray-200 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setAreCommentsExpanded((expanded) => !expanded)}
+                    className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+                    aria-expanded={areCommentsExpanded}
+                  >
+                    <span className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Notes</span>
+                      {(selectedCharacteristic.comments?.length || 0) > 0 && (
+                        <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs font-normal text-gray-500">
+                          {selectedCharacteristic.comments.length}
+                        </span>
+                      )}
+                    </span>
+                    {areCommentsExpanded
+                      ? <ChevronUp className="h-4 w-4" />
+                      : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {areCommentsExpanded && (
+                    <CommentEditor
+                      comments={selectedCharacteristic.comments || []}
+                      onCommentsChange={(comments) => updateCharacteristic('comments', comments)}
+                    />
+                  )}
+                </div>
               </div>
             )}
           </main>
