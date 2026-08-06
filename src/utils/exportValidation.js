@@ -10,6 +10,7 @@ import {
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
 import { isSensorApplicable } from './protocolApplicability';
+import { isSensorIncludedInDatasetOutput } from './sensorUsage';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
 import {
   STUDY_VARIABLE_VALUE_MODE_SCALAR,
@@ -230,7 +231,8 @@ export function buildExportValidationReport({
   const experimentTypeConfig = getExperimentTypeConfig(experimentType);
   const runCountRequired = Boolean(experimentTypeConfig?.supportsMultipleRuns);
   const selectedSetup = asArray(testSetups).find((setup) => setup?.id === selectedTestSetupId) || null;
-  const sensors = asArray(selectedSetup?.sensors);
+  const allSensors = asArray(selectedSetup?.sensors);
+  const sensors = allSensors.filter(isSensorIncludedInDatasetOutput);
   const studyRuns = expandStudiesIntoRuns(safeStudies);
   const selectionLookup = buildSelectionLookup({
     studyToMeasurementProtocolSelection,
@@ -417,12 +419,21 @@ export function buildExportValidationReport({
       count: 1,
       items: ['Project settings: re-select a valid test setup'],
     });
-  } else if (sensors.length === 0) {
+  } else if (allSensors.length === 0) {
     pushIssue(errorIssues, {
       id: 'test-setup-without-sensors',
       level: 'error',
       title: 'Selected test setup has no sensors',
       description: 'Add at least one sensor to the selected test setup before conversion.',
+      count: 1,
+      items: [selectedSetup?.name || 'Selected test setup'],
+    });
+  } else if (sensors.length === 0) {
+    pushIssue(errorIssues, {
+      id: 'test-setup-without-output-sensors',
+      level: 'error',
+      title: 'Selected test setup has no dataset-output sensors',
+      description: 'Mark at least one sensor as dataset output before conversion.',
       count: 1,
       items: [selectedSetup?.name || 'Selected test setup'],
     });
@@ -861,7 +872,8 @@ export function buildExportValidationReport({
     stats: {
       totalStudies: safeStudies.length,
       totalRuns: studyRuns.length,
-      totalSensors: sensors.length,
+      totalSensors: allSensors.length,
+      totalDatasetOutputSensors: sensors.length,
       totalContacts: safeContacts.length,
       totalStudyVariables: safeStudyVariables.length,
       totalFaultSpecifications: faultSpecificationVariables.length,

@@ -13,6 +13,7 @@ import useStudyProtocolSelection from '../../hooks/useStudyProtocolSelection';
 import { OUTPUT_MODE_RAW_ONLY, isProcessedOutputEnabled, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
 import ProtocolOutputPanel from './ProtocolOutputPanel';
 import { isSensorApplicable } from '../../utils/protocolApplicability';
+import { isSensorIncludedInDatasetOutput } from '../../utils/sensorUsage';
 
 const normalizeMappingPath = (value) => {
   if (typeof value !== 'string') return '';
@@ -42,11 +43,12 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
   const studyRuns = useStudyRuns();
 
-  const sensors = useMemo(() => (
-    Array.isArray(selectedTestSetup?.sensors)
+  const sensors = useMemo(() => {
+    const setupSensors = Array.isArray(selectedTestSetup?.sensors)
       ? selectedTestSetup.sensors
-      : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, sensor]) => ({ id, ...sensor })) : [])
-  ), [selectedTestSetup]);
+      : (selectedTestSetup?.sensors ? Object.entries(selectedTestSetup.sensors).map(([id, sensor]) => ({ id, ...sensor })) : []);
+    return setupSensors.filter(isSensorIncludedInDatasetOutput);
+  }, [selectedTestSetup]);
 
   const processingProtocolOptions = useMemo(
     () => (selectedTestSetup?.processingProtocols || []).map((protocol) => ({
@@ -172,7 +174,7 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
   const processingOutputGridConfig = useMemo(() => ({
     title: 'Mappings for processing protocol output',
     rowData: hierarchicalRows,
-    columnData: selectedTestSetup?.sensors || [],
+    columnData: sensors,
     mappings: mappingsController.mappings,
     fieldMappings: {
       rowId: 'id',

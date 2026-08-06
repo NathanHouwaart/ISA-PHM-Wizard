@@ -175,6 +175,33 @@ describe('buildExportValidationReport', () => {
     expect(report.warningIssues.some((issue) => issue.id === 'missing-operating-conditions')).toBe(true);
   });
 
+  it('does not require output mappings for condition-monitoring-only sensors', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      testSetups: [{
+        id: 'setup-1',
+        sensors: [
+          { id: 'sensor-1', alias: 'Vibration', usage: 'dataset-output' },
+          { id: 'sensor-2', alias: 'Pressure guard', usage: 'condition-monitoring' },
+        ],
+      }],
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'raw/r1_vibration.csv' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_vibration.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+    }, { includePathChecks: false });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-measurement-mappings')).toBe(false);
+    expect(report.stats.totalSensors).toBe(2);
+    expect(report.stats.totalDatasetOutputSensors).toBe(1);
+    expect(report.stats.expectedAssignments).toBe(2);
+  });
+
   it('blocks export when an experiment has no configuration', () => {
     const report = buildExportValidationReport({
       ...makeBaseInput(),

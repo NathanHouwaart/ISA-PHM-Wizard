@@ -5,6 +5,7 @@ import {
   resolveStudyOutputMode,
 } from './studyOutputMode';
 import { isSensorApplicable } from './protocolApplicability';
+import { isSensorIncludedInDatasetOutput } from './sensorUsage';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -181,7 +182,7 @@ export const buildConversionPayload = ({
   const selectedSetup = safeSetups.find((setup) => setup?.id === selectedTestSetupId) || null;
   const selectedMeasurementProtocols = asArray(selectedSetup?.measurementProtocols);
   const selectedProcessingProtocols = asArray(selectedSetup?.processingProtocols);
-  const sensors = asArray(selectedSetup?.sensors);
+  const sensors = asArray(selectedSetup?.sensors).filter(isSensorIncludedInDatasetOutput);
   const measurementMappings = asArray(selectedSetup?.sensorToMeasurementProtocolMapping);
   const processingMappings = asArray(selectedSetup?.sensorToProcessingProtocolMapping);
 
