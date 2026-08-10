@@ -18,6 +18,8 @@ import {
   STUDY_VARIABLE_VALUE_MODE_TIMESERIES,
   normalizeStudyVariableValueMode
 } from '../constants/variableTypes';
+import { isReplaceableCharacteristic } from './testSetupCharacteristics';
+import { getAssignedComponentInstanceId, getDuplicateComponentInstanceIds } from './studyConfigurationValidation';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -213,6 +215,7 @@ export function buildExportValidationReport({
   studyVariables = [],
   studyToStudyVariableMapping = [],
   studies = [],
+  configurations = [],
   testSetups = [],
   selectedTestSetupId = null,
   studyToMeasurementProtocolSelection = [],
@@ -231,6 +234,14 @@ export function buildExportValidationReport({
   const experimentTypeConfig = getExperimentTypeConfig(experimentType);
   const runCountRequired = Boolean(experimentTypeConfig?.supportsMultipleRuns);
   const selectedSetup = asArray(testSetups).find((setup) => setup?.id === selectedTestSetupId) || null;
+  const replaceableComponents = asArray(selectedSetup?.characteristics).filter(
+    (component) => isReplaceableCharacteristic(component?.isReplaceable)
+  );
+  const untypedComponentInstances = asArray(configurations).filter((instance) => (
+    instance?.testSetupId === selectedTestSetupId
+    && instance?.replaceableCharacteristicId
+    && !String(instance?.typeId || '').trim()
+  ));
   const allSensors = asArray(selectedSetup?.sensors);
   const sensors = allSensors.filter(isSensorIncludedInDatasetOutput);
   const studyRuns = expandStudiesIntoRuns(safeStudies);
@@ -241,6 +252,17 @@ export function buildExportValidationReport({
 
   const warningIssues = [];
   const errorIssues = [];
+
+  if (untypedComponentInstances.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'untyped-physical-component-ids',
+      level: 'error',
+      title: 'Physical component IDs missing type',
+      description: `${untypedComponentInstances.length} physical component IDs have no selected type.`,
+      count: untypedComponentInstances.length,
+      items: untypedComponentInstances.map((instance) => instance.componentId || instance.id),
+    });
+  }
 
   const investigationTitle = String(investigation?.investigationTitle || '').trim();
   const investigationDescription = String(investigation?.investigationDescription || '').trim();
@@ -340,44 +362,72 @@ export function buildExportValidationReport({
     });
   }
 
-  const studiesMissingConfiguration = safeStudies
-    .map((study, index) => ({ study, index }))
-    .filter(({ study }) => !String(study?.configurationId || '').trim());
+  const missingComponentAssignments = safeStudies.flatMap((study, index) => (
+    replaceableComponents
+      .filter((component) => !getAssignedComponentInstanceId(study, component.id))
+      .map((component) => ({ study, index, component }))
+  ));
 
-  if (studiesMissingConfiguration.length > 0) {
+  if (missingComponentAssignments.length > 0) {
     pushIssue(errorIssues, {
-      id: 'missing-study-configuration',
+      id: 'missing-study-component-assignment',
       level: 'error',
-      title: 'Experiments missing configuration',
-      description: `${studiesMissingConfiguration.length} experiments are not linked to a configuration.`,
-      count: studiesMissingConfiguration.length,
-      items: studiesMissingConfiguration.map(({ study, index }) => formatStudyLabel(study, index)),
+      title: 'Experiments missing physical component IDs',
+      description: `${missingComponentAssignments.length} required replaceable-component assignments are missing.`,
+      count: missingComponentAssignments.length,
+      items: missingComponentAssignments.map(({ study, index, component }) => (
+        `${formatStudyLabel(study, index)}: ${component.category || component.description || 'Replaceable component'}`
+      )),
     });
   }
 
-  if (runCountRequired) {
-    const configurationAssignments = new Map();
-    safeStudies.forEach((study, index) => {
-      const configurationId = String(study?.configurationId || '').trim();
-      if (!configurationId) return;
-      const assignments = configurationAssignments.get(configurationId) || [];
-      assignments.push({ study, index });
-      configurationAssignments.set(configurationId, assignments);
-    });
-    const duplicateConfigurationAssignments = [...configurationAssignments.entries()]
-      .filter(([, assignments]) => assignments.length > 1);
-
-    if (duplicateConfigurationAssignments.length > 0) {
+  // Keep older projects validatable until their configurations are migrated.
+  if (replaceableComponents.length === 0) {
+    const studiesMissingConfiguration = safeStudies
+      .map((study, index) => ({ study, index }))
+      .filter(({ study }) => !String(study?.configurationId || '').trim());
+    if (studiesMissingConfiguration.length > 0) {
       pushIssue(errorIssues, {
-        id: 'duplicate-prognostics-configurations',
+        id: 'missing-study-configuration',
         level: 'error',
-        title: 'Configurations assigned to multiple experiments',
-        description: 'A prognostics configuration can only be assigned to one experiment.',
-        count: duplicateConfigurationAssignments.length,
-        items: duplicateConfigurationAssignments.map(([, assignments]) => (
-          assignments.map(({ study, index }) => formatStudyLabel(study, index)).join(', ')
-        )),
+        title: 'Experiments missing configuration',
+        description: `${studiesMissingConfiguration.length} experiments are not linked to a configuration.`,
+        count: studiesMissingConfiguration.length,
+        items: studiesMissingConfiguration.map(({ study, index }) => formatStudyLabel(study, index)),
       });
+    }
+  }
+
+  if (runCountRequired) {
+    const duplicateInstanceIds = getDuplicateComponentInstanceIds(safeStudies);
+    if (duplicateInstanceIds.size > 0) {
+      const componentInstancesById = new Map(asArray(configurations).map((instance) => [instance.id, instance]));
+      pushIssue(errorIssues, {
+        id: 'duplicate-prognostics-component-ids',
+        level: 'error',
+        title: 'Physical component IDs assigned to multiple experiments',
+        description: 'A physical component in a prognostics experiment can only be assigned once.',
+        count: duplicateInstanceIds.size,
+        items: [...duplicateInstanceIds].map((instanceId) => componentInstancesById.get(instanceId)?.componentId || instanceId),
+      });
+    }
+    if (replaceableComponents.length === 0) {
+      const configurationAssignments = new Map();
+      safeStudies.forEach((study, index) => {
+        const configurationId = String(study?.configurationId || '').trim();
+        if (!configurationId) return;
+        const assignments = configurationAssignments.get(configurationId) || [];
+        assignments.push({ study, index });
+        configurationAssignments.set(configurationId, assignments);
+      });
+      const duplicates = [...configurationAssignments.entries()].filter(([, assignments]) => assignments.length > 1);
+      if (duplicates.length > 0) {
+        pushIssue(errorIssues, {
+          id: 'duplicate-prognostics-configurations', level: 'error', title: 'Configurations assigned to multiple experiments',
+          description: 'A prognostics configuration can only be assigned to one experiment.', count: duplicates.length,
+          items: duplicates.map(([, assignments]) => assignments.map(({ study, index }) => formatStudyLabel(study, index)).join(', ')),
+        });
+      }
     }
 
     const studiesWithInvalidRunCount = safeStudies

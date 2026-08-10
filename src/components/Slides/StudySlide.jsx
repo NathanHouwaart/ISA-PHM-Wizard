@@ -32,7 +32,12 @@ import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
 import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS } from '../../utils/studyOutputMode';
-import { getDuplicateConfigurationIds, isPrognosticsExperiment } from '../../utils/studyConfigurationValidation';
+import {
+    getAssignedComponentInstanceId,
+    getDuplicateComponentInstanceIds,
+    isPrognosticsExperiment,
+} from '../../utils/studyConfigurationValidation';
+import { isReplaceableCharacteristic } from '../../utils/testSetupCharacteristics';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -66,7 +71,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             description: 'Enter description...',
             submissionDate: "",
             publicationDate: "", 
-            configurationId: '',
+            componentAssignments: [],
             runCount: 1,
             outputMode: OUTPUT_MODE_RAW_ONLY
         };
@@ -88,7 +93,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             description: 'Enter description...',
             submissionDate: '',
             publicationDate: '',
-            configurationId: '',
+            componentAssignments: [],
             runCount: 1,
             outputMode: OUTPUT_MODE_RAW_ONLY
         }));
@@ -97,36 +102,64 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
         setBulkAddInput('10');
     };
 
-    // Handle study data changes from the grid
-    const handleStudyDataChange = (newStudyData) => {
-        setStudies(newStudyData || []);
-    };
-
-    const duplicateConfigurationIds = useMemo(
+    const duplicateComponentInstanceIds = useMemo(
         () => isPrognosticsExperiment(experimentType)
-            ? getDuplicateConfigurationIds(studies)
+            ? getDuplicateComponentInstanceIds(studies)
             : new Set(),
         [experimentType, studies]
     );
 
     // Prefer project-scoped configurations; retain legacy test-setup records as a fallback.
     const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-    const projectConfigurations = (Array.isArray(configurations) ? configurations : []).filter(
-        (configuration) => !configuration.testSetupId || configuration.testSetupId === selectedTestSetupId
+    const replaceableComponents = (selectedSetup?.characteristics || []).filter(
+        (component) => isReplaceableCharacteristic(component.isReplaceable)
     );
-    const legacyConfigurations = selectedSetup?.configurations || [];
-    const availableConfigurations = projectConfigurations.length > 0 ? projectConfigurations : legacyConfigurations;
-    const configurationOptions = availableConfigurations.map(c => ({
-        value: c.id,
-        label: (c.name || c.replaceableComponentId)
-            ? [c.name, c.replaceableComponentId].filter(Boolean).join(' - ')
-            : 'Unnamed'
+    const componentInstances = (Array.isArray(configurations) ? configurations : []).filter(
+        (instance) => instance.testSetupId === selectedTestSetupId && instance.replaceableCharacteristicId
+    );
+    const componentAssignmentColumns = replaceableComponents.map((component, componentIndex) => ({
+        prop: `componentAssignment-${component.id}`,
+        name: component.category || component.description || `Component ${componentIndex + 1}`,
+        size: 170,
+        readonly: false,
+        columnType: 'select',
+        labelKey: 'label',
+        valueKey: 'value',
+        source: componentInstances
+            .filter((instance) => instance.replaceableCharacteristicId === component.id && instance.typeId)
+            .map((instance) => ({ value: instance.id, label: instance.componentId || 'Unnamed ID' })),
+        cellProperties: (props) => {
+            const instanceId = getAssignedComponentInstanceId(props?.model, component.id);
+            return duplicateComponentInstanceIds.has(instanceId)
+                ? { style: { background: '#ffedd5', color: '#9a3412' } }
+                : {};
+        }
     }));
+
+    const gridRows = studies.map((study) => ({
+        ...study,
+        ...Object.fromEntries(replaceableComponents.map((component) => [
+            `componentAssignment-${component.id}`,
+            getAssignedComponentInstanceId(study, component.id)
+        ]))
+    }));
+
+    const handleStudyDataChange = (newStudyData) => {
+        setStudies((newStudyData || []).map((row) => {
+            const { ...study } = row;
+            const componentAssignments = replaceableComponents.map((component) => ({
+                replaceableCharacteristicId: component.id,
+                componentInstanceId: row[`componentAssignment-${component.id}`] || ''
+            }));
+            replaceableComponents.forEach((component) => delete study[`componentAssignment-${component.id}`]);
+            return { ...study, componentAssignments };
+        }));
+    };
 
     // Grid configuration for studies
     const studiesGridConfig = {
         title: 'Experiment Grid',
-        rowData: studies,
+        rowData: gridRows,
         columnData: [], // No dynamic columns for standalone grid
         mappings: [], // No mappings for standalone grid
         customActions: [
@@ -147,7 +180,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             {
                 prop: 'actions',
                 name: '',
-                size: 80,
+                size: 50,
                 readonly: true,
                 cellTemplate: Template(DeleteRowCellTemplate),
                 cellProperties: () => ({ style: { 'text-align': 'center' } })
@@ -155,7 +188,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             {
                 prop: 'id',
                 name: 'Identifier',
-                size: 150,
+                size: 110,
                 readonly: true,
                 cellTemplate: Template(PatternCellTemplate, { prefix: 'Experiment S' }),
                 cellProperties: () => ({
@@ -173,7 +206,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             {
                 prop: 'description',
                 name: 'Description',
-                size: 300,
+                size: 250,
                 readonly: false
             },
             {
@@ -190,27 +223,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
             },
-            {
-                prop: 'configurationId',
-                name: 'Configuration',
-                size: 220,
-                readonly: false,
-                columnType: 'select',
-                labelKey: 'label',
-                valueKey: 'value',
-                source: configurationOptions,
-                cellProperties: (props) => (
-                    duplicateConfigurationIds.has(props?.model?.configurationId)
-                        ? { style: { background: '#ffedd5', color: '#9a3412' } }
-                        : {}
-                )
-            },
-            ...(experimentConfig.supportsMultipleRuns ? [{
-                prop: 'runCount',
-                name: 'Number of runs',
-                size: 160,
-                readonly: false,
-            }] : []),
+            ...componentAssignmentColumns,
             {
                 prop: 'outputMode',
                 name: 'Data Types',
@@ -220,7 +233,13 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 labelKey: 'label',
                 valueKey: 'value',
                 source: OUTPUT_MODE_OPTIONS
-            }
+            },
+            ...(experimentConfig.supportsMultipleRuns ? [{
+                prop: 'runCount',
+                name: 'Number of runs',
+                size: 160,
+                readonly: false,
+            }] : [])
         ]
     };
     

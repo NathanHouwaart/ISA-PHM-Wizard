@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+    getAssignedComponentInstanceId,
+    getDuplicateComponentInstanceIds,
     getDuplicateConfigurationIds,
     isPrognosticsExperiment,
 } from './studyConfigurationValidation';
@@ -18,5 +20,15 @@ describe('study configuration validation', () => {
         ]);
 
         expect(duplicates).toEqual(new Set(['configuration-1']));
+    });
+
+    it('detects reused physical component instances across assignments', () => {
+        const studies = [
+            { componentAssignments: [{ replaceableCharacteristicId: 'bearing', componentInstanceId: 'bearing-1' }] },
+            { componentAssignments: [{ replaceableCharacteristicId: 'bearing', componentInstanceId: 'bearing-1' }] },
+            { componentAssignments: [{ replaceableCharacteristicId: 'motor', componentInstanceId: 'motor-1' }] },
+        ];
+        expect(getDuplicateComponentInstanceIds(studies)).toEqual(new Set(['bearing-1']));
+        expect(getAssignedComponentInstanceId(studies[0], 'bearing')).toBe('bearing-1');
     });
 });

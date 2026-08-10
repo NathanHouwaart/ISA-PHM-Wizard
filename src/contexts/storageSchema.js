@@ -6,7 +6,7 @@ import {
     buildProjectScopedStorageKey
 } from './storageKeyPolicy';
 
-const PROJECT_SCHEMA_VERSION = 3;
+const PROJECT_SCHEMA_VERSION = 4;
 const TEST_SETUPS_SCHEMA_VERSION = 1;
 
 const TEST_SETUPS_STORAGE_KEY = 'globalAppData_testSetups';
@@ -47,6 +47,53 @@ const TEST_SETUP_ARRAY_KEYS = [
 ];
 
 const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
+
+const migrateConfigurationsForComponentInstances = (state) => {
+    const setup = (state.testSetups || []).find((item) => item?.id === state.selectedTestSetupId);
+    const components = (setup?.characteristics || []).filter((item) => item?.isReplaceable === true || item?.isReplaceable === 'true');
+    const legacyConfigurations = Array.isArray(state.configurations) ? state.configurations : [];
+    if (!setup || components.length === 0 || legacyConfigurations.every((item) => item?.replaceableCharacteristicId)) {
+        return state;
+    }
+
+    const createdInstances = [];
+    const assignmentsByLegacyId = new Map();
+    components.forEach((component, componentIndex) => {
+        let instanceNumber = 0;
+        legacyConfigurations.forEach((legacy) => {
+            if (legacy?.testSetupId && legacy.testSetupId !== setup.id) return;
+            const typeId = (legacy.typeAssignments || []).find(
+                (assignment) => assignment?.replaceableCharacteristicId === component.id
+            )?.typeId || '';
+            // A legacy configuration with no per-component assignments can only
+            // be migrated safely when the setup has one replaceable component.
+            if (!(legacy.typeAssignments?.length) && components.length !== 1) return;
+            instanceNumber += 1;
+            const instance = {
+                id: `${legacy.id}::${component.id}`,
+                testSetupId: setup.id,
+                replaceableCharacteristicId: component.id,
+                componentId: `${componentIndex + 1}.${instanceNumber}`,
+                typeId,
+                legacyConfigurationId: legacy.id,
+            };
+            createdInstances.push(instance);
+            const assignments = assignmentsByLegacyId.get(legacy.id) || [];
+            assignments.push({ replaceableCharacteristicId: component.id, componentInstanceId: instance.id });
+            assignmentsByLegacyId.set(legacy.id, assignments);
+        });
+    });
+
+    if (createdInstances.length === 0) return state;
+    return {
+        ...state,
+        configurations: [...legacyConfigurations.filter((item) => item?.replaceableCharacteristicId), ...createdInstances],
+        studies: (state.studies || []).map((study) => {
+            const assignments = assignmentsByLegacyId.get(study?.configurationId);
+            return assignments ? { ...study, componentAssignments: assignments } : study;
+        })
+    };
+};
 
 const getStorage = (storage) => {
     if (storage) return storage;
@@ -475,6 +522,11 @@ export const loadProjectStateWithMigrations = ({
             pageTabStates
         };
         schemaVersion = 3;
+    }
+
+    if (schemaVersion < 4) {
+        migratedState = migrateConfigurationsForComponentInstances(migratedState);
+        schemaVersion = 4;
     }
 
     const normalizedState = normalizeProjectState(migratedState, defaults);

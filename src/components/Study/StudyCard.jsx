@@ -6,6 +6,8 @@ import TooltipButton from '../Widgets/TooltipButton';
 import { useProjectData } from '../../contexts/GlobalDataContext';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import { OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
+import { isReplaceableCharacteristic } from '../../utils/testSetupCharacteristics';
+import { getAssignedComponentInstanceId } from '../../utils/studyConfigurationValidation';
 
 /**
  * StudyCard Component
@@ -33,11 +35,11 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
   const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
   const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;
 
-  // Get configuration name
   const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-  const configuration = configurations?.find(c => c.id === study.configurationId)
-    || selectedSetup?.configurations?.find(c => c.id === study.configurationId);
-  const configurationName = configuration?.name || 'Not selected';
+  const replaceableComponents = (selectedSetup?.characteristics || []).filter(
+    (component) => isReplaceableCharacteristic(component.isReplaceable)
+  );
+  const componentInstances = configurations || [];
 
   const outputModeLabel = OUTPUT_MODE_OPTIONS.find(
     o => o.value === normalizeStudyOutputMode(study?.outputMode)
@@ -85,10 +87,10 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
                     "not provided"}
                 </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <p className='font-bold'>Configuration - </p>
-                <span>{configurationName}</span>
-              </div>
+              {replaceableComponents.map((component, index) => {
+                const instance = componentInstances.find((candidate) => candidate.id === getAssignedComponentInstanceId(study, component.id));
+                return <div key={component.id} className="flex items-center space-x-1"><p className='font-bold'>{component.category || `Component ${index + 1}`} - </p><span>{instance?.componentId || 'Not selected'}</span></div>;
+              })}
               {experimentConfig.supportsMultipleRuns && (
                 <div className="flex items-center space-x-1">
                   <p className='font-bold'>{runsLabel} - </p>

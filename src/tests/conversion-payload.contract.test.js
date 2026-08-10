@@ -68,6 +68,37 @@ const FIXTURE_CASES = [
 ];
 
 describe('conversion payload contract', () => {
+  it('includes project configurations and their types in the selected test setup', () => {
+    const payload = buildConversionPayload({
+      studies: [{ id: 'study-1', name: 'Study 1', runCount: 1, configurationId: 'config-1' }],
+      testSetups: [{
+        id: 'setup-1',
+        name: 'Setup 1',
+        characteristics: [{ id: 'component-1', category: 'Bearing', isReplaceable: true }],
+        sensors: [],
+      }],
+      selectedTestSetupId: 'setup-1',
+      configurations: [{
+        id: 'config-1',
+        testSetupId: 'setup-1',
+        name: '6205 configuration',
+        typeAssignments: [{ replaceableCharacteristicId: 'component-1', typeId: 'type-1' }],
+      }],
+      configurationTypes: [{
+        id: 'type-1',
+        name: 'SKF 6205',
+        replaceableCharacteristicId: 'component-1',
+        characteristics: [{ id: 'detail-1', name: 'Material', value: 'Steel' }],
+      }],
+    });
+
+    expect(payload.test_setup.configurations).toHaveLength(1);
+    expect(payload.test_setup.configurations[0].id).toBe('config-1');
+    expect(payload.test_setup.configurationTypes).toEqual([
+      expect.objectContaining({ id: 'type-1', replaceableCharacteristicId: 'component-1' }),
+    ]);
+  });
+
   it('builds the expected payload shape with protocol and run-aware mappings', () => {
     const studies = [
       { id: 'study-1', name: 'Study 1', runCount: 2 },

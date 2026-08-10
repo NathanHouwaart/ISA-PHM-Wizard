@@ -53,6 +53,16 @@ const makeBaseInput = () => ({
 });
 
 describe('buildExportValidationReport', () => {
+  it('blocks export when a physical component ID has no selected type', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      testSetups: [{ id: 'setup-1', characteristics: [{ id: 'bearing', category: 'Bearing', isReplaceable: true }], sensors: [] }],
+      configurations: [{ id: 'bearing-1', testSetupId: 'setup-1', replaceableCharacteristicId: 'bearing', componentId: '1.1', typeId: '' }],
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'untyped-physical-component-ids')).toBe(true);
+  });
+
   it('flags missing measurement protocol as blocking', () => {
     const run1 = createStudyRunId('study-1', 1);
     const run2 = createStudyRunId('study-1', 2);

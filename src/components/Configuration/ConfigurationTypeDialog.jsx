@@ -126,8 +126,9 @@ const ConfigurationTypeDialog = ({
     };
 
     const referencedCount = pendingDelete
-        ? configurations.filter((configuration) => configuration.typeAssignments?.some(
-            (assignment) => assignment.typeId === pendingDelete.id
+        ? configurations.filter((configuration) => (
+            configuration.typeId === pendingDelete.id
+            || configuration.typeAssignments?.some((assignment) => assignment.typeId === pendingDelete.id)
         )).length
         : 0;
 

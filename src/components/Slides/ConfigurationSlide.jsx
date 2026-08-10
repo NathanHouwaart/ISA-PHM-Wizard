@@ -14,129 +14,88 @@ import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import TooltipButton from '../Widgets/TooltipButton';
 import ConfigurationTypeDialog from '../Configuration/ConfigurationTypeDialog';
 
+const componentLabel = (component, index) => component?.category || component?.description || `Replaceable component ${index + 1}`;
+
 export const ConfigurationSlide = forwardRef(({ onHeightChange }, ref) => {
     const resizeElementRef = useResizeObserver(onHeightChange);
     const combinedRef = useCombinedRefs(ref, resizeElementRef);
-    const {
-        configurations,
-        configurationTypes,
-        testSetups,
-        selectedTestSetupId
-    } = useProjectData();
+    const { configurations, configurationTypes, testSetups, selectedTestSetupId } = useProjectData();
     const { setConfigurations, setConfigurationTypes } = useProjectActions();
-    const [selectedId, setSelectedId] = useState(null);
+    const [selectedComponentId, setSelectedComponentId] = useState(null);
     const [typeDialogOpen, setTypeDialogOpen] = useState(false);
     const [pendingDelete, setPendingDelete] = useState(null);
 
     const selectedSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
     const replaceableComponents = useMemo(
-        () => (selectedSetup?.characteristics || []).filter((characteristic) => (
-            isReplaceableCharacteristic(characteristic.isReplaceable)
-        )),
+        () => (selectedSetup?.characteristics || []).filter((characteristic) => isReplaceableCharacteristic(characteristic.isReplaceable)),
         [selectedSetup]
     );
-    const scopedConfigurations = useMemo(
-        () => configurations.filter((configuration) => configuration.testSetupId === selectedTestSetupId),
-        [configurations, selectedTestSetupId]
+    const selectedComponent = replaceableComponents.find((component) => component.id === selectedComponentId) || null;
+    const selectedComponentIndex = replaceableComponents.findIndex((component) => component.id === selectedComponentId);
+    const componentInstances = useMemo(
+        () => configurations.filter((configuration) => (
+            configuration.testSetupId === selectedTestSetupId
+            && configuration.replaceableCharacteristicId === selectedComponentId
+        )),
+        [configurations, selectedTestSetupId, selectedComponentId]
     );
     const scopedTypes = useMemo(
-        () => configurationTypes.filter((type) => replaceableComponents.some(
-            (component) => component.id === type.replaceableCharacteristicId
-        )),
+        () => configurationTypes.filter((type) => replaceableComponents.some((component) => component.id === type.replaceableCharacteristicId)),
         [configurationTypes, replaceableComponents]
-    );
-    const selectedConfiguration = useMemo(
-        () => scopedConfigurations.find((configuration) => configuration.id === selectedId) || null,
-        [scopedConfigurations, selectedId]
     );
 
     useEffect(() => {
-        if (selectedId && scopedConfigurations.some((configuration) => configuration.id === selectedId)) {
-            return;
-        }
+        if (selectedComponentId && replaceableComponents.some((component) => component.id === selectedComponentId)) return;
+        setSelectedComponentId(replaceableComponents[0]?.id || null);
+    }, [replaceableComponents, selectedComponentId]);
 
-        setSelectedId(scopedConfigurations[0]?.id || null);
-    }, [scopedConfigurations, selectedId]);
-
-    const updateConfiguration = (updates) => {
-        if (!selectedConfiguration) return;
-
-        setConfigurations((previous) => previous.map((configuration) => (
-            configuration.id === selectedConfiguration.id
-                ? { ...configuration, ...updates }
-                : configuration
-        )));
-    };
-
-    const addConfiguration = () => {
-        if (!selectedSetup || replaceableComponents.length === 0) return;
-
-        const configuration = {
+    const addComponentInstance = () => {
+        if (!selectedSetup || !selectedComponent || selectedComponentIndex < 0) return;
+        const prefix = selectedComponentIndex + 1;
+        const instanceNumbers = componentInstances
+            .map((instance) => Number(String(instance.componentId || '').split('.')[1]))
+            .filter(Number.isFinite);
+        const nextNumber = Math.max(0, ...instanceNumbers) + 1;
+        setConfigurations((previous) => [...previous, {
             id: uuid4(),
-            name: `New Configuration ${scopedConfigurations.length + 1}`,
             testSetupId: selectedSetup.id,
-            comment: '',
-            typeAssignments: replaceableComponents.map((component) => ({
-                replaceableCharacteristicId: component.id,
-                typeId: ''
-            }))
-        };
-
-        setConfigurations((previous) => [...previous, configuration]);
-        setSelectedId(configuration.id);
+            replaceableCharacteristicId: selectedComponent.id,
+            componentId: `${prefix}.${nextNumber}`,
+            typeId: ''
+        }]);
     };
 
-    const updateAssignment = (componentId, typeId) => {
-        updateConfiguration({
-            typeAssignments: replaceableComponents.map((component) => {
-                const assignment = selectedConfiguration?.typeAssignments?.find(
-                    (entry) => entry.replaceableCharacteristicId === component.id
-                );
-
-                return {
-                    replaceableCharacteristicId: component.id,
-                    typeId: component.id === componentId ? typeId : assignment?.typeId || ''
-                };
-            })
-        });
-    };
-
-    const removeConfiguration = () => {
-        if (!pendingDelete) return;
-
-        setConfigurations((previous) => previous.filter(
-            (configuration) => configuration.id !== pendingDelete.id
-        ));
-        setPendingDelete(null);
+    const updateComponentInstance = (instanceId, updates) => {
+        setConfigurations((previous) => previous.map((instance) => (
+            instance.id === instanceId ? { ...instance, ...updates } : instance
+        )));
     };
 
     const updateScopedTypes = (nextScopedTypes) => {
         setConfigurationTypes((previous) => [
-            ...previous.filter((type) => !replaceableComponents.some(
-                (component) => component.id === type.replaceableCharacteristicId
-            )),
+            ...previous.filter((type) => !replaceableComponents.some((component) => component.id === type.replaceableCharacteristicId)),
             ...nextScopedTypes
         ]);
     };
 
+    const typesForSelectedComponent = scopedTypes.filter(
+        (type) => type.replaceableCharacteristicId === selectedComponentId
+    );
+    const untypedComponentInstances = componentInstances.filter((instance) => !instance.typeId);
     const noReplaceableComponents = !selectedSetup || replaceableComponents.length === 0;
 
     return (
         <div ref={combinedRef} className="mx-auto max-w-5xl">
-            <SlidePageTitle>Configurations</SlidePageTitle>
+            <SlidePageTitle>Replaceable Component Definition</SlidePageTitle>
             <SlidePageSubtitle>
-                For each configuration, select a type for every replaceable component in the active test setup.
+                Define the physical replaceable units available in the active test setup and identify their type.
             </SlidePageSubtitle>
 
             <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 pb-2">
                 <div className="overflow-hidden rounded-lg border border-gray-300 bg-gray-50">
                     <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
-                        <Heading3 className="text-base">Project Configurations</Heading3>
-                        <TooltipButton
-                            onClick={() => setTypeDialogOpen(true)}
-                            tooltipText="Manage configuration types"
-                            className="px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
-                        >
+                        <Heading3 className="text-base">Replaceable Component Definition</Heading3>
+                        <TooltipButton onClick={() => setTypeDialogOpen(true)} tooltipText="Manage component types" className="px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
                             <Settings2 className="h-4 w-4" />
                             <span>Manage Types</span>
                         </TooltipButton>
@@ -144,186 +103,43 @@ export const ConfigurationSlide = forwardRef(({ onHeightChange }, ref) => {
 
                     <div className="flex min-h-[28rem] flex-col md:flex-row">
                         <aside className="w-full shrink-0 border-b border-gray-200 bg-white md:w-72 md:border-b-0 md:border-r">
-                            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-                                <Heading3 className="text-base">
-                                    Configurations ({scopedConfigurations.length})
-                                </Heading3>
-                                <TooltipButton
-                                    onClick={addConfiguration}
-                                    tooltipText={noReplaceableComponents
-                                        ? 'Add replaceable components first'
-                                        : 'Create configuration'}
-                                    disabled={noReplaceableComponents}
-                                    className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md disabled:bg-gray-300"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                </TooltipButton>
+                            <div className="border-b border-gray-200 px-4 py-3">
+                                <Heading3 className="text-base">Replaceable Components ({replaceableComponents.length})</Heading3>
                             </div>
-
                             <div className="max-h-56 space-y-1 overflow-y-auto p-2 md:max-h-[32rem]">
-                                {scopedConfigurations.map((configuration) => (
-                                    <button
-                                        key={configuration.id}
-                                        type="button"
-                                        onClick={() => setSelectedId(configuration.id)}
-                                        className={`w-full rounded-md px-3 py-2 text-left text-sm ${
-                                            configuration.id === selectedId
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'text-gray-700 hover:bg-gray-100'
-                                        }`}
-                                    >
-                                        <span className="block truncate font-medium">
-                                            {configuration.name || 'Unnamed configuration'}
-                                        </span>
-                                        <span className="block truncate text-xs text-gray-500">
-                                            {configuration.typeAssignments?.filter((assignment) => assignment.typeId).length || 0}
-                                            {' of '}
-                                            {replaceableComponents.length} components selected
-                                        </span>
-                                    </button>
-                                ))}
-
-                                {scopedConfigurations.length === 0 && (
-                                    <Paragraph className="px-2 py-5 text-sm text-gray-500">
-                                        No configurations yet.
-                                    </Paragraph>
-                                )}
+                                {replaceableComponents.map((component, index) => {
+                                    const count = configurations.filter((instance) => instance.testSetupId === selectedTestSetupId && instance.replaceableCharacteristicId === component.id).length;
+                                    return <button key={component.id} type="button" onClick={() => setSelectedComponentId(component.id)} className={`w-full rounded-md px-3 py-2 text-left text-sm ${component.id === selectedComponentId ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'}`}>
+                                        <span className="block truncate font-medium">{componentLabel(component, index)}</span>
+                                        <span className="block truncate text-xs text-gray-500">{count} physical ID{count === 1 ? '' : 's'}</span>
+                                    </button>;
+                                })}
+                                {replaceableComponents.length === 0 && <Paragraph className="px-2 py-5 text-sm text-gray-500">No replaceable components in this test setup.</Paragraph>}
                             </div>
                         </aside>
 
                         <main className="min-w-0 flex-1 p-5">
-                            {noReplaceableComponents ? (
-                                <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
-                                    <Layers className="mb-4 h-14 w-14 text-gray-300" />
-                                    <Heading3>No replaceable components</Heading3>
-                                    <Paragraph className="mt-1 text-sm text-gray-600">
-                                        Select a test setup with replaceable characteristics before creating configurations.
-                                    </Paragraph>
-                                </div>
-                            ) : !selectedConfiguration ? (
-                                <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
-                                    <Layers className="mb-4 h-14 w-14 text-gray-300" />
-                                    <Heading3>No configuration selected</Heading3>
-                                    <Paragraph className="mt-1 text-sm text-gray-600">
-                                        Create a configuration to choose types for the replaceable components.
-                                    </Paragraph>
-                                    <TooltipButton
-                                        onClick={addConfiguration}
-                                        tooltipText="Create configuration"
-                                        className="mt-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        <span>Create Configuration</span>
-                                    </TooltipButton>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                                        <Heading3 className="text-xl">Edit Configuration</Heading3>
-                                        <TooltipButton
-                                            onClick={() => setPendingDelete(selectedConfiguration)}
-                                            tooltipText="Delete configuration"
-                                            className="p-2 bg-rose-600 text-white hover:bg-rose-700 rounded-md"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </TooltipButton>
-                                    </div>
-
-                                    <FormField
-                                        label="Configuration Name"
-                                        name="configuration-name"
-                                        value={selectedConfiguration.name}
-                                        onChange={(event) => updateConfiguration({ name: event.target.value })}
-                                        required
-                                        placeholder="Enter configuration name"
-                                    />
-
-                                    <div className="rounded-lg border border-gray-200 bg-white p-4">
-                                        <Heading3 className="text-base">Replaceable Components</Heading3>
-                                        <Paragraph className="mb-4 text-sm text-gray-600">
-                                            Select the matching type for each component.
-                                        </Paragraph>
-
-                                        <div className="space-y-4">
-                                            {replaceableComponents.map((component) => {
-                                                const assignment = selectedConfiguration.typeAssignments?.find(
-                                                    (entry) => entry.replaceableCharacteristicId === component.id
-                                                );
-                                                const availableTypes = scopedTypes.filter(
-                                                    (type) => type.replaceableCharacteristicId === component.id
-                                                );
-
-                                                return (
-                                                    <div
-                                                        key={component.id}
-                                                        className="grid gap-3 rounded-md border border-gray-200 bg-gray-50 p-3 md:grid-cols-[1fr_1fr]"
-                                                    >
-                                                        <div>
-                                                            <Paragraph className="font-medium text-gray-900">
-                                                                {component.category || 'Unnamed component'}
-                                                            </Paragraph>
-                                                            {component.description && (
-                                                                <Paragraph className="text-sm text-gray-600">
-                                                                    {component.description}
-                                                                </Paragraph>
-                                                            )}
-                                                        </div>
-                                                        <FormField
-                                                            label="Type"
-                                                            name={`component-type-${component.id}`}
-                                                            value={assignment?.typeId || ''}
-                                                            onChange={(event) => updateAssignment(component.id, event.target.value)}
-                                                            type="select"
-                                                            placeholder={availableTypes.length ? 'Select type' : 'No types available'}
-                                                            tags={availableTypes.map((type) => ({
-                                                                value: type.id,
-                                                                label: type.name
-                                                            }))}
-                                                        />
-                                                    </div>
-                                                );
-                                            })}
+                            {noReplaceableComponents ? <div className="flex h-full min-h-64 flex-col items-center justify-center text-center"><Layers className="mb-4 h-14 w-14 text-gray-300" /><Heading3>No replaceable components</Heading3><Paragraph className="mt-1 text-sm text-gray-600">Mark one or more characteristics as replaceable in the selected test setup.</Paragraph></div>
+                                : !selectedComponent ? null
+                                    : <div className="space-y-4">
+                                        <div className="flex items-center justify-between border-b border-gray-200 pb-3"><div><Heading3 className="text-xl">Component Specifications / IDs</Heading3><Paragraph className="mt-1 text-sm text-gray-600">{componentLabel(selectedComponent, selectedComponentIndex)} — add each physical unit that can be selected in an experiment.</Paragraph></div><TooltipButton onClick={addComponentInstance} tooltipText={typesForSelectedComponent.length ? 'Add physical component ID' : 'Create a managed type before adding an ID'} disabled={!typesForSelectedComponent.length} className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md disabled:bg-gray-300"><Plus className="h-4 w-4" /></TooltipButton></div>
+                                        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                            <table className="w-full text-left text-sm"><thead className="bg-gray-50 text-gray-600"><tr><th className="px-4 py-3 font-medium">ID</th><th className="px-4 py-3 font-medium">Type</th><th className="w-12 px-2 py-3" /></tr></thead><tbody>
+                                                {componentInstances.map((instance) => <tr key={instance.id} className={`border-t border-gray-200 ${!instance.typeId ? 'bg-amber-50' : ''}`}><td className="px-4 py-3 font-medium text-gray-900">{instance.componentId}</td><td className="px-4 py-2"><FormField name={`component-type-${instance.id}`} value={instance.typeId || ''} onChange={(event) => updateComponentInstance(instance.id, { typeId: event.target.value })} type="select" required placeholder="Select type" tags={typesForSelectedComponent.map((type) => ({ value: type.id, label: type.name }))} /></td><td className="px-2 py-2"><TooltipButton onClick={() => setPendingDelete(instance)} tooltipText="Remove physical component ID" className="p-2 text-rose-600 hover:bg-rose-50 rounded-md"><Trash2 className="h-4 w-4" /></TooltipButton></td></tr>)}
+                                                {componentInstances.length === 0 && <tr><td colSpan="3" className="px-4 py-8 text-center text-gray-500">No physical IDs defined yet. Add one to make it available in experiments.</td></tr>}
+                                            </tbody></table>
                                         </div>
-                                    </div>
-
-                                    <FormField
-                                        label="Comment"
-                                        name="configuration-comment"
-                                        value={selectedConfiguration.comment || ''}
-                                        onChange={(event) => updateConfiguration({ comment: event.target.value })}
-                                        type="textarea"
-                                        placeholder="Add an optional comment"
-                                    />
-                                </div>
-                            )}
+                                        {untypedComponentInstances.length > 0 && <Paragraph className="text-sm text-amber-700">Choose a type for every physical ID. Untyped IDs cannot be assigned to experiments or exported.</Paragraph>}
+                                    </div>}
                         </main>
                     </div>
                 </div>
             </div>
-
-            <ConfigurationTypeDialog
-                open={typeDialogOpen}
-                types={scopedTypes}
-                configurations={scopedConfigurations}
-                replaceableComponents={replaceableComponents}
-                onChange={updateScopedTypes}
-                onClose={() => setTypeDialogOpen(false)}
-            />
-            <AlertDecisionDialog
-                open={Boolean(pendingDelete)}
-                tone="danger"
-                title={`Delete ${pendingDelete?.name || 'configuration'}?`}
-                message="Experiments using this configuration will keep their current reference, but it will no longer resolve to a configuration."
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
-                onConfirm={removeConfiguration}
-                onCancel={() => setPendingDelete(null)}
-                confirmButtonProps={{ className: 'bg-rose-600 hover:bg-rose-700' }}
-            />
+            <ConfigurationTypeDialog open={typeDialogOpen} types={scopedTypes} configurations={configurations.filter((instance) => instance.testSetupId === selectedTestSetupId)} replaceableComponents={replaceableComponents} onChange={updateScopedTypes} onClose={() => setTypeDialogOpen(false)} />
+            <AlertDecisionDialog open={Boolean(pendingDelete)} tone="danger" title={`Remove physical ID ${pendingDelete?.componentId || ''}?`} message="Experiments using this ID will need another selection before they can be exported." confirmLabel="Remove" cancelLabel="Cancel" onConfirm={() => { setConfigurations((previous) => previous.filter((instance) => instance.id !== pendingDelete?.id)); setPendingDelete(null); }} onCancel={() => setPendingDelete(null)} confirmButtonProps={{ className: 'bg-rose-600 hover:bg-rose-700' }} />
         </div>
     );
 });
 
-ConfigurationSlide.displayName = 'Configurations';
-
+ConfigurationSlide.displayName = 'ConfigurationSlide';
 export default ConfigurationSlide;

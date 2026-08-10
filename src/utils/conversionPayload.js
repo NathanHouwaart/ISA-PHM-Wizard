@@ -6,6 +6,7 @@ import {
 } from './studyOutputMode';
 import { isSensorApplicable } from './protocolApplicability';
 import { isSensorIncludedInDatasetOutput } from './sensorUsage';
+import { isReplaceableCharacteristic } from './testSetupCharacteristics';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -164,6 +165,8 @@ export const buildConversionPayload = ({
   studyVariables = [],
   studies = [],
   testSetups = [],
+  configurations = [],
+  configurationTypes = [],
   selectedTestSetupId = null,
   experimentType = '',
   studyToStudyVariableMapping = [],
@@ -180,6 +183,30 @@ export const buildConversionPayload = ({
   const safeContacts = asArray(contacts);
 
   const selectedSetup = safeSetups.find((setup) => setup?.id === selectedTestSetupId) || null;
+  const projectConfigurations = asArray(configurations).filter(
+    (configuration) => configuration?.testSetupId === selectedSetup?.id
+  );
+  // Preserve configurations embedded in older test setups, but prefer the
+  // project-scoped configuration model used by the current Configuration slide.
+  const payloadConfigurations = projectConfigurations.length > 0
+    ? projectConfigurations
+    : asArray(selectedSetup?.configurations);
+  const replaceableCharacteristicIds = new Set(
+    asArray(selectedSetup?.characteristics)
+      .filter((characteristic) => isReplaceableCharacteristic(characteristic?.isReplaceable))
+      .map((characteristic) => characteristic.id)
+      .filter(Boolean)
+  );
+  const payloadConfigurationTypes = asArray(configurationTypes).filter(
+    (type) => replaceableCharacteristicIds.has(type?.replaceableCharacteristicId)
+  );
+  const payloadTestSetup = selectedSetup
+    ? {
+      ...selectedSetup,
+      configurations: payloadConfigurations,
+      configurationTypes: payloadConfigurationTypes,
+    }
+    : null;
   const selectedMeasurementProtocols = asArray(selectedSetup?.measurementProtocols);
   const selectedProcessingProtocols = asArray(selectedSetup?.processingProtocols);
   const sensors = asArray(selectedSetup?.sensors).filter(isSensorIncludedInDatasetOutput);
@@ -213,7 +240,7 @@ export const buildConversionPayload = ({
     study_variables: payloadStudyVariables,
     measurement_protocols: selectedMeasurementProtocols,
     processing_protocols: selectedProcessingProtocols,
-    test_setup: selectedSetup,
+    test_setup: payloadTestSetup,
     studies: safeStudies.map((study) => {
       const studyRuns = getRunsForStudy(study);
       const selectedMeasurementProtocolId = study?.measurementProtocolId || selectionLookup.measurement[study.id] || '';

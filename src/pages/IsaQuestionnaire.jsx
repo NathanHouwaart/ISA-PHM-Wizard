@@ -65,6 +65,7 @@ export const IsaQuestionnaire = () => {
     selectedTestSetupId,
     testSetups,
     studies,
+    configurations,
     selectedDataset,
     studyToStudyVariableMapping,
     studyToMeasurementProtocolSelection,
@@ -182,6 +183,7 @@ export const IsaQuestionnaire = () => {
   const deferredStudyVariables = useDeferredValue(studyVariables);
   const deferredStudyVariableMappings = useDeferredValue(studyToStudyVariableMapping);
   const deferredStudies = useDeferredValue(studies);
+  const deferredConfigurations = useDeferredValue(configurations);
   const deferredTestSetups = useDeferredValue(testSetups);
   const deferredSelectedTestSetupId = useDeferredValue(selectedTestSetupId);
   const deferredMeasurementProtocolSelection = useDeferredValue(studyToMeasurementProtocolSelection);
@@ -197,6 +199,7 @@ export const IsaQuestionnaire = () => {
     studyVariables: deferredStudyVariables,
     studyToStudyVariableMapping: deferredStudyVariableMappings,
     studies: deferredStudies,
+    configurations: deferredConfigurations,
     testSetups: deferredTestSetups,
     selectedTestSetupId: deferredSelectedTestSetupId,
     studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -215,6 +218,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -241,6 +245,7 @@ export const IsaQuestionnaire = () => {
         studyVariables: deferredStudyVariables,
         studyToStudyVariableMapping: deferredStudyVariableMappings,
         studies: deferredStudies,
+        configurations: deferredConfigurations,
         testSetups: deferredTestSetups,
         selectedTestSetupId: deferredSelectedTestSetupId,
         studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -274,6 +279,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -292,6 +298,7 @@ export const IsaQuestionnaire = () => {
       studyVariables: deferredStudyVariables,
       studyToStudyVariableMapping: deferredStudyVariableMappings,
       studies: deferredStudies,
+      configurations: deferredConfigurations,
       testSetups: deferredTestSetups,
       selectedTestSetupId: deferredSelectedTestSetupId,
       studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -312,6 +319,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -380,6 +388,7 @@ export const IsaQuestionnaire = () => {
         studyVariables,
         studyToStudyVariableMapping,
         studies,
+        configurations,
         testSetups,
         selectedTestSetupId,
         studyToMeasurementProtocolSelection,
