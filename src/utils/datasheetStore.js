@@ -1,9 +1,4 @@
-import Dexie from 'dexie';
-
-const db = new Dexie('isa_phm_datasheets_db_v1');
-db.version(1).stores({
-  attachments: '&id, updatedAt',
-});
+import db from './attachmentDatabase';
 
 export const saveDatasheetFile = async ({ id, file }) => {
   await db.attachments.put({

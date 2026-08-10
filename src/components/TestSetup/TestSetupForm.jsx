@@ -69,6 +69,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     experimentPreparationProtocolName: '',
     testSpecimenName: '',
     description: '',
+    images: [],
     characteristics: [],
     sensors: [],
     sensorTypes: [],
@@ -87,6 +88,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       experimentPreparationProtocolName: sourceItem.experimentPreparationProtocolName || '',
       testSpecimenName: sourceItem.testSpecimenName || '',
       description: sourceItem.description || '',
+      images: Array.isArray(sourceItem.images) ? sourceItem.images : [],
       characteristics: (sourceItem.characteristics || []).map(normalizeCharacteristic),
       sensors: (sourceItem.sensors || []).map(normalizeSensor),
       sensorTypes: sourceItem.sensorTypes || [],
@@ -538,7 +540,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         />
 
         <TabPanel isActive={selectedTab === 'basic-info'}>
-          <BasicInfoSection formData={formData} onFieldChange={handleChange} />
+          <BasicInfoSection
+            formData={formData}
+            onFieldChange={handleChange}
+            onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
+          />
         </TabPanel>
 
         <EntityGridTabPanel

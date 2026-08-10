@@ -3,6 +3,7 @@ import { useProjectData } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { waitForNextPaint } from '../utils/waitForNextPaint';
 import { buildDatasheetUploadManifest } from '../utils/datasheetUploadManifest';
+import { buildImageUploadManifest } from '../utils/imageUploadManifest';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
@@ -89,6 +90,12 @@ export default function useSubmitData() {
       formData.append('datasheet_manifest', JSON.stringify(manifest));
       files.forEach(({ attachmentId, file: datasheet }) => {
         formData.append('datasheets', datasheet, `${attachmentId}.pdf`);
+      });
+      const { manifest: imageManifest, files: imageFiles } = await buildImageUploadManifest(jsonData);
+      formData.append('image_manifest', JSON.stringify(imageManifest));
+      imageFiles.forEach(({ attachmentId, file: image }) => {
+        const extension = image.type === 'image/png' ? 'png' : 'jpg';
+        formData.append('images', image, `${attachmentId}.${extension}`);
       });
 
       const DEFAULT_PROD_API = 'https://dwvmqgeaan.eu-west-1.awsapprunner.com';

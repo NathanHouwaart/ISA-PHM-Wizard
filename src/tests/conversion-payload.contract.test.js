@@ -75,6 +75,9 @@ describe('conversion payload contract', () => {
         id: 'setup-1',
         name: 'Setup 1',
         characteristics: [{ id: 'component-1', category: 'Bearing', isReplaceable: true }],
+        images: [{
+          attachmentId: 'image-1', fileName: 'rig.png', mimeType: 'image/png', size: 1024,
+        }],
         sensors: [],
       }],
       selectedTestSetupId: 'setup-1',
@@ -96,6 +99,9 @@ describe('conversion payload contract', () => {
     expect(payload.test_setup.configurations[0].id).toBe('config-1');
     expect(payload.test_setup.configurationTypes).toEqual([
       expect.objectContaining({ id: 'type-1', replaceableCharacteristicId: 'component-1' }),
+    ]);
+    expect(payload.test_setup.images).toEqual([
+      expect.objectContaining({ attachmentId: 'image-1', fileName: 'rig.png' }),
     ]);
   });
 
