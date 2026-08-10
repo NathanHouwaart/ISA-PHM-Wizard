@@ -7,6 +7,7 @@ import FormField from '../Form/FormField';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
+import DatasheetField from '../Form/fields/DatasheetField';
 
 const createEmptySensorType = () => ({
   id: uuid4(),
@@ -133,6 +134,11 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
               <FormField label="Technology Type" name="sensor-type-technology" value={draft.technologyType} onChange={(event) => setDraft((current) => ({ ...current, technologyType: event.target.value }))} placeholder="e.g. Accelerometer" />
               <FormField label="Measurement Type" name="sensor-type-measurement" value={draft.measurementType} onChange={(event) => setDraft((current) => ({ ...current, measurementType: event.target.value }))} placeholder="e.g. Vibration" />
             </div>
+            <DatasheetField
+              value={draft.datasheet}
+              onChange={(datasheet) => setDraft((current) => ({ ...current, datasheet }))}
+              explanation="Attach the manufacturer PDF datasheet, or mark it as not available."
+            />
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               {selectedType ? (
                 <TooltipButton onClick={() => setPendingDelete(selectedType)} tooltipText="Delete sensor type" className="px-3 py-2 text-sm bg-rose-600 text-white hover:bg-rose-700 rounded-lg">

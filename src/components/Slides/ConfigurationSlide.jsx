@@ -97,7 +97,7 @@ export const ConfigurationSlide = forwardRef(({ onHeightChange }, ref) => {
                         <Heading3 className="text-base">Replaceable Component Definition</Heading3>
                         <TooltipButton onClick={() => setTypeDialogOpen(true)} tooltipText="Manage component types" className="px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
                             <Settings2 className="h-4 w-4" />
-                            <span>Manage Types</span>
+                            <span>Component Types</span>
                         </TooltipButton>
                     </div>
 

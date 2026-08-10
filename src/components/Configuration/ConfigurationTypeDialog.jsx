@@ -8,6 +8,7 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
+import DatasheetField from '../Form/fields/DatasheetField';
 
 const createEmptyType = () => ({
     id: uuid4(),
@@ -52,6 +53,13 @@ const ConfigurationTypeDialog = ({
         [selectedId, types]
     );
     const isCreating = selectedId === null;
+    const sortedTypes = useMemo(() => [...types].sort((first, second) => {
+        const firstComponent = replaceableComponents.find((component) => component.id === first.replaceableCharacteristicId);
+        const secondComponent = replaceableComponents.find((component) => component.id === second.replaceableCharacteristicId);
+        const firstLabel = firstComponent?.category || firstComponent?.description || '';
+        const secondLabel = secondComponent?.category || secondComponent?.description || '';
+        return firstLabel.localeCompare(secondLabel) || (first.name || '').localeCompare(second.name || '');
+    }), [types, replaceableComponents]);
 
     if (!open || typeof document === 'undefined') return null;
 
@@ -151,12 +159,12 @@ const ConfigurationTypeDialog = ({
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
             role="dialog"
             aria-modal="true"
-            aria-label="Manage configuration types"
+            aria-label="Manage component types"
         >
             <div className="flex max-h-[calc(100vh-4rem)] w-full max-w-4xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
                 <aside className="w-64 shrink-0 border-r border-gray-200 bg-gray-50 p-4">
                     <div className="mb-4 flex items-center justify-between">
-                        <Heading3 className="text-base">Types</Heading3>
+                        <Heading3 className="text-base">Component Types</Heading3>
                         <TooltipButton
                             onClick={startNewType}
                             tooltipText="Create type"
@@ -178,7 +186,7 @@ const ConfigurationTypeDialog = ({
                             </div>
                         )}
 
-                        {types.map((type) => (
+                        {sortedTypes.map((type) => (
                             <button
                                 key={type.id}
                                 type="button"
@@ -209,7 +217,7 @@ const ConfigurationTypeDialog = ({
                 <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
                     <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
                         <Heading3 className="text-xl">
-                            {selectedType ? 'Edit Configuration Type' : 'Create Configuration Type'}
+                            {selectedType ? 'Edit Component Type' : 'Create Component Type'}
                         </Heading3>
                         <TooltipButton
                             onClick={onClose}
@@ -253,6 +261,12 @@ const ConfigurationTypeDialog = ({
                                 }))}
                             />
                         </div>
+
+                        <DatasheetField
+                            value={draft.datasheet}
+                            onChange={(datasheet) => setDraft((previous) => ({ ...previous, datasheet }))}
+                            explanation="Attach the manufacturer PDF datasheet for this replaceable component type, or mark it as not available."
+                        />
 
                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <div className="mb-3 flex items-center justify-between">

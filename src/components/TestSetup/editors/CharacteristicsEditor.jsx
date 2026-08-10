@@ -8,6 +8,7 @@ import { Switch } from '../../ui/Switch';
 import TableTooltip from '../../Widgets/TableTooltip';
 import TooltipButton from '../../Widgets/TooltipButton';
 import CommentEditor from './CommentEditor';
+import DatasheetField from '../../Form/fields/DatasheetField';
 import { isReplaceableCharacteristic, setCharacteristicReplaceable } from '../../../utils/testSetupCharacteristics';
 
 const getCharacteristicKey = (characteristic, index) => characteristic.id || `characteristic-${index}`;
@@ -85,7 +86,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
     onCharacteristicsChange(characteristics.map((characteristic, index) => (
       index === selectedIndex
-        ? setCharacteristicReplaceable(characteristic, isReplaceable)
+        ? { ...setCharacteristicReplaceable(characteristic, isReplaceable), datasheet: isReplaceable ? null : characteristic.datasheet }
         : characteristic
     )));
   };
@@ -271,6 +272,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                     required
                   />
                 ) : (
+                  <>
                   <div className="grid gap-4 md:grid-cols-12">
                     <div className="md:col-span-8">
                       <FormField
@@ -293,6 +295,12 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                       />
                     </div>
                   </div>
+                  <DatasheetField
+                    value={selectedCharacteristic.datasheet}
+                    onChange={(datasheet) => updateCharacteristic('datasheet', datasheet)}
+                    explanation="Attach the manufacturer PDF datasheet, or mark it as not available."
+                  />
+                  </>
                 )}
 
                 <div className="border-t border-gray-200 pt-4">
