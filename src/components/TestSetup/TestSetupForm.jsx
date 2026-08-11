@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { X, Save } from 'lucide-react';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
@@ -33,6 +33,14 @@ import {
   SENSOR_USAGE_DATASET_OUTPUT,
   SENSOR_USAGE_OPTIONS
 } from '../../utils/sensorUsage';
+import {
+  cleanupAttachmentRefs,
+  cloneAttachmentRefs,
+  collectAttachmentRefs,
+  getAttachmentCommitCleanup,
+  getAttachmentRollbackCleanup,
+  mergeAttachmentRefs,
+} from '../../utils/attachmentLifecycle';
 
 const sensorGridPlugins = { select: new SelectTypePlugin() };
 
@@ -112,6 +120,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const [isSensorTypeDialogOpen, setIsSensorTypeDialogOpen] = useState(false);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(buildFormState(item)));
+  const initialAttachmentRefs = useRef(collectAttachmentRefs(buildFormState(item)));
+  const seenAttachmentRefs = useRef(cloneAttachmentRefs(initialAttachmentRefs.current));
 
 
   // Calculate number of sensors from sensors array
@@ -145,9 +155,15 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   ]);
 
   useEffect(() => {
+    mergeAttachmentRefs(seenAttachmentRefs.current, collectAttachmentRefs(formData));
+  }, [formData]);
+
+  useEffect(() => {
     const nextFormData = buildFormState(item);
     setFormData(nextFormData);
     setInitialFingerprint(getDirtyFingerprint(nextFormData));
+    initialAttachmentRefs.current = collectAttachmentRefs(nextFormData);
+    seenAttachmentRefs.current = cloneAttachmentRefs(initialAttachmentRefs.current);
   }, [item, buildFormState]);
 
   useEffect(() => {
@@ -201,7 +217,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const hasUnsavedChanges = currentFingerprint !== initialFingerprint;
   const historyScopeBase = `${formHistoryScope}:${initialFingerprint}`;
 
-  const saveForm = useCallback(() => {
+  const saveForm = useCallback(async () => {
     if (
       !formData.name.trim() ||
       !formData.location.trim() ||
@@ -233,14 +249,27 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       id: isEditing && item?.id ? item.id : `testsetup-${Date.now()}`
     };
 
-    onSave(testSetupData);
+    await onSave(testSetupData);
+    const finalRefs = collectAttachmentRefs(testSetupData);
+    const removedSavedRefs = getAttachmentCommitCleanup(
+      initialAttachmentRefs.current,
+      seenAttachmentRefs.current,
+      finalRefs
+    );
+    try {
+      await cleanupAttachmentRefs(removedSavedRefs);
+    } catch (cleanupError) {
+      console.warn('[TestSetupForm] unable to clean up replaced attachments', cleanupError);
+    }
+    initialAttachmentRefs.current = cloneAttachmentRefs(finalRefs);
+    seenAttachmentRefs.current = cloneAttachmentRefs(finalRefs);
     setInitialFingerprint(currentFingerprint);
     return true;
   }, [formData, numberOfSensors, isEditing, item, onSave, currentFingerprint]);
 
-  const handleSubmit = useCallback((e) => {
+  const handleSubmit = useCallback(async (e) => {
     e?.preventDefault();
-    saveForm();
+    await saveForm();
   }, [saveForm]);
 
   const handleCloseRequest = useCallback(() => {
@@ -255,13 +284,22 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     setShowCloseWarning(false);
   }, []);
 
-  const handleSaveAndClose = useCallback(() => {
+  const handleSaveAndClose = useCallback(async () => {
     setShowCloseWarning(false);
-    saveForm();
+    await saveForm();
   }, [saveForm]);
 
-  const handleDiscardAndClose = useCallback(() => {
+  const handleDiscardAndClose = useCallback(async () => {
     setShowCloseWarning(false);
+    const stagedRefs = getAttachmentRollbackCleanup(
+      initialAttachmentRefs.current,
+      seenAttachmentRefs.current
+    );
+    try {
+      await cleanupAttachmentRefs(stagedRefs);
+    } catch (cleanupError) {
+      console.warn('[TestSetupForm] unable to clean up discarded attachments', cleanupError);
+    }
     onCancel?.();
   }, [onCancel]);
 

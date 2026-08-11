@@ -8,6 +8,13 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import DatasheetField from '../Form/fields/DatasheetField';
+import {
+  cleanupAttachmentRefs,
+  cloneAttachmentRefs,
+  collectAttachmentRefs,
+  mergeAttachmentRefs,
+  subtractAttachmentRefs
+} from '../../utils/attachmentLifecycle';
 
 const createEmptySensorType = () => ({
   id: uuid4(),
@@ -23,6 +30,11 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
   const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState(null);
   const wasOpenRef = useRef(false);
+  const seenDraftRefs = useRef(collectAttachmentRefs(types));
+
+  useEffect(() => {
+    if (open) mergeAttachmentRefs(seenDraftRefs.current, collectAttachmentRefs(draft));
+  }, [open, draft]);
 
   useEffect(() => {
     if (!open) {
@@ -34,8 +46,22 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
     const firstType = types[0];
     setSelectedId(firstType?.id || null);
     setDraft(firstType ? { ...firstType } : createEmptySensorType());
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
     setError('');
   }, [open, types]);
+
+  const cleanupUnsavedDrafts = async (nextTypes = types) => {
+    const stagedRefs = subtractAttachmentRefs(
+      seenDraftRefs.current,
+      collectAttachmentRefs(types)
+    );
+    const orphanedRefs = subtractAttachmentRefs(stagedRefs, collectAttachmentRefs(nextTypes));
+    try {
+      await cleanupAttachmentRefs(orphanedRefs);
+    } catch (cleanupError) {
+      console.warn('[SensorTypeDialog] unable to clean up discarded attachments', cleanupError);
+    }
+  };
 
   const selectedType = useMemo(
     () => types.find((type) => type.id === selectedId) || null,
@@ -48,19 +74,23 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
 
   if (!open || typeof document === 'undefined') return null;
 
-  const selectType = (type) => {
+  const selectType = async (type) => {
+    await cleanupUnsavedDrafts();
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
     setSelectedId(type.id);
     setDraft({ ...type });
     setError('');
   };
 
-  const startNewType = () => {
+  const startNewType = async () => {
+    await cleanupUnsavedDrafts();
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
     setSelectedId(null);
     setDraft(createEmptySensorType());
     setError('');
   };
 
-  const saveType = () => {
+  const saveType = async () => {
     const name = draft.name.trim();
     if (!name) {
       setError('Please enter a sensor type name.');
@@ -75,22 +105,33 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
       measurementType: draft.measurementType.trim()
     };
     const exists = types.some((type) => type.id === nextType.id);
-    onChange(exists
+    const nextTypes = exists
       ? types.map((type) => type.id === nextType.id ? nextType : type)
-      : [...types, nextType]);
+      : [...types, nextType];
+    onChange(nextTypes);
+    await cleanupUnsavedDrafts(nextTypes);
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(nextTypes));
     setSelectedId(nextType.id);
     setDraft(nextType);
     setError('');
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!pendingDelete || referencedCount > 0) return;
     const remaining = types.filter((type) => type.id !== pendingDelete.id);
     const nextSelected = remaining[0] || null;
     onChange(remaining);
+    await cleanupUnsavedDrafts(remaining);
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(remaining));
     setSelectedId(nextSelected?.id || null);
     setDraft(nextSelected ? { ...nextSelected } : createEmptySensorType());
     setPendingDelete(null);
+  };
+
+  const closeDialog = async () => {
+    await cleanupUnsavedDrafts();
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+    onClose?.();
   };
 
   return createPortal(
@@ -122,7 +163,7 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
             <Heading3 className="text-xl">{selectedType ? 'Edit Sensor Type' : 'Create Sensor Type'}</Heading3>
-            <TooltipButton onClick={onClose} tooltipText="Close" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
+            <TooltipButton onClick={closeDialog} tooltipText="Close" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
               <X className="h-5 w-5" />
             </TooltipButton>
           </div>

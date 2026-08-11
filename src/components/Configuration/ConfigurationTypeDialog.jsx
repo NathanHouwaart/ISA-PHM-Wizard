@@ -9,6 +9,13 @@ import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import DatasheetField from '../Form/fields/DatasheetField';
+import {
+    cleanupAttachmentRefs,
+    cloneAttachmentRefs,
+    collectAttachmentRefs,
+    mergeAttachmentRefs,
+    subtractAttachmentRefs
+} from '../../utils/attachmentLifecycle';
 
 const createEmptyType = () => ({
     id: uuid4(),
@@ -30,6 +37,11 @@ const ConfigurationTypeDialog = ({
     const [error, setError] = useState('');
     const [pendingDelete, setPendingDelete] = useState(null);
     const wasOpenRef = useRef(false);
+    const seenDraftRefs = useRef(collectAttachmentRefs(types));
+
+    useEffect(() => {
+        if (open) mergeAttachmentRefs(seenDraftRefs.current, collectAttachmentRefs(draft));
+    }, [open, draft]);
 
     useEffect(() => {
         if (!open) {
@@ -45,8 +57,21 @@ const ConfigurationTypeDialog = ({
         setDraft(firstType
             ? { ...firstType, characteristics: [...(firstType.characteristics || [])] }
             : createEmptyType());
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
         setError('');
     }, [open, types]);
+
+    const cleanupOutside = async (retainedTypes) => {
+        const orphanedRefs = subtractAttachmentRefs(
+            seenDraftRefs.current,
+            collectAttachmentRefs(retainedTypes)
+        );
+        try {
+            await cleanupAttachmentRefs(orphanedRefs);
+        } catch (cleanupError) {
+            console.warn('[ConfigurationTypeDialog] unable to clean up attachments', cleanupError);
+        }
+    };
 
     const selectedType = useMemo(
         () => types.find((type) => type.id === selectedId),
@@ -63,13 +88,17 @@ const ConfigurationTypeDialog = ({
 
     if (!open || typeof document === 'undefined') return null;
 
-    const selectType = (type) => {
+    const selectType = async (type) => {
+        await cleanupOutside(types);
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
         setSelectedId(type.id);
         setDraft({ ...type, characteristics: [...(type.characteristics || [])] });
         setError('');
     };
 
-    const startNewType = () => {
+    const startNewType = async () => {
+        await cleanupOutside(types);
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
         setSelectedId(null);
         setDraft(createEmptyType());
         setError('');
@@ -105,7 +134,7 @@ const ConfigurationTypeDialog = ({
         }));
     };
 
-    const saveType = () => {
+    const saveType = async () => {
         const name = draft.name.trim();
         if (!name || !draft.replaceableCharacteristicId) {
             setError('Please enter a type name and select its replaceable component.');
@@ -125,9 +154,12 @@ const ConfigurationTypeDialog = ({
         };
         const exists = types.some((type) => type.id === nextType.id);
 
-        onChange(exists
+        const nextTypes = exists
             ? types.map((type) => type.id === nextType.id ? nextType : type)
-            : [...types, nextType]);
+            : [...types, nextType];
+        onChange(nextTypes);
+        await cleanupOutside(nextTypes);
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(nextTypes));
         setSelectedId(nextType.id);
         setDraft(nextType);
         setError('');
@@ -140,18 +172,26 @@ const ConfigurationTypeDialog = ({
         )).length
         : 0;
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (!pendingDelete || referencedCount > 0) return;
 
         const remaining = types.filter((type) => type.id !== pendingDelete.id);
         const nextSelected = remaining[0];
 
         onChange(remaining);
+        await cleanupOutside(remaining);
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(remaining));
         setSelectedId(nextSelected?.id || null);
         setDraft(nextSelected
             ? { ...nextSelected, characteristics: [...(nextSelected.characteristics || [])] }
             : createEmptyType());
         setPendingDelete(null);
+    };
+
+    const closeDialog = async () => {
+        await cleanupOutside(types);
+        seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+        onClose?.();
     };
 
     return createPortal(
@@ -220,7 +260,7 @@ const ConfigurationTypeDialog = ({
                             {selectedType ? 'Edit Component Type' : 'Create Component Type'}
                         </Heading3>
                         <TooltipButton
-                            onClick={onClose}
+                            onClick={closeDialog}
                             tooltipText="Close"
                             className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
                         >

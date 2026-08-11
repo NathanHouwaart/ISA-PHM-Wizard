@@ -98,7 +98,6 @@ const ImageUploadField = ({ value = [], onChange }) => {
   };
 
   const removeImage = async (attachmentId) => {
-    await deleteImageFile(attachmentId);
     onChange?.(images.filter((image) => image.attachmentId !== attachmentId));
     setError('');
   };

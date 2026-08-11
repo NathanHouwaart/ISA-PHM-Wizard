@@ -5,7 +5,7 @@ import FormFieldShell from '../FormFieldShell';
 import TooltipButton from '../../Widgets/TooltipButton';
 import { cn } from '../../../utils/utils';
 import { BASE_INPUT_CLASSNAME } from './constants';
-import { deleteDatasheetFile, getDatasheetFile, saveDatasheetFile } from '../../../utils/datasheetStore';
+import { getDatasheetFile, saveDatasheetFile } from '../../../utils/datasheetStore';
 
 const MAX_DATASHEET_BYTES = 25 * 1024 * 1024;
 
@@ -48,7 +48,7 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
         setError('This file is not a valid PDF.');
         return;
       }
-      const attachmentId = datasheet.attachmentId || uuid4();
+      const attachmentId = uuid4();
       await saveDatasheetFile({ id: attachmentId, file });
       setDatasheet({ attachmentId, fileName: file.name, mimeType: 'application/pdf', size: file.size, notAvailable: false });
       setError('');
@@ -58,13 +58,11 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
   };
 
   const clearFile = async () => {
-    await deleteDatasheetFile(datasheet.attachmentId);
     setDatasheet(emptyDatasheet);
     setError('');
   };
 
   const toggleNotAvailable = async (checked) => {
-    if (checked) await deleteDatasheetFile(datasheet.attachmentId);
     setDatasheet({ ...emptyDatasheet, notAvailable: checked });
     setError('');
   };
