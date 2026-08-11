@@ -262,11 +262,13 @@ export const MeasurementOutputSlide = forwardRef(({ onHeightChange, currentPage,
     }
   }), [
     hierarchicalRows,
-    selectedTestSetup,
+    sensors,
     mappingsController.mappings,
     measurementProtocolOptions,
     sensorIdSet,
-    isRawEnabledForStudy,    isSensorApplicableForStudy,    duplicateRawCellKeys
+    isRawEnabledForStudy,
+    isSensorApplicableForStudy,
+    duplicateRawCellKeys
   ]);
 
   return (

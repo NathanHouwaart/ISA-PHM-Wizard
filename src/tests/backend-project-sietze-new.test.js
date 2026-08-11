@@ -116,13 +116,13 @@ const buildPayloadFromExport = (projectData) => {
 };
 
 const callConversionApi = async (payload) => {
-  const { postJsonFile } = await import('./utils/nodeFormFetch.js');
+  const { postJsonFile, readConversionJson } = await import('./utils/nodeFormFetch.js');
   const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json');
   if (!response.ok) {
     const text = await response.text().catch(() => null);
     throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
   }
-  return response.json();
+  return readConversionJson(response);
 };
 
 integrationDescribe('Backend integration with bundled example fixtures', () => {

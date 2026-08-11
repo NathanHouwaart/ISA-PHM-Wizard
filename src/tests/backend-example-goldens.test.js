@@ -219,7 +219,7 @@ const prepareConversionPayload = (projectData) => {
 };
 
 const callConversionApi = async (payload) => {
-  const { postJsonFile } = await import('./utils/nodeFormFetch.js');
+  const { postJsonFile, readConversionJson } = await import('./utils/nodeFormFetch.js');
   const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json');
 
   if (!response.ok) {
@@ -227,7 +227,7 @@ const callConversionApi = async (payload) => {
     throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
   }
 
-  return response.json();
+  return readConversionJson(response);
 };
 
 const readJson = async (relativePath) => {

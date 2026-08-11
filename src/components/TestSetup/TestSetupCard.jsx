@@ -1,26 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, Edit2, Trash2, MapPin, Gauge, Settings, MessageCircle, Layers } from 'lucide-react';
 import TooltipButton from '../Widgets/TooltipButton';
 import AvatarInitials from '../Widgets/AvatarInitials';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
-import {
-  createTestSetupExportPackage,
-  getTestSetupExportFileName
-} from '../../utils/testSetupExport';
+import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
+import { createTestSetupArchive, getTestSetupArchiveFileName } from '../../utils/testSetupArchive';
 
 const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
-  const handleExport = () => {
-    const exportPackage = createTestSetupExportPackage(item);
-    const blob = new Blob([JSON.stringify(exportPackage, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = getTestSetupExportFileName(item);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  const [exportError, setExportError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await createTestSetupArchive(item);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = getTestSetupArchiveFileName(item);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setExportError(error?.message || 'The test setup package could not be created.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Get unique measurement types from sensors
@@ -113,6 +120,7 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
               <TooltipButton
                 tooltipText="Export test setup"
                 onClick={(event) => { event.stopPropagation(); handleExport(); }}
+                disabled={isExporting}
                 className="bg-transparent p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4" />
@@ -129,6 +137,16 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
           )}
         </div>
       </div>
+      <AlertDecisionDialog
+        open={Boolean(exportError)}
+        tone="danger"
+        title="Unable to export test setup"
+        message={exportError}
+        confirmLabel="OK"
+        showCancel={false}
+        onConfirm={() => setExportError('')}
+        onCancel={() => setExportError('')}
+      />
     </div>
   );
 };

@@ -13,6 +13,8 @@ export const saveImageFile = async ({ id, file }) => {
 
 export const getImageFile = async (id) => db.images.get(id);
 
+export const getAllImageFiles = async () => db.images.toArray();
+
 export const deleteImageFile = async (id) => {
   if (id) await db.images.delete(id);
 };

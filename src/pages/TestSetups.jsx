@@ -22,7 +22,12 @@ import TestSetupConflictDialog from '../components/Widgets/TestSetupConflictDial
 import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import { hasContentChanged } from '../utils/testSetupUtils';
 import generateId from '../utils/generateId';
-import { parseTestSetupImportPackage } from '../utils/testSetupExport';
+import { collectAttachmentRefs } from '../utils/attachmentLifecycle';
+import {
+  commitTestSetupImport,
+  hasStoredTestSetupAttachments,
+  readTestSetupImportFile
+} from '../utils/testSetupArchive';
 
 const resolveImportedTestSetupName = (name, testSetups = []) => {
   const baseName = typeof name === 'string' && name.trim() ? name.trim() : 'Imported Test Setup';
@@ -71,15 +76,36 @@ export const TestSetups = () => {
 
   const handleImportFile = useCallback(async (file) => {
     try {
-      const importedTestSetup = parseTestSetupImportPackage(await file.text());
+      const candidate = await readTestSetupImportFile(file);
+      const importedTestSetup = candidate.testSetup;
       const localTestSetup = testSetups.find((testSetup) => testSetup?.id === importedTestSetup.id);
 
       if (!localTestSetup) {
-        setTestSetups((previous) => [...previous, importedTestSetup]);
+        const committedSetup = await commitTestSetupImport(candidate);
+        setTestSetups((previous) => [...previous, committedSetup]);
+        const legacyRefs = collectAttachmentRefs(committedSetup);
+        if (candidate.legacy && (legacyRefs.datasheets.size || legacyRefs.images.size)) {
+          showDialog({
+            tone: 'warning',
+            title: 'Legacy test setup imported',
+            message: 'The JSON setup was imported, but legacy exports do not contain attachment files. Reattach any missing datasheets or images.'
+          });
+        }
         return;
       }
 
       if (!hasContentChanged(localTestSetup, importedTestSetup)) {
+        if (candidate.attachments.length && !(await hasStoredTestSetupAttachments(localTestSetup))) {
+          const restoredSetup = await commitTestSetupImport(candidate);
+          setTestSetups((previous) => previous.map((testSetup) => (
+            testSetup?.id === restoredSetup.id ? restoredSetup : testSetup
+          )));
+          showDialog({
+            title: 'Test setup attachments restored',
+            message: `The locally missing attachments for "${restoredSetup.name || 'this test setup'}" were restored from the package.`
+          });
+          return;
+        }
         showDialog({
           title: 'Test setup already imported',
           message: `"${importedTestSetup.name || 'This test setup'}" is already up to date in this workspace.`
@@ -87,7 +113,7 @@ export const TestSetups = () => {
         return;
       }
 
-      setPendingImport({
+      setPendingImport({ candidate,
         conflict: {
           setupId: importedTestSetup.id,
           setupName: importedTestSetup.name || 'Unnamed Test Setup',
@@ -120,27 +146,40 @@ export const TestSetups = () => {
     }
   }, [handleImportFile]);
 
-  const handleConflictResolution = useCallback((resolution) => {
+  const handleConflictResolution = useCallback(async (resolution) => {
     const conflict = pendingImport?.conflict;
     if (!conflict) return;
 
-    if (resolution === 'use-imported') {
-      setTestSetups((previous) => previous.map((testSetup) => (
-        testSetup?.id === conflict.setupId ? conflict.imported.setup : testSetup
-      )));
-    }
+    try {
+      if (resolution === 'use-imported') {
+        const committedSetup = await commitTestSetupImport(pendingImport.candidate);
+        setTestSetups((previous) => previous.map((testSetup) => (
+          testSetup?.id === conflict.setupId ? committedSetup : testSetup
+        )));
+      }
 
-    if (resolution === 'keep-both') {
-      const importedCopy = {
-        ...conflict.imported.setup,
-        id: generateId(),
-        name: resolveImportedTestSetupName(conflict.imported.setup.name, testSetups)
-      };
-      setTestSetups((previous) => [...previous, importedCopy]);
-    }
+      if (resolution === 'keep-both') {
+        const committedSetup = await commitTestSetupImport(pendingImport.candidate);
+        const originalSetupId = committedSetup.id;
+        const newSetupId = generateId();
+        const serialized = JSON.stringify(committedSetup);
+        const importedCopy = JSON.parse(serialized, (key, value) => (
+          key === 'testSetupId' && value === originalSetupId ? newSetupId : value
+        ));
+        importedCopy.id = newSetupId;
+        importedCopy.name = resolveImportedTestSetupName(committedSetup.name, testSetups);
+        setTestSetups((previous) => [...previous, importedCopy]);
+      }
 
-    setPendingImport(null);
-  }, [pendingImport, setTestSetups, testSetups]);
+      setPendingImport(null);
+    } catch (error) {
+      showDialog({
+        tone: 'danger',
+        title: 'Unable to import test setup',
+        message: error?.message || 'The imported attachments could not be stored.'
+      });
+    }
+  }, [pendingImport, setTestSetups, showDialog, testSetups]);
 
   return (
     <PageWrapper>
@@ -173,7 +212,7 @@ export const TestSetups = () => {
         <input
           ref={importInputRef}
           type="file"
-          accept="application/json,.json"
+          accept="application/zip,.zip,application/json,.json"
           className="hidden"
           onChange={handleImportInputChange}
         />

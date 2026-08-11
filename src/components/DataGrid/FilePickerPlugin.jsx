@@ -95,7 +95,7 @@ export default function FilePickerPlugin({ api = {} }) {
     // cleanup
     selectionSnapshotRef.current = null;
     filesRef.current = null;
-  }, [getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug]);
+  }, [getFlatColumns, hookRowData, fields, updateMappingsBatch, canEditCell, showDebug]);
 
   // When using the in-app explorer we receive an array-like of file-like objects
   // so we don't need the native input change handler anymore.

@@ -13,6 +13,8 @@ export const saveDatasheetFile = async ({ id, file }) => {
 
 export const getDatasheetFile = async (id) => db.attachments.get(id);
 
+export const getAllDatasheetFiles = async () => db.attachments.toArray();
+
 export const deleteDatasheetFile = async (id) => {
   if (id) await db.attachments.delete(id);
 };

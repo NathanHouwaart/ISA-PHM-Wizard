@@ -9,8 +9,9 @@ import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import DatasheetField from '../Form/fields/DatasheetField';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import {
-    cleanupAttachmentRefs,
+    cleanupUnreferencedAttachmentRefs,
     cloneAttachmentRefs,
     collectAttachmentRefs,
     mergeAttachmentRefs,
@@ -32,6 +33,11 @@ const ConfigurationTypeDialog = ({
     onChange,
     onClose
 }) => {
+    const {
+        testSetups = [],
+        configurationTypes = [],
+        currentProjectId
+    } = useProjectData();
     const [selectedId, setSelectedId] = useState(null);
     const [draft, setDraft] = useState(createEmptyType);
     const [error, setError] = useState('');
@@ -67,7 +73,16 @@ const ConfigurationTypeDialog = ({
             collectAttachmentRefs(retainedTypes)
         );
         try {
-            await cleanupAttachmentRefs(orphanedRefs);
+            const scopedTypeIds = new Set(types.map((type) => type?.id).filter(Boolean));
+            const retainedConfigurationTypes = [
+                ...configurationTypes.filter((type) => !scopedTypeIds.has(type?.id)),
+                ...retainedTypes,
+            ];
+            await cleanupUnreferencedAttachmentRefs(
+                orphanedRefs,
+                [testSetups, retainedConfigurationTypes],
+                { excludeProjectIds: [currentProjectId] }
+            );
         } catch (cleanupError) {
             console.warn('[ConfigurationTypeDialog] unable to clean up attachments', cleanupError);
         }

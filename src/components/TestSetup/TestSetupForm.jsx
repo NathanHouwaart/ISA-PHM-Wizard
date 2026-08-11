@@ -3,7 +3,7 @@ import { X, Save } from 'lucide-react';
 import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { v4 as uuid4 } from 'uuid';
-import { useProjectActions } from '../../contexts/GlobalDataContext';
+import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
@@ -34,8 +34,8 @@ import {
   SENSOR_USAGE_OPTIONS
 } from '../../utils/sensorUsage';
 import {
-  cleanupAttachmentRefs,
   cloneAttachmentRefs,
+  cleanupUnreferencedAttachmentRefs,
   collectAttachmentRefs,
   getAttachmentCommitCleanup,
   getAttachmentRollbackCleanup,
@@ -70,6 +70,11 @@ const getDirtyFingerprint = (value) => JSON.stringify(normalizeForDirtyCheck(val
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const { setScreenWidth } = useProjectActions();
+  const {
+    testSetups = [],
+    configurationTypes = [],
+    currentProjectId
+  } = useProjectData();
   
   const initialFormState = useMemo(() => ({
     name: '',
@@ -257,7 +262,18 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       finalRefs
     );
     try {
-      await cleanupAttachmentRefs(removedSavedRefs);
+      const retainedTestSetups = [
+        ...testSetups.filter((testSetup) => testSetup?.id !== testSetupData.id),
+        testSetupData,
+      ];
+      await cleanupUnreferencedAttachmentRefs(
+        removedSavedRefs,
+        [retainedTestSetups, configurationTypes],
+        {
+          excludeGlobalTestSetups: true,
+          excludeProjectIds: [currentProjectId],
+        }
+      );
     } catch (cleanupError) {
       console.warn('[TestSetupForm] unable to clean up replaced attachments', cleanupError);
     }
@@ -265,7 +281,17 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     seenAttachmentRefs.current = cloneAttachmentRefs(finalRefs);
     setInitialFingerprint(currentFingerprint);
     return true;
-  }, [formData, numberOfSensors, isEditing, item, onSave, currentFingerprint]);
+  }, [
+    formData,
+    numberOfSensors,
+    isEditing,
+    item,
+    onSave,
+    currentFingerprint,
+    testSetups,
+    configurationTypes,
+    currentProjectId
+  ]);
 
   const handleSubmit = useCallback(async (e) => {
     e?.preventDefault();
@@ -296,12 +322,19 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       seenAttachmentRefs.current
     );
     try {
-      await cleanupAttachmentRefs(stagedRefs);
+      await cleanupUnreferencedAttachmentRefs(
+        stagedRefs,
+        [testSetups, configurationTypes],
+        {
+          excludeGlobalTestSetups: true,
+          excludeProjectIds: [currentProjectId],
+        }
+      );
     } catch (cleanupError) {
       console.warn('[TestSetupForm] unable to clean up discarded attachments', cleanupError);
     }
     onCancel?.();
-  }, [onCancel]);
+  }, [onCancel, testSetups, configurationTypes, currentProjectId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

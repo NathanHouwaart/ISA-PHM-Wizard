@@ -279,7 +279,7 @@ function prepareConversionPayload(projectData) {
 // Helper function to call the backend API
 async function callConversionAPI(payload) {
   // Use the Node helper (form-data + node-fetch) to send a multipart file like curl/browser
-  const { postJsonFile } = await import('./utils/nodeFormFetch.js');
+  const { postJsonFile, readConversionJson } = await import('./utils/nodeFormFetch.js');
   console.log('🚀 Calling conversion API at', CONVERT_ENDPOINT);
   const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json');
 
@@ -288,7 +288,7 @@ async function callConversionAPI(payload) {
     throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
   }
 
-  return await response.json();
+  return readConversionJson(response);
 }
 
 integrationDescribe('ISA-PHM Conversion Integration Tests', () => {

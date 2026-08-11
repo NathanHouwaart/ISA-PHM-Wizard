@@ -33,18 +33,16 @@ const StudyMeasurementMappingCard = ({
 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
 
-  // Protocols live on the test setup, not in global state
-  const protocolList = fileFieldScope === 'processed'
-    ? (selectedTestSetup?.processingProtocols || [])
-    : (selectedTestSetup?.measurementProtocols || []);
   const activeStudyId = activeRun?.studyId || item?.studyId || item?.id;
   const selectedProtocolId = selectedProtocolByStudy?.[activeStudyId] || '';
 
   // Look up the selected protocol to check per-sensor applicability
-  const selectedProtocol = useMemo(
-    () => (protocolList || []).find((p) => p.id === selectedProtocolId) || null,
-    [protocolList, selectedProtocolId]
-  );
+  const selectedProtocol = useMemo(() => {
+    const protocols = fileFieldScope === 'processed'
+      ? (selectedTestSetup?.processingProtocols || [])
+      : (selectedTestSetup?.measurementProtocols || []);
+    return protocols.find((protocol) => protocol.id === selectedProtocolId) || null;
+  }, [fileFieldScope, selectedProtocolId, selectedTestSetup]);
   const selectedOutputMode = normalizeStudyOutputMode(
     activeRun?.outputMode,
     OUTPUT_MODE_RAW_ONLY

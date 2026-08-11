@@ -2,7 +2,10 @@ import Card from '../components/TestSetup/TestSetupCard';
 import Form from '../components/TestSetup/TestSetupForm';
 import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
 import { hasContentChanged } from '../utils/testSetupUtils';
-import { cleanupAttachmentRefs, collectAttachmentRefs } from '../utils/attachmentLifecycle';
+import {
+    cleanupUnreferencedAttachmentRefs,
+    collectAttachmentRefs
+} from '../utils/attachmentLifecycle';
 
 // Helper to ensure test setup has version tracking fields
 const ensureVersionFields = (setup) => {
@@ -25,7 +28,7 @@ const incrementVersion = (setup) => {
 
 export const useTestSetups = () => {
 
-    const { testSetups } = useProjectData();
+    const { testSetups, configurationTypes } = useProjectData();
     const { setTestSetups: setTestSetupsRaw } = useProjectActions();
     const components = {
         card: Card,
@@ -84,7 +87,13 @@ export const useTestSetups = () => {
         setTestSetups((prev) => (Array.isArray(prev) ? prev : []).filter((testSetup) => testSetup?.id !== testSetupId));
         if (removedTestSetup) {
             try {
-                await cleanupAttachmentRefs(collectAttachmentRefs(removedTestSetup));
+                const retainedTestSetups = (Array.isArray(testSetups) ? testSetups : [])
+                    .filter((testSetup) => testSetup?.id !== testSetupId);
+                await cleanupUnreferencedAttachmentRefs(
+                    collectAttachmentRefs(removedTestSetup),
+                    [retainedTestSetups, configurationTypes],
+                    { excludeGlobalTestSetups: true }
+                );
             } catch (cleanupError) {
                 console.warn('[useTestSetups] unable to clean up deleted test setup attachments', cleanupError);
             }

@@ -126,8 +126,8 @@ const buildAssayDetails = ({
         run_number: run.runNumber,
         study_run_id: run.runId,
         study_id: run.studyId,
-        ...(rawFileName ? { raw_file_name: rawFileName } : {}),
-        ...(processedFileName ? { processed_file_name: processedFileName } : {}),
+        raw_file_name: rawFileName,
+        processed_file_name: processedFileName,
       };
     });
 
@@ -260,6 +260,7 @@ export const buildConversionPayload = ({
         total_runs: totalRuns,
         selectedMeasurementProtocolId,
         selectedProcessingProtocolId,
+        used_setup: payloadTestSetup,
         study_to_study_variable_mapping: asArray(studyRuns).flatMap((run) => (
           asArray(studyToStudyVariableMapping)
             .filter((mapping) => {

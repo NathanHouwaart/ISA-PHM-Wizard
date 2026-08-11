@@ -266,10 +266,12 @@ export const ProcessingOutputSlide = forwardRef(({ onHeightChange, currentPage, 
     }
   }), [
     hierarchicalRows,
-    selectedTestSetup,
+    sensors,
     mappingsController.mappings,
     processingProtocolOptions,
-    isProcessedEnabledForStudy,    isSensorApplicableForStudy,    sensorIdSet,
+    isProcessedEnabledForStudy,
+    isSensorApplicableForStudy,
+    sensorIdSet,
     duplicateProcessedCellKeys
   ]);
 

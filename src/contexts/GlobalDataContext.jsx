@@ -47,6 +47,7 @@ import {
 } from '../state/session/projectSessionConfig';
 import useExplorerController from '../state/ui/useExplorerController';
 import useProjectDataState from '../state/project/useProjectDataState';
+import { garbageCollectOrphanedAttachments } from '../utils/attachmentLifecycle';
 import useProjectPersistence from '../state/project/useProjectPersistence';
 
 const GlobalDataContext = createContext();
@@ -383,6 +384,11 @@ export const GlobalDataProvider = ({ children }) => {
                 allowedProjectIds: [...allowedProjectIds],
                 includeTransient: true
             });
+            if (typeof globalThis.indexedDB !== 'undefined') {
+                garbageCollectOrphanedAttachments().catch((error) => {
+                    console.warn('[GlobalDataContext] startup attachment sweep failed', error);
+                });
+            }
         } catch (error) {
             console.warn('[GlobalDataContext] startup orphan storage sweep failed', error);
         }

@@ -8,8 +8,9 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import DatasheetField from '../Form/fields/DatasheetField';
+import { useProjectData } from '../../contexts/GlobalDataContext';
 import {
-  cleanupAttachmentRefs,
+  cleanupUnreferencedAttachmentRefs,
   cloneAttachmentRefs,
   collectAttachmentRefs,
   mergeAttachmentRefs,
@@ -25,6 +26,7 @@ const createEmptySensorType = () => ({
 });
 
 const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose }) => {
+  const { testSetups = [], configurationTypes = [] } = useProjectData();
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(createEmptySensorType);
   const [error, setError] = useState('');
@@ -57,7 +59,10 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
     );
     const orphanedRefs = subtractAttachmentRefs(stagedRefs, collectAttachmentRefs(nextTypes));
     try {
-      await cleanupAttachmentRefs(orphanedRefs);
+      await cleanupUnreferencedAttachmentRefs(
+        orphanedRefs,
+        [nextTypes, testSetups, configurationTypes]
+      );
     } catch (cleanupError) {
       console.warn('[SensorTypeDialog] unable to clean up discarded attachments', cleanupError);
     }
