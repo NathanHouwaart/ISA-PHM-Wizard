@@ -6,8 +6,7 @@ import TooltipButton from '../../Widgets/TooltipButton';
 import { cn } from '../../../utils/utils';
 import { BASE_INPUT_CLASSNAME } from './constants';
 import { getDatasheetFile, saveDatasheetFile } from '../../../utils/datasheetStore';
-
-const MAX_DATASHEET_BYTES = 25 * 1024 * 1024;
+import { MAX_DATASHEET_BYTES, MAX_DATASHEET_MB } from '../../../constants/attachmentLimits';
 
 const emptyDatasheet = { attachmentId: '', fileName: '', mimeType: '', size: 0, notAvailable: false };
 
@@ -38,7 +37,7 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
       return;
     }
     if (file.size > MAX_DATASHEET_BYTES) {
-      setError('Datasheets must be 25 MB or smaller.');
+      setError(`Datasheets must be ${MAX_DATASHEET_MB} MB or smaller.`);
       return;
     }
 

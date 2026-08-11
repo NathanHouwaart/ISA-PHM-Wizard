@@ -91,6 +91,7 @@ const EXPECTED_ACTION_KEYS = [
     'deleteProject',
     'renameProject',
     'switchProject',
+    'flushProjectState',
     'resetProject',
     'updateProjectExperimentType',
     'updateProjectTestSetupSelection'

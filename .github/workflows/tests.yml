@@ -38,6 +38,7 @@ jobs:
       RUN_BACKEND_INTEGRATION: "1"
       BACKEND_URL: http://127.0.0.1:8080
       BACKEND_REF: ${{ vars.ISA_PHM_BACKEND_REF || 'main' }}
+      MAX_CONCURRENT_CONVERSIONS: "8"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

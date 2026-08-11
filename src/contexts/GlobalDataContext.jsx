@@ -135,6 +135,7 @@ export const useProjectActions = () => {
         deleteProject: context.deleteProject,
         renameProject: context.renameProject,
         switchProject: context.switchProject,
+        flushProjectState: context.flushProjectState,
         resetProject: context.resetProject,
         updateProjectExperimentType: context.updateProjectExperimentType,
         updateProjectTestSetupSelection: context.updateProjectTestSetupSelection
@@ -290,6 +291,10 @@ export const GlobalDataProvider = ({ children }) => {
             saveToLocalStorageNow(key, value);
         });
     }, []);
+
+    const flushProjectState = useCallback(() => {
+        flushBufferedStorageWrites(true);
+    }, [flushBufferedStorageWrites]);
 
     const dropBufferedStorageWritesForProject = useCallback((projectId) => {
         if (!projectId) return;
@@ -816,6 +821,7 @@ export const GlobalDataProvider = ({ children }) => {
     value.deleteProject = deleteProject;
     value.renameProject = renameProject;
     value.switchProject = switchProject;
+    value.flushProjectState = flushProjectState;
     value.resetProject = resetProject;
     value.updateProjectExperimentType = updateProjectExperimentType;
     value.updateProjectTestSetupSelection = updateProjectTestSetupSelection;

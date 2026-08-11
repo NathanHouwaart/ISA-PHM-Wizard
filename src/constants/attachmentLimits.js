@@ -1,0 +1,2 @@
+export const MAX_DATASHEET_MB = 20;
+export const MAX_DATASHEET_BYTES = MAX_DATASHEET_MB * 1024 * 1024;
