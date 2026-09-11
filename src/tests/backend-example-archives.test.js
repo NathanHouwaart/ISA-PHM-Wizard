@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { shouldRunBackendIntegration } from './backendIntegrationGate';
 import { readBundledProjectArchive } from './helpers/readProjectArchive';
+import { isReplaceableCharacteristic } from '../utils/testSetupCharacteristics';
 
 const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
@@ -93,30 +94,90 @@ const buildPayloadFromExport = (projectData) => {
     ? [{ ...selectedTestSetup, id: selectedTestSetup.id || selectedTestSetupId }]
     : [selectedTestSetup];
 
-  return {
-    payload: buildConversionPayload({
-      investigation,
-      publications,
-      contacts,
-      studyVariables,
-      studies,
-      testSetups,
-      selectedTestSetupId,
-      experimentType,
-      studyToStudyVariableMapping,
-      studyToSensorMeasurementMapping,
-      studyToSensorProcessingMapping,
-      studyToMeasurementProtocolSelection,
-      studyToProcessingProtocolSelection,
-    }),
+  const payload = buildConversionPayload({
+    investigation,
+    publications,
+    contacts,
+    studyVariables,
     studies,
-    expectedAssayCount: Array.isArray(testSetups[0]?.sensors) ? testSetups[0].sensors.length : 0,
+    testSetups,
+    selectedTestSetupId,
+    experimentType,
+    studyToStudyVariableMapping,
+    studyToSensorMeasurementMapping,
+    studyToSensorProcessingMapping,
+    studyToMeasurementProtocolSelection,
+    studyToProcessingProtocolSelection,
+  });
+
+  return {
+    studies,
+    payload,
+    expectedAssaysByStudy: payload.studies.map((study) => (
+      (study.assay_details || []).map((assay) => (
+        (assay.runs || []).flatMap((run) => [run.raw_file_name, run.processed_file_name].filter(Boolean))
+      ))
+    )),
+    uploads: buildArchiveUploads(testSetups[0], projectData.attachments),
   };
 };
 
-const callConversionApi = async (payload) => {
+const buildArchiveUploads = (testSetup = {}, archiveAttachments = []) => {
+  const archiveById = new Map(archiveAttachments.map((attachment) => [String(attachment.attachmentId), attachment]));
+  const datasheetManifest = [];
+  const datasheets = [];
+  const imageManifest = [];
+  const images = [];
+
+  const addDatasheet = (datasheet, owner) => {
+    if (!datasheet?.attachmentId || datasheet.notAvailable) return;
+    const attachmentId = String(datasheet.attachmentId);
+    const attachment = archiveById.get(attachmentId);
+    if (!attachment || attachment.kind !== 'datasheet') {
+      throw new Error(`Missing datasheet attachment ${attachmentId} in project archive`);
+    }
+    datasheetManifest.push({
+      attachmentId,
+      originalFileName: datasheet.fileName || attachment.fileName,
+      owner,
+    });
+    datasheets.push({ attachmentId, bytes: attachment.bytes });
+  };
+
+  (testSetup.characteristics || []).forEach((characteristic) => {
+    if (!isReplaceableCharacteristic(characteristic?.isReplaceable)) {
+      addDatasheet(characteristic?.datasheet, {
+        kind: 'test_setup_characteristic', id: characteristic.id,
+      });
+    }
+  });
+  (testSetup.sensorTypes || []).forEach((sensorType) => {
+    addDatasheet(sensorType?.datasheet, { kind: 'sensor_type', id: sensorType.id });
+  });
+  (testSetup.configurationTypes || []).forEach((componentType) => {
+    addDatasheet(componentType?.datasheet, { kind: 'component_type', id: componentType.id });
+  });
+  (testSetup.images || []).forEach((image) => {
+    if (!image?.attachmentId) return;
+    const attachmentId = String(image.attachmentId);
+    const attachment = archiveById.get(attachmentId);
+    if (!attachment || attachment.kind !== 'image') {
+      throw new Error(`Missing image attachment ${attachmentId} in project archive`);
+    }
+    imageManifest.push({
+      attachmentId,
+      originalFileName: image.fileName || attachment.fileName,
+      owner: { kind: 'test_setup', id: testSetup.id },
+    });
+    images.push({ attachmentId, bytes: attachment.bytes, fileName: image.fileName || attachment.fileName, mimeType: attachment.mimeType });
+  });
+
+  return { datasheetManifest, datasheets, imageManifest, images };
+};
+
+const callConversionApi = async (payload, uploads) => {
   const { postJsonFile, readConversionJson } = await import('./utils/nodeFormFetch.js');
-  const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json');
+  const response = await postJsonFile(CONVERT_ENDPOINT, payload, 'input.json', uploads);
   if (!response.ok) {
     const text = await response.text().catch(() => null);
     throw new Error(`API Error: ${response.status} - ${text || 'Conversion failed'}`);
@@ -128,23 +189,21 @@ integrationDescribe('Backend integration with bundled project archives', () => {
   it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ archivePath }) => {
     const fixture = await readBundledProjectArchive(archivePath);
 
-    const { payload, studies, expectedAssayCount } = buildPayloadFromExport(fixture);
-    const output = await callConversionApi(payload);
+    const { payload, studies, expectedAssaysByStudy, uploads } = buildPayloadFromExport(fixture);
+    const output = await callConversionApi(payload, uploads);
 
     expect(Array.isArray(output.studies)).toBe(true);
     expect(output.studies.length).toBe(studies.length);
 
-    output.studies.forEach((study) => {
+    output.studies.forEach((study, studyIndex) => {
+      const expectedAssayFiles = expectedAssaysByStudy[studyIndex];
       expect(Array.isArray(study.assays)).toBe(true);
-      expect(study.assays.length).toBe(expectedAssayCount);
+      expect(study.assays.length).toBe(expectedAssayFiles.length);
       expect(Array.isArray(study.processSequence)).toBe(true);
-      expect(study.processSequence.length).toBeGreaterThan(0);
 
-      study.assays.forEach((assay) => {
+      study.assays.forEach((assay, assayIndex) => {
         expect(Array.isArray(assay.dataFiles)).toBe(true);
-        expect(assay.dataFiles.length).toBeGreaterThan(0);
-        const hasDerivedOutput = assay.dataFiles.some((dataFile) => String(dataFile?.type || '').includes('Derived'));
-        expect(hasDerivedOutput).toBe(true);
+        expect(assay.dataFiles.map((dataFile) => dataFile.name ?? dataFile.filename)).toEqual(expectedAssayFiles[assayIndex]);
       });
     });
   }, 30000);

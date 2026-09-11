@@ -10,10 +10,30 @@ const fetch = require('node-fetch');
  * @param {Object} jsonObj
  * @param {string} filename
  */
-export async function postJsonFile(url, jsonObj, filename = 'input.json') {
+export async function postJsonFile(url, jsonObj, filename = 'input.json', {
+  datasheetManifest = [],
+  datasheets = [],
+  imageManifest = [],
+  images = [],
+} = {}) {
   const fd = new FormData();
   const bodyStr = typeof jsonObj === 'string' ? jsonObj : JSON.stringify(jsonObj);
   fd.append('file', bodyStr, { filename, contentType: 'application/json' });
+  fd.append('datasheet_manifest', JSON.stringify(datasheetManifest));
+  datasheets.forEach(({ attachmentId, bytes }) => {
+    fd.append('datasheets', Buffer.from(bytes), {
+      filename: `${attachmentId}.pdf`,
+      contentType: 'application/pdf',
+    });
+  });
+  fd.append('image_manifest', JSON.stringify(imageManifest));
+  images.forEach(({ attachmentId, bytes, fileName, mimeType }) => {
+    const extension = String(fileName || '').split('.').pop()?.toLowerCase() === 'png' ? 'png' : 'jpg';
+    fd.append('images', Buffer.from(bytes), {
+      filename: `${attachmentId}.${extension}`,
+      contentType: mimeType || (extension === 'png' ? 'image/png' : 'image/jpeg'),
+    });
+  });
 
   const headers = fd.getHeaders();
 
