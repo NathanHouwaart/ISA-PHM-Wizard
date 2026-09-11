@@ -33,6 +33,7 @@ import {
   SENSOR_USAGE_DATASET_OUTPUT,
   SENSOR_USAGE_OPTIONS
 } from '../../utils/sensorUsage';
+import { pruneProtocolSensorState } from '../../utils/protocolSensorScope';
 import {
   cloneAttachmentRefs,
   cleanupUnreferencedAttachmentRefs,
@@ -66,6 +67,26 @@ const normalizeForDirtyCheck = (value) => {
 };
 
 const getDirtyFingerprint = (value) => JSON.stringify(normalizeForDirtyCheck(value));
+
+const normalizeSensorRows = (rows = [], previousSensors = [], sensorTypes = []) => (
+  rows.map((row) => {
+    const existing = previousSensors.find((sensor) => sensor.id === row.id) || {};
+    const sensorType = sensorTypes.find((type) => type.id === row.sensorTypeId);
+    const typeSnapshot = sensorType && sensorType.id !== existing.sensorTypeId
+      ? {
+        technologyPlatform: sensorType.technologyPlatform || '',
+        technologyType: sensorType.technologyType || '',
+        measurementType: sensorType.measurementType || ''
+      }
+      : {};
+    return normalizeSensor({
+      ...existing,
+      ...row,
+      ...typeSnapshot,
+      additionalInfo: existing.additionalInfo || row.additionalInfo || []
+    });
+  })
+);
 
 // Main TestSetupForm Component
 const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
@@ -250,6 +271,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
     const testSetupData = {
       ...formData,
+      ...pruneProtocolSensorState(formData),
       number_of_sensors: numberOfSensors,
       id: isEditing && item?.id ? item.id : `testsetup-${Date.now()}`
     };
@@ -531,26 +553,14 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   }, []);
 
   const handleSensorRowsChange = useCallback((nextRows) => {
-    setFormData((prev) => ({
-      ...prev,
-      sensors: nextRows.map((row) => {
-        const existing = prev.sensors.find((s) => s.id === row.id) || {};
-        const sensorType = prev.sensorTypes.find((type) => type.id === row.sensorTypeId);
-        const typeSnapshot = sensorType && sensorType.id !== existing.sensorTypeId
-          ? {
-            technologyPlatform: sensorType.technologyPlatform || '',
-            technologyType: sensorType.technologyType || '',
-            measurementType: sensorType.measurementType || ''
-          }
-          : {};
-        return normalizeSensor({
-          ...existing,
-          ...row,
-          ...typeSnapshot,
-          additionalInfo: existing.additionalInfo || row.additionalInfo || []
-        });
-      })
-    }));
+    setFormData((prev) => {
+      const sensors = normalizeSensorRows(nextRows, prev.sensors, prev.sensorTypes);
+      return {
+        ...prev,
+        sensors,
+        ...pruneProtocolSensorState({ ...prev, sensors })
+      };
+    });
   }, []);
 
   const {
@@ -603,7 +613,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           onTabChange={setSelectedTab}
           tabs={[
             { id: 'basic-info', label: 'Basic Info', tooltip: 'Basic Information about the test setup' },
-            { id: 'characteristics', label: `Characteristics (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
+            { id: 'characteristics', label: `Components (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
             { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
             { id: 'measurement-protocols', label: `Measurement (${numberOfMeasurementProtocols})`, tooltip: 'Define raw data acquisition protocol variants and parameter values' },
             { id: 'processing-protocols', label: `Processing (${numberOfProcessingProtocols})`, tooltip: 'Define processing protocol variants and parameter values' },
@@ -648,9 +658,14 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             <SensorsEditor
               sensors={formData.sensors}
               sensorTypes={formData.sensorTypes}
-              onSensorsChange={(sensors) =>
-                setFormData((prev) => ({ ...prev, sensors }))
-              }
+              onSensorsChange={(nextSensors) => setFormData((prev) => {
+                const sensors = normalizeSensorRows(nextSensors, prev.sensors, prev.sensorTypes);
+                return {
+                  ...prev,
+                  sensors,
+                  ...pruneProtocolSensorState({ ...prev, sensors })
+                };
+              })}
               onSensorTypesChange={(sensorTypes) =>
                 setFormData((prev) => ({ ...prev, sensorTypes }))
               }

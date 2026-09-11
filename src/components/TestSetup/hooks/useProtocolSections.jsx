@@ -7,10 +7,15 @@ import {
   PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS
 } from '../../../constants/suggestionCatalog';
 import { isSensorApplicable } from '../../../utils/protocolApplicability';
+import { getDatasetOutputSensors } from '../../../utils/protocolSensorScope';
 
 const useProtocolSections = ({ formData, setFormData }) => {
   const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
   const [activeProcessingProtocolId, setActiveProcessingProtocolId] = useState(null);
+  const protocolSensors = useMemo(
+    () => getDatasetOutputSensors(formData.sensors),
+    [formData.sensors]
+  );
 
   useEffect(() => {
     if (!formData.measurementProtocols.length) {
@@ -293,7 +298,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
       ? `${activeMeasurementProtocol.name} - Sensor parameter mapping`
       : 'Measurement Protocol parameter mapping',
     rowData: activeMeasurementProtocolRows,
-    columnData: formData.sensors,
+    columnData: protocolSensors,
     mappings: activeMeasurementProtocolMappings,
     fieldMappings: {
       rowId: 'id',
@@ -360,7 +365,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
     activeMeasurementProtocol,
     activeMeasurementProtocolRows,
     activeMeasurementProtocolMappings,
-    formData.sensors,
+    protocolSensors,
     addMeasurementProtocolParameter
   ]);
 
@@ -369,7 +374,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
       ? `${activeProcessingProtocol.name} - Sensor parameter mapping`
       : 'Processing Protocol parameter mapping',
     rowData: activeProcessingProtocolRows,
-    columnData: formData.sensors,
+    columnData: protocolSensors,
     mappings: activeProcessingProtocolMappings,
     fieldMappings: {
       rowId: 'id',
@@ -436,7 +441,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
     activeProcessingProtocol,
     activeProcessingProtocolRows,
     activeProcessingProtocolMappings,
-    formData.sensors,
+    protocolSensors,
     addProcessingProtocolParameter
   ]);
 

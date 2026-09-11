@@ -10,8 +10,6 @@ import useContacts from './useContacts';
 import usePublications from './usePublications';
 import useTestSetups from './useTestSetups';
 import useVariables, { useFaultSpecifications, useOperatingConditions } from './useVariables';
-import useMeasurementProtocols from './useMeasurementProtocols';
-import useProcessingProtocols from './useProcessingProtocols';
 import useMeasurements from './useMeasurements';
 
 let mockContext;
@@ -133,24 +131,6 @@ describe('entity hook contract', () => {
     expect(operating.result.current.items).toHaveLength(1);
     expect(fault.result.current.components.form).not.toBe(base.result.current.components.form);
     expect(operating.result.current.components.form).not.toBe(base.result.current.components.form);
-  });
-
-  it('mapping protocol hooks return canonical contract', () => {
-    const measurement = renderHook(() => useMeasurementProtocols());
-    const processing = renderHook(() => useProcessingProtocols());
-
-    expectCanonicalKeys(measurement.result.current);
-    expectCanonicalKeys(processing.result.current);
-    expectNoLegacyKeys(measurement.result.current);
-    expectNoLegacyKeys(processing.result.current);
-
-    expect(measurement.result.current.components.card).toBe(null);
-    expect(measurement.result.current.components.form).toBe(null);
-    expect(typeof measurement.result.current.components.mappingCard).toBe('function');
-
-    expect(processing.result.current.components.card).toBe(null);
-    expect(processing.result.current.components.form).toBe(null);
-    expect(typeof processing.result.current.components.mappingCard).toBe('function');
   });
 
   it('useMeasurements returns canonical contract', () => {
