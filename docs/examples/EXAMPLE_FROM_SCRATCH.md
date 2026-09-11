@@ -2,7 +2,7 @@
 
 This walkthrough creates a complete ISA-PHM project from a blank installation. It uses a simple, invented scenario — an accelerated seeded-fault test on two bearing types — so every step has a concrete example value to copy or adapt.
 
-For the pre-loaded real-world examples, see [Example: Sietze](./EXAMPLE_SIETZE.md) and [Example: Milling](./EXAMPLE_MILLING.md).
+For the built-in real-world examples, see [Diagnostics Example](./EXAMPLE_DIAGNOSTICS.md) and [XJTU-SY Bearing Datasets](./EXAMPLE_XJTU_SY.md).
 
 ---
 
@@ -280,4 +280,4 @@ Download the `.json` file. It contains the full ISA-PHM metadata for your projec
 
 ---
 
-[Real-world example: Sietze →](./EXAMPLE_SIETZE.md) | [Real-world example: Milling →](./EXAMPLE_MILLING.md)
+[Built-in Diagnostics Example →](./EXAMPLE_DIAGNOSTICS.md) | [Built-in XJTU-SY Example →](./EXAMPLE_XJTU_SY.md)

@@ -1,8 +1,9 @@
 import React from 'react';
 import FormField from '../../Form/FormField';
 import Heading3 from '../../Typography/Heading3';
+import ImageUploadField from '../../Form/fields/ImageUploadField';
 
-const BasicInfoSection = ({ formData, onFieldChange }) => {
+const BasicInfoSection = ({ formData, onFieldChange, onImagesChange }) => {
   return (
     <div className="p-4 bg-gray-50 rounded-lg space-y-4">
       <div>
@@ -69,6 +70,8 @@ const BasicInfoSection = ({ formData, onFieldChange }) => {
         rows={4}
         className="min-h-20"
       />
+
+      <ImageUploadField value={formData.images} onChange={onImagesChange} />
     </div>
   );
 };

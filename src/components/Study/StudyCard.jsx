@@ -5,6 +5,9 @@ import AvatarInitials from '../Widgets/AvatarInitials';
 import TooltipButton from '../Widgets/TooltipButton';
 import { useProjectData } from '../../contexts/GlobalDataContext';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
+import { OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
+import { isReplaceableCharacteristic } from '../../utils/testSetupCharacteristics';
+import { getAssignedComponentInstanceId } from '../../utils/studyConfigurationValidation';
 
 /**
  * StudyCard Component
@@ -27,15 +30,20 @@ import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 const StudyCard = ({ item, onEdit, onRemove }) => {
 
   const study = item;
-  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
+  const { experimentType, configurations, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runsLabel = experimentConfig.supportsMultipleRuns ? 'Runs' : 'Files';
   const normalizedRunCount = Number.parseInt(study?.runCount, 10) || 1;
 
-  // Get configuration name
   const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-  const configuration = selectedSetup?.configurations?.find(c => c.id === study.configurationId);
-  const configurationName = configuration?.name || 'Not selected';
+  const replaceableComponents = (selectedSetup?.characteristics || []).filter(
+    (component) => isReplaceableCharacteristic(component.isReplaceable)
+  );
+  const componentInstances = configurations || [];
+
+  const outputModeLabel = OUTPUT_MODE_OPTIONS.find(
+    o => o.value === normalizeStudyOutputMode(study?.outputMode)
+  )?.label || 'Raw only';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -79,16 +87,20 @@ const StudyCard = ({ item, onEdit, onRemove }) => {
                     "not provided"}
                 </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <p className='font-bold'>Configuration - </p>
-                <span>{configurationName}</span>
-              </div>
+              {replaceableComponents.map((component, index) => {
+                const instance = componentInstances.find((candidate) => candidate.id === getAssignedComponentInstanceId(study, component.id));
+                return <div key={component.id} className="flex items-center space-x-1"><p className='font-bold'>{component.category || `Component ${index + 1}`} - </p><span>{instance?.componentId || 'Not selected'}</span></div>;
+              })}
               {experimentConfig.supportsMultipleRuns && (
                 <div className="flex items-center space-x-1">
                   <p className='font-bold'>{runsLabel} - </p>
                   <span>{normalizedRunCount}</span>
                 </div>
               )}
+              <div className="flex items-center space-x-1">
+                <p className='font-bold'>Data Types - </p>
+                <span>{outputModeLabel}</span>
+              </div>
             </div>
           </div>
         </div>

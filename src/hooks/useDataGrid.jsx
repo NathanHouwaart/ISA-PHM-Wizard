@@ -353,27 +353,47 @@ export const useDataGrid = ({
     if (columnData.length > 0) {
       columnData.forEach((column) => {
         if (fields.hasChildColumns) {
+          const sensorId = column[fields.columnId];
           columns.push({
-            prop: column[fields.columnId],
+            prop: sensorId,
             name: column[fields.columnName],
             size: 200,
             children: [
               {
-                prop: `${column[fields.columnId]}_spec`,
+                prop: `${sensorId}_spec`,
                 name: 'Specification',
                 size: 120,
                 readonly: false,
-                editor: 'input'
+                editor: 'input',
+                cellProperties: (props) => {
+                  if (typeof mappingCellProperties !== 'function') return {};
+                  return mappingCellProperties({
+                    ...props,
+                    row: props?.model,
+                    column,
+                    columnId: sensorId,
+                    columnName: column?.[fields.columnName],
+                  }) || {};
+                }
               },
               {
-                prop: `${column[fields.columnId]}_unit`,
+                prop: `${sensorId}_unit`,
                 name: 'Unit',
                 size: 80,
                 readonly: false,
                 editor: 'input',
-                cellProperties: () => ({
-                  style: { 'border-right': '3px solid black' }
-                })
+                cellProperties: (props) => {
+                  const baseStyle = { 'border-right': '3px solid black' };
+                  if (typeof mappingCellProperties !== 'function') return { style: baseStyle };
+                  const custom = mappingCellProperties({
+                    ...props,
+                    row: props?.model,
+                    column,
+                    columnId: sensorId,
+                    columnName: column?.[fields.columnName],
+                  }) || {};
+                  return { ...custom, style: { ...baseStyle, ...(custom.style || {}) } };
+                }
               }
             ]
           });

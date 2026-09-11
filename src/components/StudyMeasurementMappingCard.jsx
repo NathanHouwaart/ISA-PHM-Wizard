@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Layers } from 'lucide-react';
 
 import FormField from './Form/FormField';
@@ -12,6 +12,7 @@ import {
   isRawOutputEnabled,
   isProcessedOutputEnabled
 } from '../utils/studyOutputMode';
+import { isSensorApplicable } from '../utils/protocolApplicability';
 
 const StudyMeasurementMappingCard = ({
   item,
@@ -31,8 +32,17 @@ const StudyMeasurementMappingCard = ({
   const activeRun = singleRunMode ? item : (allRuns.find(r => r.runId === activeRunId) || item);
 
   const selectedTestSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
+
   const activeStudyId = activeRun?.studyId || item?.studyId || item?.id;
   const selectedProtocolId = selectedProtocolByStudy?.[activeStudyId] || '';
+
+  // Look up the selected protocol to check per-sensor applicability
+  const selectedProtocol = useMemo(() => {
+    const protocols = fileFieldScope === 'processed'
+      ? (selectedTestSetup?.processingProtocols || [])
+      : (selectedTestSetup?.measurementProtocols || []);
+    return protocols.find((protocol) => protocol.id === selectedProtocolId) || null;
+  }, [fileFieldScope, selectedProtocolId, selectedTestSetup]);
   const selectedOutputMode = normalizeStudyOutputMode(
     activeRun?.outputMode,
     OUTPUT_MODE_RAW_ONLY
@@ -109,18 +119,26 @@ const StudyMeasurementMappingCard = ({
           const sensorLabel =
             sensor?.alias || sensor?.name || `Sensor ${String(index + 1).padStart(2, '0')}`;
 
+          const applicable = isSensorApplicable(selectedProtocol, sensor.id);
+          const cellEnabled = fileFieldEnabled && applicable;
+
           return (
             <div
               key={sensor?.id ?? `sensor-${index}`}
-              className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm"
+              className={applicable
+                ? 'bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm'
+                : 'bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm opacity-50'
+              }
             >
-              <div className="mb-2 font-semibold text-gray-700">{sensorLabel}</div>
+              <div className={`mb-2 font-semibold ${applicable ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
+                {sensorLabel}
+              </div>
               <FormField
                 label={fileFieldLabel}
                 name={`sensor-${sensor.id}`}
                 value={mapping.value}
                 commitOnBlur
-                disabled={!fileFieldEnabled}
+                disabled={!cellEnabled}
                 onChange={(e) =>
                   handleInputChange(
                     0,
@@ -132,7 +150,7 @@ const StudyMeasurementMappingCard = ({
                     e.target.value
                   )
                 }
-                placeholder={fileFieldEnabled ? 'Enter filename or value' : 'Disabled for selected output mode'}
+                placeholder={!fileFieldEnabled ? 'Disabled for selected output mode' : !applicable ? 'Not applicable to this protocol' : 'Enter filename or value'}
               />
             </div>
           );

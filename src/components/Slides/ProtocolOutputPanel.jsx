@@ -102,6 +102,8 @@ const ProtocolOutputPanel = ({
           {...gridConfig}
           showControls={true}
           showDebug={false}
+          enableColFilter={true}
+          enableRowFilter={true}
           onDataChange={onDataChange}
           onRowDataChange={onRowDataChange}
           height={"45vh"}

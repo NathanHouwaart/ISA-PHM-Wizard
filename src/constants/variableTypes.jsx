@@ -8,10 +8,12 @@ export const VARIABLE_TYPE_OPTIONS = [
 ];
 
 export const STUDY_VARIABLE_VALUE_MODE_SCALAR = 'scalar';
+export const STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV = 'scalar_csv';
 export const STUDY_VARIABLE_VALUE_MODE_TIMESERIES = 'timeseries';
 
 export const STUDY_VARIABLE_VALUE_MODE_OPTIONS = [
     { label: 'Scalar', value: STUDY_VARIABLE_VALUE_MODE_SCALAR },
+    { label: 'Scalar (.csv)', value: STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV },
     { label: 'Timeseries (.csv)', value: STUDY_VARIABLE_VALUE_MODE_TIMESERIES }
 ];
 
@@ -20,7 +22,11 @@ export const normalizeStudyVariableValueMode = (
     fallback = STUDY_VARIABLE_VALUE_MODE_SCALAR
 ) => {
     const candidate = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    if (candidate === STUDY_VARIABLE_VALUE_MODE_SCALAR || candidate === STUDY_VARIABLE_VALUE_MODE_TIMESERIES) {
+    if (
+        candidate === STUDY_VARIABLE_VALUE_MODE_SCALAR ||
+        candidate === STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV ||
+        candidate === STUDY_VARIABLE_VALUE_MODE_TIMESERIES
+    ) {
         return candidate;
     }
     return fallback;

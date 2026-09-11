@@ -37,6 +37,8 @@ jobs:
     env:
       RUN_BACKEND_INTEGRATION: "1"
       BACKEND_URL: http://127.0.0.1:8080
+      BACKEND_REF: ${{ vars.ISA_PHM_BACKEND_REF || 'main' }}
+      MAX_CONCURRENT_CONVERSIONS: "8"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,29 +48,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.13'
       - name: Start local backend
         shell: bash
         run: |
           set -euo pipefail
 
           BACKEND_DIR="${RUNNER_TEMP}/ISA-PHM-Backend"
-          git clone --depth 1 https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
+          git clone --filter=blob:none --no-checkout https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
+          git -C "${BACKEND_DIR}" fetch --depth 1 origin "${BACKEND_REF}"
+          git -C "${BACKEND_DIR}" checkout --detach FETCH_HEAD
           cd "${BACKEND_DIR}"
 
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
-          # Required by backend conversion script in most environments.
-          python -m pip install isatools==0.14.2
-
-          # Backend script invokes "python3.9"; provide a compatible shim on the runner.
-          mkdir -p "${HOME}/.local/bin"
-          cat > "${HOME}/.local/bin/python3.9" <<'SH'
-          #!/usr/bin/env bash
-          exec python "$@"
-          SH
-          chmod +x "${HOME}/.local/bin/python3.9"
-          export PATH="${HOME}/.local/bin:${PATH}"
 
           # Determine local port from BACKEND_URL if provided.
           BACKEND_PORT="$(python - <<'PY'

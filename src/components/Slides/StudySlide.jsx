@@ -1,5 +1,6 @@
 // src/pages/StudyPage.js
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 // Import the single global provider
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
@@ -11,7 +12,8 @@ import Collection, {
     CollectionAddButtonText,
     CollectionEmptyStateTitle,
     CollectionEmptyStateSubtitle,
-    CollectionEmptyStateAddButtonText
+    CollectionEmptyStateAddButtonText,
+    CollectionExtraActions
 } from '../Collection';
 
 import useResizeObserver from '../../hooks/useResizeObserver';
@@ -29,7 +31,13 @@ import SelectTypePlugin from '@revolist/revogrid-column-select';
 import { WINDOW_HEIGHT } from '../../constants/slideWindowHeight';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
 import generateId from '../../utils/generateId';
-import { OUTPUT_MODE_RAW_ONLY } from '../../utils/studyOutputMode';
+import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS } from '../../utils/studyOutputMode';
+import {
+    getAssignedComponentInstanceId,
+    getDuplicateComponentInstanceIds,
+    isPrognosticsExperiment,
+} from '../../utils/studyConfigurationValidation';
+import { isReplaceableCharacteristic } from '../../utils/testSetupCharacteristics';
 
 const plugins = { select: new SelectTypePlugin() };
 
@@ -45,6 +53,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     // Access global context
     const {
         studies,
+        configurations,
         experimentType,
         testSetups,
         selectedTestSetupId
@@ -62,31 +71,95 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             description: 'Enter description...',
             submissionDate: "",
             publicationDate: "", 
-            configurationId: '',
+            componentAssignments: [],
             runCount: 1,
             outputMode: OUTPUT_MODE_RAW_ONLY
         };
         setStudies([...studies, newStudy]);
     };
 
-    // Handle study data changes from the grid
-    const handleStudyDataChange = (newStudyData) => {
-        setStudies(newStudyData || []);
+    // Bulk add
+    const [showBulkAdd, setShowBulkAdd] = useState(false);
+    const [bulkAddInput, setBulkAddInput] = useState('10');
+    const bulkInputRef = useRef(null);
+
+    const bulkAddStudies = () => {
+        const count = parseInt(bulkAddInput, 10);
+        if (!count || count < 1) return;
+        const base = studies.length;
+        const newStudies = Array.from({ length: count }, (_, i) => ({
+            id: generateId(),
+            name: `New Experiment ${base + i + 1}`,
+            description: 'Enter description...',
+            submissionDate: '',
+            publicationDate: '',
+            componentAssignments: [],
+            runCount: 1,
+            outputMode: OUTPUT_MODE_RAW_ONLY
+        }));
+        setStudies([...studies, ...newStudies]);
+        setShowBulkAdd(false);
+        setBulkAddInput('10');
     };
 
-    // Get configurations from selected test setup for dropdown
+    const duplicateComponentInstanceIds = useMemo(
+        () => isPrognosticsExperiment(experimentType)
+            ? getDuplicateComponentInstanceIds(studies)
+            : new Set(),
+        [experimentType, studies]
+    );
+
+    // Prefer project-scoped configurations; retain legacy test-setup records as a fallback.
     const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-    const configurationOptions = (selectedSetup?.configurations || []).map(c => ({
-        value: c.id,
-        label: (c.name || c.replaceableComponentId)
-            ? [c.name, c.replaceableComponentId].filter(Boolean).join(' - ')
-            : 'Unnamed'
+    const replaceableComponents = (selectedSetup?.characteristics || []).filter(
+        (component) => isReplaceableCharacteristic(component.isReplaceable)
+    );
+    const componentInstances = (Array.isArray(configurations) ? configurations : []).filter(
+        (instance) => instance.testSetupId === selectedTestSetupId && instance.replaceableCharacteristicId
+    );
+    const componentAssignmentColumns = replaceableComponents.map((component, componentIndex) => ({
+        prop: `componentAssignment-${component.id}`,
+        name: component.category || component.description || `Component ${componentIndex + 1}`,
+        size: 170,
+        readonly: false,
+        columnType: 'select',
+        labelKey: 'label',
+        valueKey: 'value',
+        source: componentInstances
+            .filter((instance) => instance.replaceableCharacteristicId === component.id && instance.typeId)
+            .map((instance) => ({ value: instance.id, label: instance.componentId || 'Unnamed ID' })),
+        cellProperties: (props) => {
+            const instanceId = getAssignedComponentInstanceId(props?.model, component.id);
+            return duplicateComponentInstanceIds.has(instanceId)
+                ? { style: { background: '#ffedd5', color: '#9a3412' } }
+                : {};
+        }
     }));
+
+    const gridRows = studies.map((study) => ({
+        ...study,
+        ...Object.fromEntries(replaceableComponents.map((component) => [
+            `componentAssignment-${component.id}`,
+            getAssignedComponentInstanceId(study, component.id)
+        ]))
+    }));
+
+    const handleStudyDataChange = (newStudyData) => {
+        setStudies((newStudyData || []).map((row) => {
+            const { ...study } = row;
+            const componentAssignments = replaceableComponents.map((component) => ({
+                replaceableCharacteristicId: component.id,
+                componentInstanceId: row[`componentAssignment-${component.id}`] || ''
+            }));
+            replaceableComponents.forEach((component) => delete study[`componentAssignment-${component.id}`]);
+            return { ...study, componentAssignments };
+        }));
+    };
 
     // Grid configuration for studies
     const studiesGridConfig = {
         title: 'Experiment Grid',
-        rowData: studies,
+        rowData: gridRows,
         columnData: [], // No dynamic columns for standalone grid
         mappings: [], // No mappings for standalone grid
         customActions: [
@@ -95,13 +168,19 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 onClick: addNewStudy,
                 className: 'px-3 py-1 text-sm bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100',
                 title: 'Add a new experiment'
+            },
+            {
+                label: '+ Add X Experiments',
+                onClick: () => setShowBulkAdd(true),
+                className: 'px-3 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100',
+                title: 'Bulk-add multiple experiments at once'
             }
         ],
             staticColumns: [
             {
                 prop: 'actions',
                 name: '',
-                size: 80,
+                size: 50,
                 readonly: true,
                 cellTemplate: Template(DeleteRowCellTemplate),
                 cellProperties: () => ({ style: { 'text-align': 'center' } })
@@ -109,7 +188,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             {
                 prop: 'id',
                 name: 'Identifier',
-                size: 150,
+                size: 110,
                 readonly: true,
                 cellTemplate: Template(PatternCellTemplate, { prefix: 'Experiment S' }),
                 cellProperties: () => ({
@@ -127,7 +206,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
             {
                 prop: 'description',
                 name: 'Description',
-                size: 300,
+                size: 250,
                 readonly: false
             },
             {
@@ -144,15 +223,16 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 readonly: false,
                 cellTemplate: Template(HTML5DateCellTemplate),
             },
+            ...componentAssignmentColumns,
             {
-                prop: 'configurationId',
-                name: 'Configuration',
-                size: 220,
+                prop: 'outputMode',
+                name: 'Data Types',
+                size: 180,
                 readonly: false,
                 columnType: 'select',
                 labelKey: 'label',
                 valueKey: 'value',
-                source: configurationOptions
+                source: OUTPUT_MODE_OPTIONS
             },
             ...(experimentConfig.supportsMultipleRuns ? [{
                 prop: 'runCount',
@@ -164,6 +244,7 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
     };
     
     return (
+        <>
         <div ref={combinedRef}>
 
             <SlidePageTitle>
@@ -197,6 +278,15 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                             <CollectionEmptyStateTitle>No Experiments Found</CollectionEmptyStateTitle>
                             <CollectionEmptyStateSubtitle>Get started by adding your first Experiment</CollectionEmptyStateSubtitle>
                             <CollectionEmptyStateAddButtonText>Add Experiment Now</CollectionEmptyStateAddButtonText>
+                            <CollectionExtraActions>
+                                <button
+                                    onClick={() => setShowBulkAdd(true)}
+                                    title="Bulk-add multiple experiments at once"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-700 border border-blue-300 rounded hover:bg-blue-100"
+                                >
+                                    + Add X Experiments
+                                </button>
+                            </CollectionExtraActions>
                         </Collection>
                     </div>
                 </TabPanel>
@@ -206,6 +296,9 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                         {...studiesGridConfig}
                         showControls={true}
                         showDebug={false}
+                        enableBulkFill={true}
+                        enableColFilter={true}
+                        enableRowFilter={true}
                         onRowDataChange={handleStudyDataChange}
                         plugins={plugins}
                         height={"45vh"}
@@ -214,6 +307,51 @@ export const StudySlide = forwardRef(({ onHeightChange, currentPage, pageIndex }
                 </TabPanel>
             </div>
         </div>
+
+        {/* Bulk Add Dialog */}
+        {showBulkAdd && createPortal(
+            <div
+                className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                onClick={() => setShowBulkAdd(false)}
+            >
+                <div
+                    className="bg-white rounded-lg shadow-xl p-6 w-80"
+                    onClick={e => e.stopPropagation()}
+                >
+                    <h3 className="text-base font-semibold text-gray-800 mb-1">Bulk Add Experiments</h3>
+                    <p className="text-sm text-gray-500 mb-3">How many experiments would you like to add?</p>
+                    <input
+                        ref={bulkInputRef}
+                        type="number"
+                        min="1"
+                        max="2000"
+                        value={bulkAddInput}
+                        onChange={e => setBulkAddInput(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        autoFocus
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') bulkAddStudies();
+                            if (e.key === 'Escape') setShowBulkAdd(false);
+                        }}
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => setShowBulkAdd(false)}
+                            className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={bulkAddStudies}
+                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Add {parseInt(bulkAddInput, 10) > 0 ? parseInt(bulkAddInput, 10) : ''} Experiments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        , document.body)}
+        </>
     );
 });
 

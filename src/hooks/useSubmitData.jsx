@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useProjectData } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { waitForNextPaint } from '../utils/waitForNextPaint';
+import { buildDatasheetUploadManifest } from '../utils/datasheetUploadManifest';
+import { buildImageUploadManifest } from '../utils/imageUploadManifest';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
@@ -28,6 +30,8 @@ export default function useSubmitData() {
     contacts,
     studyVariables,
     studies,
+    configurations,
+    configurationTypes,
     testSetups,
     selectedTestSetupId,
     experimentType,
@@ -63,6 +67,8 @@ export default function useSubmitData() {
         contacts,
         studyVariables,
         studies,
+        configurations,
+        configurationTypes,
         testSetups,
         selectedTestSetupId,
         experimentType,
@@ -80,6 +86,17 @@ export default function useSubmitData() {
       const blob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
       const formData = new FormData();
       formData.append('file', blob, 'input.json');
+      const { manifest, files } = await buildDatasheetUploadManifest(jsonData);
+      formData.append('datasheet_manifest', JSON.stringify(manifest));
+      files.forEach(({ attachmentId, file: datasheet }) => {
+        formData.append('datasheets', datasheet, `${attachmentId}.pdf`);
+      });
+      const { manifest: imageManifest, files: imageFiles } = await buildImageUploadManifest(jsonData);
+      formData.append('image_manifest', JSON.stringify(imageManifest));
+      imageFiles.forEach(({ attachmentId, file: image }) => {
+        const extension = image.type === 'image/png' ? 'png' : 'jpg';
+        formData.append('images', image, `${attachmentId}.${extension}`);
+      });
 
       const DEFAULT_PROD_API = 'https://dwvmqgeaan.eu-west-1.awsapprunner.com';
       const apiBase = (import.meta.env && import.meta.env.VITE_API_BASE)
@@ -97,16 +114,18 @@ export default function useSubmitData() {
 
       setMessage('Downloading converted result...');
 
-      const result = await response.json();
-
-      const jsonString = JSON.stringify(result, null, 2);
-      const downloadBlob = new Blob([jsonString], { type: 'application/json' });
+      const contentType = response.headers.get('content-type') || '';
+      const isZip = contentType.includes('application/zip');
+      const result = isZip ? null : await response.json();
+      const downloadBlob = isZip
+        ? await response.blob()
+        : new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
       const activeProjectName = projects.find((project) => project?.id === currentProjectId)?.name;
       const fileBaseName = sanitizeFileName(activeProjectName || 'Project') || 'Project';
-      a.download = `${fileBaseName} ISA-PHM.json`;
+      a.download = isZip ? `${fileBaseName} ISA-PHM.zip` : `${fileBaseName} ISA-PHM.json`;
       a.click();
       URL.revokeObjectURL(url);
 

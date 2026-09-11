@@ -1,252 +1,374 @@
-import React, { useState } from 'react';
-import { Trash2, HelpCircle, ChevronDown, ChevronRight, Plus } from 'lucide-react';
-import FormField from '../../Form/FormField';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp, HelpCircle, Plus, Settings2, Trash2 } from 'lucide-react';
 import { v4 as uuid4 } from 'uuid';
-import IconTooltipButton from '../../Widgets/IconTooltipButton';
-import TableTooltip from '../../Widgets/TableTooltip';
-import Paragraph from '../../Typography/Paragraph';
+import FormField from '../../Form/FormField';
 import Heading3 from '../../Typography/Heading3';
-// Sensors Component
-const SensorsEditor = ({ sensors, onSensorsChange }) => {
-  const [expandedSensors, setExpandedSensors] = useState(new Set());
-  const [activeTooltip, setActiveTooltip] = useState(false);
+import Paragraph from '../../Typography/Paragraph';
+import TableTooltip from '../../Widgets/TableTooltip';
+import TooltipButton from '../../Widgets/TooltipButton';
+import SensorTypeDialog from '../SensorTypeDialog';
+import SensorTypePickerDialog from '../SensorTypePickerDialog';
+import {
+  normalizeSensor,
+  SENSOR_USAGE_BOTH,
+  SENSOR_USAGE_CONDITION_MONITORING,
+  SENSOR_USAGE_DATASET_OUTPUT,
+  SENSOR_USAGE_OPTIONS
+} from '../../../utils/sensorUsage';
 
-  const addSensor = () => {
-    const newSensor = {
+const getSensorKey = (sensor, index) => sensor.id || `sensor-${index}`;
+
+const getSensorSummary = (sensor, sensorType) => (
+  sensorType?.name || sensor.technologyType || 'No sensor type selected'
+);
+
+const getUsageBadgeClassName = (usage) => {
+  if (usage === SENSOR_USAGE_CONDITION_MONITORING) {
+    return 'bg-amber-100 text-amber-700';
+  }
+  if (usage === SENSOR_USAGE_BOTH) {
+    return 'bg-violet-100 text-violet-700';
+  }
+  return 'bg-blue-100 text-blue-700';
+};
+
+const getUsageShortLabel = (usage) => {
+  if (usage === SENSOR_USAGE_CONDITION_MONITORING) return 'Monitoring';
+  if (usage === SENSOR_USAGE_BOTH) return 'Output + monitor';
+  return 'Output';
+};
+
+const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTypesChange }) => {
+  const [selectedId, setSelectedId] = useState(null);
+  const [activeTooltip, setActiveTooltip] = useState(false);
+  const [isSpecificationExpanded, setIsSpecificationExpanded] = useState(false);
+  const [isTypePickerOpen, setIsTypePickerOpen] = useState(false);
+  const [isTypeManagerOpen, setIsTypeManagerOpen] = useState(false);
+
+  const selectedIndex = useMemo(
+    () => sensors.findIndex((sensor, index) => getSensorKey(sensor, index) === selectedId),
+    [sensors, selectedId]
+  );
+  const selectedSensor = selectedIndex >= 0 ? normalizeSensor(sensors[selectedIndex]) : null;
+  const selectedSensorType = useMemo(
+    () => sensorTypes.find((type) => type.id === selectedSensor?.sensorTypeId) || null,
+    [sensorTypes, selectedSensor?.sensorTypeId]
+  );
+
+  useEffect(() => {
+    const hasSelectedSensor = sensors.some((sensor, index) => getSensorKey(sensor, index) === selectedId);
+    if (hasSelectedSensor) return;
+    setSelectedId(sensors.length ? getSensorKey(sensors[0], 0) : null);
+  }, [sensors, selectedId]);
+
+  const addSensor = (sensorType) => {
+    if (!sensorType) return;
+    const sensor = {
       id: uuid4(),
-      // Auto-generate alias like 'Sensor SE01', 'Sensor SE02', zero-padded 2 digits
       alias: `Sensor SE${String(sensors.length + 1).padStart(2, '0')}`,
       measurementType: '',
       measurementUnit: '',
       samplingRate: '',
       description: '',
-      technologyType: '',
-      technologyPlatform: '',
-      // flexible additional info entries (name/value pairs)
+      technologyType: sensorType.technologyType || '',
+      technologyPlatform: sensorType.technologyPlatform || '',
       additionalInfo: [],
-      phase: ''
+      phase: '',
+      usage: SENSOR_USAGE_DATASET_OUTPUT,
+      sensorTypeId: sensorType.id
     };
-    const newSensors = [...sensors, newSensor];
-    onSensorsChange(newSensors);
-
-    // Auto-expand the new sensor
-    setExpandedSensors(prev => new Set([...prev, newSensors.length - 1]));
+    onSensorsChange([...sensors, sensor]);
+    setSelectedId(sensor.id);
+    setIsSpecificationExpanded(false);
+    setIsTypePickerOpen(false);
   };
 
-  const removeSensor = (index) => {
-    const filteredSensors = sensors.filter((_, i) => i !== index);
-    onSensorsChange(filteredSensors);
-
-    // Update expanded sensors
-    setExpandedSensors(prev => {
-      const newSet = new Set();
-      Array.from(prev).forEach(i => {
-        if (i < index) newSet.add(i);
-        else if (i > index) newSet.add(i - 1);
-      });
-      return newSet;
-    });
+  const applySensorType = (sensorTypeId) => {
+    const sensorType = sensorTypes.find((type) => type.id === sensorTypeId);
+    if (!sensorType) return;
+    onSensorsChange(sensors.map((sensor, index) => (
+      index === selectedIndex
+        ? normalizeSensor({
+          ...sensor,
+          sensorTypeId,
+          technologyPlatform: sensorType.technologyPlatform || '',
+          technologyType: sensorType.technologyType || '',
+          measurementType: sensorType.measurementType || ''
+        })
+        : sensor
+    )));
   };
 
-  const updateSensor = (index, field, value) => {
-    const updatedSensors = sensors.map((sensor, i) =>
-      i === index ? { ...sensor, [field]: value } : sensor
-    );
-    onSensorsChange(updatedSensors);
+  const updateSensor = (field, value) => {
+    if (selectedIndex < 0) return;
+    onSensorsChange(sensors.map((sensor, index) => (
+      index === selectedIndex ? normalizeSensor({ ...sensor, [field]: value }) : sensor
+    )));
   };
 
-  const toggleSensor = (index) => {
-    setExpandedSensors(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
+  const removeSelectedSensor = () => {
+    if (selectedIndex < 0) return;
+    const nextSensors = sensors.filter((_, index) => index !== selectedIndex);
+    const nextSelected = nextSensors[selectedIndex] || nextSensors[selectedIndex - 1];
+    onSensorsChange(nextSensors);
+    setSelectedId(nextSelected ? getSensorKey(nextSelected, Math.min(selectedIndex, nextSensors.length - 1)) : null);
+    setIsSpecificationExpanded(false);
   };
 
-  const getSensorSummary = (sensor) => {
-    const platform = sensor.technologyPlatform || 'No platform';
-    const measurementType = sensor.measurementType || 'No measurementType';
-
-    return `${platform} - ${measurementType}`;
+  const selectSensor = (sensorId) => {
+    setSelectedId(sensorId);
+    setIsSpecificationExpanded(false);
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="p-2 mb-4 flex justify-between items-center border-b border-b-gray-300">
-        <Heading3>
-          Sensors
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            ({sensors.length} items)
-          </span>
-        </Heading3>
-
-
-        <div className='flex items-center space-x-2'>
-          <IconTooltipButton
-            icon={Plus}
-            onClick={addSensor}
-            tooltipText={"Add Sensor"}
-          />
-
-          <IconTooltipButton
-            icon={HelpCircle}
-            onClick={(e) => { e.stopPropagation(); setActiveTooltip(!activeTooltip) }}
-            tooltipText={"Help"}
-          />
+    <>
+      <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 pb-2">
+      <div className="overflow-hidden rounded-lg border border-gray-300 bg-gray-50">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
+          <div>
+            <Heading3 className="text-base">Sensors</Heading3>
+            <Paragraph className="mt-1 text-sm text-gray-600">
+              Describe the sensors in this test setup and how their data is used.
+            </Paragraph>
+          </div>
+          <div className="flex items-center gap-2">
+            <TooltipButton
+              onClick={() => setIsTypeManagerOpen(true)}
+              tooltipText="Manage sensor types"
+              className="h-8 px-3 py-0 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+            >
+              <Settings2 className="h-4 w-4" />
+              <span>Manage Types</span>
+            </TooltipButton>
+            <TooltipButton
+              onClick={() => setIsTypePickerOpen(true)}
+              tooltipText="Add sensor"
+              disabled={sensorTypes.length === 0}
+              className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md disabled:bg-gray-300"
+            >
+              <Plus className="h-4 w-4" />
+            </TooltipButton>
+            <TooltipButton
+              onClick={() => setActiveTooltip((visible) => !visible)}
+              tooltipText="Show sensor field guidance"
+              aria-label="Show sensor field guidance"
+              className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+            >
+              <HelpCircle className="h-4 w-4 text-white" />
+            </TooltipButton>
+          </div>
         </div>
-      </div>
 
-       <Paragraph className={"px-2 pb-4 border-b border-gray-300 mb-3 text-sm text-gray-600"}>
-        Specify the sensors on the test set-up from which fault responses will be extracted.
-      </Paragraph>
-
-
-      <div>
-        <TableTooltip isVisible={activeTooltip}
+        <TableTooltip
+          isVisible={activeTooltip}
           explanations={[
-            <><b>Basic Information:</b> Basic Information about the sensor</>,
-            <><b>- Technology Platform:</b> Platform of the sensor</>,
-            <><b>- Technology Type:</b> Technology Type of the sensor</>,
-            <><b>- Description:</b> Description of the sensor</>
+            <><b>Dataset output:</b> The sensor is included in raw and/or processed output file mappings.</>,
+            <><b>Condition monitoring:</b> The sensor documents or monitors the test setup without requiring output files.</>,
+            <><b>Both:</b> The sensor is valuable output data and also used to monitor the test setup.</>
           ]}
           examples={[
-            { "technology Platform": "PT5401", "Technology Type": "PT", description: "measures pressure on the radial cylinder" },
+            { alias: 'vib_de', usage: 'Dataset output only', description: 'Drive-end vibration accelerometer' },
+            { alias: 'pressure_guard', usage: 'Condition monitoring only', description: 'Protective hydraulic-pressure sensor' },
+            { alias: 'motor_torque', usage: 'Dataset output + condition monitoring', description: 'Measured motor torque from controller' }
           ]}
         />
-      </div>
 
-      <div className="space-y-1">
-        {sensors.map((sensor, index) => {
-          const isExpanded = expandedSensors.has(index);
+        <div className="flex min-h-[28rem] flex-col md:h-[45rem] md:flex-row md:items-stretch">
+          <aside className="w-full shrink-0 border-b border-gray-200 bg-white md:flex md:w-72 md:self-stretch md:flex-col md:border-b-0 md:border-r">
+            <div className="max-h-56 space-y-1 overflow-y-auto p-2 md:max-h-none md:min-h-0 md:flex-1">
+              {sensors.map((sensor, index) => {
+                const sensorId = getSensorKey(sensor, index);
+                const normalizedSensor = normalizeSensor(sensor);
+                const usage = normalizedSensor.usage;
+                const sensorType = sensorTypes.find((type) => type.id === normalizedSensor.sensorTypeId);
 
-          return (
-            <div key={sensor.id ?? `sensor-${index}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => toggleSensor(index)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="font-medium text-gray-900">
-                      s{index + 1}:
+                return (
+                  <button
+                    key={sensorId}
+                    type="button"
+                    onClick={() => selectSensor(sensorId)}
+                    className={`w-full rounded-md border px-3 py-2.5 text-left text-sm transition-colors ${
+                      sensorId === selectedId
+                        ? 'border-blue-200 bg-blue-50 text-blue-900'
+                        : 'border-transparent text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {normalizedSensor.alias || `Sensor ${index + 1}`}
+                      </span>
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getUsageBadgeClassName(usage)}`}>
+                        {getUsageShortLabel(usage)}
+                      </span>
                     </span>
-                  </div>
-                  <span className="text-sm text-gray-600 truncate max-w-md">
-                    <span className='font-bold'>{sensor.alias || 'Unnamed Sensor'}: </span>
-                    {getSensorSummary(sensor)}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <IconTooltipButton
-                    icon={Trash2}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSensor(index);
-                    }}
-                    className="h-6.5 w-6.5 text-gray-400 hover:bg-red-100 rounded-md p-1 transition-colors"
-                    tooltipText={"Remove sensor"}
-                  />
-                  <span className="text-gray-400">
-                    {isExpanded ?
-                      <ChevronDown className="w-4 h-4 text-gray-500" /> :
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    }
-                  </span>
-                </div>
-              </div>
+                    <span
+                      className="mt-1 block truncate pl-4 text-xs text-gray-500"
+                      title={getSensorSummary(normalizedSensor, sensorType)}
+                    >
+                      Type · {getSensorSummary(normalizedSensor, sensorType)}
+                    </span>
+                  </button>
+                );
+              })}
 
-              {isExpanded && (
-
-                <div>
-
-                  <div className="border-t border-gray-200 p-4 bg-white space-y-6">
-                    {/* Basic Information */}
-                    <div className='space-y-3'>
-                      <h6 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                        Basic Information
-                      </h6>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <FormField
-                          name={`sensor-${index}-alias`}
-                          value={sensor.alias}
-                          onChange={(e) => updateSensor(index, 'alias', e.target.value)}
-                          label="Sensor alias"
-                          type="text"
-                          placeholder="Enter a sensor name/alias"
-                          explanation="Provide a name for the sensor. This name will appear in the ISA Questionnaire fields when adding sensor information."
-                          example="vib_ch_1"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-technologyPlatform`}
-                          value={sensor.technologyPlatform}
-                          onChange={(e) => updateSensor(index, 'technologyPlatform', e.target.value)}
-                          label="Sensor Model"
-                          type="text"
-                          placeholder="Enter Sensor model"
-                          explanation="Specify the specific sensor model that is used."
-                          example="Wilcoxon 786B-10"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-technologyType`}
-                          value={sensor.technologyType}
-                          onChange={(e) => updateSensor(index, 'technologyType', e.target.value)}
-                          label="Sensor Type"
-                          type="text"
-                          placeholder="Enter Sensor type"
-                          explanation="Specify the type of sensor used"
-                          example="Accelerometer"
-                        />
-
-                        <FormField
-                          name={`sensor-${index}-measurementType`}
-                          value={sensor.measurementType}
-                          onChange={(e) => updateSensor(index, 'measurementType', e.target.value)}
-                          label="Measurement Type"
-                          type="text"
-                          placeholder="Enter measurement type"
-                          explanation="Specify the type of measurement"
-                          example={"Vibration"}
-                        />
-                      </div>
-
-                      <div>
-                        <FormField
-                          name={`sensor-${index}-description`}
-                          value={sensor.description}
-                          onChange={(e) => updateSensor(index, 'description', e.target.value)}
-                          label="Description"
-                          type="textarea"
-                          placeholder="Enter description"
-                          className='min-h-20'
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
+              {sensors.length === 0 && (
+                <Paragraph className="px-2 py-5 text-sm text-gray-500">No sensors yet.</Paragraph>
               )}
             </div>
-          );
-        })}
+          </aside>
 
-        {sensors.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="mb-2">No sensors added yet.</p>
-            <p className="text-sm">Click "Add Sensor" to get started.</p>
-          </div>
-        )}
+          <main className="min-w-0 flex-1 p-5 md:min-h-0 md:overflow-y-auto">
+            {!selectedSensor ? (
+              <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
+                <Settings2 className="mb-4 h-14 w-14 text-gray-300" />
+                <Heading3>No sensor selected</Heading3>
+                <Paragraph className="mt-1 text-sm text-gray-600">
+                  Add a sensor to describe the test setup and its data role.
+                </Paragraph>
+                <TooltipButton
+                  onClick={() => setIsTypePickerOpen(true)}
+                  tooltipText="Add sensor"
+                  disabled={sensorTypes.length === 0}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg disabled:bg-gray-300"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Sensor</span>
+                </TooltipButton>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <Heading3 className="text-xl">Edit Sensor</Heading3>
+                  <TooltipButton
+                    onClick={removeSelectedSensor}
+                    tooltipText="Remove sensor"
+                    aria-label="Remove sensor"
+                    className="rounded-md bg-none bg-transparent p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </TooltipButton>
+                </div>
+
+                <FormField
+                  name={`sensor-${selectedIndex}-sensorTypeId`}
+                  value={selectedSensor.sensorTypeId || ''}
+                  onChange={(event) => applySensorType(event.target.value)}
+                  label="Sensor Type"
+                  type="select"
+                  placeholder="Select sensor type"
+                  tags={sensorTypes.map((type) => ({ value: type.id, label: type.name || 'Unnamed type' }))}
+                />
+
+                <FormField
+                  name={`sensor-${selectedIndex}-alias`}
+                  value={selectedSensor.alias || ''}
+                  onChange={(event) => updateSensor('alias', event.target.value)}
+                  label="Alias"
+                  type="text"
+                  placeholder="e.g. vib_de"
+                  required
+                />
+
+                <FormField
+                  name={`sensor-${selectedIndex}-description`}
+                  value={selectedSensor.description || ''}
+                  onChange={(event) => updateSensor('description', event.target.value)}
+                  label="Description"
+                  type="textarea"
+                  placeholder="Describe where the sensor is installed and what it measures"
+                  rows={3}
+                />
+
+                <section className="border-y border-gray-200 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <Heading3 className="text-sm font-semibold text-gray-800">Sensor usage</Heading3>
+                      <TooltipButton
+                        tooltipText="Dataset output: include files in the dataset. Monitoring only: document the device without output file mappings. Both: do both."
+                        className="h-7 w-7 rounded-full bg-none bg-transparent p-0 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                        aria-label="Explain sensor usage options"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </TooltipButton>
+                    </div>
+                    <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="radiogroup" aria-label="Sensor usage">
+                    {SENSOR_USAGE_OPTIONS.map((option) => {
+                      const isSelected = selectedSensor.usage === option.value;
+                      const label = option.value === SENSOR_USAGE_DATASET_OUTPUT
+                        ? 'Dataset output'
+                        : option.value === SENSOR_USAGE_CONDITION_MONITORING
+                          ? 'Monitoring only'
+                          : 'Both';
+                      return (
+                        <TooltipButton
+                          key={option.value}
+                          role="radio"
+                          aria-checked={isSelected}
+                          onClick={() => updateSensor('usage', option.value)}
+                          tooltipText={option.description}
+                          className={`h-8 rounded-md bg-none px-3 py-0 text-xs font-medium ${
+                            isSelected
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-transparent text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          <span>{label}</span>
+                        </TooltipButton>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="border-t border-gray-200 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsSpecificationExpanded((expanded) => !expanded)}
+                    className="flex w-full items-center justify-between rounded-md py-1 text-left text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+                    aria-expanded={isSpecificationExpanded}
+                  >
+                    <span>Sensor type specification</span>
+                    {isSpecificationExpanded
+                      ? <ChevronUp className="h-4 w-4" />
+                      : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {isSpecificationExpanded && (
+                    <div className="mt-4 grid gap-4 md:grid-cols-3">
+                      {[
+                        ['Sensor model', selectedSensorType?.technologyPlatform || selectedSensor.technologyPlatform],
+                        ['Technology type', selectedSensorType?.technologyType || selectedSensor.technologyType],
+                        ['Measurement type', selectedSensorType?.measurementType || selectedSensor.measurementType]
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                          <span className="block text-xs font-medium text-gray-500">{label}</span>
+                          <span className="mt-1 block text-sm text-gray-800">{value || 'Not specified'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+      </div>
+      <SensorTypeDialog
+        open={isTypeManagerOpen}
+        types={sensorTypes}
+        sensors={sensors}
+        onChange={onSensorTypesChange}
+        onClose={() => setIsTypeManagerOpen(false)}
+      />
+      <SensorTypePickerDialog
+        open={isTypePickerOpen}
+        types={sensorTypes}
+        onSelect={addSensor}
+        onClose={() => setIsTypePickerOpen(false)}
+      />
+    </>
   );
 };
 
 export default SensorsEditor;
-

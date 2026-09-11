@@ -9,14 +9,26 @@ import {
   OUTPUT_MODE_RAW_AND_PROCESSED,
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
+import { isSensorApplicable } from './protocolApplicability';
+import { isSensorIncludedInDatasetOutput } from './sensorUsage';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
 import {
   STUDY_VARIABLE_VALUE_MODE_SCALAR,
+  STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV,
   STUDY_VARIABLE_VALUE_MODE_TIMESERIES,
   normalizeStudyVariableValueMode
 } from '../constants/variableTypes';
+import { isReplaceableCharacteristic } from './testSetupCharacteristics';
+import { getAssignedComponentInstanceId, getDuplicateComponentInstanceIds } from './studyConfigurationValidation';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+// Wraps isSensorApplicable so that a missing protocol (no protocol selected yet)
+// is treated as "all sensors applicable" rather than blocking the check.
+const isSensorApplicableForProtocol = (protocol, sensorId) => {
+  if (!protocol) return true;
+  return isSensorApplicable(protocol, sensorId);
+};
 
 const normalizePath = (value) => {
   if (typeof value !== 'string') return '';
@@ -203,6 +215,7 @@ export function buildExportValidationReport({
   studyVariables = [],
   studyToStudyVariableMapping = [],
   studies = [],
+  configurations = [],
   testSetups = [],
   selectedTestSetupId = null,
   studyToMeasurementProtocolSelection = [],
@@ -221,7 +234,16 @@ export function buildExportValidationReport({
   const experimentTypeConfig = getExperimentTypeConfig(experimentType);
   const runCountRequired = Boolean(experimentTypeConfig?.supportsMultipleRuns);
   const selectedSetup = asArray(testSetups).find((setup) => setup?.id === selectedTestSetupId) || null;
-  const sensors = asArray(selectedSetup?.sensors);
+  const replaceableComponents = asArray(selectedSetup?.characteristics).filter(
+    (component) => isReplaceableCharacteristic(component?.isReplaceable)
+  );
+  const untypedComponentInstances = asArray(configurations).filter((instance) => (
+    instance?.testSetupId === selectedTestSetupId
+    && instance?.replaceableCharacteristicId
+    && !String(instance?.typeId || '').trim()
+  ));
+  const allSensors = asArray(selectedSetup?.sensors);
+  const sensors = allSensors.filter(isSensorIncludedInDatasetOutput);
   const studyRuns = expandStudiesIntoRuns(safeStudies);
   const selectionLookup = buildSelectionLookup({
     studyToMeasurementProtocolSelection,
@@ -230,6 +252,17 @@ export function buildExportValidationReport({
 
   const warningIssues = [];
   const errorIssues = [];
+
+  if (untypedComponentInstances.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'untyped-physical-component-ids',
+      level: 'error',
+      title: 'Physical component IDs missing type',
+      description: `${untypedComponentInstances.length} physical component IDs have no selected type.`,
+      count: untypedComponentInstances.length,
+      items: untypedComponentInstances.map((instance) => instance.componentId || instance.id),
+    });
+  }
 
   const investigationTitle = String(investigation?.investigationTitle || '').trim();
   const investigationDescription = String(investigation?.investigationDescription || '').trim();
@@ -329,7 +362,74 @@ export function buildExportValidationReport({
     });
   }
 
+  const missingComponentAssignments = safeStudies.flatMap((study, index) => (
+    replaceableComponents
+      .filter((component) => !getAssignedComponentInstanceId(study, component.id))
+      .map((component) => ({ study, index, component }))
+  ));
+
+  if (missingComponentAssignments.length > 0) {
+    pushIssue(errorIssues, {
+      id: 'missing-study-component-assignment',
+      level: 'error',
+      title: 'Experiments missing physical component IDs',
+      description: `${missingComponentAssignments.length} required replaceable-component assignments are missing.`,
+      count: missingComponentAssignments.length,
+      items: missingComponentAssignments.map(({ study, index, component }) => (
+        `${formatStudyLabel(study, index)}: ${component.category || component.description || 'Replaceable component'}`
+      )),
+    });
+  }
+
+  // Keep older projects validatable until their configurations are migrated.
+  if (replaceableComponents.length === 0) {
+    const studiesMissingConfiguration = safeStudies
+      .map((study, index) => ({ study, index }))
+      .filter(({ study }) => !String(study?.configurationId || '').trim());
+    if (studiesMissingConfiguration.length > 0) {
+      pushIssue(errorIssues, {
+        id: 'missing-study-configuration',
+        level: 'error',
+        title: 'Experiments missing configuration',
+        description: `${studiesMissingConfiguration.length} experiments are not linked to a configuration.`,
+        count: studiesMissingConfiguration.length,
+        items: studiesMissingConfiguration.map(({ study, index }) => formatStudyLabel(study, index)),
+      });
+    }
+  }
+
   if (runCountRequired) {
+    const duplicateInstanceIds = getDuplicateComponentInstanceIds(safeStudies);
+    if (duplicateInstanceIds.size > 0) {
+      const componentInstancesById = new Map(asArray(configurations).map((instance) => [instance.id, instance]));
+      pushIssue(errorIssues, {
+        id: 'duplicate-prognostics-component-ids',
+        level: 'error',
+        title: 'Physical component IDs assigned to multiple experiments',
+        description: 'A physical component in a prognostics experiment can only be assigned once.',
+        count: duplicateInstanceIds.size,
+        items: [...duplicateInstanceIds].map((instanceId) => componentInstancesById.get(instanceId)?.componentId || instanceId),
+      });
+    }
+    if (replaceableComponents.length === 0) {
+      const configurationAssignments = new Map();
+      safeStudies.forEach((study, index) => {
+        const configurationId = String(study?.configurationId || '').trim();
+        if (!configurationId) return;
+        const assignments = configurationAssignments.get(configurationId) || [];
+        assignments.push({ study, index });
+        configurationAssignments.set(configurationId, assignments);
+      });
+      const duplicates = [...configurationAssignments.entries()].filter(([, assignments]) => assignments.length > 1);
+      if (duplicates.length > 0) {
+        pushIssue(errorIssues, {
+          id: 'duplicate-prognostics-configurations', level: 'error', title: 'Configurations assigned to multiple experiments',
+          description: 'A prognostics configuration can only be assigned to one experiment.', count: duplicates.length,
+          items: duplicates.map(([, assignments]) => assignments.map(({ study, index }) => formatStudyLabel(study, index)).join(', ')),
+        });
+      }
+    }
+
     const studiesWithInvalidRunCount = safeStudies
       .map((study, index) => ({ study, index }))
       .filter(({ study }) => {
@@ -369,12 +469,21 @@ export function buildExportValidationReport({
       count: 1,
       items: ['Project settings: re-select a valid test setup'],
     });
-  } else if (sensors.length === 0) {
+  } else if (allSensors.length === 0) {
     pushIssue(errorIssues, {
       id: 'test-setup-without-sensors',
       level: 'error',
       title: 'Selected test setup has no sensors',
       description: 'Add at least one sensor to the selected test setup before conversion.',
+      count: 1,
+      items: [selectedSetup?.name || 'Selected test setup'],
+    });
+  } else if (sensors.length === 0) {
+    pushIssue(errorIssues, {
+      id: 'test-setup-without-output-sensors',
+      level: 'error',
+      title: 'Selected test setup has no dataset-output sensors',
+      description: 'Mark at least one sensor as dataset output before conversion.',
       count: 1,
       items: [selectedSetup?.name || 'Selected test setup'],
     });
@@ -514,27 +623,49 @@ export function buildExportValidationReport({
   let requiredRawAssignments = 0;
   let requiredProcessedAssignments = 0;
 
+  // Build protocol lookup maps from the selected test setup so we can check
+  // applicableSensorIds per study when validating file mapping requirements.
+  const measurementProtocolById = new Map(
+    asArray(selectedSetup?.measurementProtocols).map((p) => [String(p?.id || ''), p])
+  );
+  const processingProtocolById = new Map(
+    asArray(selectedSetup?.processingProtocols).map((p) => [String(p?.id || ''), p])
+  );
+
   if (studyRuns.length > 0 && sensors.length > 0) {
     studyRuns.forEach((run) => {
       const modeInfo = modeByStudyId.get(String(run?.studyId || ''));
       const rawRequired = Boolean(modeInfo?.rawEnabled);
       const processedRequired = Boolean(modeInfo?.processedEnabled);
 
+      const measurementProtocol = measurementProtocolById.get(
+        String(modeInfo?.selectedMeasurementProtocolId || '')
+      ) || null;
+      const processingProtocol = processingProtocolById.get(
+        String(modeInfo?.selectedProcessingProtocolId || '')
+      ) || null;
+
       sensors.forEach((sensor) => {
+        const sensorId = String(sensor?.id || '');
+
+        // Check sensor applicability for the selected protocols
+        const rawApplicable = isSensorApplicableForProtocol(measurementProtocol, sensorId);
+        const processedApplicable = isSensorApplicableForProtocol(processingProtocol, sensorId);
+
         const measurement = resolveScopedMapping(measurementMappingsLookup, sensor?.id, run);
         const processing = resolveScopedMapping(processingMappingsLookup, sensor?.id, run);
 
-        if (rawRequired) {
+        if (rawRequired && rawApplicable) {
           requiredRawAssignments += 1;
         }
-        if (processedRequired) {
+        if (processedRequired && processedApplicable) {
           requiredProcessedAssignments += 1;
         }
 
-        if (rawRequired && !hasFilledValue(measurement?.value)) {
+        if (rawRequired && rawApplicable && !hasFilledValue(measurement?.value)) {
           missingMeasurement.push(formatRunSensorLabel(run, sensor));
         }
-        if (processedRequired && !hasFilledValue(processing?.value)) {
+        if (processedRequired && processedApplicable && !hasFilledValue(processing?.value)) {
           missingProcessing.push(formatRunSensorLabel(run, sensor));
         }
       });
@@ -594,7 +725,7 @@ export function buildExportValidationReport({
           return;
         }
 
-        if (valueMode !== STUDY_VARIABLE_VALUE_MODE_TIMESERIES) {
+        if (valueMode !== STUDY_VARIABLE_VALUE_MODE_TIMESERIES && valueMode !== STUDY_VARIABLE_VALUE_MODE_SCALAR_CSV) {
           return;
         }
 
@@ -791,7 +922,8 @@ export function buildExportValidationReport({
     stats: {
       totalStudies: safeStudies.length,
       totalRuns: studyRuns.length,
-      totalSensors: sensors.length,
+      totalSensors: allSensors.length,
+      totalDatasetOutputSensors: sensors.length,
       totalContacts: safeContacts.length,
       totalStudyVariables: safeStudyVariables.length,
       totalFaultSpecifications: faultSpecificationVariables.length,

@@ -7,12 +7,14 @@ import TooltipButton from '../Widgets/TooltipButton';
 import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import { getExperimentTypeConfig } from '../../constants/experimentTypes';
-import { OUTPUT_MODE_RAW_ONLY, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
+import { OUTPUT_MODE_RAW_ONLY, OUTPUT_MODE_OPTIONS, normalizeStudyOutputMode } from '../../utils/studyOutputMode';
+import { isReplaceableCharacteristic } from '../../utils/testSetupCharacteristics';
+import { getAssignedComponentInstanceId } from '../../utils/studyConfigurationValidation';
 
 // Main TestSetupForm Component
 const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
-  const { experimentType, testSetups, selectedTestSetupId } = useProjectData();
+  const { experimentType, configurations, testSetups, selectedTestSetupId } = useProjectData();
   const experimentConfig = getExperimentTypeConfig(experimentType);
   const runCountDisabled = !experimentConfig.supportsMultipleRuns;
 
@@ -24,7 +26,8 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     submissionDate: item?.submissionDate || '',
     publicationDate: item?.publicationDate || '',
     runCount: item?.runCount ?? 1,
-    configurationId: item?.configurationId || '',
+    componentAssignments: item?.componentAssignments || [],
+    outputMode: normalizeStudyOutputMode(item?.outputMode, OUTPUT_MODE_RAW_ONLY),
   });
   const [formError, setFormError] = useState('');
 
@@ -35,6 +38,10 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
       setFormError('Please fill in all required fields (Study Name).');
       return;
     }
+    if (replaceableComponents.some((component) => !getAssignedComponentInstanceId(formData, component.id))) {
+      setFormError('Select a physical component ID for every replaceable component.');
+      return;
+    }
     setFormError('');
 
     const normalizedRunCount = runCountDisabled ? 1 : Math.max(1, Number.parseInt(formData.runCount, 10) || 1);
@@ -42,7 +49,7 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
     const studyData = {
       ...formData,
       runCount: normalizedRunCount,
-      outputMode: normalizeStudyOutputMode(item?.outputMode, OUTPUT_MODE_RAW_ONLY),
+      outputMode: normalizeStudyOutputMode(formData.outputMode, OUTPUT_MODE_RAW_ONLY),
       id: isEditing && item.id ? item.id : generateId(), // Generate a new ID if not editing}`
     };
 
@@ -71,6 +78,25 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const runCountExplanation = runCountDisabled
     ? 'This experiment type always uses a single file per study.'
     : 'Specify how many repeated runs/trajectories were collected for this study. Set to 1 if only a single run exists.';
+
+  const selectedSetup = testSetups?.find((setup) => setup.id === selectedTestSetupId);
+  const replaceableComponents = (selectedSetup?.characteristics || []).filter(
+    (component) => isReplaceableCharacteristic(component.isReplaceable)
+  );
+  const componentInstances = (configurations || []).filter(
+    (instance) => instance.testSetupId === selectedTestSetupId && instance.replaceableCharacteristicId
+  );
+  const updateComponentAssignment = (replaceableCharacteristicId, componentInstanceId) => {
+    setFormData((previous) => ({
+      ...previous,
+      componentAssignments: replaceableComponents.map((component) => ({
+        replaceableCharacteristicId: component.id,
+        componentInstanceId: component.id === replaceableCharacteristicId
+          ? componentInstanceId
+          : getAssignedComponentInstanceId(previous, component.id)
+      }))
+    }));
+  };
 
 
   return (
@@ -156,20 +182,29 @@ const StudyForm = ({ item, onSave, onCancel, isEditing = false }) => {
             />
           )}
 
+          {replaceableComponents.map((component, index) => (
+            <FormField
+              key={component.id}
+              name={`component-${component.id}`}
+              onChange={(event) => updateComponentAssignment(component.id, event.target.value)}
+              value={getAssignedComponentInstanceId(formData, component.id)}
+              label={component.category || component.description || `Replaceable Component ${index + 1}`}
+              type='select'
+              placeholder='Select physical component ID'
+              tags={componentInstances.filter((instance) => instance.replaceableCharacteristicId === component.id && instance.typeId).map((instance) => ({ value: instance.id, label: instance.componentId }))}
+              explanation="Select the physical component used for this experiment"
+              required
+            />
+          ))}
+
           <FormField
-            name={"configurationId"}
+            name={"outputMode"}
             onChange={handleChange}
-            value={formData.configurationId}
-            label="Test Setup Configuration"
+            value={formData.outputMode}
+            label="Data Types"
             type='select'
-            placeholder='No configuration selected'
-            tags={(() => {
-              const selectedSetup = testSetups?.find(t => t.id === selectedTestSetupId);
-              const configs = selectedSetup?.configurations || [];
-              return configs.map(c => ({ value: c.id, label: c.name || 'Unnamed' }));
-            })()}
-            explanation="Select which configuration of the test setup was used for this study"
-            disabled={!selectedTestSetupId}
+            tags={OUTPUT_MODE_OPTIONS}
+            explanation="Specify whether this experiment contains raw data, processed data, or both."
           />
 
         </div>

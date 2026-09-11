@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { createStudyRunId } from '../utils/studyRuns';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { readBundledProjectArchive } from './helpers/readProjectArchive';
 
 const parseJsonValue = (value, fallback) => {
   if (value === undefined || value === null) return fallback;
@@ -14,6 +13,8 @@ const parseJsonValue = (value, fallback) => {
     return fallback;
   }
 };
+
+const asArray = (value) => Array.isArray(value) ? value : [];
 
 const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 
@@ -58,16 +59,53 @@ const readProjectValue = (localStorageState, projectId, key, fallback) => {
 
 const FIXTURE_CASES = [
   {
-    name: 'example-single-run-nln-emp',
-    path: 'src/data/example-single-run-nln-emp.json',
+    name: 'diagnostics example',
+    archivePath: 'public/examples/diagnostics-example.isa-phm.zip',
   },
   {
-    name: 'example-multi-run-milling',
-    path: 'src/data/example-multi-run-milling.json',
+    name: 'XJTU-SY bearing datasets example',
+    archivePath: 'public/examples/xjtu-sy-bearing-datasets.isa-phm.zip',
   },
 ];
 
 describe('conversion payload contract', () => {
+  it('includes project configurations and their types in the selected test setup', () => {
+    const payload = buildConversionPayload({
+      studies: [{ id: 'study-1', name: 'Study 1', runCount: 1, configurationId: 'config-1' }],
+      testSetups: [{
+        id: 'setup-1',
+        name: 'Setup 1',
+        characteristics: [{ id: 'component-1', category: 'Bearing', isReplaceable: true }],
+        images: [{
+          attachmentId: 'image-1', fileName: 'rig.png', mimeType: 'image/png', size: 1024,
+        }],
+        sensors: [],
+      }],
+      selectedTestSetupId: 'setup-1',
+      configurations: [{
+        id: 'config-1',
+        testSetupId: 'setup-1',
+        name: '6205 configuration',
+        typeAssignments: [{ replaceableCharacteristicId: 'component-1', typeId: 'type-1' }],
+      }],
+      configurationTypes: [{
+        id: 'type-1',
+        name: 'SKF 6205',
+        replaceableCharacteristicId: 'component-1',
+        characteristics: [{ id: 'detail-1', name: 'Material', value: 'Steel' }],
+      }],
+    });
+
+    expect(payload.test_setup.configurations).toHaveLength(1);
+    expect(payload.test_setup.configurations[0].id).toBe('config-1');
+    expect(payload.test_setup.configurationTypes).toEqual([
+      expect.objectContaining({ id: 'type-1', replaceableCharacteristicId: 'component-1' }),
+    ]);
+    expect(payload.test_setup.images).toEqual([
+      expect.objectContaining({ attachmentId: 'image-1', fileName: 'rig.png' }),
+    ]);
+  });
+
   it('builds the expected payload shape with protocol and run-aware mappings', () => {
     const studies = [
       { id: 'study-1', name: 'Study 1', runCount: 2 },
@@ -330,26 +368,24 @@ describe('conversion payload contract', () => {
     expect(rawAssay.runs[0].processed_file_name).toBe('');
   });
 
-  it.each(FIXTURE_CASES)('builds a valid payload from $name fixture', async ({ path: fixtureFile }) => {
-    const fixturePath = path.resolve(process.cwd(), fixtureFile);
-    const fixtureRaw = await fs.readFile(fixturePath, 'utf8');
-    const fixture = JSON.parse(fixtureRaw);
+  it.each(FIXTURE_CASES)('builds a valid payload from the $name archive', async ({ archivePath }) => {
+    const fixture = await readBundledProjectArchive(archivePath);
 
     const projectId = fixture?.projectId || 'default';
     const localStorageState =
       fixture?.localStorage && typeof fixture.localStorage === 'object' ? fixture.localStorage : {};
 
-    const studies = readProjectValue(localStorageState, projectId, 'studies', []);
-    const studyVariables = readProjectValue(localStorageState, projectId, 'studyVariables', []);
-    const publications = readProjectValue(localStorageState, projectId, 'publications', []);
-    const contacts = readProjectValue(localStorageState, projectId, 'contacts', []);
+    const studies = asArray(readProjectValue(localStorageState, projectId, 'studies', []));
+    const studyVariables = asArray(readProjectValue(localStorageState, projectId, 'studyVariables', []));
+    const publications = asArray(readProjectValue(localStorageState, projectId, 'publications', []));
+    const contacts = asArray(readProjectValue(localStorageState, projectId, 'contacts', []));
     const investigation = readProjectValue(localStorageState, projectId, 'investigation', {});
     const experimentType = readProjectValue(localStorageState, projectId, 'experimentType', '');
-    const studyToStudyVariableMapping = readProjectValue(localStorageState, projectId, 'studyToStudyVariableMapping', []);
-    const studyToSensorMeasurementMapping = readProjectValue(localStorageState, projectId, 'studyToSensorMeasurementMapping', []);
-    const studyToSensorProcessingMapping = readProjectValue(localStorageState, projectId, 'studyToSensorProcessingMapping', []);
-    const studyToMeasurementProtocolSelection = readProjectValue(localStorageState, projectId, 'studyToMeasurementProtocolSelection', []);
-    const studyToProcessingProtocolSelection = readProjectValue(localStorageState, projectId, 'studyToProcessingProtocolSelection', []);
+    const studyToStudyVariableMapping = asArray(readProjectValue(localStorageState, projectId, 'studyToStudyVariableMapping', []));
+    const studyToSensorMeasurementMapping = asArray(readProjectValue(localStorageState, projectId, 'studyToSensorMeasurementMapping', []));
+    const studyToSensorProcessingMapping = asArray(readProjectValue(localStorageState, projectId, 'studyToSensorProcessingMapping', []));
+    const studyToMeasurementProtocolSelection = asArray(readProjectValue(localStorageState, projectId, 'studyToMeasurementProtocolSelection', []));
+    const studyToProcessingProtocolSelection = asArray(readProjectValue(localStorageState, projectId, 'studyToProcessingProtocolSelection', []));
     const selectedTestSetupId = readProjectValue(localStorageState, projectId, 'selectedTestSetupId', fixture?.selectedTestSetup?.id || null);
 
     const selectedTestSetup = fixture?.selectedTestSetup || {};
@@ -410,12 +446,12 @@ describe('conversion payload contract', () => {
 
     studyToMeasurementProtocolSelection.forEach((mapping) => {
       expect(studyIds.has(mapping.studyId)).toBe(true);
-      expect(measurementProtocolIds.has(mapping.protocolId)).toBe(true);
+      if (mapping.protocolId) expect(measurementProtocolIds.has(mapping.protocolId)).toBe(true);
     });
 
     studyToProcessingProtocolSelection.forEach((mapping) => {
       expect(studyIds.has(mapping.studyId)).toBe(true);
-      expect(processingProtocolIds.has(mapping.protocolId)).toBe(true);
+      if (mapping.protocolId) expect(processingProtocolIds.has(mapping.protocolId)).toBe(true);
     });
 
     const payload = buildConversionPayload({
@@ -448,7 +484,8 @@ describe('conversion payload contract', () => {
     payload.studies.forEach((study) => {
       expect(study.total_runs).toBeGreaterThanOrEqual(1);
       expect(Array.isArray(study.assay_details)).toBe(true);
-      expect(study.assay_details).toHaveLength(setupSensorCount);
+      expect(study.assay_details.length).toBeGreaterThan(0);
+      expect(study.assay_details.length).toBeLessThanOrEqual(setupSensorCount);
       expect(Array.isArray(study.study_to_study_variable_mapping)).toBe(true);
       expect(study.study_to_study_variable_mapping.length).toBeGreaterThanOrEqual(0);
 

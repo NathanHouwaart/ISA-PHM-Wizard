@@ -37,7 +37,7 @@ function sortFilesNaturally(files) {
     .map((entry) => entry.file);
 }
 
-export function applyFilesToRange(range, rows, flatCols, files) {
+export function applyFilesToRange(range, rows, flatCols, files, isAssignable) {
   if (!range || !rows || !flatCols || !files) return [];
 
   const x0 = typeof range.x === 'number' ? range.x : 0;
@@ -63,6 +63,11 @@ export function applyFilesToRange(range, rows, flatCols, files) {
     for (let c = sx; c <= ex; c++) {
       const col = flatCols[c];
       if (!col) continue;
+
+      // Skip disabled cells without consuming the file — it will go to the next enabled cell.
+      if (typeof isAssignable === 'function' && !isAssignable(row, col.prop)) {
+        continue;
+      }
 
       if (fileIndex >= fileArray.length) {
         // No more files to assign

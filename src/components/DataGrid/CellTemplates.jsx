@@ -1,7 +1,7 @@
 
 import React from 'react';
 import IconToolTipButton from '../Widgets/IconTooltipButton';
-import { Trash } from 'lucide-react';
+import { Check, Trash } from 'lucide-react';
 
 // Cell template for bold text
 export const BoldCell = ({ value }) => {
@@ -61,6 +61,50 @@ export const DeleteRowCellTemplate = ({ model, rowIndex }) => {
                 tooltipText={`Delete row ${rowIndex + 1}`}
                 className="h-10 w-10 text-red-500"
             />
+        </div>
+    );
+};
+
+export const BooleanCheckboxCellTemplate = ({ model, prop, rowIndex }) => {
+    const checked = model?.[prop] === true || model?.[prop] === 'true';
+
+    const handleToggle = (event) => {
+        event.stopPropagation();
+        const nextValue = !checked;
+        const gridElement = event.currentTarget.closest?.('revo-grid');
+        if (!gridElement) return;
+
+        const detail = {
+            rowIndex,
+            prop,
+            val: nextValue,
+            value: checked,
+            model,
+            rgRow: rowIndex
+        };
+
+        gridElement.dispatchEvent(new CustomEvent('beforeedit', { detail, bubbles: true }));
+        setTimeout(() => {
+            gridElement.dispatchEvent(new CustomEvent('afteredit', { detail, bubbles: true }));
+        }, 0);
+    };
+
+    return (
+        <div className="flex h-full items-center justify-center">
+            <button
+                type="button"
+                role="checkbox"
+                aria-checked={checked}
+                aria-label="Toggle replaceable"
+                onClick={handleToggle}
+                className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
+                    checked
+                        ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'
+                        : 'border-gray-300 bg-white text-transparent hover:border-blue-400'
+                }`}
+            >
+                <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </button>
         </div>
     );
 };

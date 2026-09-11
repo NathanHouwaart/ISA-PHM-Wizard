@@ -65,6 +65,7 @@ export const IsaQuestionnaire = () => {
     selectedTestSetupId,
     testSetups,
     studies,
+    configurations,
     selectedDataset,
     studyToStudyVariableMapping,
     studyToMeasurementProtocolSelection,
@@ -72,6 +73,7 @@ export const IsaQuestionnaire = () => {
     studyToSensorMeasurementMapping,
     studyToSensorProcessingMapping,
     experimentType,
+    isExampleProjectLoading,
   } = useProjectData();
   const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
@@ -112,20 +114,21 @@ export const IsaQuestionnaire = () => {
   }, [location.pathname]);
 
   // Set screen width based on persisted tab state for the active page and slide index.
-  // Slides 0-6 (IntroductionSlide through OperatingConditionsSlide): tab-aware width
+  // Early editable slides can opt into grid width through their persisted tab state.
   //   - simple-view: max-w-5xl
   //   - grid-view: max-w-[100rem]
-  // Slides 7+ (StudyVariableSlide onwards): always max-w-[100rem] for both simple and grid views
+  // Slides 8+ (StudyVariableSlide onwards): always max-w-[100rem] for both simple and grid views
   useEffect(() => {
-    const FIRST_WIDE_SLIDE_INDEX = 7; // StudyVariableSlide is at index 7
+    const FIRST_WIDE_SLIDE_INDEX = 8; // StudyVariableSlide is at index 8
+    const CONFIGURATION_SLIDE_INDEX = 4;
 
     if (currentPage >= FIRST_WIDE_SLIDE_INDEX) {
       // Always wide for slides from StudyVariableSlide onwards
       setScreenWidth('max-w-[100rem]');
     } else {
-      // Tab-aware width for earlier slides (Introduction through OperatingConditionsSlide)
+      // Configurations has no grid view. Ignore any stale tab state at its index.
       const activeTab = pageTabStates?.[currentPage];
-      if (activeTab === 'grid-view') {
+      if (currentPage !== CONFIGURATION_SLIDE_INDEX && activeTab === 'grid-view') {
         setScreenWidth('max-w-[100rem]');
       } else {
         setScreenWidth('max-w-5xl');
@@ -181,6 +184,7 @@ export const IsaQuestionnaire = () => {
   const deferredStudyVariables = useDeferredValue(studyVariables);
   const deferredStudyVariableMappings = useDeferredValue(studyToStudyVariableMapping);
   const deferredStudies = useDeferredValue(studies);
+  const deferredConfigurations = useDeferredValue(configurations);
   const deferredTestSetups = useDeferredValue(testSetups);
   const deferredSelectedTestSetupId = useDeferredValue(selectedTestSetupId);
   const deferredMeasurementProtocolSelection = useDeferredValue(studyToMeasurementProtocolSelection);
@@ -196,6 +200,7 @@ export const IsaQuestionnaire = () => {
     studyVariables: deferredStudyVariables,
     studyToStudyVariableMapping: deferredStudyVariableMappings,
     studies: deferredStudies,
+    configurations: deferredConfigurations,
     testSetups: deferredTestSetups,
     selectedTestSetupId: deferredSelectedTestSetupId,
     studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -214,6 +219,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -240,6 +246,7 @@ export const IsaQuestionnaire = () => {
         studyVariables: deferredStudyVariables,
         studyToStudyVariableMapping: deferredStudyVariableMappings,
         studies: deferredStudies,
+        configurations: deferredConfigurations,
         testSetups: deferredTestSetups,
         selectedTestSetupId: deferredSelectedTestSetupId,
         studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -273,6 +280,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -291,6 +299,7 @@ export const IsaQuestionnaire = () => {
       studyVariables: deferredStudyVariables,
       studyToStudyVariableMapping: deferredStudyVariableMappings,
       studies: deferredStudies,
+      configurations: deferredConfigurations,
       testSetups: deferredTestSetups,
       selectedTestSetupId: deferredSelectedTestSetupId,
       studyToMeasurementProtocolSelection: deferredMeasurementProtocolSelection,
@@ -311,6 +320,7 @@ export const IsaQuestionnaire = () => {
     deferredStudyVariables,
     deferredStudyVariableMappings,
     deferredStudies,
+    deferredConfigurations,
     deferredTestSetups,
     deferredSelectedTestSetupId,
     deferredMeasurementProtocolSelection,
@@ -379,6 +389,7 @@ export const IsaQuestionnaire = () => {
         studyVariables,
         studyToStudyVariableMapping,
         studies,
+        configurations,
         testSetups,
         selectedTestSetupId,
         studyToMeasurementProtocolSelection,
@@ -412,6 +423,7 @@ export const IsaQuestionnaire = () => {
   return (
     <PageWrapper>
       {/* All overlays follow consistent conditional rendering pattern with explicit handlers */}
+      {isExampleProjectLoading && <LoadingOverlay message="Loading the complete example project…" />}
       {isSubmitOverlayVisible && <LoadingOverlay message={submitOverlayMessage} onCancel={submitOverlayCancel} />}
       {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
       {showSessionsModal && <ProjectSessionsModal onClose={handleSessionsModalClose} />}

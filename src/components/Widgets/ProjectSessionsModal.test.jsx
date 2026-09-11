@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProjectSessionsModal from './ProjectSessionsModal';
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
 import { importProject } from '../../utils/indexedTreeStore';
+import {
+  commitProjectArchiveImport,
+  createProjectArchive,
+  readProjectImportFile,
+} from '../../utils/projectArchive';
 
 vi.mock('../../contexts/GlobalDataContext', () => ({
   useProjectData: vi.fn(),
@@ -13,6 +18,13 @@ vi.mock('../../contexts/GlobalDataContext', () => ({
 vi.mock('../../utils/indexedTreeStore', () => ({
   exportProject: vi.fn(),
   importProject: vi.fn(),
+}));
+
+vi.mock('../../utils/projectArchive', () => ({
+  createProjectArchive: vi.fn(),
+  getProjectArchiveFileName: vi.fn(() => 'project.zip'),
+  readProjectImportFile: vi.fn(),
+  commitProjectArchiveImport: vi.fn(),
 }));
 
 vi.mock('./IconTooltipButton', () => ({
@@ -74,9 +86,10 @@ describe('ProjectSessionsModal import rollback', () => {
   const mockDeleteProject = vi.fn();
   const mockResetProject = vi.fn();
   const mockSetTestSetups = vi.fn();
+  const mockFlushProjectState = vi.fn();
 
   const baseProjectData = {
-    projects: [{ id: 'example-single-run', name: 'Single Run Sietze' }],
+    projects: [{ id: 'example-single-run', name: 'Diagnostics Example' }],
     currentProjectId: 'example-single-run',
     DEFAULT_PROJECT_ID: 'example-single-run',
     MULTI_RUN_EXAMPLE_PROJECT_ID: 'example-multi-run',
@@ -88,6 +101,7 @@ describe('ProjectSessionsModal import rollback', () => {
     deleteProject: mockDeleteProject,
     resetProject: mockResetProject,
     setTestSetups: mockSetTestSetups,
+    flushProjectState: mockFlushProjectState,
   };
 
   beforeEach(() => {
@@ -95,6 +109,11 @@ describe('ProjectSessionsModal import rollback', () => {
     useProjectData.mockReturnValue(baseProjectData);
     useProjectActions.mockReturnValue(baseProjectActions);
     mockDeleteProject.mockReturnValue(true);
+    readProjectImportFile.mockImplementation(async (file) => ({
+      project: JSON.parse(await file.text()),
+      attachments: [],
+      legacy: true,
+    }));
   });
 
   const triggerImport = (container, payload) => {
@@ -163,5 +182,47 @@ describe('ProjectSessionsModal import rollback', () => {
     });
     expect(mockDeleteProject).not.toHaveBeenCalled();
     expect(screen.getByTestId('conflict-dialog')).toBeInTheDocument();
+  });
+
+  it('imports ZIP candidates through the transactional archive path', async () => {
+    mockCreateProject.mockReturnValue('new-project-id');
+    const project = {
+      projectId: 'source-project',
+      projectName: 'ZIP project',
+      nodes: [],
+      localStorage: {},
+      selectedTestSetup: null,
+    };
+    readProjectImportFile.mockResolvedValueOnce({ project, attachments: [], legacy: false });
+    commitProjectArchiveImport.mockResolvedValueOnce({ success: true, targetProjectId: 'new-project-id' });
+
+    const { container } = render(<ProjectSessionsModal onClose={vi.fn()} />);
+    triggerImport(container, project);
+
+    await waitFor(() => {
+      expect(commitProjectArchiveImport).toHaveBeenCalledWith(
+        { project, attachments: [], legacy: false },
+        'new-project-id'
+      );
+    });
+    expect(importProject).not.toHaveBeenCalled();
+    expect(mockDeleteProject).not.toHaveBeenCalled();
+  });
+
+  it('flushes buffered state before exporting a project archive', async () => {
+    createProjectArchive.mockRejectedValueOnce(new Error('Stop after export read'));
+
+    render(<ProjectSessionsModal onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Export project' }));
+
+    await waitFor(() => {
+      expect(createProjectArchive).toHaveBeenCalledWith(
+        'example-single-run',
+        { projectName: 'Diagnostics Example' }
+      );
+    });
+    expect(mockFlushProjectState).toHaveBeenCalledTimes(1);
+    expect(mockFlushProjectState.mock.invocationCallOrder[0])
+      .toBeLessThan(createProjectArchive.mock.invocationCallOrder[0]);
   });
 });

@@ -6,6 +6,7 @@ export default function useGridControlsApi({
     hookRowData,
     fields,
     updateMappingsBatch,
+    canEditCell,
     showDebug = false
 }) {
     const handleDebugSelection = useCallback(async () => {
@@ -34,8 +35,9 @@ export default function useGridControlsApi({
         hookRowData,
         fields,
         updateMappingsBatch,
+        canEditCell,
         showDebug
-    }), [gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug]);
+    }), [gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, canEditCell, showDebug]);
 
     return {
         handleDebugSelection,

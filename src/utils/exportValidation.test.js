@@ -53,6 +53,16 @@ const makeBaseInput = () => ({
 });
 
 describe('buildExportValidationReport', () => {
+  it('blocks export when a physical component ID has no selected type', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      testSetups: [{ id: 'setup-1', characteristics: [{ id: 'bearing', category: 'Bearing', isReplaceable: true }], sensors: [] }],
+      configurations: [{ id: 'bearing-1', testSetupId: 'setup-1', replaceableCharacteristicId: 'bearing', componentId: '1.1', typeId: '' }],
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'untyped-physical-component-ids')).toBe(true);
+  });
+
   it('flags missing measurement protocol as blocking', () => {
     const run1 = createStudyRunId('study-1', 1);
     const run2 = createStudyRunId('study-1', 2);
@@ -130,7 +140,7 @@ describe('buildExportValidationReport', () => {
     const report = buildExportValidationReport({
       ...makeBaseInput(),
       studies: [
-        { id: 'study-1', name: 'Study 1', runCount: 2, outputMode: OUTPUT_MODE_RAW_ONLY },
+        { id: 'study-1', name: 'Study 1', runCount: 2, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
       ],
       studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
       studyToSensorMeasurementMapping: [
@@ -173,6 +183,55 @@ describe('buildExportValidationReport', () => {
     expect(report.warningIssues.some((issue) => issue.id === 'missing-contacts')).toBe(true);
     expect(report.warningIssues.some((issue) => issue.id === 'missing-fault-specifications')).toBe(true);
     expect(report.warningIssues.some((issue) => issue.id === 'missing-operating-conditions')).toBe(true);
+  });
+
+  it('does not require output mappings for condition-monitoring-only sensors', () => {
+    const run1 = createStudyRunId('study-1', 1);
+    const run2 = createStudyRunId('study-1', 2);
+
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      testSetups: [{
+        id: 'setup-1',
+        sensors: [
+          { id: 'sensor-1', alias: 'Vibration', usage: 'dataset-output' },
+          { id: 'sensor-2', alias: 'Pressure guard', usage: 'condition-monitoring' },
+        ],
+      }],
+      studyToMeasurementProtocolSelection: [{ studyId: 'study-1', protocolId: 'mp-1' }],
+      studyToSensorMeasurementMapping: [
+        { studyRunId: run1, sensorId: 'sensor-1', value: 'raw/r1_vibration.csv' },
+        { studyRunId: run2, sensorId: 'sensor-1', value: 'raw/r2_vibration.csv' },
+      ],
+      studyToSensorProcessingMapping: [],
+    }, { includePathChecks: false });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-measurement-mappings')).toBe(false);
+    expect(report.stats.totalSensors).toBe(2);
+    expect(report.stats.totalDatasetOutputSensors).toBe(1);
+    expect(report.stats.expectedAssignments).toBe(2);
+  });
+
+  it('blocks export when an experiment has no configuration', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      experimentType: 'diagnostic-experiment',
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'missing-study-configuration')).toBe(true);
+  });
+
+  it('blocks duplicate configuration assignments for prognostics experiments', () => {
+    const report = buildExportValidationReport({
+      ...makeBaseInput(),
+      experimentType: 'prognostics-experiment',
+      studies: [
+        { id: 'study-1', name: 'Experiment 1', runCount: 1, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
+        { id: 'study-2', name: 'Experiment 2', runCount: 1, configurationId: 'configuration-1', outputMode: OUTPUT_MODE_RAW_ONLY },
+      ],
+    });
+
+    expect(report.blockingIssues.some((issue) => issue.id === 'duplicate-prognostics-configurations')).toBe(true);
   });
 
   it('flags missing test matrix values as blocking errors', () => {

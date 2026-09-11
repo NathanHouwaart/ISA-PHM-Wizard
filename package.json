@@ -15,9 +15,9 @@
     "test:run": "vitest --run",
     "test:coverage": "vitest --run --coverage",
     "ci:quality": "npm run lint:ci && npm run test:coverage && npm run build",
-    "test:unit": "vitest --run --exclude \"src/tests/backend-*.test.js\" --exclude \"src/tests/conversion-payload.contract.test.js\"",
+    "test:unit": "node scripts/run-unit-tests.mjs",
     "test:contract": "vitest --run src/tests/conversion-payload.contract.test.js",
-    "test:integration": "vitest --run src/tests/backend-conversion.test.js src/tests/backend-root.test.js src/tests/backend-project-sietze-new.test.js src/tests/backend-example-goldens.test.js",
+    "test:integration": "vitest --run src/tests/backend-root.test.js src/tests/backend-example-archives.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -37,15 +37,16 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^3.2.2",
+    "fflate": "0.8.3",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.513.0",
     "lz-string": "^1.4.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.0",
-    "react-router-dom": "^7.6.2",
+    "react-router-dom": "^7.18.2",
     "tailwind-merge": "^3.3.1",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
@@ -68,10 +69,10 @@
     "json-dereference": "^0.0.1",
     "node-fetch": "^2.7.0",
     "playwright": "^1.58.2",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.26",
     "tailwindcss": "^4.1.10",
     "tw-animate-css": "^1.3.4",
-    "vite": "^6.3.5",
+    "vite": "^6.4.3",
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^3.2.4"
   }

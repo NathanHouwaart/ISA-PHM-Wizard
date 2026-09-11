@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
-import { exportProject, importProject } from '../../utils/indexedTreeStore';
+import { importProject } from '../../utils/indexedTreeStore';
+import {
+  commitProjectArchiveImport,
+  createProjectArchive,
+  getProjectArchiveFileName,
+  readProjectImportFile,
+} from '../../utils/projectArchive';
 import { decodeJsonFromStorage } from '../../utils/storageCodec';
 import IconToolTipButton from './IconTooltipButton';
 import TooltipButton from './TooltipButton';
@@ -37,14 +43,6 @@ const ActionGroup = ({ label, children, wrap = true }) => (
     <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-nowrap'}`}>{children}</div>
   </div>
 );
-
-const sanitizeFileName = (value) => {
-  const source = typeof value === 'string' ? value : '';
-  return source
-    .replace(/[<>:"/\\|?*]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
 
 const normalizeProjectName = (value) => {
   const source = typeof value === 'string' ? value : '';
@@ -108,7 +106,8 @@ const ProjectActionToolbar = ({
   onOpenName,
   onExport,
   onReset,
-  onDelete
+  onDelete,
+  disabled = false,
 }) => (
   <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm overflow-x-auto">
     <div className="flex flex-col gap-3">
@@ -119,6 +118,7 @@ const ProjectActionToolbar = ({
             icon={HardDrive}
           tooltipText="Pick, replace, or remove the dataset for this project"
           onClick={onOpenDataset}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Experiment">
@@ -126,6 +126,7 @@ const ProjectActionToolbar = ({
           icon={Repeat}
           tooltipText="Choose how many runs/files belong in each study"
           onClick={onOpenTemplate}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Test setup">
@@ -133,6 +134,7 @@ const ProjectActionToolbar = ({
           icon={FlaskRound}
           tooltipText="Select or change the test setup for this project"
           onClick={onOpenTestSetup}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Project" wrap={false}>
@@ -140,23 +142,27 @@ const ProjectActionToolbar = ({
           icon={Pencil}
           tooltipText="Rename project"
           onClick={onOpenName}
+          disabled={disabled}
         />
         <IconTooltipButton
           icon={Upload}
-          tooltipText="Export project"
+          tooltipText={disabled ? 'Example project is still loading' : 'Export project'}
           onClick={onExport}
+          disabled={disabled}
         />
         {isDefault ? (
           <IconTooltipButton
             icon={RefreshCw}
             tooltipText="Reset project to defaults"
             onClick={onReset}
+            disabled={disabled}
           />
         ) : (
           <IconTooltipButton
             icon={Trash2}
             tooltipText="Delete project"
             onClick={onDelete}
+            disabled={disabled}
           />
         )}
       </ActionGroup>
@@ -166,8 +172,17 @@ const ProjectActionToolbar = ({
 );
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], currentProjectId, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID } = useProjectData();
-  const { switchProject, createProject, deleteProject, resetProject, setTestSetups } = useProjectActions();
+  const {
+    projects = [], currentProjectId, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID, isExampleProjectLoading,
+  } = useProjectData();
+  const {
+    switchProject,
+    createProject,
+    deleteProject,
+    resetProject,
+    setTestSetups,
+    flushProjectState,
+  } = useProjectActions();
   
   const [show, setShow] = useState(false);
   const fileRef = useRef(null);
@@ -314,13 +329,12 @@ export default function ProjectSessionsModal({ onClose }) {
   const handleExportProject = useCallback(async (id) => {
     const project = projects.find((x) => x.id === id);
     try {
-      const pkg = await exportProject(id, { projectName: project?.name });
-      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
+      flushProjectState();
+      const { blob, project: exportedProject } = await createProjectArchive(id, { projectName: project?.name });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const fileBaseName = sanitizeFileName(project?.name || pkg?.projectName || id) || 'project-export';
-      a.download = `${fileBaseName} ISA-PHM.json`;
+      a.download = getProjectArchiveFileName(exportedProject);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -338,7 +352,7 @@ export default function ProjectSessionsModal({ onClose }) {
         onConfirm: () => handleExportProject(id),
       });
     }
-  }, [projects]);
+  }, [flushProjectState, projects]);
 
   const completeImport = useCallback(async (newId) => {
     try {
@@ -360,8 +374,8 @@ export default function ProjectSessionsModal({ onClose }) {
   const handleImportFile = useCallback(async (file) => {
     let createdProjectId = null;
     try {
-      const text = await file.text();
-      const pkg = JSON.parse(text);
+      const candidate = await readProjectImportFile(file);
+      const pkg = candidate.project;
       const requestedName = (
         (typeof pkg?.projectName === 'string' && pkg.projectName.trim()) ||
         (typeof pkg?.projectId === 'string' && pkg.projectId.trim()) ||
@@ -374,8 +388,12 @@ export default function ProjectSessionsModal({ onClose }) {
       );
       createdProjectId = newId;
       
-      // Attempt import - this may return a conflict
-      const result = await importProject(pkg, newId);
+      // ZIP packages are self-contained copies, so their test setup and
+      // attachment identifiers are remapped before persistence. Legacy JSON
+      // imports retain the existing conflict-resolution flow.
+      const result = candidate.legacy
+        ? await importProject(pkg, newId)
+        : await commitProjectArchiveImport(candidate, newId);
       
       if (result.conflict) {
         // Conflict detected - store pending import and show resolution dialog
@@ -519,9 +537,9 @@ export default function ProjectSessionsModal({ onClose }) {
               </Paragraph>
             </div>
             <div className="flex items-center gap-2">
-              <input ref={fileRef} type="file" accept="application/json" onChange={(e) => { if (e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
+              <input ref={fileRef} type="file" accept="application/zip,.zip,application/json,.json" onChange={(e) => { if (e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
               <IconToolTipButton icon={Plus} onClick={handleCreate} tooltipText="Create new project" />
-              <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project" />
+              <IconToolTipButton icon={Download} onClick={() => fileRef.current && fileRef.current.click()} tooltipText="Import project ZIP or legacy JSON" />
             </div>
           </div>
 
@@ -596,6 +614,7 @@ export default function ProjectSessionsModal({ onClose }) {
                       onOpenTestSetup={() => setSectionDialog({ type: 'test', projectId: selectedProject.id })}
                       onOpenName={() => setSectionDialog({ type: 'name', projectId: selectedProject.id })}
                       onExport={() => handleExportProject(selectedProject.id)}
+                      disabled={isExampleProjectLoading && selectedProject.id === currentProjectId}
                       onReset={() => {
                         showDialog({
                           tone: 'warning',

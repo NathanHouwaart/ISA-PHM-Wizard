@@ -15,8 +15,10 @@ import { AlertTriangle } from 'lucide-react';
  * - onResolve: (resolution: 'keep-local' | 'use-imported' | 'keep-both') => void
  * - onCancel: () => void
  */
-const TestSetupConflictDialog = ({ conflict, onResolve, onCancel }) => {
+const TestSetupConflictDialog = ({ conflict, onResolve, onCancel, importScope = 'project' }) => {
     if (!conflict) return null;
+
+    const isProjectImport = importScope === 'project';
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'Unknown';
@@ -43,7 +45,7 @@ const TestSetupConflictDialog = ({ conflict, onResolve, onCancel }) => {
                         <div className="flex-1">
                             <Heading3>Test Setup Conflict Detected</Heading3>
                             <Paragraph className="text-gray-600 mt-1">
-                                The project you're importing contains a test setup that already exists in your workspace,
+                                The {isProjectImport ? 'project' : 'test setup'} you're importing contains a test setup that already exists in your workspace,
                                 but with different content. Please choose how to resolve this conflict.
                             </Paragraph>
                         </div>
@@ -104,8 +106,8 @@ const TestSetupConflictDialog = ({ conflict, onResolve, onCancel }) => {
                                 Keep Your Current Version
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
-                                Discard the imported test setup and keep your existing version. The project will be imported
-                                but will reference your current test setup.
+                                Discard the imported test setup and keep your existing version.
+                                {isProjectImport && ' The project will be imported but will reference your current test setup.'}
                             </p>
                         </button>
 
@@ -131,7 +133,7 @@ const TestSetupConflictDialog = ({ conflict, onResolve, onCancel }) => {
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
                                 Keep your current test setup unchanged and add the imported version as a new test setup
-                                with a different ID. The imported project will use the new test setup.
+                                with a different ID.{isProjectImport && ' The imported project will use the new test setup.'}
                             </p>
                         </button>
                     </div>

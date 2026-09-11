@@ -17,7 +17,7 @@ import TooltipButton from '../Widgets/TooltipButton';
 export default function FilePickerPlugin({ api = {} }) {
   // accept a single `api` object to keep the plugin surface small and
   // future-proof: api = { gridRef, getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug }
-  const { gridRef, getFlatColumns, hookRowData = [], fields = {}, updateMappingsBatch, showDebug } = api;
+  const { gridRef, getFlatColumns, hookRowData = [], fields = {}, updateMappingsBatch, canEditCell, showDebug } = api;
 
   const selectionSnapshotRef = useRef(null);
   const filesRef = useRef(null);
@@ -49,6 +49,12 @@ export default function FilePickerPlugin({ api = {} }) {
     const flatCols = getFlatColumns();
     const rowsForUtil = (hookRowData || []).map((r, i) => ({ ...r, id: r[fields.rowId] ?? i }));
 
+    // Build an assignability check so disabled cells are skipped without consuming a file.
+    // rowsForUtil rows have the same structure as hookRowData rows so canEditCell works directly.
+    const isAssignable = typeof canEditCell === 'function'
+      ? (row, columnProp) => canEditCell(row, columnProp)
+      : null;
+
     // Convert RevoGrid's type-relative coordinates to global coordinates
     // RevoGrid returns coordinates relative to column type (colPinStart, rgCol, colPinEnd)
     // but we need global coordinates for our flat columns array
@@ -76,7 +82,7 @@ export default function FilePickerPlugin({ api = {} }) {
       };
     }
 
-    const updates = applyFilesToRange(adjustedSnap, rowsForUtil, flatCols, fileList);
+    const updates = applyFilesToRange(adjustedSnap, rowsForUtil, flatCols, fileList, isAssignable);
     if (!updates || updates.length === 0) {
       selectionSnapshotRef.current = null;
       filesRef.current = null;
@@ -89,7 +95,7 @@ export default function FilePickerPlugin({ api = {} }) {
     // cleanup
     selectionSnapshotRef.current = null;
     filesRef.current = null;
-  }, [getFlatColumns, hookRowData, fields, updateMappingsBatch, showDebug]);
+  }, [getFlatColumns, hookRowData, fields, updateMappingsBatch, canEditCell, showDebug]);
 
   // When using the in-app explorer we receive an array-like of file-like objects
   // so we don't need the native input change handler anymore.

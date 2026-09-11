@@ -3,7 +3,7 @@
 This page takes you from a completely fresh install to a converted ISA-PHM export in the shortest possible path. It uses a simple artificial scenario so every field has a concrete example value.
 
 **Scenario used in this guide:** A single-run bearing diagnostics test on a small motor-pump bench.  
-For real-world filled examples, see [Example: Sietze (single-run)](../examples/EXAMPLE_SIETZE.md) and [Example: Milling (multi-run)](../examples/EXAMPLE_MILLING.md).
+For real-world filled examples, see [Diagnostics Example](../examples/EXAMPLE_DIAGNOSTICS.md) and [XJTU-SY Bearing Datasets](../examples/EXAMPLE_XJTU_SY.md).
 
 ## Minimal path (if you are in a hurry)
 
@@ -333,4 +333,4 @@ This file is the metadata companion to your dataset. Place it in the root of you
 
 - Read [ISA-PHM Concepts](./GUIDE_CONCEPTS.md) for a deeper explanation of what each file contains.
 - Read [Guide: Export](./GUIDE_EXPORT.md) for details on the output format.
-- Open **Single Run Sietze** or **Multi Run Milling** (pre-loaded example projects) to see a fully filled project.
+- Open **Diagnostics Example** or **XJTU-SY Bearing Datasets** (built-in project archives) to see a fully filled project.

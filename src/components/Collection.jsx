@@ -18,6 +18,7 @@ export const CollectionAddButtonText = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateTitle = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateSubtitle = ({ children }) => <>{children}</>;
 export const CollectionEmptyStateAddButtonText = ({ children }) => <>{children}</>;
+export const CollectionExtraActions = ({ children }) => <>{children}</>;
 
 const deriveItemLabel = (item) => {
     if (!item) {
@@ -122,6 +123,7 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
     let emptyStateTitle = 'No Items Yet';
     let emptyStateSubtitle = 'Get started by adding your first item.';
     let _emptyStateAddButtonText = 'Add First Item';
+    let extraActionsContent = null;
 
     React.Children.forEach(children, (child) => {
         if (!isValidElement(child)) {
@@ -147,6 +149,9 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
             case CollectionEmptyStateAddButtonText:
                 _emptyStateAddButtonText = child.props.children;
                 break;
+            case CollectionExtraActions:
+                extraActionsContent = child.props.children;
+                break;
             default:
                 break;
         }
@@ -161,16 +166,17 @@ const Collection = forwardRef(({ onHeightChange, grid, itemHook, children }, ref
                         <Heading1 className="mb-0 border-b-0 text-left px-0 py-0">{title}</Heading1>
                         <Paragraph className="text-gray-600 mt-2">{subtitle}</Paragraph>
                     </div>
-                    <TooltipButton
-                        onClick={() => setShowAddForm(true)}
-                        tooltipText={addButtonTooltip}
-                        disabled={!canManageCollection}
-                    >
-                        <Plus className="w-5 h-5" />
-                        <span>{addButtonText}</span>
-                    </TooltipButton>
-
-                    
+                    <div className="flex items-center gap-2">
+                        {extraActionsContent}
+                        <TooltipButton
+                            onClick={() => setShowAddForm(true)}
+                            tooltipText={addButtonTooltip}
+                            disabled={!canManageCollection}
+                        >
+                            <Plus className="w-5 h-5" />
+                            <span>{addButtonText}</span>
+                        </TooltipButton>
+                    </div>
                 </div>
 
                 {/* Add/Edit Form */}
