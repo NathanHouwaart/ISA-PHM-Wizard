@@ -326,9 +326,9 @@ const ConfigurationTypeDialog = ({
                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <div className="mb-3 flex items-center justify-between">
                                 <div>
-                                    <Heading3 className="text-base">Characteristics</Heading3>
+                                    <Heading3 className="text-base">Properties</Heading3>
                                     <Paragraph className="text-sm text-gray-600">
-                                        Define the characteristic names and values for this type.
+                                        Define the properties names and values for this type.
                                     </Paragraph>
                                 </div>
                                 <TooltipButton onClick={addCharacteristic} tooltipText="Add characteristic" className="px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
