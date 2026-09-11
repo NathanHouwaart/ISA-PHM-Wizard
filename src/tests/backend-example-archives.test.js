@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { shouldRunBackendIntegration } from './backendIntegrationGate';
+import { readBundledProjectArchive } from './helpers/readProjectArchive';
 
 const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
@@ -10,12 +9,12 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const CONVERT_ENDPOINT = `${BACKEND_URL.replace(/\/$/, '')}/convert`;
 const FIXTURE_CASES = [
   {
-    name: 'example-single-run-nln-emp',
-    path: 'src/data/example-single-run-nln-emp.json',
+    name: 'diagnostics example',
+    archivePath: 'public/examples/diagnostics-example.isa-phm.zip',
   },
   {
-    name: 'example-multi-run-milling',
-    path: 'src/data/example-multi-run-milling.json',
+    name: 'XJTU-SY bearing datasets example',
+    archivePath: 'public/examples/xjtu-sy-bearing-datasets.isa-phm.zip',
   },
 ];
 
@@ -125,11 +124,9 @@ const callConversionApi = async (payload) => {
   return readConversionJson(response);
 };
 
-integrationDescribe('Backend integration with bundled example fixtures', () => {
-  it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ path: fixtureFile }) => {
-    const fixturePath = path.resolve(process.cwd(), fixtureFile);
-    const fixtureRaw = await fs.readFile(fixturePath, 'utf8');
-    const fixture = JSON.parse(fixtureRaw);
+integrationDescribe('Backend integration with bundled project archives', () => {
+  it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ archivePath }) => {
+    const fixture = await readBundledProjectArchive(archivePath);
 
     const { payload, studies, expectedAssayCount } = buildPayloadFromExport(fixture);
     const output = await callConversionApi(payload);

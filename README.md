@@ -140,8 +140,8 @@ Individual guides for each of the 6 test setup editor tabs live in [`docs/test-s
 ### Worked examples
 
 - [`docs/examples/EXAMPLE_FROM_SCRATCH.md`](docs/examples/EXAMPLE_FROM_SCRATCH.md) — Simple bearing diagnostics, every step with concrete values
-- [`docs/examples/EXAMPLE_SIETZE.md`](docs/examples/EXAMPLE_SIETZE.md) — Pre-loaded single-run diagnostic project (Sietze dataset)
-- [`docs/examples/EXAMPLE_MILLING.md`](docs/examples/EXAMPLE_MILLING.md) — Pre-loaded multi-run prognostics project (Milling tool wear)
+- [`docs/examples/EXAMPLE_DIAGNOSTICS.md`](docs/examples/EXAMPLE_DIAGNOSTICS.md) — Built-in diagnostic project
+- [`docs/examples/EXAMPLE_XJTU_SY.md`](docs/examples/EXAMPLE_XJTU_SY.md) — Built-in XJTU-SY multi-run prognostics project
 
 ---
 
@@ -175,7 +175,7 @@ The export step sends project data to the ISA-PHM backend, which converts it to 
 
 ## Key Architectural Concepts
 
-**Global state via `GlobalDataContext`** — All application data (projects, test setups, mappings, studies, variables, etc.) flows through a single context. Every state change auto-saves to `localStorage` under prefixed keys (`globalAppData_*`). On load, state is rehydrated from storage, falling back to JSON defaults in `src/data/`.
+**Global state via `GlobalDataContext`** — All application data (projects, test setups, mappings, studies, variables, etc.) flows through a single context. Every state change auto-saves to `localStorage` under prefixed keys (`globalAppData_*`). Built-in examples are complete project archives that are loaded only when selected.
 
 **Hook-based entity controllers** — Each entity type (studies, contacts, sensors, etc.) has a dedicated hook (`useStudies`, `useContacts`, …) that reads from and writes to the global context. `useMappingsController` provides generic CRUD for any mapping between two entity types.
 

@@ -20,6 +20,7 @@ import TooltipButton from '../components/Widgets/TooltipButton';
 import AlertDecisionDialog from '../components/Widgets/AlertDecisionDialog';
 import TestSetupConflictDialog from '../components/Widgets/TestSetupConflictDialog';
 import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { hasContentChanged } from '../utils/testSetupUtils';
 import generateId from '../utils/generateId';
 import { collectAttachmentRefs } from '../utils/attachmentLifecycle';
@@ -51,7 +52,7 @@ const resolveImportedTestSetupName = (name, testSetups = []) => {
 };
 
 export const TestSetups = () => {
-  const { testSetups = [] } = useProjectData();
+  const { testSetups = [], isExampleProjectLoading } = useProjectData();
   const { setTestSetups } = useProjectActions();
   const importInputRef = useRef(null);
   const [pendingImport, setPendingImport] = useState(null);
@@ -183,6 +184,7 @@ export const TestSetups = () => {
 
   return (
     <PageWrapper>
+        {isExampleProjectLoading && <LoadingOverlay message="Loading the complete example project…" />}
         <div className='space-y-6 w-ful overflow-hidden flex-shrink-0' >
           <div style={{ height: containerHeight, transition: 'height 0.35s' }}>
             {

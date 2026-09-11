@@ -89,7 +89,7 @@ describe('ProjectSessionsModal import rollback', () => {
   const mockFlushProjectState = vi.fn();
 
   const baseProjectData = {
-    projects: [{ id: 'example-single-run', name: 'Single Run Sietze' }],
+    projects: [{ id: 'example-single-run', name: 'Diagnostics Example' }],
     currentProjectId: 'example-single-run',
     DEFAULT_PROJECT_ID: 'example-single-run',
     MULTI_RUN_EXAMPLE_PROJECT_ID: 'example-multi-run',
@@ -218,7 +218,7 @@ describe('ProjectSessionsModal import rollback', () => {
     await waitFor(() => {
       expect(createProjectArchive).toHaveBeenCalledWith(
         'example-single-run',
-        { projectName: 'Single Run Sietze' }
+        { projectName: 'Diagnostics Example' }
       );
     });
     expect(mockFlushProjectState).toHaveBeenCalledTimes(1);

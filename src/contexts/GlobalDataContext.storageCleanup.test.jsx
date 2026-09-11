@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalDataProvider, useProjectActions } from './GlobalDataContext';
 
 const clearTreeMock = vi.fn(async () => true);
+const datasetStoreMocks = vi.hoisted(() => ({
+    setSelectedDataset: vi.fn(),
+    loadDatasetSubtree: vi.fn()
+}));
 
 vi.mock('../utils/indexedTreeStore', () => ({
     clearTree: (...args) => clearTreeMock(...args),
@@ -13,8 +17,8 @@ vi.mock('../utils/indexedTreeStore', () => ({
 vi.mock('../hooks/useDatasetStore', () => ({
     default: () => ({
         selectedDataset: null,
-        setSelectedDataset: vi.fn(),
-        loadDatasetSubtree: vi.fn(),
+        setSelectedDataset: datasetStoreMocks.setSelectedDataset,
+        loadDatasetSubtree: datasetStoreMocks.loadDatasetSubtree,
         initHydrated: true
     })
 }));
@@ -22,6 +26,7 @@ vi.mock('../hooks/useDatasetStore', () => ({
 vi.mock('../hooks/useExampleProjects', () => ({
     useExampleProjects: vi.fn(),
     isExampleProject: vi.fn(() => false),
+    getExampleProjectIds: vi.fn(() => []),
     getExampleProjectData: vi.fn(() => null),
     resetExampleProject: vi.fn(async () => {}),
     seedExampleProject: vi.fn(async () => {})

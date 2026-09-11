@@ -73,6 +73,7 @@ export const IsaQuestionnaire = () => {
     studyToSensorMeasurementMapping,
     studyToSensorProcessingMapping,
     experimentType,
+    isExampleProjectLoading,
   } = useProjectData();
   const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
   const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
@@ -422,6 +423,7 @@ export const IsaQuestionnaire = () => {
   return (
     <PageWrapper>
       {/* All overlays follow consistent conditional rendering pattern with explicit handlers */}
+      {isExampleProjectLoading && <LoadingOverlay message="Loading the complete example project…" />}
       {isSubmitOverlayVisible && <LoadingOverlay message={submitOverlayMessage} onCancel={submitOverlayCancel} />}
       {error && <LoadingOverlay message={error.message || 'Submission failed'} isError onRetry={retry} onCancel={clearError} />}
       {showSessionsModal && <ProjectSessionsModal onClose={handleSessionsModalClose} />}

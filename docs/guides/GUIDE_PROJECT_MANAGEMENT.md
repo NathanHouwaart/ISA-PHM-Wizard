@@ -110,17 +110,17 @@ Click a project card (or a **Select** / **Open** button) to make it the active p
 
 ## Importing a Project
 
-Use **Import** in the Project Sessions modal to load a previously exported project JSON file. The file contains all project data and the test setup it used.
+Use **Import** in the Project Sessions modal to load a previously exported project archive. The archive contains project data, its selected test setup, and attachments.
 
 ![SCREENSHOT: Import button in the modal](../images/annotated/project-sessions-project-import.png)
 
-> The two built-in example projects (`Single Run Sietze` and `Multi Run Milling`) are loaded this way — they ship as JSON files in `src/data/`.
+> The two built-in examples, **Diagnostics Example** and **XJTU-SY Bearing Datasets**, ship as project archives in `public/examples/`. They are downloaded and seeded only when selected or reset.
 
 ---
 
 ## Exporting a Project
 
-Use **Export** on a project card to download it as a JSON file. This file:
+Use **Export** on a project card to download it as a project archive. This archive:
 - Captures all questionnaire data for that project
 - Includes the linked test setup snapshot
 - Can be shared, backed up, or re-imported on another machine

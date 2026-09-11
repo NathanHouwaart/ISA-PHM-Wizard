@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { strFromU8, unzipSync, zipSync } from 'fflate';
 import { decodeJsonFromStorage } from './storageCodec';
 
@@ -206,4 +208,19 @@ describe('project archive', () => {
     });
     expect(manifest.attachments).toHaveLength(3);
   });
+
+  it.each([
+    ['Diagnostics Example', 'public/examples/diagnostics-example.isa-phm.zip'],
+    ['XJTU-SY Bearing Datasets', 'public/examples/xjtu-sy-bearing-datasets.isa-phm.zip'],
+  ])('accepts the shipped %s archive', async (_name, archivePath) => {
+    const bytes = await fs.readFile(path.resolve(process.cwd(), archivePath));
+    const candidate = await readProjectImportFile(asProjectFile(
+      new Blob([bytes], { type: 'application/zip' }),
+      path.basename(archivePath)
+    ));
+
+    expect(candidate.legacy).toBe(false);
+    expect(candidate.project.selectedTestSetup?.id).toBeTruthy();
+    expect(candidate.project.selectedTestSetup?.name).toBeTruthy();
+  }, 30000);
 });

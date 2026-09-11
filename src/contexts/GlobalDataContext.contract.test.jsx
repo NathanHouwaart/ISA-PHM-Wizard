@@ -8,11 +8,16 @@ import {
 } from './GlobalDataContext';
 import { decodeJsonFromStorage } from '../utils/storageCodec';
 
+const datasetStoreMocks = vi.hoisted(() => ({
+    setSelectedDataset: vi.fn(),
+    loadDatasetSubtree: vi.fn()
+}));
+
 vi.mock('../hooks/useDatasetStore', () => ({
     default: () => ({
         selectedDataset: null,
-        setSelectedDataset: vi.fn(),
-        loadDatasetSubtree: vi.fn(),
+        setSelectedDataset: datasetStoreMocks.setSelectedDataset,
+        loadDatasetSubtree: datasetStoreMocks.loadDatasetSubtree,
         initHydrated: true
     })
 }));
@@ -20,6 +25,7 @@ vi.mock('../hooks/useDatasetStore', () => ({
 vi.mock('../hooks/useExampleProjects', () => ({
     useExampleProjects: vi.fn(),
     isExampleProject: vi.fn(() => false),
+    getExampleProjectIds: vi.fn(() => []),
     getExampleProjectData: vi.fn(() => null),
     resetExampleProject: vi.fn(async () => {}),
     seedExampleProject: vi.fn(async () => {})
@@ -53,6 +59,7 @@ const EXPECTED_DATA_KEYS = [
     'dataMap',
     'projects',
     'currentProjectId',
+    'isExampleProjectLoading',
     'DEFAULT_PROJECT_ID',
     'MULTI_RUN_EXAMPLE_PROJECT_ID',
     'DEFAULT_PROJECT_NAME'

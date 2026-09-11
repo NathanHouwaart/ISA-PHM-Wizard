@@ -2,7 +2,7 @@
 // src/context/GlobalDataContext.js
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 
-import { clearTree, loadTree } from '../utils/indexedTreeStore';
+import { clearTree } from '../utils/indexedTreeStore';
 import useDatasetStore from '../hooks/useDatasetStore';
 import generateId from '../utils/generateId';
 import { DEFAULT_EXPERIMENT_TYPE_ID } from '../constants/experimentTypes';
@@ -33,6 +33,7 @@ import {
 import { 
     useExampleProjects, 
     isExampleProject, 
+    getExampleProjectIds,
     getExampleProjectData,
     resetExampleProject,
     seedExampleProject
@@ -92,6 +93,7 @@ export const useProjectData = () => {
         dataMap: context.dataMap,
         projects: context.projects,
         currentProjectId: context.currentProjectId,
+        isExampleProjectLoading: context.isExampleProjectLoading,
         DEFAULT_PROJECT_ID: context.DEFAULT_PROJECT_ID,
         MULTI_RUN_EXAMPLE_PROJECT_ID: context.MULTI_RUN_EXAMPLE_PROJECT_ID,
         DEFAULT_PROJECT_NAME: context.DEFAULT_PROJECT_NAME
@@ -186,6 +188,7 @@ const saveToLocalStorageNow = (key, value) => {
 
 // Main Data Provider Component
 export const GlobalDataProvider = ({ children }) => {
+    const [exampleProjectLoadingId, setExampleProjectLoadingId] = useState(null);
     const pendingStorageWritesRef = useRef(new Map());
     const pendingStorageTimerRef = useRef(null);
 
@@ -494,28 +497,8 @@ export const GlobalDataProvider = ({ children }) => {
     const { selectedDataset, setSelectedDataset, loadDatasetSubtree, initHydrated } = useDatasetStore(currentProjectId);
     const { explorerOpen, setExplorerOpen, openExplorer, closeExplorer, resolveExplorerSelection } = useExplorerController();
 
-    // Initialize example projects using hook.
-    // A forced reseed is versioned in useExampleProjects; when it happens for
-    // the currently active example project we refresh in-memory state/dataset.
-    useExampleProjects(setTestSetups, loadFromLocalStorage, async (reseededProjectIds = []) => {
-        if (!Array.isArray(reseededProjectIds) || reseededProjectIds.length === 0) return;
-        if (!currentProjectId || !reseededProjectIds.includes(currentProjectId)) return;
-
-        try {
-            switchProjectRef.current?.(currentProjectId);
-            const root = await loadTree(currentProjectId);
-            if (root) {
-                setProjectDatasetName(currentProjectId, root.rootName || root.name || null);
-                setProjectDatasetStats(currentProjectId, root);
-            } else {
-                clearProjectDatasetName(currentProjectId);
-                clearProjectDatasetStats(currentProjectId);
-            }
-            try { setSelectedDataset(root || null); } catch (e) { /* ignore */ }
-        } catch (err) {
-            console.error('[GlobalDataContext] reseed example project refresh error', err);
-        }
-    });
+    // Built-in examples are archive-backed and seeded only when selected.
+    useExampleProjects();
 
     // Project management helpers
     function createProject(name = 'Untitled Project', initialExperimentType = DEFAULT_EXPERIMENT_TYPE_ID) {
@@ -616,6 +599,7 @@ export const GlobalDataProvider = ({ children }) => {
                 await resetExampleProject(id, {
                     getKeyFallback,
                     setTestSetups,
+                    loadFromLocalStorage,
                     saveToLocalStorage,
                     currentProjectId,
                     setSelectedDataset,
@@ -720,41 +704,48 @@ export const GlobalDataProvider = ({ children }) => {
 
     // The dataset store handles persistence and lazy-loading; expose its helpers via context below.
 
-    // Lazy-load example project dataset if needed
+    // Seed both bundled examples at startup. They are complete project archives,
+    // so their project summaries and selected test setups must be available before
+    // Project Sessions is shown.
+    const currentProjectIdRef = useRef(currentProjectId);
+    currentProjectIdRef.current = currentProjectId;
+
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                // Check if we're in an example project
-                if (!isExampleProject(currentProjectId)) return;
-
-                // only act after dataset hydration attempt finished
                 if (!initHydrated) return;
 
-                // If an in-memory dataset already exists, no seeding needed
-                if (selectedDataset) return;
+                setExampleProjectLoadingId('startup');
+                for (const projectId of getExampleProjectIds()) {
+                    await seedExampleProject(projectId, {
+                        setSelectedDataset: projectId === currentProjectIdRef.current
+                            ? setSelectedDataset
+                            : undefined,
+                        setProjectDatasetName,
+                        setProjectDatasetStats,
+                        clearProjectDatasetName,
+                        clearProjectDatasetStats,
+                        setTestSetups,
+                        loadFromLocalStorage
+                    });
+                }
 
-                // Use the hook's seedExampleProject function
-                await seedExampleProject(currentProjectId, {
-                    setSelectedDataset,
-                    setProjectDatasetName,
-                    setProjectDatasetStats,
-                    clearProjectDatasetName,
-                    clearProjectDatasetStats,
-                    setTestSetups,
-                    loadFromLocalStorage
-                });
-
-                // Refresh in-memory app state from the newly written localStorage keys
+                // Refresh the active project's in-memory state after both archives
+                // have populated the shared test-setup catalog.
                 if (mounted) {
-                    try { switchProjectRef.current?.(currentProjectId); } catch (e) { /* ignore */ }
+                    try { switchProjectRef.current?.(currentProjectIdRef.current); } catch (e) { /* ignore */ }
                 }
             } catch (err) {
                 console.error('[GlobalDataContext] seed example project error', err);
+            } finally {
+                if (mounted) {
+                    setExampleProjectLoadingId(null);
+                }
             }
         })();
         return () => { mounted = false; };
-    }, [currentProjectId, initHydrated, selectedDataset, setSelectedDataset, setTestSetups]);
+    }, [initHydrated, setSelectedDataset, setTestSetups]);
 
     // submission logic intentionally removed from context; use `useSubmitData` hook instead
 
@@ -815,6 +806,7 @@ export const GlobalDataProvider = ({ children }) => {
     // add project helpers and list
     value.projects = projects;
     value.currentProjectId = currentProjectId;
+    value.isExampleProjectLoading = Boolean(exampleProjectLoadingId);
     value.DEFAULT_PROJECT_ID = DEFAULT_PROJECT_ID;
     value.MULTI_RUN_EXAMPLE_PROJECT_ID = MULTI_RUN_EXAMPLE_PROJECT_ID;
     value.createProject = createProject;

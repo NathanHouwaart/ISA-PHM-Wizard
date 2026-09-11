@@ -63,5 +63,5 @@ Each slide has its own page with field tables, dependency notes, and screenshot 
 | Example | Description |
 |---|---|
 | [From scratch](./examples/EXAMPLE_FROM_SCRATCH.md) | Invented simple bearing diagnostics — complete walkthrough from nothing to export |
-| [Single Run Sietze](./examples/EXAMPLE_SIETZE.md) | Pre-loaded real-world diagnostic example (single-run template) |
-| [Multi Run Milling](./examples/EXAMPLE_MILLING.md) | Pre-loaded real-world prognostics example (multi-run template) |
+| [Diagnostics Example](./examples/EXAMPLE_DIAGNOSTICS.md) | Built-in diagnostic project |
+| [XJTU-SY Bearing Datasets](./examples/EXAMPLE_XJTU_SY.md) | Built-in multi-run prognostics project |

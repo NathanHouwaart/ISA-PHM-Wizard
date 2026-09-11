@@ -106,7 +106,8 @@ const ProjectActionToolbar = ({
   onOpenName,
   onExport,
   onReset,
-  onDelete
+  onDelete,
+  disabled = false,
 }) => (
   <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm overflow-x-auto">
     <div className="flex flex-col gap-3">
@@ -117,6 +118,7 @@ const ProjectActionToolbar = ({
             icon={HardDrive}
           tooltipText="Pick, replace, or remove the dataset for this project"
           onClick={onOpenDataset}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Experiment">
@@ -124,6 +126,7 @@ const ProjectActionToolbar = ({
           icon={Repeat}
           tooltipText="Choose how many runs/files belong in each study"
           onClick={onOpenTemplate}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Test setup">
@@ -131,6 +134,7 @@ const ProjectActionToolbar = ({
           icon={FlaskRound}
           tooltipText="Select or change the test setup for this project"
           onClick={onOpenTestSetup}
+          disabled={disabled}
         />
       </ActionGroup>
       <ActionGroup label="Project" wrap={false}>
@@ -138,23 +142,27 @@ const ProjectActionToolbar = ({
           icon={Pencil}
           tooltipText="Rename project"
           onClick={onOpenName}
+          disabled={disabled}
         />
         <IconTooltipButton
           icon={Upload}
-          tooltipText="Export project"
+          tooltipText={disabled ? 'Example project is still loading' : 'Export project'}
           onClick={onExport}
+          disabled={disabled}
         />
         {isDefault ? (
           <IconTooltipButton
             icon={RefreshCw}
             tooltipText="Reset project to defaults"
             onClick={onReset}
+            disabled={disabled}
           />
         ) : (
           <IconTooltipButton
             icon={Trash2}
             tooltipText="Delete project"
             onClick={onDelete}
+            disabled={disabled}
           />
         )}
       </ActionGroup>
@@ -164,7 +172,9 @@ const ProjectActionToolbar = ({
 );
 
 export default function ProjectSessionsModal({ onClose }) {
-  const { projects = [], currentProjectId, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID } = useProjectData();
+  const {
+    projects = [], currentProjectId, DEFAULT_PROJECT_ID, MULTI_RUN_EXAMPLE_PROJECT_ID, isExampleProjectLoading,
+  } = useProjectData();
   const {
     switchProject,
     createProject,
@@ -604,6 +614,7 @@ export default function ProjectSessionsModal({ onClose }) {
                       onOpenTestSetup={() => setSectionDialog({ type: 'test', projectId: selectedProject.id })}
                       onOpenName={() => setSectionDialog({ type: 'name', projectId: selectedProject.id })}
                       onExport={() => handleExportProject(selectedProject.id)}
+                      disabled={isExampleProjectLoading && selectedProject.id === currentProjectId}
                       onReset={() => {
                         showDialog({
                           tone: 'warning',
