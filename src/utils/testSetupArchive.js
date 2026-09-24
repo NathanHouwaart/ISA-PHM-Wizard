@@ -79,7 +79,7 @@ const collectOwnedAttachmentReferences = (testSetup) => {
   (testSetup.characteristics || []).forEach((characteristic) => {
     if (isReplaceableCharacteristic(characteristic?.isReplaceable)) {
       if (characteristic?.datasheet?.attachmentId && !characteristic.datasheet.notAvailable) {
-        throw new Error('Replaceable characteristics cannot own datasheets; attach the PDF to a project component type instead');
+        throw new Error('Replaceable components cannot own datasheets; attach the PDF to a project component type instead');
       }
       return;
     }

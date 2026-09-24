@@ -3,6 +3,7 @@ import {
   SENSOR_USAGE_BOTH,
   SENSOR_USAGE_CONDITION_MONITORING,
   SENSOR_USAGE_DATASET_OUTPUT,
+  getSensorUsageLabel,
   isSensorIncludedInDatasetOutput,
   isSensorUsedForConditionMonitoring,
   normalizeSensor
@@ -20,5 +21,14 @@ describe('sensor usage', () => {
     expect(isSensorUsedForConditionMonitoring({ usage: SENSOR_USAGE_CONDITION_MONITORING })).toBe(true);
     expect(isSensorIncludedInDatasetOutput({ usage: SENSOR_USAGE_BOTH })).toBe(true);
     expect(isSensorUsedForConditionMonitoring({ usage: SENSOR_USAGE_BOTH })).toBe(true);
+  });
+
+  it('uses PHM terminology without changing persisted sensor-role values', () => {
+    expect(SENSOR_USAGE_DATASET_OUTPUT).toBe('dataset-output');
+    expect(SENSOR_USAGE_CONDITION_MONITORING).toBe('condition-monitoring');
+    expect(SENSOR_USAGE_BOTH).toBe('both');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_DATASET_OUTPUT })).toBe('Degradation monitoring');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_CONDITION_MONITORING })).toBe('Operating-condition monitoring');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_BOTH })).toBe('Degradation + operating-condition monitoring');
   });
 });

@@ -29,9 +29,9 @@ Each configuration can be linked to an experiment on Questionnaire Slide 5.
 
 ---
 
-## Characteristics vs. Configurations
+## Components vs. Configurations
 
-| | Characteristics | Configurations |
+| | Components | Configurations |
 |---|---|---|
 | What it describes | Fixed properties of the rig (same for all experiments) | The specific component swapped in per experiment |
 | ISA-PHM entity | Study Design Descriptor | Sample |
@@ -62,7 +62,7 @@ Each configuration can be linked to an experiment on Questionnaire Slide 5.
 
 ## Details (name/value pairs)
 
-Use Detail entries to record properties that are specific to this configuration but don't belong in Characteristics (which apply to all configurations). Examples:
+Use Detail entries to record properties that are specific to this configuration but don't belong in Components (which apply to all configurations). Examples:
 
 | Detail Name | Detail Value |
 |---|---|

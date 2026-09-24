@@ -1,3 +1,4 @@
+// Values are persisted in project data; labels below are intentionally separate.
 export const SENSOR_USAGE_DATASET_OUTPUT = 'dataset-output';
 export const SENSOR_USAGE_CONDITION_MONITORING = 'condition-monitoring';
 export const SENSOR_USAGE_BOTH = 'both';
@@ -5,18 +6,18 @@ export const SENSOR_USAGE_BOTH = 'both';
 export const SENSOR_USAGE_OPTIONS = [
   {
     value: SENSOR_USAGE_DATASET_OUTPUT,
-    label: 'Dataset output only',
-    description: 'Include this sensor in exported raw and processed output files.'
+    label: 'Degradation monitoring',
+    description: 'Include this sensor in exported raw and processed output files used to monitor degradation.'
   },
   {
     value: SENSOR_USAGE_CONDITION_MONITORING,
-    label: 'Condition monitoring only',
-    description: 'Record this device as test-setup context without output file mappings.'
+    label: 'Operating-condition monitoring',
+    description: 'Record this sensor as operating-condition context without output file mappings.'
   },
   {
     value: SENSOR_USAGE_BOTH,
-    label: 'Dataset output + condition monitoring',
-    description: 'Include this sensor in output files and identify it as condition monitoring.'
+    label: 'Degradation + operating-condition monitoring',
+    description: 'Include this sensor in output files and use it to monitor both degradation and operating conditions.'
   }
 ];
 
@@ -43,5 +44,5 @@ export const isSensorUsedForConditionMonitoring = (sensor = {}) => {
 
 export const getSensorUsageLabel = (sensor = {}) => (
   SENSOR_USAGE_OPTIONS.find((option) => option.value === normalizeSensorUsage(sensor.usage))?.label
-  || 'Dataset output only'
+  || 'Degradation monitoring'
 );

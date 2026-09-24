@@ -38,7 +38,7 @@ Fill the tabs in this recommended order:
 
 ```
 1. Basic Info       ← required fields that identify the setup
-2. Characteristics  ← fixed hardware properties
+2. Components       ← fixed hardware properties
 3. Sensors          ← measurement channels (must exist before protocols)
 4. Configurations   ← hardware variants (must exist before experiments)
 5. Measurement      ← raw acquisition protocol(s)
@@ -64,15 +64,15 @@ Optional: Description (free text, can be long).
 
 ---
 
-## Tab 2 — Characteristics
+## Tab 2 — Components
 
 Static hardware properties of the rig or its components — anything that doesn't change between experiments.
 
 Each row has: **Category**, **Value**, **Unit**, optional **Comments** (simple view only).
 
-Use the **+ Add Characteristic** button, or switch to **Grid view** for fast bulk entry.
+Use the **+ Add Component** button, or switch to **Grid view** for fast bulk entry.
 
-![Characteristics tab — several rows filled, simple view](../images/annotated/example-test-setup-characteristics.png)
+![Components tab — several rows filled, simple view](../images/annotated/example-test-setup-characteristics.png)
 
 Examples:
 - Category: `Motor`, Value: `WEG W21`, Unit: ``
@@ -159,9 +159,9 @@ Full details: [TAB_PROCESSING_PROTOCOLS.md](../test-setup-tabs/TAB_PROCESSING_PR
 
 ## Saving
 
-Click **Add Test Setup** (new) or **Update Test Setup** (existing) at the bottom of the editor.
+Click **Save Test Setup** at the bottom of the editor.
 
-![Save / Update Test Setup button at the bottom of the editor](../images/annotated/example-test-setup-save-update.png)
+![Save Test Setup button at the bottom of the editor](../images/annotated/example-test-setup-save-update.png)
 
 If you close without saving, a dialog appears:
 - **Save and close** — saves all changes
@@ -174,7 +174,7 @@ If you close without saving, a dialog appears:
 
 1. On the Test Setups page, click the **pencil icon** on a setup card.
 2. Update any tab.
-3. Click **Update Test Setup**.
+3. Click **Save Test Setup**.
 
 > **Note:** Updating a test setup affects every project that references it. Sensor renames or deletions will break any existing output mappings that reference those sensors.
 

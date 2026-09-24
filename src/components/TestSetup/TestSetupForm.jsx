@@ -258,7 +258,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       isReplaceableCharacteristic(characteristic.isReplaceable)
     ));
     if (replaceableCharacteristics.length === 0) {
-      setFormError('Please add at least one replaceable component in the Characteristics tab.');
+      setFormError('Please add at least one replaceable component in the Components tab.');
       return false;
     }
     if (replaceableCharacteristics.some((characteristic) => (
@@ -418,7 +418,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   }, []);
 
   const characteristicGridConfig = useMemo(() => ({
-    title: 'Characteristics',
+    title: 'Components',
     rowData: characteristicRows,
     columnData: [],
     mappings: [],
@@ -436,7 +436,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         name: 'Identifier',
         size: 150,
         readonly: true,
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Characteristic C' })
+        cellTemplate: Template(PatternCellTemplate, { prefix: 'Component C' })
       },
       { prop: 'category', name: 'Category', size: 180, readonly: false },
       {
@@ -462,8 +462,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     ],
     customActions: [
       {
-        label: '+ Add characteristic',
-        title: 'Add characteristic row',
+        label: '+ Add component',
+        title: 'Add component row',
         onClick: addCharacteristicRow,
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
@@ -508,7 +508,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       },
       {
         prop: 'usage',
-        name: 'Sensor Usage',
+        name: 'Sensor Role',
         size: 250,
         readonly: false,
         columnType: 'select',
@@ -613,7 +613,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           onTabChange={setSelectedTab}
           tabs={[
             { id: 'basic-info', label: 'Basic Info', tooltip: 'Basic Information about the test setup' },
-            { id: 'characteristics', label: `Components (${numberOfCharacteristics})`, tooltip: 'Characteristics of the test setup' },
+            { id: 'characteristics', label: `Components (${numberOfCharacteristics})`, tooltip: 'Components of the test setup' },
             { id: 'sensors', label: `Sensors (${numberOfSensors})`, tooltip: 'Sensors used in the test setup' },
             { id: 'measurement-protocols', label: `Measurement (${numberOfMeasurementProtocols})`, tooltip: 'Define raw data acquisition protocol variants and parameter values' },
             { id: 'processing-protocols', label: `Processing (${numberOfProcessingProtocols})`, tooltip: 'Define processing protocol variants and parameter values' },
@@ -632,8 +632,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           isActive={selectedTab === 'characteristics'}
           selectedView={characteristicsView}
           onViewChange={setCharacteristicsView}
-          simpleViewTooltip="Edit characteristics with collapsible cards"
-          gridViewTooltip="Edit characteristics inline in a grid"
+          simpleViewTooltip="Edit components with collapsible cards"
+          gridViewTooltip="Edit components inline in a grid"
           simpleContent={
             <CharacteristicsEditor
               characteristics={formData.characteristics}
@@ -748,10 +748,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
         <TooltipButton
           onClick={handleSubmit}
-          tooltipText={isEditing ? 'Update Test Setup' : 'Add Test Setup'}
+          tooltipText="Save Test Setup"
         >
           <Save className="w-4 h-4" />
-          <span>{isEditing ? 'Update Test Setup' : 'Add Test Setup'}</span>
+          <span>Save Test Setup</span>
         </TooltipButton>
       </div>
 

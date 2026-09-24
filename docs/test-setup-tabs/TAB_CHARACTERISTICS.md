@@ -1,22 +1,22 @@
-# Test Setup Tab — Characteristics
+# Test Setup Tab — Components
 
 ---
 
 <table><tr>
-  <td><img src="../images/annotated/test-setup-characteristics-empty.png" alt="Characteristics tab — empty state" /></td>
-  <td><img src="../images/annotated/test-setup-characteristics-populated.png" alt="Characteristics tab — simple view with rows filled" /></td>
-  <td><img src="../images/annotated/test-setup-characteristics-populated-grid-view.png" alt="Characteristics tab — grid view" /></td>
+  <td><img src="../images/annotated/test-setup-characteristics-empty.png" alt="Components tab — empty state" /></td>
+  <td><img src="../images/annotated/test-setup-characteristics-populated.png" alt="Components tab — simple view with rows filled" /></td>
+  <td><img src="../images/annotated/test-setup-characteristics-populated-grid-view.png" alt="Components tab — grid view" /></td>
 </tr></table>
 
 ---
 
 ## Purpose
 
-Documents fixed hardware properties of the test rig and its components. Characteristics are static context — they do not change per experiment. They appear in the ISA-PHM output as study design descriptor properties.
+Documents the fixed components and hardware properties of the test rig. Components are static context — they do not change per experiment. They appear in the ISA-PHM output as study design descriptor properties.
 
 ---
 
-## Fields per characteristic
+## Fields per component
 
 | Field | Description | Example |
 |---|---|---|
@@ -27,10 +27,10 @@ Documents fixed hardware properties of the test rig and its components. Characte
 
 ---
 
-## Adding characteristics
+## Adding components
 
 **Simple view:**
-1. Click **+ Add Characteristic** (or the empty-state button).
+1. Click **+ Add Component** (or the empty-state button).
 2. Fill category, value, and unit.
 3. Optionally expand the card to add comments (free text, one comment per entry).
 
@@ -43,11 +43,11 @@ Documents fixed hardware properties of the test rig and its components. Characte
 
 ## Managing Comments
 
-Each characteristic can have one or more free-text comments — useful for recording *why* a value is what it is, or noting a change over time (e.g. a bearing replacement date).
+Each component can have one or more free-text comments — useful for recording *why* a value is what it is, or noting a change over time (e.g. a bearing replacement date).
 
-Comments are only visible and editable in **simple view**. Expand a characteristic card to reveal the comment field. In grid view, a badge shows how many comments exist, but you cannot edit them there.
+Comments are only visible and editable in **simple view**. Expand a component card to reveal the comment field. In grid view, a badge shows how many comments exist, but you cannot edit them there.
 
-![Characteristics tab — simple view, one card expanded with comment field visible](../images/annotated/test-setup-characteristics-comments.png)
+![Components tab — simple view, one card expanded with comment field visible](../images/annotated/test-setup-characteristics-comments.png)
 
 > **Tip:** Use comments for provenance notes like `Replaced 2026-01-15 after run 42` or `Value from manufacturer datasheet rev. C`.
 

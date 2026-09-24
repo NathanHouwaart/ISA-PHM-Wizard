@@ -14,13 +14,19 @@
 
 ## Purpose
 
-Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Each sensor becomes:
+Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Sensors selected for **degradation monitoring** become:
 - A column in the Measurement Protocol parameter grid (Measurement tab)
 - A column in the Processing Protocol parameter grid (Processing tab)
 - A column in the Raw Measurement Output grid (Questionnaire Slide 10)
 - A column in the Processing Output grid (Questionnaire Slide 11)
 
 > **Multi-axis sensors:** A tri-axis accelerometer (X, Y, Z) must be entered as **three separate sensors** — one per axis (e.g., `acc_x`, `acc_y`, `acc_z`). Each axis generates its own assay entry in the output JSON, linked to its own two-column data file.
+
+### Sensor role
+
+- **Degradation monitoring**: the sensor is included in raw and/or processed output file mappings.
+- **Operating-condition monitoring**: the sensor records operating conditions without output file mappings.
+- **Both**: the sensor supports both roles.
 
 ---
 
@@ -33,6 +39,7 @@ Defines all measurement channels in the test setup. Each sensor entry represents
 | **Sensor Type** | Technology or transducer type (`technologyType` in ISA) | `Accelerometer`, `Current transducer` |
 | **Measurement Type** | Physical quantity measured | `Vibration`, `Current`, `Temperature` |
 | **Description** | Additional context | `Channel 1 on bearing housing, drive-end side` |
+| **Sensor role** | Whether the sensor monitors degradation, operating conditions, or both | `Degradation monitoring` |
 
 ---
 
@@ -75,8 +82,8 @@ Aliases appear as column headers in the output grids where you assign filenames.
 
 ## Deleting sensors
 
-Deleting a sensor from the list removes it from protocol parameter grids and output mapping grids. Any filenames already mapped to that sensor will be lost. Rename rather than delete if you just want to update the alias.
+Deleting a sensor from the list removes it from applicable protocol parameter grids and output mapping grids. Any filenames already mapped to that sensor will be lost. Rename rather than delete if you just want to update the alias.
 
 ---
 
-[← Characteristics](./TAB_CHARACTERISTICS.md) | [Next: Configurations →](./TAB_CONFIGURATIONS.md)
+[← Components](./TAB_CHARACTERISTICS.md) | [Next: Configurations →](./TAB_CONFIGURATIONS.md)

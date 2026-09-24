@@ -81,7 +81,7 @@ ISA-PHM is designed to produce datasets that are **Findable, Accessible, Interop
 
 ## What This Wizard Does
 
-**Test setup authoring** — Before starting a questionnaire, users build a reusable test setup that describes the physical rig: its characteristics, sensors, hardware configurations, and measurement/processing protocols. Test setups are shared across all projects in the workspace.
+**Test setup authoring** — Before starting a questionnaire, users build a reusable test setup that describes the physical rig: its components, sensors, hardware configurations, and measurement/processing protocols. Test setups are shared across all projects in the workspace.
 
 **Project management** — Multiple named projects can be created in one browser session. Each project is independently configured with an experiment template (single-run diagnostic or multi-run prognostic), a dataset index, and a reference to a test setup.
 

@@ -50,7 +50,7 @@ Each slide has its own page with field tables, dependency notes, and screenshot 
 | Tab | Guide |
 |---|---|
 | Basic Info | [TAB_BASIC_INFO.md](./test-setup-tabs/TAB_BASIC_INFO.md) |
-| Characteristics | [TAB_CHARACTERISTICS.md](./test-setup-tabs/TAB_CHARACTERISTICS.md) |
+| Components | [TAB_CHARACTERISTICS.md](./test-setup-tabs/TAB_CHARACTERISTICS.md) |
 | Sensors | [TAB_SENSORS.md](./test-setup-tabs/TAB_SENSORS.md) |
 | Configurations | [TAB_CONFIGURATIONS.md](./test-setup-tabs/TAB_CONFIGURATIONS.md) |
 | Measurement Protocols | [TAB_MEASUREMENT_PROTOCOLS.md](./test-setup-tabs/TAB_MEASUREMENT_PROTOCOLS.md) |

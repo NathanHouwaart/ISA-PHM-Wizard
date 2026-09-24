@@ -50,11 +50,11 @@ Fill in the required fields:
 
 ![SCREENSHOT: Basic Info tab — fields filled with the values above](../images/annotated/example-test-setup-basic-info.png)
 
-### 1b — Characteristics tab
+### 1b — Components tab
 
 Document the fixed hardware properties of your test rig — anything that doesn't change between experiments.
 
-1. Click **+ Add Characteristic**.
+1. Click **+ Add Component**.
 2. Add a few key properties:
 
 | Category | Value | Unit |
@@ -63,7 +63,7 @@ Document the fixed hardware properties of your test rig — anything that doesn'
 | Motor Power | 2.2 | kW |
 | Pump Bearing | 6308.2Z.C3 | |
 
-![SCREENSHOT: Characteristics tab — three characteristic rows filled](../images/annotated/example-test-setup-characteristics.png)
+![SCREENSHOT: Components tab — three component rows filled](../images/annotated/example-test-setup-characteristics.png)
 
 > **Tip:** Include model numbers, bearing designations, and rated specifications — enough for someone else to replicate your setup.
 
@@ -116,7 +116,7 @@ Same pattern. Name it `FFT Feature Extraction`. Add at least one parameter.
 
 ### 1g — Save
 
-Click **Add Test Setup** or **Update Test Setup** at the bottom.
+Click **Save Test Setup** at the bottom.
 
 ![SCREENSHOT: Save button highlighted at the bottom of the editor](../images/annotated/example-test-setup-save-update.png)
 
