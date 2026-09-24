@@ -202,7 +202,7 @@ const ProjectCard = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <SummaryBadge
                 icon={ListChecks}
-                label="Characteristics"
+                label="Components"
                 value={formatCount(characteristicCount)}
                 accent="bg-emerald-50 text-emerald-600"
               />

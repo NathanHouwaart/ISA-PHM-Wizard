@@ -36,9 +36,9 @@ Click **Test Setups** → **Add Test Setup**.
 
 [SCREENSHOT: Basic Info tab — fields filled as above]
 
-### 1.3 Characteristics
+### 1.3 Components
 
-Click **+ Add Characteristic** three times and fill:
+Click **+ Add Component** three times and fill:
 
 | Category | Value | Unit |
 |---|---|---|
@@ -46,7 +46,7 @@ Click **+ Add Characteristic** three times and fill:
 | Motor Nominal Speed | 1500 | RPM |
 | Test Bearing | SKF 6308 | |
 
-[SCREENSHOT: Characteristics tab — three rows filled]
+[SCREENSHOT: Components tab — three rows filled]
 
 ### 1.4 Sensors
 
@@ -93,7 +93,7 @@ Add parameters:
 
 ### 1.8 Save
 
-Click **Add Test Setup**.
+Click **Save Test Setup**.
 
 [SCREENSHOT: Save confirmation / return to test setup list showing "Motor-Pump Bench"]
 

@@ -33,9 +33,9 @@ const getUsageBadgeClassName = (usage) => {
 };
 
 const getUsageShortLabel = (usage) => {
-  if (usage === SENSOR_USAGE_CONDITION_MONITORING) return 'Monitoring';
-  if (usage === SENSOR_USAGE_BOTH) return 'Output + monitor';
-  return 'Output';
+  if (usage === SENSOR_USAGE_CONDITION_MONITORING) return 'Operating conditions';
+  if (usage === SENSOR_USAGE_BOTH) return 'Degradation + conditions';
+  return 'Degradation';
 };
 
 const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTypesChange }) => {
@@ -162,14 +162,14 @@ const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTyp
         <TableTooltip
           isVisible={activeTooltip}
           explanations={[
-            <><b>Dataset output:</b> The sensor is included in raw and/or processed output file mappings.</>,
-            <><b>Condition monitoring:</b> The sensor documents or monitors the test setup without requiring output files.</>,
-            <><b>Both:</b> The sensor is valuable output data and also used to monitor the test setup.</>
+            <><b>Degradation monitoring:</b> The sensor is included in raw and/or processed output file mappings.</>,
+            <><b>Operating-condition monitoring:</b> The sensor records operating conditions without requiring output files.</>,
+            <><b>Both:</b> The sensor supports both degradation and operating-condition monitoring.</>
           ]}
           examples={[
-            { alias: 'vib_de', usage: 'Dataset output only', description: 'Drive-end vibration accelerometer' },
-            { alias: 'pressure_guard', usage: 'Condition monitoring only', description: 'Protective hydraulic-pressure sensor' },
-            { alias: 'motor_torque', usage: 'Dataset output + condition monitoring', description: 'Measured motor torque from controller' }
+            { alias: 'vib_de', usage: 'Degradation monitoring', description: 'Drive-end vibration accelerometer' },
+            { alias: 'pressure_guard', usage: 'Operating-condition monitoring', description: 'Protective hydraulic-pressure sensor' },
+            { alias: 'motor_torque', usage: 'Degradation + operating-condition monitoring', description: 'Measured motor torque from controller' }
           ]}
         />
 
@@ -283,22 +283,22 @@ const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTyp
                 <section className="border-y border-gray-200 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-1.5">
-                      <Heading3 className="text-sm font-semibold text-gray-800">Sensor usage</Heading3>
+                      <Heading3 className="text-sm font-semibold text-gray-800">Sensor role</Heading3>
                       <TooltipButton
-                        tooltipText="Dataset output: include files in the dataset. Monitoring only: document the device without output file mappings. Both: do both."
+                        tooltipText="Degradation monitoring: include files in the dataset. Operating-condition monitoring: record operating conditions without output file mappings. Both: do both."
                         className="h-7 w-7 rounded-full bg-none bg-transparent p-0 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
-                        aria-label="Explain sensor usage options"
+                        aria-label="Explain sensor role options"
                       >
                         <HelpCircle className="h-4 w-4" />
                       </TooltipButton>
                     </div>
-                    <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="radiogroup" aria-label="Sensor usage">
+                    <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="radiogroup" aria-label="Sensor role">
                     {SENSOR_USAGE_OPTIONS.map((option) => {
                       const isSelected = selectedSensor.usage === option.value;
                       const label = option.value === SENSOR_USAGE_DATASET_OUTPUT
-                        ? 'Dataset output'
+                        ? 'Degradation'
                         : option.value === SENSOR_USAGE_CONDITION_MONITORING
-                          ? 'Monitoring only'
+                          ? 'Operating conditions'
                           : 'Both';
                       return (
                         <TooltipButton

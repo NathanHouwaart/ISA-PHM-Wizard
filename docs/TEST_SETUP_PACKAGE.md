@@ -6,8 +6,8 @@ Standalone test setups are exported as versioned ZIP packages. Runtime storage r
 
 The package contains data owned by the test setup:
 
-- the test setup definition, characteristics, sensors, sensor types, and protocols;
-- datasheets for non-replaceable characteristics;
+- the test setup definition, components, sensors, sensor types, and protocols;
+- datasheets for non-replaceable components;
 - sensor-type datasheets;
 - test-setup PNG/JPEG images.
 

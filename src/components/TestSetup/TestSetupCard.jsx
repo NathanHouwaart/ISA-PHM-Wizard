@@ -83,7 +83,7 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
               </div>
               <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Settings className="w-4 h-4" />
-                <span>{characteristicsCount} characteristic{characteristicsCount !== 1 ? 's' : ''}</span>
+                <span>{characteristicsCount} component{characteristicsCount !== 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center gap-1.5 bg-gray-50 rounded-md px-2 py-1.5">
                 <Layers className="w-4 h-4" />

@@ -62,8 +62,8 @@ Optional but recommended. Describe the rig in enough detail that someone unfamil
 
 ## Save behaviour
 
-Clicking **Add Test Setup** or **Update Test Setup** saves all six tabs at once. If any required field is missing, the save is blocked and a validation message appears.
+Clicking **Save Test Setup** saves all six tabs at once. If any required field is missing, the save is blocked and a validation message appears.
 
 ---
 
-[← Test Setups Guide](../guides/GUIDE_TEST_SETUPS.md) | [Next: Characteristics →](./TAB_CHARACTERISTICS.md)
+[← Test Setups Guide](../guides/GUIDE_TEST_SETUPS.md) | [Next: Components →](./TAB_CHARACTERISTICS.md)

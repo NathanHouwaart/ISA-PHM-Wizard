@@ -161,7 +161,7 @@ describe('test setup ZIP packages', () => {
     };
 
     await expect(createTestSetupArchive(setup)).rejects.toThrow(
-      'Replaceable characteristics cannot own datasheets'
+      'Replaceable components cannot own datasheets'
     );
   });
 });

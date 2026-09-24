@@ -30,7 +30,7 @@ The wizard uses PHM-friendly language throughout its UI. The output JSON uses th
 | Fault Spec / Operating Condition | Study Factor | `study.factors[]` | A variable that distinguishes experiments from each other |
 | Test Matrix value | Factor Value | `samples[].factorValues[]` | The value of a factor for a specific experiment or run |
 | Configuration | Sample | `study.materials.samples[]` | The physical component installed in the rig |
-| Characteristics | Study Design Descriptor | `study.studyDesignDescriptors[]` | Fixed properties of the test rig, constant across all experiments |
+| Components | Study Design Descriptor | `study.studyDesignDescriptors[]` | Fixed properties of the test rig, constant across all experiments |
 
 The three-level hierarchy in the output JSON:
 
@@ -119,7 +119,7 @@ Measurement outputs are constructed automatically from the experiment–sensor�
 
 Before (or alongside) filling in your project structure, you define a **Test Setup** — the reusable description of your physical lab bench. It contains:
 
-- **Characteristics** — fixed hardware properties of the rig that are the same across all experiments (motor model, rated power, shaft geometry)
+- **Components** — fixed hardware properties of the rig that are the same across all experiments (motor model, rated power, shaft geometry)
 - **Sensors** — every measurement channel (alias, model, type)
 - **Configurations** — Variants of the setup containing different physical hardware components or test articles (e.g. changed bearings, impellers, tool pieces, etc.)
 - **Measurement Protocols** — how raw signals were acquired (sample rate, filter settings, etc.)
@@ -146,9 +146,9 @@ A Configuration identifies **which specific physical component was installed** i
 
 This matters for traceability: if a bearing's failure mode differs from the others, you can identify which unit that was. The Replaceable Component ID (`BRG-01` etc.) is the unique tag for that physical object.
 
-**Characteristics vs. Configurations:**
+**Components vs. Configurations:**
 
-| | Characteristics | Configurations |
+| | Components | Configurations |
 |---|---|---|
 | What it describes | The fixed rig itself (same for all experiments) | The specific component swapped in per experiment |
 | ISA-PHM entity | Study Design Descriptor (ISA term) | Sample (ISA term) |
@@ -239,7 +239,7 @@ Many things in the wizard depend on other things existing first. The correct ord
 ```
 1. Create Test Setup
    ├─ Add basic info
-   ├─ Add characteristics
+   ├─ Add components
    ├─ Add sensors
    ├─ Add configurations
    ├─ Add measurement protocols (after sensors)

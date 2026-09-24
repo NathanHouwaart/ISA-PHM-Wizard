@@ -113,23 +113,23 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
       <div className="overflow-hidden rounded-lg border border-gray-300 bg-gray-50">
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
           <div>
-            <Heading3 className="text-base">Characteristics</Heading3>
+            <Heading3 className="text-base">Components</Heading3>
             <Paragraph className="mt-1 text-sm text-gray-600">
-              Specify the test set-up characteristics and identify replaceable components.
+              Specify the test set-up components and identify those that are replaceable.
             </Paragraph>
           </div>
           <div className="flex items-center gap-2">
             <TooltipButton
               onClick={addCharacteristic}
-              tooltipText="Add characteristic"
+              tooltipText="Add component"
               className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
             >
               <Plus className="h-4 w-4" />
             </TooltipButton>
             <TooltipButton
               onClick={() => setActiveTooltip((visible) => !visible)}
-              tooltipText="Show characteristic field guidance"
-              aria-label="Show characteristic field guidance"
+              tooltipText="Show component field guidance"
+              aria-label="Show component field guidance"
               className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
             >
               <HelpCircle className="h-4 w-4 text-white" />
@@ -140,9 +140,9 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
         <TableTooltip
           isVisible={activeTooltip}
           explanations={[
-            <><b>Category:</b> Category of the characteristic you are describing</>,
-            <><b>Value:</b> Value of the characteristic you are describing</>,
-            <><b>Unit:</b> Unit of the characteristic you are describing (may be optional)</>
+            <><b>Category:</b> Category of the component you are describing</>,
+            <><b>Value:</b> Value of the component property you are describing</>,
+            <><b>Unit:</b> Unit of the component property you are describing (may be optional)</>
           ]}
           examples={[
             { category: 'Motor', value: 'WEG W21', unit: 'N/A' },
@@ -171,7 +171,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                     <span className="flex items-center gap-2">
                       <span className={`h-2 w-2 shrink-0 rounded-full ${replaceable ? 'bg-amber-500' : 'bg-blue-500'}`} />
                       <span className="min-w-0 flex-1 truncate font-medium">
-                        {characteristic.category || `Characteristic ${index + 1}`}
+                        {characteristic.category || `Component ${index + 1}`}
                       </span>
                       {replaceable && (
                         <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
@@ -199,7 +199,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
 
               {characteristics.length === 0 && (
                 <Paragraph className="px-2 py-5 text-sm text-gray-500">
-                  No characteristics yet.
+                  No components yet.
                 </Paragraph>
               )}
             </div>
@@ -209,27 +209,27 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
             {!selectedCharacteristic ? (
               <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
                 <Settings2 className="mb-4 h-14 w-14 text-gray-300" />
-                <Heading3>No characteristic selected</Heading3>
+                <Heading3>No component selected</Heading3>
                 <Paragraph className="mt-1 text-sm text-gray-600">
-                  Add a characteristic to define the selected test setup.
+                  Add a component to define the selected test setup.
                 </Paragraph>
                 <TooltipButton
                   onClick={addCharacteristic}
-                  tooltipText="Add characteristic"
+                  tooltipText="Add component"
                   className="mt-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Add Characteristic</span>
+                  <span>Add Component</span>
                 </TooltipButton>
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                  <Heading3 className="text-xl">Edit Characteristic</Heading3>
+                  <Heading3 className="text-xl">Edit Component</Heading3>
                   <TooltipButton
                     onClick={removeSelectedCharacteristic}
-                    tooltipText="Remove characteristic"
-                    aria-label="Remove characteristic"
+                    tooltipText="Remove component"
+                    aria-label="Remove component"
                     className="rounded-md bg-none bg-transparent p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -255,7 +255,7 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                   <Switch
                     checked={isReplaceable}
                     onCheckedChange={updateReplaceable}
-                    aria-label={`Mark characteristic ${selectedIndex + 1} as replaceable`}
+                    aria-label={`Mark component ${selectedIndex + 1} as replaceable`}
                     className="mt-1 data-[state=checked]:bg-amber-500 data-[state=checked]:hover:bg-amber-600"
                   />
                 </div>
