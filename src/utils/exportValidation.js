@@ -483,7 +483,7 @@ export function buildExportValidationReport({
       id: 'test-setup-without-output-sensors',
       level: 'error',
       title: 'Selected test setup has no dataset-output sensors',
-      description: 'Mark at least one sensor for degradation monitoring before conversion.',
+      description: 'Mark at least one sensor that measures degradation before conversion.',
       count: 1,
       items: [selectedSetup?.name || 'Selected test setup'],
     });

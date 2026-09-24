@@ -27,8 +27,8 @@ describe('sensor usage', () => {
     expect(SENSOR_USAGE_DATASET_OUTPUT).toBe('dataset-output');
     expect(SENSOR_USAGE_CONDITION_MONITORING).toBe('condition-monitoring');
     expect(SENSOR_USAGE_BOTH).toBe('both');
-    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_DATASET_OUTPUT })).toBe('Degradation monitoring');
-    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_CONDITION_MONITORING })).toBe('Operating-condition monitoring');
-    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_BOTH })).toBe('Degradation + operating-condition monitoring');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_DATASET_OUTPUT })).toBe('Measures degradation');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_CONDITION_MONITORING })).toBe('Monitors operating conditions');
+    expect(getSensorUsageLabel({ usage: SENSOR_USAGE_BOTH })).toBe('Measures degradation + monitors operating conditions');
   });
 });

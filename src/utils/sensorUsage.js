@@ -6,18 +6,18 @@ export const SENSOR_USAGE_BOTH = 'both';
 export const SENSOR_USAGE_OPTIONS = [
   {
     value: SENSOR_USAGE_DATASET_OUTPUT,
-    label: 'Degradation monitoring',
-    description: 'Include this sensor in exported raw and processed output files used to monitor degradation.'
+    label: 'Measures degradation',
+    description: 'Include this sensor in exported raw and processed output files used to measure degradation.'
   },
   {
     value: SENSOR_USAGE_CONDITION_MONITORING,
-    label: 'Operating-condition monitoring',
+    label: 'Monitors operating conditions',
     description: 'Record this sensor as operating-condition context without output file mappings.'
   },
   {
     value: SENSOR_USAGE_BOTH,
-    label: 'Degradation + operating-condition monitoring',
-    description: 'Include this sensor in output files and use it to monitor both degradation and operating conditions.'
+    label: 'Measures degradation + monitors operating conditions',
+    description: 'Include this sensor in output files and use it to measure degradation and monitor operating conditions.'
   }
 ];
 
@@ -44,5 +44,5 @@ export const isSensorUsedForConditionMonitoring = (sensor = {}) => {
 
 export const getSensorUsageLabel = (sensor = {}) => (
   SENSOR_USAGE_OPTIONS.find((option) => option.value === normalizeSensorUsage(sensor.usage))?.label
-  || 'Degradation monitoring'
+  || 'Measures degradation'
 );

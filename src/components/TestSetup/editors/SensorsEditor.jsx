@@ -33,9 +33,9 @@ const getUsageBadgeClassName = (usage) => {
 };
 
 const getUsageShortLabel = (usage) => {
-  if (usage === SENSOR_USAGE_CONDITION_MONITORING) return 'Operating conditions';
-  if (usage === SENSOR_USAGE_BOTH) return 'Degradation + conditions';
-  return 'Degradation';
+  if (usage === SENSOR_USAGE_CONDITION_MONITORING) return 'Monitors conditions';
+  if (usage === SENSOR_USAGE_BOTH) return 'Measures + monitors';
+  return 'Measures degradation';
 };
 
 const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTypesChange }) => {
@@ -162,14 +162,14 @@ const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTyp
         <TableTooltip
           isVisible={activeTooltip}
           explanations={[
-            <><b>Degradation monitoring:</b> The sensor is included in raw and/or processed output file mappings.</>,
-            <><b>Operating-condition monitoring:</b> The sensor records operating conditions without requiring output files.</>,
-            <><b>Both:</b> The sensor supports both degradation and operating-condition monitoring.</>
+            <><b>Measures degradation:</b> The sensor is included in raw and/or processed output file mappings.</>,
+            <><b>Monitors operating conditions:</b> The sensor records operating conditions without requiring output files.</>,
+            <><b>Both:</b> The sensor measures degradation and monitors operating conditions.</>
           ]}
           examples={[
-            { alias: 'vib_de', usage: 'Degradation monitoring', description: 'Drive-end vibration accelerometer' },
-            { alias: 'pressure_guard', usage: 'Operating-condition monitoring', description: 'Protective hydraulic-pressure sensor' },
-            { alias: 'motor_torque', usage: 'Degradation + operating-condition monitoring', description: 'Measured motor torque from controller' }
+            { alias: 'vib_de', usage: 'Measures degradation', description: 'Drive-end vibration accelerometer' },
+            { alias: 'pressure_guard', usage: 'Monitors operating conditions', description: 'Protective hydraulic-pressure sensor' },
+            { alias: 'motor_torque', usage: 'Measures degradation + monitors operating conditions', description: 'Measured motor torque from controller' }
           ]}
         />
 
@@ -285,7 +285,7 @@ const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTyp
                     <div className="flex items-center gap-1.5">
                       <Heading3 className="text-sm font-semibold text-gray-800">Sensor role</Heading3>
                       <TooltipButton
-                        tooltipText="Degradation monitoring: include files in the dataset. Operating-condition monitoring: record operating conditions without output file mappings. Both: do both."
+                        tooltipText="Measures degradation: include files in the dataset. Monitors operating conditions: record operating conditions without output file mappings. Both: do both."
                         className="h-7 w-7 rounded-full bg-none bg-transparent p-0 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
                         aria-label="Explain sensor role options"
                       >
@@ -296,9 +296,9 @@ const SensorsEditor = ({ sensors, sensorTypes = [], onSensorsChange, onSensorTyp
                     {SENSOR_USAGE_OPTIONS.map((option) => {
                       const isSelected = selectedSensor.usage === option.value;
                       const label = option.value === SENSOR_USAGE_DATASET_OUTPUT
-                        ? 'Degradation'
+                        ? 'Measures degradation'
                         : option.value === SENSOR_USAGE_CONDITION_MONITORING
-                          ? 'Operating conditions'
+                          ? 'Monitors operating conditions'
                           : 'Both';
                       return (
                         <TooltipButton

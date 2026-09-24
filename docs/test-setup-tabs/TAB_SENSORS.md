@@ -14,7 +14,7 @@
 
 ## Purpose
 
-Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Sensors selected for **degradation monitoring** become:
+Defines all measurement channels in the test setup. Each sensor entry represents **one measurement channel** — meaning one data file with a timestamp column and a single measurement value column. Sensors that **measure degradation** become:
 - A column in the Measurement Protocol parameter grid (Measurement tab)
 - A column in the Processing Protocol parameter grid (Processing tab)
 - A column in the Raw Measurement Output grid (Questionnaire Slide 10)
@@ -24,9 +24,9 @@ Defines all measurement channels in the test setup. Each sensor entry represents
 
 ### Sensor role
 
-- **Degradation monitoring**: the sensor is included in raw and/or processed output file mappings.
-- **Operating-condition monitoring**: the sensor records operating conditions without output file mappings.
-- **Both**: the sensor supports both roles.
+- **Measures degradation**: the sensor is included in raw and/or processed output file mappings.
+- **Monitors operating conditions**: the sensor records operating conditions without output file mappings.
+- **Both**: the sensor measures degradation and monitors operating conditions.
 
 ---
 
@@ -39,7 +39,7 @@ Defines all measurement channels in the test setup. Each sensor entry represents
 | **Sensor Type** | Technology or transducer type (`technologyType` in ISA) | `Accelerometer`, `Current transducer` |
 | **Measurement Type** | Physical quantity measured | `Vibration`, `Current`, `Temperature` |
 | **Description** | Additional context | `Channel 1 on bearing housing, drive-end side` |
-| **Sensor role** | Whether the sensor monitors degradation, operating conditions, or both | `Degradation monitoring` |
+| **Sensor role** | Whether the sensor measures degradation, monitors operating conditions, or both | `Measures degradation` |
 
 ---
 
