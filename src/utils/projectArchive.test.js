@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { strFromU8, unzipSync, zipSync } from 'fflate';
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { decodeJsonFromStorage } from './storageCodec';
 
 const mocks = vi.hoisted(() => ({
@@ -159,6 +159,22 @@ describe('project archive', () => {
     await expect(readProjectImportFile(asProjectFile(unexpected))).rejects.toThrow(
       'files not declared by its manifest'
     );
+  });
+
+  it('directs a test setup archive to the Test Setups importer', async () => {
+    const archive = zipSync({
+      'manifest.json': strToU8(JSON.stringify({
+        format: 'isa-phm-test-setup-archive',
+        formatVersion: 1,
+        testSetup: { path: 'test-setup.json' },
+        attachments: [],
+      })),
+      'test-setup.json': strToU8('{}'),
+    });
+
+    await expect(readProjectImportFile(
+      asProjectFile(new Blob([archive], { type: 'application/zip' }), 'test-setup.zip')
+    )).rejects.toThrow('Import it from Test Setups → Import Test Setup');
   });
 
   it('rejects path traversal entries before extracting the archive', async () => {

@@ -21,6 +21,7 @@ import { MAX_DATASHEET_BYTES } from '../constants/attachmentLimits';
 
 export const PROJECT_ARCHIVE_FORMAT = 'isa-phm-project-archive';
 export const PROJECT_ARCHIVE_VERSION = 1;
+const TEST_SETUP_ARCHIVE_FORMAT = 'isa-phm-test-setup-archive';
 
 const MANIFEST_PATH = 'manifest.json';
 const PROJECT_PATH = 'project.json';
@@ -258,6 +259,9 @@ const parseProjectArchive = async (file) => {
   });
   const entries = unzipSync(archiveBytes);
   const manifest = parseArchiveJsonEntry(entries, MANIFEST_PATH, MAX_MANIFEST_BYTES);
+  if (manifest?.format === TEST_SETUP_ARCHIVE_FORMAT) {
+    throw new Error('This is a Test Setup archive. Import it from Test Setups → Import Test Setup.');
+  }
   if (manifest?.format !== PROJECT_ARCHIVE_FORMAT) throw new Error('The selected ZIP is not an ISA-PHM project package');
   if (manifest.formatVersion !== PROJECT_ARCHIVE_VERSION) {
     throw new Error(`Unsupported project package version: ${manifest.formatVersion ?? 'unknown'}`);
