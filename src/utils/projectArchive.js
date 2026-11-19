@@ -164,7 +164,7 @@ const remapProjectReferences = (project, attachmentIdMap, setupIdMap) => {
 
 export const getProjectArchiveFileName = (project) => {
   const baseName = sanitizeProjectFileName(project?.projectName || project?.projectId) || 'project-export';
-  return `${baseName} ISA-PHM.zip`;
+  return `${baseName} ISA-PHM Wizard Project.zip`;
 };
 
 export const createProjectArchive = async (projectId, options = {}) => {

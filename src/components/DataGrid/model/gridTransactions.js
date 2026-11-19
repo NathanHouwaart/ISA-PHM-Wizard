@@ -86,7 +86,12 @@ export function applyRowUpdates(baseRows, rowDataUpdates, rowIdKey = 'id') {
         if (!updatesByRowId.has(rowId)) {
             updatesByRowId.set(rowId, {});
         }
-        updatesByRowId.get(rowId)[columnProp] = normalizeCellValue(value);
+        const changes = updatesByRowId.get(rowId);
+        changes[columnProp] = normalizeCellValue(value);
+        if (columnProp === 'unit') {
+            changes.unitIdentifier = value && typeof value === 'object' && typeof value.valueIdentifier === 'string'
+                ? value.valueIdentifier : '';
+        }
     });
 
     return (baseRows || []).map((row) => {
@@ -111,6 +116,8 @@ export function applyMappingUpdates(baseMappings, mappingUpdates, fields) {
 
     mappingUpdates.forEach(({ rowId, columnId, value }) => {
         const cleanedValue = normalizeCellValue(value);
+        const selectedIdentifier = value && typeof value === 'object' && typeof value.valueIdentifier === 'string'
+            ? value.valueIdentifier : undefined;
         const isChildColumn = isChildColumnId(columnId);
         const actualColumnId = toBaseColumnId(columnId);
 
@@ -130,7 +137,19 @@ export function applyMappingUpdates(baseMappings, mappingUpdates, fields) {
 
                 nextMappings[existingIndex] = {
                     ...existing,
-                    [mappingValue]: nextValue
+                    [mappingValue]: nextValue,
+                    // An identifier describes the specification value; changing
+                    // that value must never leave an old identifier attached.
+                    ...(columnId.endsWith('_spec') && selectedIdentifier !== undefined
+                        ? { valueIdentifier: selectedIdentifier }
+                        : existing.valueIdentifier !== undefined && columnId.endsWith('_spec') && cleanedValue !== normalizeCellValue(parsedValue.specification)
+                            ? { valueIdentifier: undefined }
+                            : {}),
+                    ...(columnId.endsWith('_unit') && selectedIdentifier !== undefined
+                        ? { unitIdentifier: selectedIdentifier }
+                        : existing.unitIdentifier !== undefined && columnId.endsWith('_unit') && cleanedValue !== normalizeCellValue(parsedValue.unit)
+                            ? { unitIdentifier: undefined }
+                            : {})
                 };
             } else {
                 nextMappings[existingIndex] = {
@@ -148,7 +167,9 @@ export function applyMappingUpdates(baseMappings, mappingUpdates, fields) {
         nextMappings.push({
             [mappingRowId]: rowId,
             [mappingColumnId]: actualColumnId,
-            [mappingValue]: initialValue
+            [mappingValue]: initialValue,
+            ...(columnId.endsWith('_spec') && selectedIdentifier !== undefined ? { valueIdentifier: selectedIdentifier } : {}),
+            ...(columnId.endsWith('_unit') && selectedIdentifier !== undefined ? { unitIdentifier: selectedIdentifier } : {})
         });
     });
 
@@ -193,14 +214,17 @@ export function filterEffectiveRowUpdates(updates, baseRows, rowIdKey = 'id') {
         deduped.set(key, {
             rowId: update.rowId,
             columnProp: update.columnProp,
-            value: normalizeCellValue(update.value)
+            value: update.value && typeof update.value === 'object' && typeof update.value.valueIdentifier === 'string'
+                ? { value: normalizeCellValue(update.value), valueIdentifier: update.value.valueIdentifier }
+                : normalizeCellValue(update.value)
         });
     });
 
     return Array.from(deduped.values()).filter((update) => {
         const row = rowLookup.get(update.rowId);
         const currentValue = normalizeCellValue(row?.[update.columnProp]);
-        return currentValue !== update.value;
+        return currentValue !== normalizeCellValue(update.value)
+            || (update.value?.valueIdentifier !== undefined && update.value.valueIdentifier !== row?.unitIdentifier);
     });
 }
 
@@ -214,7 +238,9 @@ export function filterEffectiveMappingUpdates(updates, baseMappings, fields) {
         deduped.set(key, {
             rowId: update.rowId,
             columnId: update.columnId,
-            value: normalizeCellValue(update.value)
+            value: update.value && typeof update.value === 'object' && typeof update.value.valueIdentifier === 'string'
+                ? { value: normalizeCellValue(update.value), valueIdentifier: update.value.valueIdentifier }
+                : normalizeCellValue(update.value)
         });
     });
 
@@ -225,7 +251,15 @@ export function filterEffectiveMappingUpdates(updates, baseMappings, fields) {
             update.columnId,
             fields
         );
-        return currentValue !== update.value;
+        const selectedIdentifier = update.value?.valueIdentifier;
+        const currentMapping = (baseMappings || []).find((mapping) =>
+            mapping?.[fields.mappingRowId || 'studyId'] === update.rowId &&
+            mapping?.[fields.mappingColumnId || 'studyVariableId'] === toBaseColumnId(update.columnId)
+        );
+        const currentIdentifier = update.columnId.endsWith('_unit')
+            ? currentMapping?.unitIdentifier : currentMapping?.valueIdentifier;
+        return currentValue !== normalizeCellValue(update.value)
+            || (selectedIdentifier !== undefined && selectedIdentifier !== currentIdentifier);
     });
 }
 

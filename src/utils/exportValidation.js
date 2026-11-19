@@ -20,6 +20,7 @@ import {
 } from '../constants/variableTypes';
 import { isReplaceableCharacteristic } from './testSetupCharacteristics';
 import { getAssignedComponentInstanceId, getDuplicateComponentInstanceIds } from './studyConfigurationValidation';
+import quantityUnitWarningRules from '../../vendor/isa-phm-specification/specification/quantity-unit-warning-rules.json';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -631,6 +632,43 @@ export function buildExportValidationReport({
   const processingProtocolById = new Map(
     asArray(selectedSetup?.processingProtocols).map((p) => [String(p?.id || ''), p])
   );
+
+  // Only explicit identifier pairs in the reviewed rule set produce warnings;
+  // missing catalogue relationships and custom identifiers are not failures.
+  const quantityUnitWarnings = new Set();
+  for (const modeInfo of modeByStudyId.values()) {
+    const protocol = measurementProtocolById.get(String(modeInfo.selectedMeasurementProtocolId || ''));
+    if (!protocol) continue;
+    const unitParameter = asArray(protocol.parameters).find((p) => p?.builtinKey === 'measured_unit');
+    if (!unitParameter) continue;
+    for (const sensor of sensors) {
+      if (!isSensorApplicable(protocol, String(sensor.id || ''))) continue;
+      const type = asArray(selectedSetup?.sensorTypes).find((item) => item.id === sensor.sensorTypeId);
+      const quantityId = sensor.quantityKindIdentifier || (!sensor.measurementType ? type?.quantityKindIdentifier : '');
+      for (const mapping of asArray(selectedSetup?.sensorToMeasurementProtocolMapping)) {
+        if (String(mapping?.sourceId ?? mapping?.sensorId) !== String(sensor.id)
+          || String(mapping?.protocolId || '') !== String(protocol.id)
+          || String(mapping?.targetId ?? mapping?.target ?? mapping?.mappingTargetId) !== String(unitParameter.id)) continue;
+        const unitValue = Array.isArray(mapping.value) ? mapping.value[0] : mapping.value?.specification;
+        if (!unitValue || ['unknown', 'not applicable'].includes(String(unitValue).trim().toLowerCase())) continue;
+        for (const rule of quantityUnitWarningRules.rules) {
+          if (rule.quantityIdentifiers.includes(quantityId) && rule.unitIdentifiers.includes(mapping.valueIdentifier)) {
+            quantityUnitWarnings.add(`${sensor.alias || sensor.id}: ${rule.message}`);
+          }
+        }
+      }
+    }
+  }
+  if (quantityUnitWarnings.size) {
+    pushIssue(warningIssues, {
+      id: 'quantity-unit-compatibility',
+      level: 'warning',
+      title: 'Review measured quantity and unit',
+      description: 'A selected unit may not match its sensor quantity. Review before conversion.',
+      count: quantityUnitWarnings.size,
+      items: [...quantityUnitWarnings],
+    });
+  }
 
   if (studyRuns.length > 0 && sensors.length > 0) {
     studyRuns.forEach((run) => {

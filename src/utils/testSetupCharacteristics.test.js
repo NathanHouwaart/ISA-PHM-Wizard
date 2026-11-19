@@ -22,6 +22,11 @@ describe('test setup characteristics', () => {
       .toEqual({ isReplaceable: true, value: '', unit: '' });
   });
 
+  it('also clears a stale unit identifier when marking a component replaceable', () => {
+    const result = setCharacteristicReplaceable({ value: '2.2', unit: 'kW', unitIdentifier: 'http://qudt.org/vocab/unit/KiloW' }, true);
+    expect(result).toMatchObject({ value: '', unit: '', unitIdentifier: '' });
+  });
+
   it('clears replaceable descriptions when a characteristic becomes fixed', () => {
     expect(setCharacteristicReplaceable(
       { category: 'Motor', description: 'Drive motor', isReplaceable: true },

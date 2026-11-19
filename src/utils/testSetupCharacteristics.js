@@ -6,7 +6,7 @@ export const normalizeCharacteristic = (characteristic = {}) => {
   return {
     ...characteristic,
     isReplaceable,
-    ...(isReplaceable ? { value: '', unit: '' } : { description: '' })
+    ...(isReplaceable ? { value: '', unit: '', ...('unitIdentifier' in characteristic ? { unitIdentifier: '' } : {}) } : { description: '' })
   };
 };
 

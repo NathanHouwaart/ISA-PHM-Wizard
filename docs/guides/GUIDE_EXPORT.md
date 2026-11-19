@@ -25,10 +25,15 @@ The pre-export validation panel shows blocking errors and warnings.
 
 1. Bundles project metadata into a conversion payload.
 2. Sends it to the backend conversion service.
-3. Receives ISA-structured JSON output.
-4. Downloads a JSON file named:
+3. Receives the converted ISA-JSON dataset and packaged attachments.
+4. Downloads an archive named:
 
-`<Project Name> ISA-PHM.json`
+`<Project Name> ISA-PHM Dataset.zip`
+
+The separately exported editable project is named
+`<Project Name> ISA-PHM Wizard Project.zip`. It can be imported back into the Wizard;
+the converted dataset is intended for downstream tools. If the backend returns
+JSON instead of a ZIP, the converted download uses `ISA-PHM Dataset.json`.
 
 ---
 

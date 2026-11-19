@@ -6,10 +6,12 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import { createTestSetupArchive, getTestSetupArchiveFileName } from '../../utils/testSetupArchive';
+import { getTestSetupReadiness } from '../../utils/testSetupReadiness';
 
 const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
   const [exportError, setExportError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const readinessIssues = getTestSetupReadiness(item);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -57,13 +59,14 @@ const TestSetupCard = ({ item, onEdit, onRemove, isEditable = true }) => {
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-4">
           <AvatarInitials 
-            name={item.name} 
+            name={item.name?.trim() || 'Untitled test setup'}
             size="md"
             gradientFrom="from-green-500"
             gradientTo="to-blue-600"
           />
           <div className="flex-1 space-y-2">
-            <Heading3 className="text-gray-900">{item.name}</Heading3>
+            <Heading3 className="text-gray-900">{item.name?.trim() || 'Untitled test setup'}</Heading3>
+            <p className={`text-xs font-semibold ${readinessIssues.length ? 'text-amber-700' : 'text-green-700'}`}>{readinessIssues.length ? `Incomplete · ${readinessIssues.length} to complete` : 'Ready'}</p>
             <Paragraph className="text-gray-600 flex items-center">
               <MapPin className="w-4 h-4 mr-1" />
               {item.location}

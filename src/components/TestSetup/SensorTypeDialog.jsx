@@ -8,6 +8,9 @@ import Heading3 from '../Typography/Heading3';
 import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import DatasheetField from '../Form/fields/DatasheetField';
+import QuantityKindField from '../Form/fields/QuantityKindField';
+import { SENSOR_USAGE_DATASET_OUTPUT } from '../../utils/sensorUsage';
+import { missingSensorTypeFields } from '../../utils/sensorTypeValidation';
 import { useProjectData } from '../../contexts/GlobalDataContext';
 import {
   cleanupUnreferencedAttachmentRefs,
@@ -25,18 +28,24 @@ const createEmptySensorType = () => ({
   measurementType: ''
 });
 
-const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose }) => {
+const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChange, onDevicesChange, onSensorsChange, onClose, typesOnly = false }) => {
   const { testSetups = [], configurationTypes = [] } = useProjectData();
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(createEmptySensorType);
+  const [workingTypes, setWorkingTypes] = useState([]);
+  const [workingDevices, setWorkingDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [activeTab, setActiveTab] = useState('devices');
+  const [newOutputs, setNewOutputs] = useState([]);
+  const [channelTypeId, setChannelTypeId] = useState('');
   const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState(null);
   const wasOpenRef = useRef(false);
   const seenDraftRefs = useRef(collectAttachmentRefs(types));
 
   useEffect(() => {
-    if (open) mergeAttachmentRefs(seenDraftRefs.current, collectAttachmentRefs(draft));
-  }, [open, draft]);
+    if (open) mergeAttachmentRefs(seenDraftRefs.current, collectAttachmentRefs([draft, workingDevices]));
+  }, [open, draft, workingDevices]);
 
   useEffect(() => {
     if (!open) {
@@ -46,22 +55,28 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
     if (wasOpenRef.current) return;
     wasOpenRef.current = true;
     const firstType = types[0];
+    setWorkingTypes(types.map((type) => ({ ...type })));
+    setWorkingDevices(devices.map((device) => ({ ...device })));
+    setSelectedDeviceId(devices[0]?.id || null);
+    setActiveTab(typesOnly ? 'types' : 'devices');
+    setNewOutputs([]);
+    setChannelTypeId('');
     setSelectedId(firstType?.id || null);
     setDraft(firstType ? { ...firstType } : createEmptySensorType());
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([types, devices]));
     setError('');
-  }, [open, types]);
+  }, [open, types, devices, typesOnly]);
 
-  const cleanupUnsavedDrafts = async (nextTypes = types) => {
+  const cleanupUnsavedDrafts = async (nextTypes = types, nextDevices = devices) => {
     const stagedRefs = subtractAttachmentRefs(
       seenDraftRefs.current,
-      collectAttachmentRefs(types)
+      collectAttachmentRefs([types, devices])
     );
-    const orphanedRefs = subtractAttachmentRefs(stagedRefs, collectAttachmentRefs(nextTypes));
+    const orphanedRefs = subtractAttachmentRefs(stagedRefs, collectAttachmentRefs([nextTypes, nextDevices]));
     try {
       await cleanupUnreferencedAttachmentRefs(
         orphanedRefs,
-        [nextTypes, testSetups, configurationTypes]
+        [nextTypes, nextDevices, testSetups, configurationTypes]
       );
     } catch (cleanupError) {
       console.warn('[SensorTypeDialog] unable to clean up discarded attachments', cleanupError);
@@ -69,65 +84,67 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
   };
 
   const selectedType = useMemo(
-    () => types.find((type) => type.id === selectedId) || null,
-    [types, selectedId]
+    () => workingTypes.find((type) => type.id === selectedId) || null,
+    [workingTypes, selectedId]
   );
   const isCreating = selectedId === null;
+  const selectedDevice = workingDevices.find((device) => device.id === selectedDeviceId);
   const referencedCount = pendingDelete
-    ? sensors.filter((sensor) => sensor.sensorTypeId === pendingDelete.id).length
+    ? [...sensors, ...newOutputs].filter((sensor) => sensor.sensorTypeId === pendingDelete.id).length
     : 0;
 
   if (!open || typeof document === 'undefined') return null;
 
-  const selectType = async (type) => {
-    await cleanupUnsavedDrafts();
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+  const stagedTypes = () => {
+    const exists = workingTypes.some((type) => type.id === draft.id);
+    const hasContent = draft.name?.trim() || draft.technologyPlatform?.trim() || draft.technologyType?.trim() || draft.measurementType?.trim() || draft.datasheet?.attachmentId;
+    if (!exists && !hasContent) return workingTypes;
+    return exists ? workingTypes.map((type) => type.id === draft.id ? draft : type) : [...workingTypes, draft];
+  };
+
+  const selectType = (type) => {
+    if (type.id === draft.id) return;
+    setWorkingTypes(stagedTypes());
     setSelectedId(type.id);
     setDraft({ ...type });
     setError('');
   };
 
-  const startNewType = async () => {
-    await cleanupUnsavedDrafts();
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+  const startNewType = () => {
+    setWorkingTypes(stagedTypes());
     setSelectedId(null);
     setDraft(createEmptySensorType());
     setError('');
   };
 
-  const saveType = async () => {
-    const name = draft.name.trim();
-    if (!name) {
-      setError('Please enter a sensor type name.');
+  const saveTypes = async () => {
+    const nextTypes = stagedTypes().map((type) => ({
+      ...type,
+      name: (type.name || '').trim(),
+      technologyPlatform: (type.technologyPlatform || '').trim(),
+      technologyType: (type.technologyType || '').trim(),
+      measurementType: (type.measurementType || '').trim(),
+    }));
+    const invalidType = nextTypes.find((type) => missingSensorTypeFields(type).length);
+    if (invalidType) {
+      setError(`Sensor type ${invalidType.name || '(unnamed)'} needs: ${missingSensorTypeFields(invalidType).join(', ')}.`);
+      setActiveTab('types');
       return;
     }
-
-    const nextType = {
-      ...draft,
-      name,
-      technologyPlatform: draft.technologyPlatform.trim(),
-      technologyType: draft.technologyType.trim(),
-      measurementType: draft.measurementType.trim()
-    };
-    const exists = types.some((type) => type.id === nextType.id);
-    const nextTypes = exists
-      ? types.map((type) => type.id === nextType.id ? nextType : type)
-      : [...types, nextType];
     onChange(nextTypes);
-    await cleanupUnsavedDrafts(nextTypes);
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(nextTypes));
-    setSelectedId(nextType.id);
-    setDraft(nextType);
+    onDevicesChange?.(workingDevices);
+    if (newOutputs.length) onSensorsChange?.([...sensors, ...newOutputs]);
+    await cleanupUnsavedDrafts(nextTypes, workingDevices);
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([nextTypes, workingDevices]));
     setError('');
+    onClose?.();
   };
 
   const confirmDelete = async () => {
     if (!pendingDelete || referencedCount > 0) return;
-    const remaining = types.filter((type) => type.id !== pendingDelete.id);
+    const remaining = stagedTypes().filter((type) => type.id !== pendingDelete.id);
     const nextSelected = remaining[0] || null;
-    onChange(remaining);
-    await cleanupUnsavedDrafts(remaining);
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(remaining));
+    setWorkingTypes(remaining);
     setSelectedId(nextSelected?.id || null);
     setDraft(nextSelected ? { ...nextSelected } : createEmptySensorType());
     setPendingDelete(null);
@@ -135,13 +152,52 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
 
   const closeDialog = async () => {
     await cleanupUnsavedDrafts();
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs(types));
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([types, devices]));
     onClose?.();
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label="Manage sensor types">
-      <div className="flex max-h-[calc(100vh-4rem)] w-full max-w-4xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={typesOnly ? 'Manage sensor types' : 'Manage sensors'}>
+      <div className="flex max-h-[calc(100vh-4rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <Heading3 className="text-xl">{typesOnly ? 'Manage sensor types' : 'Manage sensors'}</Heading3>
+          <TooltipButton onClick={closeDialog} tooltipText="Close" aria-label="Close" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"><X className="h-5 w-5" /></TooltipButton>
+        </div>
+        {!typesOnly && <div className="flex gap-2 border-b border-gray-200 px-6" role="tablist" aria-label="Sensor management">
+          {[['devices', 'Devices'], ['types', 'Sensor types']].map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={activeTab === id} onClick={() => setActiveTab(id)} className={`border-b-2 px-3 py-3 text-sm ${activeTab === id ? 'border-blue-600 font-semibold text-blue-700' : 'border-transparent text-gray-600'}`}>{label}</button>
+          ))}
+        </div>}
+        {error && <Paragraph className="mx-6 mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</Paragraph>}
+        {activeTab === 'devices' ? (
+          <div className="flex min-h-80 overflow-hidden">
+            <aside className="w-64 shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <Heading3 className="text-base">Devices</Heading3>
+                <TooltipButton onClick={() => { const device = { id: uuid4(), name: '', model: '', serialNumber: '' }; setWorkingDevices((current) => [...current, device]); setSelectedDeviceId(device.id); }} tooltipText="Add device" aria-label="Add device" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"><Plus className="h-4 w-4" /></TooltipButton>
+              </div>
+              {workingDevices.map((device) => <button key={device.id} type="button" onClick={() => setSelectedDeviceId(device.id)} className={`w-full rounded-md px-3 py-2 text-left text-sm ${selectedDeviceId === device.id ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'}`}>{device.name || device.model || 'Unnamed device'}</button>)}
+              {workingDevices.length === 0 && <Paragraph className="text-sm text-gray-500">No devices yet.</Paragraph>}
+            </aside>
+            <div className="min-w-0 flex-1 space-y-4 overflow-y-auto p-6">
+              <Paragraph className="text-sm text-gray-600">Optionally group outputs from the same physical device, such as an enDAQ recorder.</Paragraph>
+              {selectedDevice && <>
+                <Heading3>Edit device</Heading3>
+                {[["name", "Device name"], ["model", "Model"], ["serialNumber", "Serial number"]].map(([field, label]) => <FormField key={field} label={label} name={`device-${field}`} value={selectedDevice[field] || ''} onChange={(event) => { const value = event.target.value; setWorkingDevices((current) => current.map((device) => device.id === selectedDevice.id ? { ...device, [field]: value } : device)); }} />)}
+                <DatasheetField value={selectedDevice.datasheet} onChange={(datasheet) => setWorkingDevices((current) => current.map((device) => device.id === selectedDevice.id ? { ...device, datasheet } : device))} explanation="Optional datasheet shared by this device's outputs." />
+                <div className="space-y-3 border-t border-gray-200 pt-4">
+                  <Heading3 className="text-base">Outputs used from this device</Heading3>
+                  <Paragraph className="text-sm text-gray-600">Add only channels used in this experiment. Configure their names, quantities and roles in the sensor editor after saving.</Paragraph>
+                  {[...sensors, ...newOutputs].filter((sensor) => sensor.physicalDeviceId === selectedDevice.id).map((sensor) => <div key={sensor.id} className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm"><span>{sensor.alias || 'Unnamed output'} — {stagedTypes().find((type) => type.id === sensor.sensorTypeId)?.name || 'Sensor type'}</span>{newOutputs.some((output) => output.id === sensor.id) && <button type="button" className="text-rose-700" onClick={() => setNewOutputs((current) => current.filter((output) => output.id !== sensor.id))}>Remove</button>}</div>)}
+                  <label className="block text-sm text-gray-700" htmlFor="device-output-type">Sensor type for new output</label>
+                  <select id="device-output-type" value={channelTypeId} onChange={(event) => setChannelTypeId(event.target.value)} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2"><option value="">Select a sensor type</option>{stagedTypes().filter((type) => type.name?.trim()).map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}</select>
+                  <TooltipButton disabled={!channelTypeId || !stagedTypes().some((type) => type.id === channelTypeId) || !onSensorsChange} onClick={() => { const type = stagedTypes().find((item) => item.id === channelTypeId); if (!type) return; setNewOutputs((current) => [...current, { id: uuid4(), alias: `Sensor SE${String(sensors.length + current.length + 1).padStart(2, '0')}`, sensorTypeId: type.id, physicalDeviceId: selectedDevice.id, measurementType: type.measurementType || '', quantityKindIdentifier: type.quantityKindIdentifier || '', technologyType: type.technologyType || '', technologyPlatform: type.technologyPlatform || '', measurementUnit: '', samplingRate: '', description: '', additionalInfo: [], phase: '', usage: SENSOR_USAGE_DATASET_OUTPUT }]); }} tooltipText="Add a channel used in this experiment" className="px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg disabled:opacity-40"><Plus className="h-4 w-4" /><span>Add output</span></TooltipButton>
+                </div>
+                <TooltipButton onClick={() => { setWorkingDevices((current) => current.filter((device) => device.id !== selectedDevice.id)); setSelectedDeviceId(null); }} disabled={[...sensors, ...newOutputs].some((sensor) => sensor.physicalDeviceId === selectedDevice.id)} tooltipText="Devices assigned to outputs cannot be removed" className="px-3 py-2 text-sm bg-rose-600 text-white hover:bg-rose-700 rounded-lg disabled:opacity-40"><Trash2 className="h-4 w-4" /><span>Delete device</span></TooltipButton>
+              </>}
+            </div>
+          </div>
+        ) : <div className="flex min-h-80 overflow-hidden">
         <aside className="w-64 shrink-0 border-r border-gray-200 bg-gray-50 p-4">
           <div className="mb-4 flex items-center justify-between">
             <Heading3 className="text-base">Sensor Types</Heading3>
@@ -155,30 +211,26 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
                 {draft.name || 'New sensor type'}
               </div>
             )}
-            {types.map((type) => (
+            {workingTypes.map((type) => (
               <button key={type.id} type="button" onClick={() => selectType(type)} className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${selectedId === type.id ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'}`}>
                 <span className="block truncate font-medium">{type.name || 'Unnamed type'}</span>
                 <span className="block truncate text-xs text-gray-500">{type.measurementType || type.technologyType || 'No specification'}</span>
               </button>
             ))}
-            {types.length === 0 && !isCreating && <Paragraph className="px-2 py-4 text-sm text-gray-500">No sensor types yet.</Paragraph>}
+            {workingTypes.length === 0 && !isCreating && <Paragraph className="px-2 py-4 text-sm text-gray-500">No sensor types yet.</Paragraph>}
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
             <Heading3 className="text-xl">{selectedType ? 'Edit Sensor Type' : 'Create Sensor Type'}</Heading3>
-            <TooltipButton onClick={closeDialog} tooltipText="Close" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
-              <X className="h-5 w-5" />
-            </TooltipButton>
           </div>
           <div className="space-y-4 p-6">
-            {error && <Paragraph className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</Paragraph>}
             <FormField label="Sensor Type Name" name="sensor-type-name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} required placeholder="e.g. Wilcoxon 786B-10 vibration channel" />
             <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="Sensor Model" name="sensor-type-model" value={draft.technologyPlatform} onChange={(event) => setDraft((current) => ({ ...current, technologyPlatform: event.target.value }))} placeholder="e.g. Wilcoxon 786B-10" />
-              <FormField label="Technology Type" name="sensor-type-technology" value={draft.technologyType} onChange={(event) => setDraft((current) => ({ ...current, technologyType: event.target.value }))} placeholder="e.g. Accelerometer" />
-              <FormField label="Measurement Type" name="sensor-type-measurement" value={draft.measurementType} onChange={(event) => setDraft((current) => ({ ...current, measurementType: event.target.value }))} placeholder="e.g. Vibration" />
+              <FormField label="Sensor Model" name="sensor-type-model" value={draft.technologyPlatform} onChange={(event) => setDraft((current) => ({ ...current, technologyPlatform: event.target.value }))} required placeholder="e.g. Wilcoxon 786B-10" />
+              <FormField label="Technology Type" name="sensor-type-technology" value={draft.technologyType} onChange={(event) => setDraft((current) => ({ ...current, technologyType: event.target.value }))} required placeholder="e.g. Accelerometer" />
+              <QuantityKindField label="Default measured quantity" required value={draft.measurementType} identifier={draft.quantityKindIdentifier} onChange={({ name, identifier }) => setDraft((current) => ({ ...current, measurementType: name, quantityKindIdentifier: identifier }))} />
             </div>
             <DatasheetField
               value={draft.datasheet}
@@ -192,19 +244,20 @@ const SensorTypeDialog = ({ open, types = [], sensors = [], onChange, onClose })
                   <span>Delete</span>
                 </TooltipButton>
               ) : <span />}
-              <TooltipButton onClick={saveType} tooltipText="Save sensor type" className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
-                <Save className="h-4 w-4" />
-                <span>Save Type</span>
-              </TooltipButton>
             </div>
           </div>
+        </div>
+        </div>}
+        <div className="flex justify-end gap-2 border-t border-gray-200 px-6 py-4">
+          <TooltipButton onClick={closeDialog} tooltipText="Discard changes" className="px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 rounded-lg"><span>Cancel</span></TooltipButton>
+          <TooltipButton onClick={saveTypes} tooltipText="Save devices and sensor types" className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"><Save className="h-4 w-4" /><span>Save all</span></TooltipButton>
         </div>
       </div>
       <AlertDecisionDialog
         open={Boolean(pendingDelete)}
         tone={referencedCount > 0 ? 'warning' : 'danger'}
         title={referencedCount > 0 ? 'Sensor type is in use' : `Delete ${pendingDelete?.name || 'sensor type'}?`}
-        message={referencedCount > 0 ? `This sensor type is used by ${referencedCount} sensor${referencedCount === 1 ? '' : 's'} and cannot be deleted.` : 'This action cannot be undone.'}
+        message={referencedCount > 0 ? `This sensor type is used by ${referencedCount} sensor${referencedCount === 1 ? '' : 's'} and cannot be deleted.` : 'The deletion will be applied when you save all changes.'}
         confirmLabel={referencedCount > 0 ? 'OK' : 'Delete'}
         cancelLabel="Cancel"
         showCancel={referencedCount === 0}

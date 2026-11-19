@@ -4,6 +4,7 @@ import Paragraph from '../../Typography/Paragraph';
 import TooltipButton from '../../Widgets/TooltipButton';
 import TestSetupPickerDialog from '../../TestSetup/TestSetupPickerDialog';
 import { useProjectData } from '../../../contexts/GlobalDataContext';
+import { getTestSetupReadiness } from '../../../utils/testSetupReadiness';
 
 const ProjectTestSetupSection = ({ projectId: _projectId, value, onChange }) => {
   const { testSetups = [] } = useProjectData();
@@ -12,6 +13,7 @@ const ProjectTestSetupSection = ({ projectId: _projectId, value, onChange }) => 
   const selectedSetup = Array.isArray(testSetups)
     ? testSetups.find((setup) => setup?.id === value)
     : null;
+  const readinessIssues = selectedSetup ? getTestSetupReadiness(selectedSetup) : [];
 
   return (
     <>
@@ -19,8 +21,9 @@ const ProjectTestSetupSection = ({ projectId: _projectId, value, onChange }) => 
         <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
           <Heading3 className="text-sm text-gray-900">Selected test setup</Heading3>
           <Paragraph className="text-sm text-gray-700 mt-2">
-            {selectedSetup ? selectedSetup.name : 'No test setup linked'}
+            {selectedSetup ? (selectedSetup.name?.trim() || 'Untitled test setup') : 'No test setup linked'}
           </Paragraph>
+          {readinessIssues.length > 0 && <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">Incomplete — this setup remains linked, but cannot be exported yet.</p><ul className="mt-1 list-inside list-disc">{readinessIssues.map((issue, index) => <li key={index}>{issue.message}</li>)}</ul></div>}
         </div>
         <div className="flex items-center gap-3">
           <TooltipButton

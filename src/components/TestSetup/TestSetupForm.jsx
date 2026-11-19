@@ -10,6 +10,8 @@ import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
 import Paragraph from '../Typography/Paragraph';
 import { Template } from '@revolist/react-datagrid';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
+import UnitCellEditor from '../DataGrid/editors/UnitCellEditor';
+import { UnitCellTemplate } from '../DataGrid/UnitCellTemplate';
 import {
   BooleanCheckboxCellTemplate,
   DeleteRowCellTemplate,
@@ -18,22 +20,19 @@ import {
 import ProtocolEntityGridSection from './ProtocolEntityGridSection';
 import CharacteristicsEditor from './editors/CharacteristicsEditor';
 import SensorsEditor from './editors/SensorsEditor';
-import SensorTypeDialog from './SensorTypeDialog';
-import SensorTypePickerDialog from './SensorTypePickerDialog';
 import BasicInfoSection from './sections/BasicInfoSection';
 import EntityGridTabPanel from './sections/EntityGridTabPanel';
 import useProtocolSections from './hooks/useProtocolSections';
 import {
-  isReplaceableCharacteristic,
   normalizeCharacteristic
 } from '../../utils/testSetupCharacteristics';
 import {
   isSensorIncludedInDatasetOutput,
   normalizeSensor,
-  SENSOR_USAGE_DATASET_OUTPUT,
-  SENSOR_USAGE_OPTIONS
+  SENSOR_USAGE_DATASET_OUTPUT
 } from '../../utils/sensorUsage';
 import { pruneProtocolSensorState } from '../../utils/protocolSensorScope';
+import { getTestSetupReadiness } from '../../utils/testSetupReadiness';
 import {
   cloneAttachmentRefs,
   cleanupUnreferencedAttachmentRefs,
@@ -42,8 +41,6 @@ import {
   getAttachmentRollbackCleanup,
   mergeAttachmentRefs,
 } from '../../utils/attachmentLifecycle';
-
-const sensorGridPlugins = { select: new SelectTypePlugin() };
 
 const normalizeForDirtyCheck = (value) => {
   if (Array.isArray(value)) {
@@ -76,7 +73,8 @@ const normalizeSensorRows = (rows = [], previousSensors = [], sensorTypes = []) 
       ? {
         technologyPlatform: sensorType.technologyPlatform || '',
         technologyType: sensorType.technologyType || '',
-        measurementType: sensorType.measurementType || ''
+        measurementType: existing.measurementType || sensorType.measurementType || '',
+        quantityKindIdentifier: existing.quantityKindIdentifier || (!existing.measurementType ? sensorType.quantityKindIdentifier : '') || ''
       }
       : {};
     return normalizeSensor({
@@ -107,6 +105,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     characteristics: [],
     sensors: [],
     sensorTypes: [],
+    physicalDevices: [],
     configurations: [],
     measurementProtocols: [],
     processingProtocols: [],
@@ -117,6 +116,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const buildFormState = useCallback((sourceItem) => {
     if (!sourceItem) return initialFormState;
     return {
+      ...sourceItem,
       name: sourceItem.name || '',
       location: sourceItem.location || '',
       experimentPreparationProtocolName: sourceItem.experimentPreparationProtocolName || '',
@@ -126,6 +126,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       characteristics: (sourceItem.characteristics || []).map(normalizeCharacteristic),
       sensors: (sourceItem.sensors || []).map(normalizeSensor),
       sensorTypes: sourceItem.sensorTypes || [],
+      physicalDevices: Array.isArray(sourceItem.physicalDevices) ? sourceItem.physicalDevices : [],
       configurations: sourceItem.configurations || [],
       measurementProtocols: sourceItem.measurementProtocols || [],
       processingProtocols: sourceItem.processingProtocols || [],
@@ -138,12 +139,8 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const formHistoryScope = item?.id ? `testsetup:${item.id}` : `testsetup:${newFormHistoryScope}`;
 
   const [formData, setFormData] = useState(() => buildFormState(item));
-  const [formError, setFormError] = useState('');
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
-  const [sensorsView, setSensorsView] = useState('simple-view');
-  const [isSensorTypePickerOpen, setIsSensorTypePickerOpen] = useState(false);
-  const [isSensorTypeDialogOpen, setIsSensorTypeDialogOpen] = useState(false);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [initialFingerprint, setInitialFingerprint] = useState(() => getDirtyFingerprint(buildFormState(item)));
   const initialAttachmentRefs = useRef(collectAttachmentRefs(buildFormState(item)));
@@ -164,7 +161,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   useEffect(() => {
     const isGridActive = 
       (selectedTab === 'characteristics' && characteristicsView === 'grid-view') ||
-      (selectedTab === 'sensors' && sensorsView === 'grid-view') ||
       selectedTab === 'measurement-protocols' ||
       selectedTab === 'processing-protocols';
     setScreenWidth(isGridActive ? 'max-w-[100rem]' : 'max-w-5xl');
@@ -176,7 +172,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   }, [
     selectedTab,
     characteristicsView,
-    sensorsView,
     setScreenWidth
   ]);
 
@@ -240,35 +235,11 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   ]);
 
   const currentFingerprint = useMemo(() => getDirtyFingerprint(formData), [formData]);
+  const readinessIssues = useMemo(() => getTestSetupReadiness(formData), [formData]);
   const hasUnsavedChanges = currentFingerprint !== initialFingerprint;
   const historyScopeBase = `${formHistoryScope}:${initialFingerprint}`;
 
   const saveForm = useCallback(async () => {
-    if (
-      !formData.name.trim() ||
-      !formData.location.trim() ||
-      !formData.experimentPreparationProtocolName.trim() ||
-      !formData.testSpecimenName.trim()
-    ) {
-      setFormError('Please fill in all required fields (Name, Location, Experiment Preparation Protocol Name, Set-up or test specimen-name).');
-      return false;
-    }
-
-    const replaceableCharacteristics = formData.characteristics.filter((characteristic) => (
-      isReplaceableCharacteristic(characteristic.isReplaceable)
-    ));
-    if (replaceableCharacteristics.length === 0) {
-      setFormError('Please add at least one replaceable component in the Components tab.');
-      return false;
-    }
-    if (replaceableCharacteristics.some((characteristic) => (
-      !(characteristic.category || '').trim() || !(characteristic.description || '').trim()
-    ))) {
-      setFormError('Each replaceable component requires a category and description.');
-      return false;
-    }
-    setFormError('');
-
     const testSetupData = {
       ...formData,
       ...pruneProtocolSensorState(formData),
@@ -373,7 +344,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       commentHint: 'Manage comments in Simple View'
     }));
   }, [formData.characteristics]);
-  const sensorRows = useMemo(() => formData.sensors.map(normalizeSensor), [formData.sensors]);
 
   const addCharacteristicRow = useCallback(() => {
     setFormData((prev) => ({
@@ -393,28 +363,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         }
       ]
     }));
-  }, []);
-
-  const addSensorFromType = useCallback((sensorType) => {
-    if (!sensorType) return;
-    setFormData((prev) => ({
-      ...prev,
-      sensors: [
-        ...prev.sensors,
-        {
-          id: uuid4(),
-          alias: `Sensor SE${String(prev.sensors.length + 1).padStart(2, '0')}`,
-          technologyPlatform: sensorType.technologyPlatform || '',
-          technologyType: sensorType.technologyType || '',
-          measurementType: sensorType.measurementType || '',
-          description: '',
-          additionalInfo: [],
-          usage: SENSOR_USAGE_DATASET_OUTPUT,
-          sensorTypeId: sensorType.id
-        }
-      ]
-    }));
-    setIsSensorTypePickerOpen(false);
   }, []);
 
   const characteristicGridConfig = useMemo(() => ({
@@ -447,7 +395,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         cellTemplate: Template(BooleanCheckboxCellTemplate)
       },
       { prop: 'value', name: 'Value', size: 200, readonly: false, cellProperties: ({ model }) => model?.isReplaceable ? { style: { background: '#f3f4f6', color: '#9ca3af' } } : {} },
-      { prop: 'unit', name: 'Unit', size: 120, readonly: false, cellProperties: ({ model }) => model?.isReplaceable ? { style: { background: '#f3f4f6', color: '#9ca3af' } } : {} },
+      { prop: 'unit', name: 'Unit', size: 160, readonly: false, unitSelector: true, editor: UnitCellEditor, cellTemplate: UnitCellTemplate, cellProperties: ({ model }) => model?.isReplaceable ? { style: { background: '#f3f4f6', color: '#9ca3af' } } : {} },
       {
         prop: 'description',
         name: 'Replaceable Component Description',
@@ -474,68 +422,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     }
   }), [characteristicRows, addCharacteristicRow]);
 
-  const sensorGridConfig = useMemo(() => ({
-    title: 'Sensors',
-    rowData: sensorRows,
-    columnData: [],
-    mappings: [],
-    staticColumns: [
-      {
-        prop: 'actions',
-        name: '',
-        size: 70,
-        readonly: true,
-        cellTemplate: Template(DeleteRowCellTemplate),
-        cellProperties: () => ({ style: { 'text-align': 'center' } })
-      },
-      {
-        prop: 'pattern',
-        name: 'Identifier',
-        size: 140,
-        readonly: true,
-        cellTemplate: Template(PatternCellTemplate, { prefix: 'Sensor S' })
-      },
-      { prop: 'alias', name: 'Alias', size: 160, readonly: false },
-      {
-        prop: 'sensorTypeId',
-        name: 'Sensor Type',
-        size: 250,
-        readonly: false,
-        columnType: 'select',
-        labelKey: 'label',
-        valueKey: 'value',
-        source: formData.sensorTypes.map((type) => ({ value: type.id, label: type.name || 'Unnamed type' }))
-      },
-      {
-        prop: 'usage',
-        name: 'Sensor Role',
-        size: 250,
-        readonly: false,
-        columnType: 'select',
-        labelKey: 'label',
-        valueKey: 'value',
-        source: SENSOR_USAGE_OPTIONS
-      },
-      { prop: 'description', name: 'Description', size: 220, readonly: false },
-    ],
-    customActions: [
-      {
-        label: '+ Add sensor from type',
-        title: 'Add sensor from a managed type',
-        onClick: () => setIsSensorTypePickerOpen(true),
-        disabled: formData.sensorTypes.length === 0,
-        className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-      },
-      {
-        label: 'Manage sensor types',
-        title: 'Create or edit managed sensor types',
-        onClick: () => setIsSensorTypeDialogOpen(true),
-        className: 'px-3 py-1 text-sm rounded border bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
-      }
-    ],
-    plugins: sensorGridPlugins
-  }), [sensorRows, formData.sensorTypes]);
-
   const handleCharacteristicRowsChange = useCallback((nextRows) => {
     setFormData((prev) => ({
       ...prev,
@@ -550,17 +436,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         });
       })
     }));
-  }, []);
-
-  const handleSensorRowsChange = useCallback((nextRows) => {
-    setFormData((prev) => {
-      const sensors = normalizeSensorRows(nextRows, prev.sensors, prev.sensorTypes);
-      return {
-        ...prev,
-        sensors,
-        ...pruneProtocolSensorState({ ...prev, sensors })
-      };
-    });
   }, []);
 
   const {
@@ -603,11 +478,10 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       </div>
 
       <div className="p-4">
-        {formError && (
-          <Paragraph className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            {formError}
-          </Paragraph>
-        )}
+        <div className={`mb-4 rounded-md border p-3 text-sm ${readinessIssues.length ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-green-200 bg-green-50 text-green-800'}`}>
+          <p className="font-semibold">{readinessIssues.length ? `Incomplete — ${readinessIssues.length} item${readinessIssues.length === 1 ? '' : 's'} to complete` : 'Ready for questionnaire'}</p>
+          {readinessIssues.length > 0 && <><p className="mt-1">You can save this draft and complete it later.</p><ul className="mt-2 list-inside list-disc">{readinessIssues.map((issue, index) => <li key={`${issue.section}-${index}`}><button type="button" className="text-left underline" onClick={() => setSelectedTab(issue.section)}>{issue.message}</button></li>)}</ul></>}
+        </div>
         <TabSwitcher
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
@@ -648,16 +522,12 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
           onRowDataChange={handleCharacteristicRowsChange}
         />
 
-        <EntityGridTabPanel
-          isActive={selectedTab === 'sensors'}
-          selectedView={sensorsView}
-          onViewChange={setSensorsView}
-          simpleViewTooltip="Edit sensors with collapsible cards"
-          gridViewTooltip="Edit sensors inline in a grid"
-          simpleContent={
+        <TabPanel isActive={selectedTab === 'sensors'} unmountOnHide>
             <SensorsEditor
               sensors={formData.sensors}
               sensorTypes={formData.sensorTypes}
+              physicalDevices={formData.physicalDevices}
+              onPhysicalDevicesChange={(physicalDevices) => setFormData((prev) => ({ ...prev, physicalDevices }))}
               onSensorsChange={(nextSensors) => setFormData((prev) => {
                 const sensors = normalizeSensorRows(nextSensors, prev.sensors, prev.sensorTypes);
                 return {
@@ -670,12 +540,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
                 setFormData((prev) => ({ ...prev, sensorTypes }))
               }
             />
-          }
-          gridConfig={sensorGridConfig}
-          historyScopeKey={`${historyScopeBase}:sensors`}
-          isGridActive={selectedTab === 'sensors' && sensorsView === 'grid-view'}
-          onRowDataChange={handleSensorRowsChange}
-        />
+        </TabPanel>
 
         <TabPanel isActive={selectedTab === 'measurement-protocols'}>
           <ProtocolEntityGridSection
@@ -772,19 +637,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
         onConfirm={handleSaveAndClose}
         onTertiary={handleDiscardAndClose}
         onCancel={handleKeepEditing}
-      />
-      <SensorTypeDialog
-        open={isSensorTypeDialogOpen}
-        types={formData.sensorTypes}
-        sensors={formData.sensors}
-        onChange={(sensorTypes) => setFormData((prev) => ({ ...prev, sensorTypes }))}
-        onClose={() => setIsSensorTypeDialogOpen(false)}
-      />
-      <SensorTypePickerDialog
-        open={isSensorTypePickerOpen}
-        types={formData.sensorTypes}
-        onSelect={addSensorFromType}
-        onClose={() => setIsSensorTypePickerOpen(false)}
       />
     </div>
   );

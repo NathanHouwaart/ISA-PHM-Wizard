@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 import { slides } from "../components/Slides/slides";
 import SlideReloadOverlay from '../components/Slides/SlideReloadOverlay';
 import { cn } from '../utils/utils';
+import { getTestSetupReadiness } from '../utils/testSetupReadiness';
 import Heading1 from '../components/Typography/Heading1';
 // ProjectSelector removed in favor of the single 'Change Project' button in the header
 import { useProjectActions, useProjectData } from '../contexts/GlobalDataContext';
@@ -454,6 +455,11 @@ export const IsaQuestionnaire = () => {
         </div>
 
         <Heading1> ISA Questionnaire Form </Heading1>
+        {selectedTestSetupId && (() => {
+          const selectedSetup = testSetups?.find((setup) => setup.id === selectedTestSetupId);
+          const issues = getTestSetupReadiness(selectedSetup);
+          return issues.length ? <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">The linked test setup is incomplete. It remains linked, but export is blocked until it is ready.</p><ul className="mt-1 list-inside list-disc">{issues.map((issue, index) => <li key={index}>{issue.message}</li>)}</ul></div> : null;
+        })()}
       </div>
 
       <div className="flex justify-center items-center mb-1 gap-4">

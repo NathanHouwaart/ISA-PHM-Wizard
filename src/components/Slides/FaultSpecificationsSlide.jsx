@@ -18,6 +18,8 @@ import DataGrid from '../DataGrid/DataGrid';
 import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
+import UnitCellEditor from '../DataGrid/editors/UnitCellEditor';
+import { UnitCellTemplate } from '../DataGrid/UnitCellTemplate';
 import {
     FAULT_SPEC_TYPES,
     STUDY_VARIABLE_VALUE_MODE_OPTIONS,
@@ -123,6 +125,9 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
                 prop: 'unit',
                 name: 'Unit',
                 size: 120,
+                unitSelector: true,
+                editor: UnitCellEditor,
+                cellTemplate: UnitCellTemplate,
                 readonly: false
             },
             {

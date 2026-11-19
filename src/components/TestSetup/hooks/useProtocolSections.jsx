@@ -8,10 +8,30 @@ import {
 } from '../../../constants/suggestionCatalog';
 import { isSensorApplicable } from '../../../utils/protocolApplicability';
 import { getDatasetOutputSensors } from '../../../utils/protocolSensorScope';
+import UnitCellEditor from '../../DataGrid/editors/UnitCellEditor';
+
+const ensureMeasurementFields = (protocol) => {
+  const parameters = protocol.parameters || [];
+  const builtins = [
+    { builtinKey: 'sampling_rate', name: 'Sampling Rate' },
+    { builtinKey: 'measured_unit', name: 'Measured Unit' },
+  ];
+  const missing = builtins.filter((item) => !parameters.some((parameter) => parameter.builtinKey === item.builtinKey));
+  if (!missing.length) return protocol;
+  return { ...protocol, parameters: [...missing.map((item) => ({ ...item, id: `${protocol.id}::${item.builtinKey}`, description: '', unit: '' })), ...parameters] };
+};
 
 const useProtocolSections = ({ formData, setFormData }) => {
   const [activeMeasurementProtocolId, setActiveMeasurementProtocolId] = useState(null);
   const [activeProcessingProtocolId, setActiveProcessingProtocolId] = useState(null);
+  useEffect(() => {
+    setFormData((previous) => {
+      const protocols = previous.measurementProtocols || [];
+      const updated = protocols.map(ensureMeasurementFields);
+      return updated.every((protocol, index) => protocol === protocols[index])
+        ? previous : { ...previous, measurementProtocols: updated };
+    });
+  }, [formData.measurementProtocols, setFormData]);
   const protocolSensors = useMemo(
     () => getDatasetOutputSensors(formData.sensors),
     [formData.sensors]
@@ -309,7 +329,9 @@ const useProtocolSections = ({ formData, setFormData }) => {
       mappingRowId: 'targetId',
       mappingColumnId: 'sourceId',
       mappingValue: 'value',
-      hasChildColumns: true
+      hasChildColumns: true,
+      specEditor: UnitCellEditor,
+      unitEditor: UnitCellEditor,
     },
     staticColumns: [
       {
@@ -318,7 +340,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
         size: 70,
         readonly: true,
         pin: 'colPinStart',
-        cellTemplate: Template(DeleteRowCellTemplate),
+        cellTemplate: Template((props) => props.model?.builtinKey ? null : DeleteRowCellTemplate(props)),
         cellProperties: () => ({ style: { 'text-align': 'center' } })
       },
       {
@@ -350,12 +372,18 @@ const useProtocolSections = ({ formData, setFormData }) => {
         className: 'px-3 py-1 text-sm rounded border bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
       }
     ],
-    isCellEditable: ({ isStaticColumn, columnProp }) => {
-      if (isStaticColumn) return true;
+    isCellEditable: ({ row, isStaticColumn, columnProp }) => {
+      if (isStaticColumn) return !(row?.builtinKey && columnProp === 'name');
+      if (row?.builtinKey === 'measured_unit' && columnProp.endsWith('_unit')) return false;
       const sensorId = columnProp?.replace(/_spec$|_unit$/, '');
+      if (row?.builtinKey === 'sampling_rate' && columnProp.endsWith('_unit')) {
+        const mapping = activeMeasurementProtocolMappings.find((item) => item.sourceId === sensorId && item.targetId === row.id);
+        if (['unknown', 'not applicable'].includes(String(mapping?.value?.[0] || '').toLowerCase())) return false;
+      }
       return isSensorApplicable(activeMeasurementProtocol, sensorId);
     },
-    mappingCellProperties: ({ columnId }) => {
+    mappingCellProperties: ({ row, columnId, prop }) => {
+      if (row?.builtinKey === 'measured_unit' && String(prop || '').endsWith('_unit')) return { style: { background: '#f3f4f6' } };
       if (!isSensorApplicable(activeMeasurementProtocol, columnId)) {
         return { style: { background: '#f3f4f6', color: '#9ca3af' } };
       }
@@ -385,7 +413,9 @@ const useProtocolSections = ({ formData, setFormData }) => {
       mappingRowId: 'targetId',
       mappingColumnId: 'sourceId',
       mappingValue: 'value',
-      hasChildColumns: true
+      hasChildColumns: true,
+      specEditor: UnitCellEditor,
+      unitEditor: UnitCellEditor,
     },
     staticColumns: [
       {

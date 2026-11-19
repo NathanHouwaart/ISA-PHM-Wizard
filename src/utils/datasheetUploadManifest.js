@@ -33,6 +33,18 @@ export const buildDatasheetUploadManifest = async (payload = {}) => {
     });
   }
 
+  for (const sensor of payload?.test_setup?.sensors || []) {
+    await addAttachment(sensor?.datasheet, {
+      kind: 'sensor', id: sensor.id, label: sensor.alias || 'a sensor'
+    });
+  }
+
+  for (const device of payload?.test_setup?.physicalDevices || []) {
+    await addAttachment(device?.datasheet, {
+      kind: 'physical_device', id: device.id, label: device.name || 'a physical device'
+    });
+  }
+
   for (const componentType of payload?.test_setup?.configurationTypes || []) {
     await addAttachment(componentType?.datasheet, {
       kind: 'component_type', id: componentType.id, label: componentType.name || 'a component type'

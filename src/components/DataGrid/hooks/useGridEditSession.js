@@ -210,6 +210,12 @@ export default function useGridEditSession({
         }
 
         const stringValue = normalizeCellValue(newValue);
+        // RevoGrid writes the editor payload into its displayed row before this
+        // event. Keep that transient value scalar even when the selection is a
+        // no-op and our transaction intentionally does not trigger a re-render.
+        if (newValue && typeof newValue === 'object' && typeof newValue.valueIdentifier === 'string' && detail.model) {
+            detail.model[columnProp] = stringValue;
+        }
         const isStaticColumn = staticColumns.some((col) => col.prop === columnProp);
 
         if (isStaticColumn) {
@@ -217,7 +223,9 @@ export default function useGridEditSession({
                 rowDataUpdates: [{
                     rowId: row[fields.rowId],
                     columnProp,
-                    value: stringValue
+                    value: newValue && typeof newValue === 'object' && typeof newValue.valueIdentifier === 'string'
+                        ? { value: stringValue, valueIdentifier: newValue.valueIdentifier }
+                        : stringValue
                 }],
                 reason: 'row-cell-edit'
             });
@@ -226,7 +234,9 @@ export default function useGridEditSession({
                 mappingUpdates: [{
                     rowId: row[fields.rowId],
                     columnId: columnProp,
-                    value: stringValue
+                    value: newValue && typeof newValue === 'object' && typeof newValue.valueIdentifier === 'string'
+                        ? { value: stringValue, valueIdentifier: newValue.valueIdentifier }
+                        : stringValue
                 }],
                 reason: 'mapping-cell-edit'
             });

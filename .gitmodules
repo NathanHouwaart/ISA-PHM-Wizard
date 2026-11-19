@@ -1,0 +1,3 @@
+[submodule "vendor/isa-phm-specification"]
+	path = vendor/isa-phm-specification
+	url = https://github.com/NathanHouwaart/ISA-PHM-Specification.git

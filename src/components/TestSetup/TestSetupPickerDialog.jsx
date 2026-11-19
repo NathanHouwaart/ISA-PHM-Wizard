@@ -9,6 +9,7 @@ import TooltipButton from '../Widgets/TooltipButton';
 import IconTooltipButton from '../Widgets/IconTooltipButton';
 import TestSetupSelectableCard from './TestSetupSelectableCard';
 import Z_INDEX from '../../constants/zIndex';
+import { getTestSetupReadiness } from '../../utils/testSetupReadiness';
 
 /**
  * TestSetupPickerDialog
@@ -51,9 +52,11 @@ const TestSetupPickerDialog = ({
   if (!open) return null;
 
   const visibleItems = results.length > 0 ? results : initialItems;
+  const activeSetup = initialItems.find((setup) => setup.id === activeSetupId);
+  const activeIssues = activeSetup ? getTestSetupReadiness(activeSetup) : [];
 
   const handleConfirm = () => {
-    if (!activeSetupId) return;
+    if (!activeSetupId || !activeSetup || activeIssues.length) return;
     onConfirm?.(activeSetupId);
   };
 
@@ -118,6 +121,7 @@ const TestSetupPickerDialog = ({
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 bg-white flex-shrink-0">
+            {activeIssues.length > 0 && <p className="mr-auto text-sm text-amber-800">Incomplete: {activeIssues.map((issue) => issue.message).join(' ')}</p>}
             <TooltipButton
               tooltipText="Close without making changes"
               onClick={() => onClose?.()}
@@ -128,8 +132,8 @@ const TestSetupPickerDialog = ({
             <TooltipButton
               tooltipText="Assign the selected test setup to this project"
               onClick={handleConfirm}
-              disabled={!activeSetupId}
-              className={activeSetupId ? '' : 'opacity-60 cursor-not-allowed'}
+              disabled={!activeSetupId || activeIssues.length > 0}
+              className={activeSetupId && !activeIssues.length ? '' : 'opacity-60 cursor-not-allowed'}
             >
               Assign test setup
             </TooltipButton>

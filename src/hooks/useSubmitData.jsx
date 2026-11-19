@@ -4,6 +4,8 @@ import { buildConversionPayload } from '../utils/conversionPayload';
 import { waitForNextPaint } from '../utils/waitForNextPaint';
 import { buildDatasheetUploadManifest } from '../utils/datasheetUploadManifest';
 import { buildImageUploadManifest } from '../utils/imageUploadManifest';
+import { validateMeasurementMetadata } from '../utils/measurementMetadataValidation';
+import { getTestSetupReadiness } from '../utils/testSetupReadiness';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
@@ -18,6 +20,11 @@ const sanitizeFileName = (value) => {
     .replace(/[<>:"/\\|?*]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+};
+
+export const getDatasetDownloadFileName = (projectName, isZip) => {
+  const fileBaseName = sanitizeFileName(projectName || 'Project') || 'Project';
+  return `${fileBaseName} ISA-PHM Dataset.${isZip ? 'zip' : 'json'}`;
 };
 
 // Hook responsibility: perform the submit/convert API call using data from the
@@ -61,6 +68,9 @@ export default function useSubmitData() {
     await waitForNextPaint();
 
     try {
+      const selectedSetup = testSetups.find((setup) => setup.id === selectedTestSetupId);
+      const setupIssues = getTestSetupReadiness(selectedSetup);
+      if (setupIssues.length) throw new Error(`The selected test setup is incomplete. Complete these items before export:\n${setupIssues.map((issue) => `- ${issue.message}`).join('\n')}`);
       const jsonData = buildConversionPayload({
         investigation,
         publications,
@@ -78,6 +88,9 @@ export default function useSubmitData() {
         studyToMeasurementProtocolSelection,
         studyToProcessingProtocolSelection,
       });
+
+      const metadataErrors = validateMeasurementMetadata(jsonData);
+      if (metadataErrors.length) throw new Error(`Complete measurement metadata before export:\n${metadataErrors.join('\n')}`);
 
       setMessage('Uploading to conversion service...');
 
@@ -124,8 +137,7 @@ export default function useSubmitData() {
       const a = document.createElement('a');
       a.href = url;
       const activeProjectName = projects.find((project) => project?.id === currentProjectId)?.name;
-      const fileBaseName = sanitizeFileName(activeProjectName || 'Project') || 'Project';
-      a.download = isZip ? `${fileBaseName} ISA-PHM.zip` : `${fileBaseName} ISA-PHM.json`;
+      a.download = getDatasetDownloadFileName(activeProjectName, isZip);
       a.click();
       URL.revokeObjectURL(url);
 

@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { decodeJsonFromStorage } from './storageCodec';
+import { getTestSetupReadiness } from './testSetupReadiness';
+import { missingSensorTypeFields } from './sensorTypeValidation';
 
 const mocks = vi.hoisted(() => ({
   datasheets: new Map(),
@@ -37,6 +39,7 @@ vi.mock('./generateId', () => ({
 import {
   commitProjectArchiveImport,
   createProjectArchive,
+  getProjectArchiveFileName,
   readProjectImportFile,
 } from './projectArchive';
 
@@ -86,6 +89,9 @@ const blobToBytes = (blob) => new Promise((resolve, reject) => {
 });
 
 describe('project archive', () => {
+  it('uses an identifiable project archive filename', () => {
+    expect(getProjectArchiveFileName({ projectName: 'Pump project' })).toBe('Pump project ISA-PHM Wizard Project.zip');
+  });
   beforeEach(() => {
     mocks.datasheets.clear();
     mocks.images.clear();
@@ -238,5 +244,29 @@ describe('project archive', () => {
     expect(candidate.legacy).toBe(false);
     expect(candidate.project.selectedTestSetup?.id).toBeTruthy();
     expect(candidate.project.selectedTestSetup?.name).toBeTruthy();
+    expect(getTestSetupReadiness(candidate.project.selectedTestSetup)).toEqual([]);
+    for (const sensorType of candidate.project.selectedTestSetup.sensorTypes || []) {
+      expect(missingSensorTypeFields(sensorType), sensorType.name).toEqual([]);
+    }
+  }, 30000);
+
+  it('describes the enDAQ orientation and rotation outputs without confusing their quantities', async () => {
+    const bytes = await fs.readFile(path.resolve(process.cwd(), 'public/examples/diagnostics-example.isa-phm.zip'));
+    const candidate = await readProjectImportFile(asProjectFile(new Blob([bytes]), 'diagnostics.zip'));
+    const sensors = candidate.project.selectedTestSetup.sensors;
+    const orientation = sensors.filter((sensor) => sensor.alias.includes('Orientation Sensor'));
+    const rotation = sensors.filter((sensor) => sensor.alias.includes('Rotation Sensor'));
+    expect(orientation).toHaveLength(4);
+    expect(rotation).toHaveLength(3);
+    expect(orientation.every((sensor) => sensor.measurementType === 'Quaternion component' && sensor.quantityKindIdentifier === 'urn:isa-phm:quantity:quaternion-component')).toBe(true);
+    expect(rotation.every((sensor) => sensor.measurementType === 'Angular Velocity' && sensor.quantityKindIdentifier === 'http://qudt.org/vocab/quantitykind/AngularVelocity')).toBe(true);
+    const setup = candidate.project.selectedTestSetup;
+    const protocol = setup.measurementProtocols[0];
+    const measuredUnit = protocol.parameters.find((parameter) => parameter.builtinKey === 'measured_unit');
+    expect(measuredUnit).toBeTruthy();
+    for (const sensor of orientation) {
+      const mapping = setup.sensorToMeasurementProtocolMapping.find((item) => item.sourceId === sensor.id && item.targetId === measuredUnit.id && item.protocolId === protocol.id);
+      expect(mapping?.value).toEqual(['Not applicable', '']);
+    }
   }, 30000);
 });

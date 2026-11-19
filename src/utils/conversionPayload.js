@@ -7,8 +7,20 @@ import {
 import { isSensorApplicable } from './protocolApplicability';
 import { isSensorIncludedInDatasetOutput } from './sensorUsage';
 import { isReplaceableCharacteristic } from './testSetupCharacteristics';
+import { resolveUnambiguousQuantity } from './quantityCatalogue';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const resolveSensorMetadata = (sensor, sensorTypes) => {
+  const type = sensor.sensorTypeId && asArray(sensorTypes).find((item) => item.id === sensor.sensorTypeId);
+  const quantity = !sensor.quantityKindIdentifier && resolveUnambiguousQuantity(sensor.measurementType);
+  return {
+    ...sensor,
+    ...(type?.technologyPlatform?.trim() ? { technologyPlatform: type.technologyPlatform } : {}),
+    ...(type?.technologyType?.trim() ? { technologyType: type.technologyType } : {}),
+    ...(quantity ? { quantityKindIdentifier: quantity.identifier } : {}),
+  };
+};
 
 const asObject = (value) => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -84,6 +96,8 @@ const mapProtocolsForSensor = (mappings = [], sensorId, selectedProtocolId = '')
       targetId: mapping.targetId ?? mapping.target ?? mapping.mappingTargetId ?? null,
       protocolId: mapping.protocolId ?? '',
       value: normalizeProtocolMappingValue(mapping.value),
+      ...(mapping.valueIdentifier ? { valueIdentifier: mapping.valueIdentifier } : {}),
+      ...(mapping.unitIdentifier ? { unitIdentifier: mapping.unitIdentifier } : {}),
     }));
 };
 
@@ -203,13 +217,21 @@ export const buildConversionPayload = ({
   const payloadTestSetup = selectedSetup
     ? {
       ...selectedSetup,
+      sensors: asArray(selectedSetup.sensors).map((sensor) => resolveSensorMetadata(sensor, selectedSetup.sensorTypes)),
       configurations: payloadConfigurations,
       configurationTypes: payloadConfigurationTypes,
     }
     : null;
   const selectedMeasurementProtocols = asArray(selectedSetup?.measurementProtocols);
   const selectedProcessingProtocols = asArray(selectedSetup?.processingProtocols);
-  const sensors = asArray(selectedSetup?.sensors).filter(isSensorIncludedInDatasetOutput);
+  const devices = asArray(selectedSetup?.physicalDevices);
+  const sensors = asArray(payloadTestSetup?.sensors).filter(isSensorIncludedInDatasetOutput).map((sensor) => {
+    const device = devices.find((item) => item.id === sensor.physicalDeviceId);
+    if (sensor.physicalDeviceId && !device) {
+      throw new Error(`Sensor "${sensor.alias || sensor.id}" refers to a missing physical device.`);
+    }
+    return device ? { ...sensor, physicalDevice: device } : sensor;
+  });
   const measurementMappings = asArray(selectedSetup?.sensorToMeasurementProtocolMapping);
   const processingMappings = asArray(selectedSetup?.sensorToProcessingProtocolMapping);
 

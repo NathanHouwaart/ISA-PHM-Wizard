@@ -18,6 +18,8 @@ import DataGrid from '../DataGrid/DataGrid';
 import { Template } from '@revolist/react-datagrid';
 import { BoldCell, DeleteRowCellTemplate } from '../DataGrid/CellTemplates';
 import SelectTypePlugin from '@revolist/revogrid-column-select';
+import UnitCellEditor from '../DataGrid/editors/UnitCellEditor';
+import { UnitCellTemplate } from '../DataGrid/UnitCellTemplate';
 import {
     STUDY_VARIABLE_VALUE_MODE_OPTIONS,
     STUDY_VARIABLE_VALUE_MODE_SCALAR,
@@ -107,7 +109,10 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
             {
                 prop: 'unit',
                 name: 'Unit',
-                size: 120,
+                size: 160,
+                unitSelector: true,
+                editor: UnitCellEditor,
+                cellTemplate: UnitCellTemplate,
                 readonly: false
             },
             {

@@ -53,6 +53,22 @@ const makeBaseInput = () => ({
 });
 
 describe('buildExportValidationReport', () => {
+  it('warns on explicit mass units for acceleration without blocking', () => {
+    const input = makeBaseInput();
+    input.testSetups[0].sensors = [{ id: 'sensor-1', alias: 'S1', quantityKindIdentifier: 'http://qudt.org/vocab/quantitykind/Acceleration' }];
+    input.testSetups[0].measurementProtocols = [{ id: 'mp', parameters: [{ id: 'unit', builtinKey: 'measured_unit' }] }];
+    input.testSetups[0].sensorToMeasurementProtocolMapping = [{ sourceId: 'sensor-1', protocolId: 'mp', targetId: 'unit', value: ['g', ''], valueIdentifier: 'http://qudt.org/vocab/unit/GM' }];
+    input.studyToMeasurementProtocolSelection = [{ studyId: 'study-1', protocolId: 'mp' }];
+    const report = buildExportValidationReport(input);
+    const warn = report.warningIssues.find((issue) => issue.id === 'quantity-unit-compatibility');
+    expect(warn?.level).toBe('warning');
+    expect(warn?.items[0]).toContain('mass unit');
+    expect(report.blockingIssues.some((issue) => issue.id === 'quantity-unit-compatibility')).toBe(false);
+    input.testSetups[0].sensorToMeasurementProtocolMapping[0].valueIdentifier = 'http://qudt.org/vocab/unit/G';
+    expect(buildExportValidationReport(input).warningIssues.some((issue) => issue.id === 'quantity-unit-compatibility')).toBe(false);
+    input.testSetups[0].sensorToMeasurementProtocolMapping[0].valueIdentifier = 'urn:custom:unit';
+    expect(buildExportValidationReport(input).warningIssues.some((issue) => issue.id === 'quantity-unit-compatibility')).toBe(false);
+  });
   it('blocks export when a physical component ID has no selected type', () => {
     const report = buildExportValidationReport({
       ...makeBaseInput(),

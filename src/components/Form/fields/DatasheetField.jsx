@@ -10,7 +10,7 @@ import { MAX_DATASHEET_BYTES, MAX_DATASHEET_MB } from '../../../constants/attach
 
 const emptyDatasheet = { attachmentId: '', fileName: '', mimeType: '', size: 0, notAvailable: false };
 
-const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) => {
+const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation, unavailableLabel = 'N.A.', required = false }) => {
   const inputRef = useRef(null);
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -67,7 +67,7 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
   };
 
   return (
-    <FormFieldShell label={label} fieldType="text" explanation={explanation}>
+    <FormFieldShell label={label} fieldType="text" explanation={explanation} required={required}>
       <div>
         <div className="flex items-center gap-2">
           <div
@@ -80,7 +80,7 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
             <FileText className="h-4 w-4 shrink-0 text-gray-400" />
             <input
               readOnly
-              value={datasheet.notAvailable ? 'N.A.' : datasheet.fileName}
+              value={datasheet.notAvailable ? unavailableLabel : datasheet.fileName}
               placeholder={datasheet.notAvailable ? '' : 'Drop a PDF or select a datasheet'}
               onClick={() => !datasheet.notAvailable && inputRef.current?.click()}
               className={cn(BASE_INPUT_CLASSNAME, 'cursor-pointer', datasheet.notAvailable && 'bg-gray-100 text-gray-500')}
@@ -89,7 +89,7 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation }) =
           <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => { selectFile(event.target.files?.[0]); event.target.value = ''; }} />
           {!datasheet.notAvailable && <TooltipButton onClick={() => inputRef.current?.click()} tooltipText="Select PDF datasheet" className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"><Upload className="h-4 w-4" /></TooltipButton>}
           {datasheet.fileName && !datasheet.notAvailable && <TooltipButton onClick={clearFile} tooltipText="Remove datasheet" className="p-2 text-rose-600 hover:bg-rose-50 rounded-md"><X className="h-4 w-4" /></TooltipButton>}
-          <label className="flex shrink-0 items-center gap-1.5 text-sm text-gray-700"><input type="checkbox" checked={datasheet.notAvailable} onChange={(event) => toggleNotAvailable(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />N.A.</label>
+          <label className="flex shrink-0 items-center gap-1.5 text-sm text-gray-700"><input type="checkbox" checked={datasheet.notAvailable} onChange={(event) => toggleNotAvailable(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />{unavailableLabel}</label>
         </div>
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       </div>

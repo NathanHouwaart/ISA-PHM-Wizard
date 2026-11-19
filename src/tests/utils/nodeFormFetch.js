@@ -64,9 +64,9 @@ export async function readConversionJson(response) {
   }
 
   const entries = unzipSync(body);
-  const output = entries['ISA-PHM-Out.json'];
+  const output = entries['ISA-PHM-Out.isa-phm.json'];
   if (!output) {
-    throw new Error('Conversion ZIP does not contain ISA-PHM-Out.json');
+    throw new Error('Conversion ZIP does not contain ISA-PHM-Out.isa-phm.json');
   }
   return JSON.parse(strFromU8(output));
 }

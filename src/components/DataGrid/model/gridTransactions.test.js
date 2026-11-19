@@ -8,6 +8,39 @@ import {
 } from './gridTransactions';
 
 describe('gridTransactions', () => {
+    it('stores and updates the identifier for a protocol unit independently of its value identifier', () => {
+        const fields = { mappingRowId: 'rowId', mappingColumnId: 'sensorId', mappingValue: 'value', hasChildColumns: true };
+        const base = [{ rowId: 'r1', sensorId: 's1', value: ['12', 'g'], valueIdentifier: 'urn:value', unitIdentifier: 'urn:gravity' }];
+        const updates = [{ rowId: 'r1', columnId: 's1_unit', value: { value: 'g', valueIdentifier: 'urn:gram' } }];
+        const effective = filterEffectiveMappingUpdates(updates, base, fields);
+        expect(effective).toHaveLength(1);
+        const changed = applyMappingUpdates(base, effective, fields);
+        expect(changed[0]).toMatchObject({ value: ['12', 'g'], valueIdentifier: 'urn:value', unitIdentifier: 'urn:gram' });
+        expect(applyMappingUpdates(changed, [{ rowId: 'r1', columnId: 's1_unit', value: 'kg' }], fields)[0].unitIdentifier).toBeUndefined();
+    });
+    it('stores the chosen identifier on a study variable and clears it after a text edit', () => {
+        const rows = [{ id: 'r1', unit: 'g', unitIdentifier: 'urn:gravity' }];
+        const update = [{ rowId: 'r1', columnProp: 'unit', value: { value: 'g', valueIdentifier: 'urn:gram' } }];
+        const changed = applyRowUpdates(rows, filterEffectiveRowUpdates(update, rows));
+        expect(changed[0]).toMatchObject({ unit: 'g', unitIdentifier: 'urn:gram' });
+        expect(applyRowUpdates(changed, [{ rowId: 'r1', columnProp: 'unit', value: 'kg' }])[0].unitIdentifier).toBe('');
+    });
+    it('persists a selected identifier even when two units share a symbol', () => {
+        const fields = { mappingRowId: 'rowId', mappingColumnId: 'sensorId', mappingValue: 'value', hasChildColumns: true };
+        const base = [{ rowId: 'r1', sensorId: 's1', value: ['g', ''], valueIdentifier: 'urn:gravity' }];
+        const updates = [{ rowId: 'r1', columnId: 's1_spec', value: { value: 'g', valueIdentifier: 'urn:gram' } }];
+        const effective = filterEffectiveMappingUpdates(updates, base, fields);
+        expect(effective).toHaveLength(1);
+        expect(applyMappingUpdates(base, effective, fields)[0]).toMatchObject({ value: ['g', ''], valueIdentifier: 'urn:gram' });
+    });
+    it('clears a stale unit identifier when the specification changes but preserves it for unit edits', () => {
+        const fields = { mappingRowId: 'rowId', mappingColumnId: 'sensorId', mappingValue: 'value', hasChildColumns: true };
+        const base = [{ rowId: 'r1', sensorId: 's1', value: ['g', ''], valueIdentifier: 'urn:unit:gravity' }];
+        const changed = applyMappingUpdates(base, [{ rowId: 'r1', columnId: 's1_spec', value: 'Unknown' }], fields);
+        expect(changed[0].valueIdentifier).toBeUndefined();
+        const unitChanged = applyMappingUpdates(base, [{ rowId: 'r1', columnId: 's1_unit', value: 'Hz' }], fields);
+        expect(unitChanged[0].valueIdentifier).toBe('urn:unit:gravity');
+    });
     it('normalizes scalar-like editor payloads and strips control characters', () => {
         expect(normalizeCellValue({ value: 'abc' })).toBe('abc');
         expect(normalizeCellValue({ id: 42 })).toBe('42');

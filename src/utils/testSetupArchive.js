@@ -40,6 +40,7 @@ const TEST_SETUP_ARRAY_FIELDS = [
   'characteristics',
   'sensors',
   'sensorTypes',
+  'physicalDevices',
   'configurations',
   'comments',
   'images',
@@ -87,6 +88,9 @@ const collectOwnedAttachmentReferences = (testSetup) => {
   });
   (testSetup.sensorTypes || []).forEach((sensorType) => {
     addDatasheet(sensorType?.datasheet, 'sensor_type', sensorType?.id);
+  });
+  (testSetup.physicalDevices || []).forEach((device) => {
+    addDatasheet(device?.datasheet, 'physical_device', device?.id);
   });
   (testSetup.images || []).forEach((image) => {
     if (!image?.attachmentId) return;

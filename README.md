@@ -148,9 +148,15 @@ Individual guides for each of the 6 test setup editor tabs live in [`docs/test-s
 ## Run Locally
 
 ```powershell
+git submodule update --init --recursive
 npm install
 npm run dev
 ```
+
+The pinned ISA-PHM Specification submodule supplies the shared draft QUDT
+unit/quantity catalogues, ISA-PHM additions, and experimental quantity/unit
+warning rules. Initialize it before running or building the app; update the
+pin deliberately when adopting a new catalogue revision.
 
 Open `http://localhost:5173/ISA-PHM-Wizard/#/` in your browser.
 

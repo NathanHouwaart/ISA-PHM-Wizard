@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { UnitCellTemplate } from '../components/DataGrid/UnitCellTemplate';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -361,10 +362,12 @@ export const useDataGrid = ({
             children: [
               {
                 prop: `${sensorId}_spec`,
+                quantityKindIdentifier: column.quantityKindIdentifier,
                 name: 'Specification',
                 size: 120,
                 readonly: false,
-                editor: 'input',
+                editor: fields.specEditor || 'input',
+                ...(fields.specEditor ? { cellTemplate: (h, props) => props.model?.builtinKey === 'measured_unit' ? UnitCellTemplate(h, props) : h('span', {}, props.model?.[props.prop] || '') } : {}),
                 cellProperties: (props) => {
                   if (typeof mappingCellProperties !== 'function') return {};
                   return mappingCellProperties({
@@ -378,10 +381,12 @@ export const useDataGrid = ({
               },
               {
                 prop: `${sensorId}_unit`,
+                quantityKindIdentifier: column.quantityKindIdentifier,
                 name: 'Unit',
-                size: 80,
+                size: 160,
                 readonly: false,
-                editor: 'input',
+                editor: fields.unitEditor || 'input',
+                ...(fields.unitEditor ? { cellTemplate: UnitCellTemplate } : {}),
                 cellProperties: (props) => {
                   const baseStyle = { 'border-right': '3px solid black' };
                   if (typeof mappingCellProperties !== 'function') return { style: baseStyle };
@@ -469,6 +474,8 @@ export const useDataGrid = ({
 
             gridRow[`${column[fields.columnId]}_spec`] = specValue;
             gridRow[`${column[fields.columnId]}_unit`] = unitValue;
+            gridRow[`${column[fields.columnId]}_spec_identifier`] = mapping?.valueIdentifier || '';
+            gridRow[`${column[fields.columnId]}_unit_identifier`] = mapping?.unitIdentifier || '';
           } else {
             gridRow[column[fields.columnId]] = mapping ? mapping[fields.mappingValue] : '';
           }

@@ -1,0 +1,15 @@
+/* The grid dropdown is rendered under body, outside the grid itself. */
+.revo-dropdown-list .dropdown-inner:has(.unit-grid-option) {
+  width: 300px;
+  max-width: min(300px, calc(100vw - 16px));
+}
+
+.revo-dropdown-list .dropdown-inner:has(.unit-grid-option) revo-list {
+  width: 100%;
+}
+
+.revo-dropdown-list .unit-grid-option {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

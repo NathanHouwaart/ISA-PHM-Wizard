@@ -69,6 +69,61 @@ const FIXTURE_CASES = [
 ];
 
 describe('conversion payload contract', () => {
+  it('preserves selected component and protocol unit identifiers', () => {
+    const payload = buildConversionPayload({
+      studies: [{ id: 'study', name: 'Study', runCount: 1 }],
+      selectedTestSetupId: 'setup',
+      studyToMeasurementProtocolSelection: [{ studyId: 'study', protocolId: 'mp' }],
+      studyToProcessingProtocolSelection: [{ studyId: 'study', protocolId: 'pp' }],
+      testSetups: [{
+        id: 'setup',
+        characteristics: [{ id: 'motor', category: 'Motor', value: '2.2', unit: 'kW', unitIdentifier: 'http://qudt.org/vocab/unit/KiloW' }],
+        sensors: [{ id: 's1', alias: 'S1' }],
+        measurementProtocols: [{ id: 'mp', parameters: [{ id: 'rate', name: 'Sampling Rate' }] }],
+        processingProtocols: [{ id: 'pp', parameters: [{ id: 'window', name: 'Window length' }] }],
+        sensorToMeasurementProtocolMapping: [{ sourceId: 's1', targetId: 'rate', protocolId: 'mp', value: ['25600', 'Hz'], unitIdentifier: 'http://qudt.org/vocab/unit/HZ' }],
+        sensorToProcessingProtocolMapping: [{ sourceId: 's1', targetId: 'window', protocolId: 'pp', value: ['10', 's'], unitIdentifier: 'http://qudt.org/vocab/unit/SEC' }],
+      }],
+    });
+    expect(payload.test_setup.characteristics[0].unitIdentifier).toBe('http://qudt.org/vocab/unit/KiloW');
+    expect(payload.studies[0].assay_details[0].measurement_protocols[0].unitIdentifier).toBe('http://qudt.org/vocab/unit/HZ');
+    expect(payload.studies[0].assay_details[0].processing_protocols[0].unitIdentifier).toBe('http://qudt.org/vocab/unit/SEC');
+  });
+  it('exports current reusable-type details and resolves a unique legacy quantity without changing saved data', () => {
+    const sensor = { id: 's1', alias: 'X', sensorTypeId: 't1', technologyPlatform: 'Old model', technologyType: 'Old technology', measurementType: 'Acceleration' };
+    const payload = buildConversionPayload({ studies: [{ id: 'study-1', name: 'Study', runCount: 1 }], selectedTestSetupId: 'setup', testSetups: [{ id: 'setup', sensorTypes: [{ id: 't1', technologyPlatform: 'Updated model', technologyType: 'Accelerometer' }], sensors: [sensor] }] });
+    const exported = payload.studies[0].assay_details[0].used_sensor;
+    expect(exported).toMatchObject({ technologyPlatform: 'Updated model', technologyType: 'Accelerometer', quantityKindIdentifier: 'http://qudt.org/vocab/quantitykind/Acceleration' });
+    expect(payload.test_setup.sensors[0]).toMatchObject({ technologyPlatform: 'Updated model', technologyType: 'Accelerometer', quantityKindIdentifier: 'http://qudt.org/vocab/quantitykind/Acceleration' });
+    expect(sensor.technologyPlatform).toBe('Old model');
+    expect(sensor.quantityKindIdentifier).toBeUndefined();
+  });
+
+  it('does not guess an ontology identifier for an ambiguous legacy quantity', () => {
+    const payload = buildConversionPayload({ studies: [{ id: 'study-1', name: 'Study', runCount: 1 }], selectedTestSetupId: 'setup', testSetups: [{ id: 'setup', sensors: [{ id: 's1', alias: 'X', measurementType: 'Volume' }] }] });
+    expect(payload.studies[0].assay_details[0].used_sensor.quantityKindIdentifier).toBeUndefined();
+  });
+  it('includes the same physical device on each assigned sensor output', () => {
+    const payload = buildConversionPayload({
+      studies: [{ id: 'study-1', name: 'Study', runCount: 1 }],
+      selectedTestSetupId: 'setup-1',
+      testSetups: [{ id: 'setup-1', physicalDevices: [{ id: 'device-1', name: 'enDAQ', model: 'Example', serialNumber: 'SN1' }], sensors: [
+        { id: 'sensor-x', alias: 'X', physicalDeviceId: 'device-1' },
+        { id: 'sensor-y', alias: 'Y', physicalDeviceId: 'device-1' },
+      ] }],
+    });
+    const sensors = payload.studies[0].assay_details.map((assay) => assay.used_sensor);
+    expect(sensors).toHaveLength(2);
+    expect(sensors.map((sensor) => sensor.physicalDevice.id)).toEqual(['device-1', 'device-1']);
+    expect(sensors[0].physicalDevice.serialNumber).toBe('SN1');
+  });
+  it('does not silently discard a missing physical-device link', () => {
+    expect(() => buildConversionPayload({
+      studies: [{ id: 'study-1', name: 'Study', runCount: 1 }],
+      selectedTestSetupId: 'setup-1',
+      testSetups: [{ id: 'setup-1', sensors: [{ id: 'sensor-x', alias: 'X', physicalDeviceId: 'missing' }] }],
+    })).toThrow('refers to a missing physical device');
+  });
   it('includes project configurations and their types in the selected test setup', () => {
     const payload = buildConversionPayload({
       studies: [{ id: 'study-1', name: 'Study 1', runCount: 1, configurationId: 'config-1' }],
@@ -334,7 +389,7 @@ describe('conversion payload contract', () => {
           id: 'setup-1',
           sensors: [{ id: 'sensor-1', alias: 'S1' }],
           measurementProtocols: [{ id: 'mp-1', name: 'Measurement 1' }],
-          processingProtocols: [{ id: 'pp-1', name: 'Processing 1' }],
+          processingProtocols: [{ id: 'pp-1', name: 'Processing 1', description: 'High-pass filter at 100 Hz' }],
           sensorToMeasurementProtocolMapping: [],
           sensorToProcessingProtocolMapping: [],
         },
@@ -355,6 +410,7 @@ describe('conversion payload contract', () => {
 
     expect(processedStudy).toBeTruthy();
     expect(rawStudy).toBeTruthy();
+    expect(processedStudy.used_setup.processingProtocols[0].description).toBe('High-pass filter at 100 Hz');
 
     const processedAssay = processedStudy.assay_details[0];
     expect(processedAssay.processing_protocol_id).toBe('pp-1');

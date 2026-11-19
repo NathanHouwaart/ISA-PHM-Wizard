@@ -1,9 +1,13 @@
 # ISA-PHM project package
 
+The Wizard reads its experimental quantity/unit warnings from the pinned
+`vendor/isa-phm-specification` submodule. Initialize dependencies with
+`git submodule update --init --recursive` before starting or building it.
+
 Project exports use a versioned ZIP package so that editable questionnaire state and browser-stored attachments remain portable together.
 
 ```text
-<project name> ISA-PHM.zip
+<project name> ISA-PHM Wizard Project.zip
 ├── manifest.json
 ├── project.json
 ├── Datasheets/
@@ -13,6 +17,9 @@ Project exports use a versioned ZIP package so that editable questionnaire state
 ```
 
 `project.json` remains the authoritative editable project state. `manifest.json` records the package version and, for every file, its path, size, SHA-256 checksum, original filename, MIME type, attachment ID, and owners.
+
+The name distinguishes this editable project archive from the converted
+`<project name> ISA-PHM Dataset.zip`. Existing project archives remain importable.
 
 Imports are created as new projects. Attachment identifiers and the selected test-setup identifier are remapped to prevent collisions with existing browser data. The importer validates the complete package before writing, stages attachments in one IndexedDB transaction, and removes staged attachments if project persistence fails.
 

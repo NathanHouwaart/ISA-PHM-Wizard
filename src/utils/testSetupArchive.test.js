@@ -87,6 +87,15 @@ beforeEach(() => {
 });
 
 describe('test setup ZIP packages', () => {
+  it('preserves physical devices and their shared datasheets', async () => {
+    const setup = sampleSetup();
+    setup.physicalDevices = [{ id: 'device-1', name: 'DAQ', datasheet: { attachmentId: 'device-sheet', fileName: 'device.pdf' } }];
+    mocks.datasheets.set('device-sheet', { file: fileFromBytes(pdfBytes, 'device.pdf', 'application/pdf') });
+    const archive = await createTestSetupArchive(setup);
+    const candidate = await readTestSetupImportFile(fileFromBytes(await blobToBytes(archive), 'setup.zip', 'application/zip'));
+    expect(candidate.testSetup.physicalDevices[0].name).toBe('DAQ');
+    expect(candidate.attachments.some((item) => item.attachmentId === 'device-sheet')).toBe(true);
+  });
   it('exports setup-owned attachments and remaps their IDs on import', async () => {
     const archive = await createTestSetupArchive(sampleSetup());
     const candidate = await readTestSetupImportFile(

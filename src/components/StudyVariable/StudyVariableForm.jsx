@@ -13,6 +13,7 @@ import {
 } from '../../constants/variableTypes';
 import generateId from '../../utils/generateId';
 import SuggestionStrip from '../Suggestions/SuggestionStrip';
+import UnitField from '../Form/fields/UnitField';
 
 /**
  * StudyVariableForm Component
@@ -46,6 +47,7 @@ const StudyVariableForm = ({
     type: item?.type || lockedType || (allowedTypes ? allowedTypes[0] : VARIABLE_TYPE_OPTIONS[0]),
     valueMode: normalizeStudyVariableValueMode(item?.valueMode, STUDY_VARIABLE_VALUE_MODE_SCALAR),
     unit: item?.unit || '',
+    unitIdentifier: item?.unitIdentifier || '',
     description: item?.description || ''
   });
   const [formError, setFormError] = useState('');
@@ -160,15 +162,7 @@ const StudyVariableForm = ({
         </select>
       </div>
 
-      <FormField
-        label="Unit"
-        name="unit"
-        value={formData.unit || ''}
-        onChange={handleChange}
-        placeholder="Enter unit"
-        explanation="The unit of measurement for this variable"
-        example="°C, Pa, Hz, rpm"
-      />
+      <UnitField value={formData.unit || ''} identifier={formData.unitIdentifier || ''} onChange={({ value, identifier }) => setFormData((previous) => ({ ...previous, unit: value, unitIdentifier: identifier }))} />
 
       <FormField
         label="Description"

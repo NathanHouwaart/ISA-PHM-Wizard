@@ -9,6 +9,7 @@ import TableTooltip from '../../Widgets/TableTooltip';
 import TooltipButton from '../../Widgets/TooltipButton';
 import CommentEditor from './CommentEditor';
 import DatasheetField from '../../Form/fields/DatasheetField';
+import UnitField from '../../Form/fields/UnitField';
 import { isReplaceableCharacteristic, setCharacteristicReplaceable } from '../../../utils/testSetupCharacteristics';
 
 const getCharacteristicKey = (characteristic, index) => characteristic.id || `characteristic-${index}`;
@@ -285,13 +286,12 @@ const CharacteristicsEditor = ({ characteristics, onCharacteristicsChange }) => 
                       />
                     </div>
                     <div className="md:col-span-4">
-                      <FormField
-                        name={`characteristic-${selectedIndex}-unit`}
+                      <UnitField
                         value={selectedCharacteristic.unit || ''}
-                        onChange={(event) => updateCharacteristic('unit', event.target.value)}
-                        label="Unit"
-                        type="text"
-                        placeholder="Unit (optional)"
+                        identifier={selectedCharacteristic.unitIdentifier || ''}
+                        onChange={({ value, identifier }) => onCharacteristicsChange(characteristics.map((characteristic, index) => (
+                          index === selectedIndex ? { ...characteristic, unit: value, unitIdentifier: identifier } : characteristic
+                        )))}
                       />
                     </div>
                   </div>
