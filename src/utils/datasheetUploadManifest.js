@@ -4,17 +4,25 @@ import { isReplaceableCharacteristic } from './testSetupCharacteristics';
 export const buildDatasheetUploadManifest = async (payload = {}) => {
   const files = [];
   const manifest = [];
+  const byId = new Map();
   const addAttachment = async (datasheet, owner) => {
     if (!datasheet?.attachmentId || datasheet?.notAvailable) return;
+    const existing = byId.get(datasheet.attachmentId);
+    if (existing) {
+      existing.owners.push({ kind: owner.kind, id: owner.id });
+      return;
+    }
     const storedAttachment = await getDatasheetFile(datasheet.attachmentId);
     if (!storedAttachment?.file) {
       throw new Error(`Datasheet for ${owner.label} is not stored locally. Please attach it again.`);
     }
-    manifest.push({
+    const entry = {
       attachmentId: datasheet.attachmentId,
       originalFileName: datasheet.fileName,
-      owner: { kind: owner.kind, id: owner.id },
-    });
+      owners: [{ kind: owner.kind, id: owner.id }],
+    };
+    manifest.push(entry);
+    byId.set(datasheet.attachmentId, entry);
     files.push({ attachmentId: datasheet.attachmentId, file: storedAttachment.file });
   };
 

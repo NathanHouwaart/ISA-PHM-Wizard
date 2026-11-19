@@ -125,6 +125,7 @@ const buildPayloadFromExport = (projectData) => {
 const buildArchiveUploads = (testSetup = {}, archiveAttachments = []) => {
   const archiveById = new Map(archiveAttachments.map((attachment) => [String(attachment.attachmentId), attachment]));
   const datasheetManifest = [];
+  const datasheetsById = new Map();
   const datasheets = [];
   const imageManifest = [];
   const images = [];
@@ -132,15 +133,22 @@ const buildArchiveUploads = (testSetup = {}, archiveAttachments = []) => {
   const addDatasheet = (datasheet, owner) => {
     if (!datasheet?.attachmentId || datasheet.notAvailable) return;
     const attachmentId = String(datasheet.attachmentId);
+    const existing = datasheetsById.get(attachmentId);
+    if (existing) {
+      existing.owners.push(owner);
+      return;
+    }
     const attachment = archiveById.get(attachmentId);
     if (!attachment || attachment.kind !== 'datasheet') {
       throw new Error(`Missing datasheet attachment ${attachmentId} in project archive`);
     }
-    datasheetManifest.push({
+    const entry = {
       attachmentId,
       originalFileName: datasheet.fileName || attachment.fileName,
-      owner,
-    });
+      owners: [owner],
+    };
+    datasheetManifest.push(entry);
+    datasheetsById.set(attachmentId, entry);
     datasheets.push({ attachmentId, bytes: attachment.bytes });
   };
 
