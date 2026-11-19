@@ -34,6 +34,7 @@ import InAppExplorer from '../components/Widgets/InAppExplorer';
 import ProjectSessionsModal from '../components/Widgets/ProjectSessionsModal';
 import Heading3 from '../components/Typography/Heading3';
 import PreExportValidationPanel from '../components/Widgets/PreExportValidationPanel';
+import SpecificationValidationReport from '../components/Widgets/SpecificationValidationReport';
 import { buildExportValidationReport } from '../utils/exportValidation';
 import { waitForNextPaint } from '../utils/waitForNextPaint';
 
@@ -77,7 +78,7 @@ export const IsaQuestionnaire = () => {
     isExampleProjectLoading,
   } = useProjectData();
   const { setScreenWidth, resolveExplorerSelection } = useProjectActions();
-  const { submitData, isSubmitting, message, error, cancel, retry, clearError } = useSubmitData();
+  const { submitData, isSubmitting, message, error, specificationReport, cancel, retry, clearError } = useSubmitData();
 
   // Overlay state management - all overlays follow the same conditional rendering pattern
   const [showSessionsModal, setShowSessionsModal] = useState(false);
@@ -557,6 +558,8 @@ export const IsaQuestionnaire = () => {
             <SlideReloadOverlay isVisible={isRemountingSlides} animationMs={MIN_OVERLAY_DURATION - 100} />
           </div>
         </div>
+
+        <SpecificationValidationReport report={specificationReport} />
 
         {showValidationPanel ? (
           <div className="mx-5">

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useProjectData } from '../contexts/GlobalDataContext';
 import { buildConversionPayload } from '../utils/conversionPayload';
 import { waitForNextPaint } from '../utils/waitForNextPaint';
@@ -6,6 +6,8 @@ import { buildDatasheetUploadManifest } from '../utils/datasheetUploadManifest';
 import { buildImageUploadManifest } from '../utils/imageUploadManifest';
 import { validateMeasurementMetadata } from '../utils/measurementMetadataValidation';
 import { getTestSetupReadiness } from '../utils/testSetupReadiness';
+import { readSpecificationValidationReport } from '../utils/specificationValidationReport';
+import { toArchiveBytes } from '../utils/archiveSecurity';
 
 const DEV_LOGS = Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
@@ -54,7 +56,10 @@ export default function useSubmitData() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('Submitting data...');
   const [error, setError] = useState(null);
+  const [specificationReport, setSpecificationReport] = useState(null);
   const controllerRef = useRef(null);
+
+  useEffect(() => { setSpecificationReport(null); }, [currentProjectId]);
 
   const submitData = async () => {
     // create a fresh AbortController for this submit
@@ -65,6 +70,7 @@ export default function useSubmitData() {
     setIsSubmitting(true);
     setMessage('Preparing data...');
     setError(null);
+    setSpecificationReport(null);
     await waitForNextPaint();
 
     try {
@@ -133,6 +139,9 @@ export default function useSubmitData() {
       const downloadBlob = isZip
         ? await response.blob()
         : new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+      setSpecificationReport(readSpecificationValidationReport(
+        isZip ? await toArchiveBytes(downloadBlob) : new Uint8Array(),
+      ));
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -185,5 +194,5 @@ export default function useSubmitData() {
     setMessage('');
   };
 
-  return { submitData, isSubmitting, message, error, setMessage, cancel, retry, clearError };
+  return { submitData, isSubmitting, message, error, specificationReport, setMessage, cancel, retry, clearError };
 }

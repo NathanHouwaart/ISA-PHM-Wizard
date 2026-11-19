@@ -66,10 +66,12 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/NathanHouwaart/ISA-PHM-Backend.git "${BACKEND_DIR}"
           git -C "${BACKEND_DIR}" fetch --depth 1 origin "${BACKEND_REF}"
           git -C "${BACKEND_DIR}" checkout --detach FETCH_HEAD
+          git -C "${BACKEND_DIR}" submodule update --init --recursive
           cd "${BACKEND_DIR}"
 
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
+          if [ -f vendor/isa-phm-specification/pyproject.toml ]; then python -m pip install ./vendor/isa-phm-specification; fi
 
           BACKEND_PORT="$(python - <<'PY'
           import os

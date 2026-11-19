@@ -174,6 +174,13 @@ npm run deploy      # Push dist/ to GitHub Pages
 
 The export step sends project data to the ISA-PHM backend, which converts it to a structured ISA-PHM JSON file.
 
+After conversion, the questionnaire shows the Backend's selected draft
+Specification checks and includes their report in the downloaded ZIP. The
+report states when validation is unavailable and does not claim conformance.
+Measurement CSVs are not uploaded, so their paths and contents require a
+separate check on the completed dataset. The Backend must have the shared
+validator installed for these checks; see its local setup instructions.
+
 - Backend repository: [https://github.com/NathanHouwaart/ISA-PHM-Backend](https://github.com/NathanHouwaart/ISA-PHM-Backend)
 - API call handled in `src/hooks/useSubmitData.jsx`
 
