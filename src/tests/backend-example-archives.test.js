@@ -162,6 +162,12 @@ const buildArchiveUploads = (testSetup = {}, archiveAttachments = []) => {
   (testSetup.sensorTypes || []).forEach((sensorType) => {
     addDatasheet(sensorType?.datasheet, { kind: 'sensor_type', id: sensorType.id });
   });
+  (testSetup.sensors || []).forEach((sensor) => {
+    addDatasheet(sensor?.datasheet, { kind: 'sensor', id: sensor.id });
+  });
+  (testSetup.physicalDevices || []).forEach((device) => {
+    addDatasheet(device?.datasheet, { kind: 'physical_device', id: device.id });
+  });
   (testSetup.configurationTypes || []).forEach((componentType) => {
     addDatasheet(componentType?.datasheet, { kind: 'component_type', id: componentType.id });
   });
@@ -207,7 +213,7 @@ integrationDescribe('Backend integration with bundled project archives', () => {
     const { payload, uploads } = buildPayloadFromExport(fixture);
     const output = await callConversionApi(payload, uploads);
     const assays = output.studies.flatMap((study) => study.assays || []);
-    expect(assays.some((assay) => assay.technologyPlatform === 'Sensor model X' && (assay.comments || []).some((comment) => comment.name === 'physical device model' && comment.value === 'Demo S3'))).toBe(true);
+    expect(assays.some((assay) => assay.technologyPlatform === 'Sensor model X' && (assay.comments || []).some((comment) => comment.name === 'physical_device_model' && comment.value === 'Demo S3'))).toBe(true);
     expect(payload.test_setup.deviceDefinitions).toBeUndefined();
   }, 30000);
 
@@ -231,5 +237,18 @@ integrationDescribe('Backend integration with bundled project archives', () => {
         expect(assay.dataFiles.map((dataFile) => dataFile.name ?? dataFile.filename)).toEqual(expectedAssayFiles[assayIndex]);
       });
     });
+
+    if (archivePath.includes('diagnostics-example')) {
+      const assays = output.studies.flatMap((study) => study.assays || []);
+      for (const device of fixture.selectedTestSetup.physicalDevices) {
+        const matching = assays.filter((assay) => (assay.comments || []).some(
+          (comment) => comment.name === 'physical_device_id' && comment.value === device.id
+        ));
+        expect(matching.length, device.name).toBeGreaterThan(0);
+        expect(matching.every((assay) => (assay.comments || []).some(
+          (comment) => comment.name === 'physical_device_datasheet' && comment.value.startsWith('./Datasheets/')
+        ))).toBe(true);
+      }
+    }
   }, 30000);
 });

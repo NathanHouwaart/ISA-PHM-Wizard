@@ -269,4 +269,33 @@ describe('project archive', () => {
       expect(mapping?.value).toEqual(['Not applicable', '']);
     }
   }, 30000);
+
+  it('groups the diagnostic example outputs under the enDAQ and FBG devices', async () => {
+    const bytes = await fs.readFile(path.resolve(process.cwd(), 'public/examples/diagnostics-example.isa-phm.zip'));
+    const candidate = await readProjectImportFile(asProjectFile(new Blob([bytes]), 'diagnostics.zip'));
+    const setup = candidate.project.selectedTestSetup;
+    expect(getTestSetupReadiness(setup)).toEqual([]);
+    expect(setup.physicalDevices).toHaveLength(2);
+
+    for (const [name, count] of [['FBG Sleeve', 8], ['enDAQ S3-E100D40', 18]]) {
+      const device = setup.physicalDevices.find((item) => item.name === name);
+      const definition = setup.deviceDefinitions.find((item) => item.id === device?.definitionId);
+      const sensors = setup.sensors.filter((item) => item.physicalDeviceId === device?.id);
+      expect(device?.datasheet?.attachmentId).toBeTruthy();
+      expect(definition?.datasheet?.attachmentId).toBe(device.datasheet.attachmentId);
+      expect(sensors).toHaveLength(count);
+      for (const sensor of sensors) {
+        const output = definition.outputs.find((item) => item.id === sensor.definitionOutputId);
+        expect(output).toBeTruthy();
+        expect(sensor.measurementType).toBe(output.measurementType);
+        expect(sensor.quantityKindIdentifier).toBe(output.quantityKindIdentifier);
+      }
+    }
+    expect(setup.sensors.filter((sensor) => !sensor.physicalDeviceId)).toHaveLength(6);
+    const ids = new Set(setup.sensors.map((sensor) => sensor.id));
+    expect(setup.sensorToMeasurementProtocolMapping.every((mapping) => ids.has(mapping.sourceId))).toBe(true);
+    const mappingEntry = Object.entries(candidate.project.localStorage).find(([key]) => key.endsWith('_studyToSensorMeasurementMapping'));
+    expect(mappingEntry).toBeTruthy();
+    expect(JSON.parse(mappingEntry[1]).every((mapping) => ids.has(mapping.sensorId))).toBe(true);
+  }, 30000);
 });
