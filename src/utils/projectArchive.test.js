@@ -5,6 +5,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { decodeJsonFromStorage } from './storageCodec';
 import { getTestSetupReadiness } from './testSetupReadiness';
 import { missingSensorTypeFields } from './sensorTypeValidation';
+import { unitSelection } from './unitCatalogue';
 
 const mocks = vi.hoisted(() => ({
   datasheets: new Map(),
@@ -248,6 +249,15 @@ describe('project archive', () => {
     for (const sensorType of candidate.project.selectedTestSetup.sensorTypes || []) {
       expect(missingSensorTypeFields(sensorType), sensorType.name).toEqual([]);
     }
+    const variableEntry = Object.entries(candidate.project.localStorage).find(([key]) => key.endsWith('_studyVariables'));
+    expect(variableEntry).toBeTruthy();
+    const variables = decodeJsonFromStorage(variableEntry[1]).value;
+    expect(variables.length).toBeGreaterThan(0);
+    for (const variable of variables.filter((item) => item.unit)) {
+      expect(unitSelection(variable.unitIdentifier)?.value, variable.name).toBe(variable.unit);
+    }
+    const speed = variables.find((variable) => variable.name.toLowerCase() === 'motor speed');
+    expect(speed).toMatchObject({ unit: 'rev/min', unitIdentifier: 'http://qudt.org/vocab/unit/REV-PER-MIN' });
   }, 30000);
 
   it('describes the enDAQ orientation and rotation outputs without confusing their quantities', async () => {

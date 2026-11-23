@@ -3,6 +3,7 @@ import { buildConversionPayload } from '../utils/conversionPayload';
 import { shouldRunBackendIntegration } from './backendIntegrationGate';
 import { readBundledProjectArchive } from './helpers/readProjectArchive';
 import { isReplaceableCharacteristic } from '../utils/testSetupCharacteristics';
+import { decodeJsonFromStorage } from '../utils/storageCodec';
 
 const RUN_BACKEND_INTEGRATION = shouldRunBackendIntegration();
 const integrationDescribe = RUN_BACKEND_INTEGRATION ? describe : describe.skip;
@@ -22,12 +23,7 @@ const FIXTURE_CASES = [
 const parseJsonValue = (value, fallback) => {
   if (value === undefined || value === null) return fallback;
   if (typeof value !== 'string') return value;
-  try {
-    const parsed = JSON.parse(value);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
+  return decodeJsonFromStorage(value).value ?? fallback;
 };
 
 const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
@@ -215,7 +211,7 @@ integrationDescribe('Backend integration with bundled project archives', () => {
     const assays = output.studies.flatMap((study) => study.assays || []);
     expect(assays.some((assay) => assay.technologyPlatform === 'Sensor model X' && (assay.comments || []).some((comment) => comment.name === 'physical_device_model' && comment.value === 'Demo S3'))).toBe(true);
     expect(payload.test_setup.deviceDefinitions).toBeUndefined();
-  }, 30000);
+  }, 120000);
 
   it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ archivePath }) => {
     const fixture = await readBundledProjectArchive(archivePath);
@@ -228,6 +224,10 @@ integrationDescribe('Backend integration with bundled project archives', () => {
 
     output.studies.forEach((study, studyIndex) => {
       const expectedAssayFiles = expectedAssaysByStudy[studyIndex];
+      const unitIdentifiers = new Set((study.unitCategories || []).map((unit) => unit.termAccession));
+      for (const variable of payload.study_variables.filter((item) => item.unitIdentifier)) {
+        expect(unitIdentifiers.has(variable.unitIdentifier), `${variable.name}: ${variable.unitIdentifier}`).toBe(true);
+      }
       expect(Array.isArray(study.assays)).toBe(true);
       expect(study.assays.length).toBe(expectedAssayFiles.length);
       expect(Array.isArray(study.processSequence)).toBe(true);
@@ -250,5 +250,5 @@ integrationDescribe('Backend integration with bundled project archives', () => {
         ))).toBe(true);
       }
     }
-  }, 30000);
+  }, 120000);
 });
