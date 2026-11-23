@@ -32,10 +32,15 @@ const useProtocolSections = ({ formData, setFormData }) => {
         ? previous : { ...previous, measurementProtocols: updated };
     });
   }, [formData.measurementProtocols, setFormData]);
-  const protocolSensors = useMemo(
-    () => getDatasetOutputSensors(formData.sensors),
-    [formData.sensors]
-  );
+  const protocolSensors = useMemo(() => {
+    const devices = new Map((formData.physicalDevices || []).map((device) => [device.id, device]));
+    return getDatasetOutputSensors(formData.sensors).map((sensor) => {
+      const device = devices.get(sensor.physicalDeviceId);
+      const deviceName = device?.name?.trim() || device?.model?.trim() || (device ? 'Unnamed device' : '');
+      const sensorName = sensor.alias?.trim() || 'Unnamed sensor';
+      return { ...sensor, protocolLabel: deviceName ? `${deviceName} - ${sensorName}` : sensorName };
+    });
+  }, [formData.sensors, formData.physicalDevices]);
 
   useEffect(() => {
     if (!formData.measurementProtocols.length) {
@@ -195,24 +200,27 @@ const useProtocolSections = ({ formData, setFormData }) => {
 
   const addMeasurementProtocolParameterSuggestion = useCallback((suggestion) => {
     if (!activeMeasurementProtocolId || !suggestion) return;
-    setFormData((prev) => ({
-      ...prev,
-      measurementProtocols: (prev.measurementProtocols || []).map((protocol) => {
-        if (protocol.id !== activeMeasurementProtocolId) return protocol;
-        return {
-          ...protocol,
-          parameters: [
-            ...(protocol.parameters || []),
-            {
-              id: uuid4(),
-              name: suggestion.name || `Parameter ${(protocol.parameters || []).length + 1}`,
-              description: suggestion.description || '',
-              unit: suggestion.unit || ''
-            }
-          ]
-        };
-      })
-    }));
+    const parameterId = uuid4();
+    setFormData((prev) => {
+      const protocol = (prev.measurementProtocols || []).find((item) => item.id === activeMeasurementProtocolId);
+      if (!protocol) return prev;
+      const newMappings = suggestion.unitIdentifier ? getDatasetOutputSensors(prev.sensors || [])
+        .filter((sensor) => isSensorApplicable(protocol, String(sensor.id)))
+        .map((sensor) => ({ sourceId: sensor.id, targetId: parameterId, protocolId: protocol.id,
+          value: ['', suggestion.unit], unitIdentifier: suggestion.unitIdentifier })) : [];
+      return {
+        ...prev,
+        measurementProtocols: prev.measurementProtocols.map((item) => item.id !== protocol.id ? item : {
+          ...item,
+          parameters: [...(item.parameters || []), {
+            id: parameterId, name: suggestion.name || `Parameter ${(item.parameters || []).length + 1}`,
+            description: suggestion.description || '', unit: suggestion.unit || '',
+            unitIdentifier: suggestion.unitIdentifier || ''
+          }]
+        }),
+        sensorToMeasurementProtocolMapping: [...(prev.sensorToMeasurementProtocolMapping || []), ...newMappings]
+      };
+    });
   }, [activeMeasurementProtocolId, setFormData]);
 
   const addProcessingProtocolParameter = useCallback(() => {
@@ -239,24 +247,27 @@ const useProtocolSections = ({ formData, setFormData }) => {
 
   const addProcessingProtocolParameterSuggestion = useCallback((suggestion) => {
     if (!activeProcessingProtocolId || !suggestion) return;
-    setFormData((prev) => ({
-      ...prev,
-      processingProtocols: (prev.processingProtocols || []).map((protocol) => {
-        if (protocol.id !== activeProcessingProtocolId) return protocol;
-        return {
-          ...protocol,
-          parameters: [
-            ...(protocol.parameters || []),
-            {
-              id: uuid4(),
-              name: suggestion.name || `Parameter ${(protocol.parameters || []).length + 1}`,
-              description: suggestion.description || '',
-              unit: suggestion.unit || ''
-            }
-          ]
-        };
-      })
-    }));
+    const parameterId = uuid4();
+    setFormData((prev) => {
+      const protocol = (prev.processingProtocols || []).find((item) => item.id === activeProcessingProtocolId);
+      if (!protocol) return prev;
+      const newMappings = suggestion.unitIdentifier ? getDatasetOutputSensors(prev.sensors || [])
+        .filter((sensor) => isSensorApplicable(protocol, String(sensor.id)))
+        .map((sensor) => ({ sourceId: sensor.id, targetId: parameterId, protocolId: protocol.id,
+          value: ['', suggestion.unit], unitIdentifier: suggestion.unitIdentifier })) : [];
+      return {
+        ...prev,
+        processingProtocols: prev.processingProtocols.map((item) => item.id !== protocol.id ? item : {
+          ...item,
+          parameters: [...(item.parameters || []), {
+            id: parameterId, name: suggestion.name || `Parameter ${(item.parameters || []).length + 1}`,
+            description: suggestion.description || '', unit: suggestion.unit || '',
+            unitIdentifier: suggestion.unitIdentifier || ''
+          }]
+        }),
+        sensorToProcessingProtocolMapping: [...(prev.sensorToProcessingProtocolMapping || []), ...newMappings]
+      };
+    });
   }, [activeProcessingProtocolId, setFormData]);
 
   const handleMeasurementProtocolMappingsChange = useCallback((newMappings) => {
@@ -324,7 +335,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
       rowId: 'id',
       rowName: 'name',
       columnId: 'id',
-      columnName: 'alias',
+      columnName: 'protocolLabel',
       columnUnit: 'measurementUnit',
       mappingRowId: 'targetId',
       mappingColumnId: 'sourceId',
@@ -408,7 +419,7 @@ const useProtocolSections = ({ formData, setFormData }) => {
       rowId: 'id',
       rowName: 'name',
       columnId: 'id',
-      columnName: 'alias',
+      columnName: 'protocolLabel',
       columnUnit: 'measurementUnit',
       mappingRowId: 'targetId',
       mappingColumnId: 'sourceId',

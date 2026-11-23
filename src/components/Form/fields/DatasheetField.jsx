@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FileText, Upload, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { v4 as uuid4 } from 'uuid';
 import FormFieldShell from '../FormFieldShell';
 import TooltipButton from '../../Widgets/TooltipButton';
@@ -77,7 +77,6 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation, una
             onDragLeave={() => setIsDragging(false)}
             onDrop={(event) => { event.preventDefault(); setIsDragging(false); if (!datasheet.notAvailable) selectFile(event.dataTransfer.files?.[0]); }}
           >
-            <FileText className="h-4 w-4 shrink-0 text-gray-400" />
             <input
               readOnly
               value={datasheet.notAvailable ? unavailableLabel : datasheet.fileName}
@@ -89,8 +88,8 @@ const DatasheetField = ({ label = 'Datasheet', value, onChange, explanation, una
           <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => { selectFile(event.target.files?.[0]); event.target.value = ''; }} />
           {!datasheet.notAvailable && <TooltipButton onClick={() => inputRef.current?.click()} tooltipText="Select PDF datasheet" className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"><Upload className="h-4 w-4" /></TooltipButton>}
           {datasheet.fileName && !datasheet.notAvailable && <TooltipButton onClick={clearFile} tooltipText="Remove datasheet" className="p-2 text-rose-600 hover:bg-rose-50 rounded-md"><X className="h-4 w-4" /></TooltipButton>}
-          <label className="flex shrink-0 items-center gap-1.5 text-sm text-gray-700"><input type="checkbox" checked={datasheet.notAvailable} onChange={(event) => toggleNotAvailable(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />{unavailableLabel}</label>
         </div>
+        <label className="mt-1 flex items-center gap-1.5 text-sm text-gray-700"><input type="checkbox" checked={datasheet.notAvailable} onChange={(event) => toggleNotAvailable(event.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />{unavailableLabel}</label>
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       </div>
     </FormFieldShell>

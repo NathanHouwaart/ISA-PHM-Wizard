@@ -13,8 +13,10 @@ const SelectField = ({
     required,
     tags = [],
     value,
+    'aria-label': ariaLabel,
 }) => (
     <select
+        aria-label={ariaLabel}
         name={name}
         value={value}
         onChange={onChange}

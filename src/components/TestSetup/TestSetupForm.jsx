@@ -4,6 +4,7 @@ import TabSwitcher, { TabPanel } from '../TabSwitcher';
 import Heading3 from '../Typography/Heading3';
 import { v4 as uuid4 } from 'uuid';
 import { useProjectActions, useProjectData } from '../../contexts/GlobalDataContext';
+import { clearReviewForUnmappedNewSensors } from '../../utils/deviceDefinitions';
 
 import TooltipButton from '../Widgets/TooltipButton';
 import AlertDecisionDialog from '../Widgets/AlertDecisionDialog';
@@ -27,7 +28,6 @@ import {
   normalizeCharacteristic
 } from '../../utils/testSetupCharacteristics';
 import {
-  isSensorIncludedInDatasetOutput,
   normalizeSensor,
   SENSOR_USAGE_DATASET_OUTPUT
 } from '../../utils/sensorUsage';
@@ -73,8 +73,8 @@ const normalizeSensorRows = (rows = [], previousSensors = [], sensorTypes = []) 
       ? {
         technologyPlatform: sensorType.technologyPlatform || '',
         technologyType: sensorType.technologyType || '',
-        measurementType: existing.measurementType || sensorType.measurementType || '',
-        quantityKindIdentifier: existing.quantityKindIdentifier || (!existing.measurementType ? sensorType.quantityKindIdentifier : '') || ''
+        measurementType: row.measurementType || existing.measurementType || sensorType.measurementType || '',
+        quantityKindIdentifier: row.quantityKindIdentifier || (row.measurementType ? '' : existing.quantityKindIdentifier || (!existing.measurementType ? sensorType.quantityKindIdentifier : '')) || ''
       }
       : {};
     return normalizeSensor({
@@ -106,6 +106,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     sensors: [],
     sensorTypes: [],
     physicalDevices: [],
+    deviceDefinitions: [],
     configurations: [],
     measurementProtocols: [],
     processingProtocols: [],
@@ -127,6 +128,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
       sensors: (sourceItem.sensors || []).map(normalizeSensor),
       sensorTypes: sourceItem.sensorTypes || [],
       physicalDevices: Array.isArray(sourceItem.physicalDevices) ? sourceItem.physicalDevices : [],
+      deviceDefinitions: Array.isArray(sourceItem.deviceDefinitions) ? sourceItem.deviceDefinitions : [],
       configurations: sourceItem.configurations || [],
       measurementProtocols: sourceItem.measurementProtocols || [],
       processingProtocols: sourceItem.processingProtocols || [],
@@ -139,6 +141,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const formHistoryScope = item?.id ? `testsetup:${item.id}` : `testsetup:${newFormHistoryScope}`;
 
   const [formData, setFormData] = useState(() => buildFormState(item));
+  const persistedSensorIds = useRef(new Set(isEditing ? (item?.sensors || []).map((sensor) => sensor.id) : []));
   const [selectedTab, setSelectedTab] = useState('basic-info');
   const [characteristicsView, setCharacteristicsView] = useState('simple-view');
   const [showCloseWarning, setShowCloseWarning] = useState(false);
@@ -152,10 +155,6 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
   const numberOfCharacteristics = formData.characteristics.length;
   const numberOfMeasurementProtocols = formData.measurementProtocols.length;
   const numberOfProcessingProtocols = formData.processingProtocols.length;
-  const outputSensors = useMemo(
-    () => formData.sensors.filter(isSensorIncludedInDatasetOutput),
-    [formData.sensors]
-  );
 
   // Update screen width based on active view
   useEffect(() => {
@@ -181,11 +180,12 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
 
   useEffect(() => {
     const nextFormData = buildFormState(item);
+    persistedSensorIds.current = new Set(isEditing ? (item?.sensors || []).map((sensor) => sensor.id) : []);
     setFormData(nextFormData);
     setInitialFingerprint(getDirtyFingerprint(nextFormData));
     initialAttachmentRefs.current = collectAttachmentRefs(nextFormData);
     seenAttachmentRefs.current = cloneAttachmentRefs(initialAttachmentRefs.current);
-  }, [item, buildFormState]);
+  }, [item, isEditing, buildFormState]);
 
   useEffect(() => {
     const needsCharacteristicIds = formData.characteristics.some((c) => !c.id);
@@ -248,6 +248,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
     };
 
     await onSave(testSetupData);
+    persistedSensorIds.current = new Set((testSetupData.sensors || []).map((sensor) => sensor.id));
     const finalRefs = collectAttachmentRefs(testSetupData);
     const removedSavedRefs = getAttachmentCommitCleanup(
       initialAttachmentRefs.current,
@@ -527,9 +528,15 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
               sensors={formData.sensors}
               sensorTypes={formData.sensorTypes}
               physicalDevices={formData.physicalDevices}
+              deviceDefinitions={formData.deviceDefinitions}
+              onDeviceDefinitionsChange={(deviceDefinitions) => setFormData((prev) => ({ ...prev, deviceDefinitions }))}
               onPhysicalDevicesChange={(physicalDevices) => setFormData((prev) => ({ ...prev, physicalDevices }))}
               onSensorsChange={(nextSensors) => setFormData((prev) => {
-                const sensors = normalizeSensorRows(nextSensors, prev.sensors, prev.sensorTypes);
+                const sensors = clearReviewForUnmappedNewSensors(
+                  normalizeSensorRows(nextSensors, prev.sensors, prev.sensorTypes), prev.sensors,
+                  persistedSensorIds.current,
+                  [...(prev.sensorToMeasurementProtocolMapping || []), ...(prev.sensorToProcessingProtocolMapping || [])],
+                );
                 return {
                   ...prev,
                   sensors,
@@ -558,7 +565,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             removeButtonTooltip="Remove measurement protocol"
             accentDotClassName="bg-indigo-500"
             description="Define measurement protocol variants. Open a variant to edit its name, description, and sensor-parameter mapping grid."
-            sensors={outputSensors}
+            sensors={measurementProtocolGridConfig.columnData}
             gridConfig={measurementProtocolGridConfig}
             onGridMappingsChange={handleMeasurementProtocolMappingsChange}
             onGridRowDataChange={handleMeasurementProtocolRowsChange}
@@ -587,7 +594,7 @@ const TestSetupForm = ({ item, onSave, onCancel, isEditing = false }) => {
             removeButtonTooltip="Remove processing protocol"
             accentDotClassName="bg-orange-500"
             description="Define processing protocol variants. Open a variant to edit its name, description, and sensor-parameter mapping grid."
-            sensors={outputSensors}
+            sensors={processingProtocolGridConfig.columnData}
             gridConfig={processingProtocolGridConfig}
             onGridMappingsChange={handleProcessingProtocolMappingsChange}
             onGridRowDataChange={handleProcessingProtocolRowsChange}

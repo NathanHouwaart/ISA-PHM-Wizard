@@ -10,6 +10,7 @@ import {
 } from './studyOutputMode';
 import { isValidEmail } from './validation';
 import { isSensorApplicable } from './protocolApplicability';
+import { validateMeasurementMetadata } from './measurementMetadataValidation';
 import { isSensorIncludedInDatasetOutput } from './sensorUsage';
 import { getExperimentTypeConfig } from '../constants/experimentTypes';
 import {
@@ -596,6 +597,33 @@ export function buildExportValidationReport({
       missingProcessingProtocols.push(formatStudyLabel(study, studyIndex));
     }
   });
+
+  // Check the shared test-setup metadata once per protocol, rather than once
+  // per study that uses it. Export performs the same validation on its payload.
+  const usedMeasurementIds = new Set([...modeByStudyId.values()].map((item) => String(item.selectedMeasurementProtocolId || '')).filter(Boolean));
+  const usedMeasurementProtocols = asArray(selectedSetup?.measurementProtocols).filter((protocol) => usedMeasurementIds.has(String(protocol.id)));
+  const measurementMetadataIssues = validateMeasurementMetadata({
+    measurement_protocols: usedMeasurementProtocols,
+    studies: usedMeasurementProtocols.map((protocol) => ({
+      name: protocol.name || 'Measurement protocol',
+      selectedMeasurementProtocolId: protocol.id,
+      assay_details: sensors.map((sensor) => ({
+        used_sensor: sensor,
+        measurement_protocols: asArray(selectedSetup?.sensorToMeasurementProtocolMapping)
+          .filter((mapping) => String(mapping.protocolId || '') === String(protocol.id)
+            && String(mapping.sourceId ?? mapping.sensorId) === String(sensor.id))
+          .map((mapping) => ({ ...mapping, value: Array.isArray(mapping.value) ? mapping.value
+            : [mapping.value?.specification ?? '', mapping.value?.unit ?? ''] })),
+      })),
+    })),
+  });
+  if (measurementMetadataIssues.length) {
+    pushIssue(errorIssues, {
+      id: 'invalid-measurement-metadata', level: 'error', title: 'Measurement protocol metadata needs attention',
+      description: `${measurementMetadataIssues.length} sensor parameter values need attention. Open the selected test setup, then Measurement Protocols. For Measured Unit, choose the unit in the Specification cell from the catalogue; do not type or paste its symbol alone.`,
+      count: measurementMetadataIssues.length, items: measurementMetadataIssues,
+    });
+  }
 
   if (missingMeasurementProtocols.length > 0) {
     pushIssue(errorIssues, {

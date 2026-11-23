@@ -46,6 +46,7 @@ const OperatingConditionsSlide = forwardRef(({ onHeightChange, currentPage, page
             name: suggestion.name || 'New Variable',
             valueMode: suggestion.valueMode || STUDY_VARIABLE_VALUE_MODE_SCALAR,
             unit: suggestion.unit || '',
+            unitIdentifier: suggestion.unitIdentifier || '',
             description: suggestion.description || ''
         });
     }, [addItem]);

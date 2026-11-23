@@ -1,0 +1,442 @@
+[
+  {
+    "id": "endaq-s3-e100d40",
+    "name": "enDAQ S3-E100D40",
+    "model": "S3-E100D40",
+    "catalogueDescription": "Example multi-output enDAQ recorder.",
+    "catalogueDatasheet": {
+      "path": "device-catalogue/endaq-s3-e100d40.pdf",
+      "fileName": "S3-E100D40.pdf"
+    },
+    "outputs": [
+      {
+        "name": "Ch8 - 100g PE Accelerometer X",
+        "description": "High-frequency piezoelectric accelerometer, 100 g range. Captures bearing vibration signatures and impact events.",
+        "technologyType": "Accelerometer",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-01"
+      },
+      {
+        "name": "Ch8 - 100g PE Accelerometer Y",
+        "description": "High-frequency piezoelectric accelerometer, 100 g range. Captures bearing vibration signatures and impact events.",
+        "technologyType": "Accelerometer",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-02"
+      },
+      {
+        "name": "Ch8 - 100g PE Accelerometer Z",
+        "description": "High-frequency piezoelectric accelerometer, 100 g range. Captures bearing vibration signatures and impact events.",
+        "technologyType": "Accelerometer",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-03"
+      },
+      {
+        "name": "Ch20 - Internal Env Sensor Pressure",
+        "description": "Internal pressure, temperature and humidity sensor monitoring DAQ enclosure environment.",
+        "technologyType": "Thick-film Resistors",
+        "technologyPlatform": "N/A",
+        "measurementType": "Pressure",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Pressure",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-04"
+      },
+      {
+        "name": "Ch20 - Internal Env Sensor Temperature",
+        "description": "Internal pressure, temperature and humidity sensor monitoring DAQ enclosure environment.",
+        "technologyType": "PT100",
+        "technologyPlatform": "N/A",
+        "measurementType": "Temperature",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Temperature",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-05"
+      },
+      {
+        "name": "Ch59 - Control Pad Env Sensor Pressure",
+        "description": "Control pad pressure, temperature and humidity sensor monitoring ambient test conditions.",
+        "technologyType": "Thick-film Resistors",
+        "technologyPlatform": "N/A",
+        "measurementType": "Pressure",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Pressure",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-06"
+      },
+      {
+        "name": "Ch59 - Control Pad Env Sensor Temperature",
+        "description": "Control pad pressure, temperature and humidity sensor monitoring ambient test conditions.",
+        "technologyType": "PT100",
+        "technologyPlatform": "N/A",
+        "measurementType": "Temperature",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Temperature",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-07"
+      },
+      {
+        "name": "Ch59 - Control Pad Env Sensor Relative Humidity",
+        "description": "Control pad pressure, temperature and humidity sensor monitoring ambient test conditions.",
+        "technologyType": "Thick-film Resistors",
+        "technologyPlatform": "N/A",
+        "measurementType": "Relative Humidity",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/RelativeHumidity",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-08"
+      },
+      {
+        "name": "Ch70 - Orientation Sensor X",
+        "description": "Relative orientation (IMU) sensor. Captures angular position and tilt changes during operation.",
+        "technologyType": "IMU ",
+        "technologyPlatform": "N/A",
+        "measurementType": "Quaternion component",
+        "quantityKindIdentifier": "urn:isa-phm:quantity:quaternion-component",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-09"
+      },
+      {
+        "name": "Ch70 - Orientation Sensor Y",
+        "description": "Relative orientation (IMU) sensor. Captures angular position and tilt changes during operation.",
+        "technologyType": "IMU",
+        "technologyPlatform": "N/A",
+        "measurementType": "Quaternion component",
+        "quantityKindIdentifier": "urn:isa-phm:quantity:quaternion-component",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-10"
+      },
+      {
+        "name": "Ch70 - Orientation Sensor Z",
+        "description": "Relative orientation (IMU) sensor. Captures angular position and tilt changes during operation.",
+        "technologyType": "IMU",
+        "technologyPlatform": "N/A",
+        "measurementType": "Quaternion component",
+        "quantityKindIdentifier": "urn:isa-phm:quantity:quaternion-component",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-11"
+      },
+      {
+        "name": "Ch70 - Orientation Sensor W",
+        "description": "Relative orientation (IMU) sensor. Captures angular position and tilt changes during operation.",
+        "technologyType": "IMU",
+        "technologyPlatform": "N/A",
+        "measurementType": "Quaternion component",
+        "quantityKindIdentifier": "urn:isa-phm:quantity:quaternion-component",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-12"
+      },
+      {
+        "name": "Ch80 - 40g DC Accelerometer X",
+        "description": "Low-frequency DC-coupled MEMS accelerometer, 40 g range. Captures low-frequency vibration and quasi-static loads.",
+        "technologyType": "Accelerometer",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-13"
+      },
+      {
+        "name": "Ch80 - 40g DC Accelerometer Y",
+        "description": "Low-frequency DC-coupled MEMS accelerometer, 40 g range. Captures low-frequency vibration and quasi-static loads.",
+        "technologyType": "Accelerometer",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-14"
+      },
+      {
+        "name": "Ch80 - 40g DC Accelerometer Z",
+        "description": "Low-frequency DC-coupled MEMS accelerometer, 40 g range. Captures low-frequency vibration and quasi-static loads.",
+        "technologyType": "Acceleration",
+        "technologyPlatform": "N/A",
+        "measurementType": "Acceleration",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Acceleration",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-15"
+      },
+      {
+        "name": "Ch84 - Rotation Sensor X",
+        "description": "Rotation sensor X axis",
+        "technologyType": "MEMS Gyroscope",
+        "technologyPlatform": "N/A",
+        "measurementType": "Angular Velocity",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/AngularVelocity",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-16"
+      },
+      {
+        "name": "Ch84 - Rotation Sensor Y",
+        "description": "Rotation sensor Y axis",
+        "technologyType": "MEMS Gyroscope",
+        "technologyPlatform": "N/A",
+        "measurementType": "Angular Velocity",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/AngularVelocity",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-17"
+      },
+      {
+        "name": "Ch84 - Rotation Sensor Z",
+        "description": "Rotation sensor Z axis",
+        "technologyType": "MEMS Gyroscope",
+        "technologyPlatform": "N/A",
+        "measurementType": "Angular Velocity",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/AngularVelocity",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "endaq-s3-e100d40-output-18"
+      }
+    ]
+  },
+  {
+    "id": "custom-fbg-sleeve",
+    "name": "Custom FBG sleeve (8 sensors)",
+    "model": "S360 - Custom FBG Sleeve",
+    "catalogueDescription": "Example custom sleeve; review and adapt its details to your own sleeve.",
+    "catalogueDatasheet": {
+      "path": "device-catalogue/custom-fbg-sleeve.pdf",
+      "fileName": "S360-ASM-080 - Sleeve FOS position.pdf"
+    },
+    "outputs": [
+      {
+        "name": "Sensor 1",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-01"
+      },
+      {
+        "name": "Sensor 2",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-02"
+      },
+      {
+        "name": "Sensor 3",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-03"
+      },
+      {
+        "name": "Sensor 4",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-04"
+      },
+      {
+        "name": "Sensor 5",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-05"
+      },
+      {
+        "name": "Sensor 6",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-06"
+      },
+      {
+        "name": "Sensor 7",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-07"
+      },
+      {
+        "name": "Sensor 8",
+        "description": "FBG sensor measuring change in strain as a change in wavelength",
+        "technologyType": "FBG",
+        "technologyPlatform": "N/A",
+        "measurementType": "Wavelength",
+        "quantityKindIdentifier": "http://qudt.org/vocab/quantitykind/Wavelength",
+        "datasheet": {
+          "attachmentId": "",
+          "fileName": "",
+          "mimeType": "",
+          "size": 0,
+          "notAvailable": true
+        },
+        "id": "custom-fbg-sleeve-output-08"
+      }
+    ]
+  }
+]

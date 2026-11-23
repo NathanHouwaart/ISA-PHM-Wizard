@@ -48,6 +48,7 @@ const FaultSpecificationsSlide = forwardRef(({ onHeightChange, currentPage, page
             type: suggestion.type || FAULT_SPEC_TYPES[0],
             valueMode: suggestion.valueMode || STUDY_VARIABLE_VALUE_MODE_SCALAR,
             unit: suggestion.unit || '',
+            unitIdentifier: suggestion.unitIdentifier || '',
             description: suggestion.description || ''
         });
     }, [addItem]);

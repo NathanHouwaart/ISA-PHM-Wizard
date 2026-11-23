@@ -7,6 +7,7 @@ export default function useGridEditSession({
     isEditableColumn,
     canEditCell,
     getRowByIndex,
+    getGridRowByIndex,
     resolveEditValue,
     stableColumnDefsRef,
     fields,
@@ -15,6 +16,25 @@ export default function useGridEditSession({
 }) {
     const DBG = !!showDebug;
     const editSessionRef = useRef(null);
+    const autofillSourcesRef = useRef(null);
+
+    const handleBeforeAutofill = useCallback((event) => {
+        const sources = new Map();
+        for (const [targetRow, columns] of Object.entries(event.detail?.mapping || {})) {
+            for (const [targetProp, source] of Object.entries(columns || {})) {
+                const sourceRow = getGridRowByIndex?.(source.rowIndex);
+                const sourceProp = source.colProp;
+                const sameKind = (targetProp.endsWith('_spec') && sourceProp?.endsWith('_spec'))
+                    || (targetProp.endsWith('_unit') && sourceProp?.endsWith('_unit'))
+                    || (targetProp === 'unit' && sourceProp === 'unit');
+                const identifier = sourceProp === 'unit' ? sourceRow?.unitIdentifier : sourceRow?.[`${sourceProp}_identifier`];
+                if (sameKind && identifier) sources.set(`${targetRow}:${targetProp}`, {
+                    value: normalizeCellValue(sourceRow?.[sourceProp]), valueIdentifier: identifier
+                });
+            }
+        }
+        autofillSourcesRef.current = sources;
+    }, [getGridRowByIndex]);
 
     const clearEditSession = useCallback(() => {
         editSessionRef.current = null;
@@ -153,18 +173,20 @@ export default function useGridEditSession({
                     }
 
                     const stringValue = normalizeCellValue(newValue);
+                    const source = autofillSourcesRef.current?.get(`${rowIndex}:${columnProp}`);
+                    const value = source && source.value === stringValue ? source : stringValue;
 
                     if (isStaticColumn) {
                         rowDataUpdates.push({
                             rowId: row[fields.rowId],
                             columnProp,
-                            value: stringValue
+                            value
                         });
                     } else if (!isStandaloneGrid && isEditableColumn(columnProp)) {
                         updates.push({
                             rowId: row[fields.rowId],
                             columnId: columnProp,
-                            value: stringValue
+                            value
                         });
                     }
                 }
@@ -175,6 +197,7 @@ export default function useGridEditSession({
                 mappingUpdates: updates,
                 reason: 'range-edit'
             });
+            autofillSourcesRef.current = null;
             clearEditSession();
             return;
         }
@@ -272,7 +295,8 @@ export default function useGridEditSession({
         handleBeforeEdit,
         handleAfterEdit,
         handleBeforeRangeEdit,
-        handleAfterRangeEdit
+        handleAfterRangeEdit,
+        handleBeforeAutofill
     };
 }
 

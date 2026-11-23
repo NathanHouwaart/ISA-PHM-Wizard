@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SensorTypeDialog from './SensorTypeDialog';
 
@@ -12,6 +12,32 @@ const types = [
 ];
 
 describe('Manage sensor types', () => {
+  it('warns and flags affected sensors when a shared quantity changes', async () => {
+    const onSensorsChange = vi.fn();
+    const sensor = { id: 'sensor', alias: 'X', sensorTypeId: 'a', measurementType: 'Acceleration' };
+    render(<SensorTypeDialog open types={[types[0]]} sensors={[sensor]} onChange={vi.fn()} onSensorsChange={onSensorsChange} onClose={vi.fn()} typesOnly />);
+    const quantity = screen.getByLabelText(/Default measured quantity/);
+    fireEvent.change(quantity, { target: { value: 'Temperature' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Temperature (Temperature)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save all' }));
+    expect(screen.getByText(/Affected sensors: X/)).toBeTruthy();
+    expect(onSensorsChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSensorsChange).toHaveBeenCalledOnce());
+    expect(onSensorsChange.mock.calls[0][0][0]).toMatchObject({ id: 'sensor', measurementType: 'Temperature', mappingReviewRequired: true });
+  });
+  it('detaches existing sensors without losing their model or datasheet when deleting a definition', async () => {
+    const onSensorsChange = vi.fn();
+    const attachedType = { ...types[0], datasheet: { attachmentId: 'sheet', fileName: 'sensor.pdf' } };
+    const sensor = { id: 'sensor', alias: 'X', sensorTypeId: 'a', measurementType: 'Acceleration' };
+    render(<SensorTypeDialog open types={[attachedType]} sensors={[sensor]} onChange={vi.fn()} onSensorsChange={onSensorsChange} onClose={vi.fn()} typesOnly />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByText(/keep their current details and mappings/)).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save all' }));
+    await waitFor(() => expect(onSensorsChange).toHaveBeenCalledOnce());
+    expect(onSensorsChange.mock.calls[0][0][0]).toMatchObject({ id: 'sensor', sensorTypeId: '', technologyPlatform: 'Model A', datasheet: attachedType.datasheet });
+  });
   it('does not save an incomplete reusable type', () => {
     const onChange = vi.fn();
     render(<SensorTypeDialog open types={[{ id: 'incomplete', name: 'Incomplete' }]} sensors={[]} onChange={onChange} onClose={vi.fn()} typesOnly />);

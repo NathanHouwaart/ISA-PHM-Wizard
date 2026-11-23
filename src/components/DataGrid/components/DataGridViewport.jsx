@@ -11,6 +11,7 @@ export default function DataGridViewport({
     handleAfterEdit,
     handleBeforeRangeEdit,
     handleAfterRangeEdit,
+    handleBeforeAutofill,
     showDebug = false,
     handlePasteRegion,
     handleClearRegion,
@@ -85,6 +86,7 @@ export default function DataGridViewport({
                     if (showDebug) {
                         console.log('[DataGrid] beforeautofill (letting RevoGrid handle):', event.detail);
                     }
+                    handleBeforeAutofill(event);
                 }}
                 readonly={false}
                 resize={true}

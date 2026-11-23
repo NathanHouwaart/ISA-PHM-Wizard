@@ -96,6 +96,20 @@ describe('test setup ZIP packages', () => {
     expect(candidate.testSetup.physicalDevices[0].name).toBe('DAQ');
     expect(candidate.attachments.some((item) => item.attachmentId === 'device-sheet')).toBe(true);
   });
+  it('preserves saved device definitions and remaps their datasheet', async () => {
+    const setup = sampleSetup();
+    setup.sensors = [{ id: 'sensor-pending', alias: 'X', mappingReviewRequired: true }];
+    setup.deviceDefinitions = [{ id: 'def-1', name: 'DAQ', outputs: [{ id: 'output-1', name: 'X', description: 'X acceleration channel', datasheet: { attachmentId: 'sensor-sheet', fileName: 'sensor.pdf' } }], datasheet: { attachmentId: 'sensor-sheet', fileName: 'sensor.pdf' } }];
+    const archive = await createTestSetupArchive(setup);
+    const candidate = await readTestSetupImportFile(fileFromBytes(await blobToBytes(archive), 'setup.zip', 'application/zip'));
+    const imported = await commitTestSetupImport(candidate);
+    expect(imported.sensors[0].mappingReviewRequired).toBe(true);
+    expect(imported.deviceDefinitions[0].outputs[0].name).toBe('X');
+    expect(imported.deviceDefinitions[0].outputs[0].description).toBe('X acceleration channel');
+    expect(imported.deviceDefinitions[0].datasheet.attachmentId).toBe(imported.sensorTypes[0].datasheet.attachmentId);
+    expect(imported.deviceDefinitions[0].outputs[0].datasheet.attachmentId).toBe(imported.sensorTypes[0].datasheet.attachmentId);
+    expect(imported.deviceDefinitions[0].datasheet.attachmentId).not.toBe('sensor-sheet');
+  });
   it('exports setup-owned attachments and remaps their IDs on import', async () => {
     const archive = await createTestSetupArchive(sampleSetup());
     const candidate = await readTestSetupImportFile(

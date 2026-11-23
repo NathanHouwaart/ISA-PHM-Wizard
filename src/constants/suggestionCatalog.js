@@ -1,6 +1,7 @@
+import { unitSelection } from '../utils/unitCatalogue';
 import { OPERATING_CONDITION_TYPE } from './variableTypes';
 
-export const FAULT_SPECIFICATION_SUGGESTIONS = [
+const FAULT_SPECIFICATION_SUGGESTIONS_RAW = [
     {
         name: "RUL",
         type: 'Quantitative fault specification',
@@ -63,7 +64,7 @@ export const FAULT_SPECIFICATION_SUGGESTIONS = [
     }
 ];
 
-export const OPERATING_CONDITION_SUGGESTIONS = [
+const OPERATING_CONDITION_SUGGESTIONS_RAW = [
     {
         name: 'Rotational Speed',
         type: OPERATING_CONDITION_TYPE,
@@ -168,7 +169,7 @@ export const OPERATING_CONDITION_SUGGESTIONS = [
     }
 ];
 
-export const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS = [
+const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS_RAW = [
     {
         name: 'Sensor Location',
         description: 'Location where the sensor is mounted on the test setup.'
@@ -279,7 +280,7 @@ export const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS = [
     }
 ];
 
-export const PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS = [
+const PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS_RAW = [
     {
         name: 'Filter type',
         description: 'Type of signal filter applied to the measurement data, such as low-pass, high-pass, or band-pass, to remove unwanted frequency components.'
@@ -353,3 +354,26 @@ export const PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS = [
         description: 'Frequency at which the smoothed signal is sampled or updated during acquisition or processing.'
     }
 ];
+
+// Explicit identifiers prevent ambiguous symbols from being interpreted as another unit.
+const withCatalogueUnits = (items, defaults) => items.map((item) => {
+    const code = defaults[item.name];
+    const selected = code ? unitSelection(`http://qudt.org/vocab/unit/${code}`) : null;
+    return { ...item, unit: selected?.value || '', unitIdentifier: selected?.valueIdentifier || '' };
+});
+
+export const FAULT_SPECIFICATION_SUGGESTIONS = withCatalogueUnits(FAULT_SPECIFICATION_SUGGESTIONS_RAW, {
+    'Fault Size': 'MilliM', 'Fault Depth': 'MilliM', 'Fault Diameter': 'MilliM', VB: 'MilliM'
+});
+export const OPERATING_CONDITION_SUGGESTIONS = withCatalogueUnits(OPERATING_CONDITION_SUGGESTIONS_RAW, {
+    'Rotational Speed': 'REV-PER-MIN', 'Motor Speed': 'REV-PER-MIN', 'Spindle Speed': 'REV-PER-MIN',
+    Load: 'N', Torque: 'N-M', Temperature: 'DEG_C', 'Ambient Temperature': 'DEG_C',
+    Pressure: 'BAR', Current: 'A', Voltage: 'V', 'Depth of Cut': 'MilliM', Humidity: 'PERCENT'
+});
+export const MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS = withCatalogueUnits(MEASUREMENT_PROTOCOL_PARAMETER_SUGGESTIONS_RAW.filter((item) => !['Sampling Rate', 'Measured Unit'].includes(item.name)), {
+    'Acquisition Duration': 'SEC', 'ADC Resolution': 'BIT', 'HP cutoff frequency': 'HZ'
+});
+export const PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS = withCatalogueUnits(PROCESSING_PROTOCOL_PARAMETER_SUGGESTIONS_RAW, {
+    'Filter LP cutoff frequency': 'HZ', 'Filter HP cutoff frequency': 'HZ', 'Resampling frequency': 'HZ',
+    'Smoothing time constant': 'SEC', 'Smoothing sampling frequency': 'HZ'
+});

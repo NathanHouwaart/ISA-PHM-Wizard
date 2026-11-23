@@ -27,7 +27,7 @@ export function validateMeasurementMetadata(payload) {
           }
         } else {
           const selected = unitSelection(mapping.valueIdentifier);
-          if (!selected || selected.value !== value) errors.push(`${prefix}: select a recognized unit from the catalogue.`);
+          if (!selected || selected.value !== value) errors.push(`${prefix}: "${value}" is not linked to a matching catalogue unit. In the measurement protocol grid, select the unit again in this sensor's Specification cell.`);
         }
         const duplicates = (protocol.parameters || []).filter((item) => !item.builtinKey && item.name?.trim().toLowerCase() === name.toLowerCase());
         if (duplicates.some((item) => (assay.measurement_protocols || []).some((entry) => entry.targetId === item.id && String(entry.value?.[0] ?? '').trim()))) {

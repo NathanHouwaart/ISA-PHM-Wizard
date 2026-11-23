@@ -54,6 +54,15 @@ const InAppExplorer = ({ onClose, onSelect }) => {
     emptyFolders: [],
   });
   const [selectionError, setSelectionError] = useState('');
+  const [filePattern, setFilePattern] = useState('');
+  const patternResult = useMemo(() => {
+    if (!filePattern.trim()) return { regex: null, error: '' };
+    try {
+      return { regex: new RegExp(filePattern, 'i'), error: '' };
+    } catch {
+      return { regex: null, error: 'Invalid regular expression. Check the pattern.' };
+    }
+  }, [filePattern]);
 
   const containerRef = useRef(null);
   const fileRefs = useRef({});
@@ -295,13 +304,15 @@ const InAppExplorer = ({ onClose, onSelect }) => {
       }
     }
 
-    const uniquePaths = [...new Set(expandedPaths)].sort(comparePathsNaturally);
+    const uniquePaths = [...new Set(expandedPaths)]
+      .filter((path) => !patternResult.regex || patternResult.regex.test(path))
+      .sort(comparePathsNaturally);
     return {
       paths: uniquePaths,
       samplePaths: uniquePaths.slice(0, 5),
       emptyFolders,
     };
-  }, [nodesByRelPath, tree, loadDatasetSubtree, collectFilesRecursively]);
+  }, [nodesByRelPath, tree, loadDatasetSubtree, collectFilesRecursively, patternResult.regex]);
 
   useEffect(() => {
     setSelectionError('');
@@ -333,7 +344,9 @@ const InAppExplorer = ({ onClose, onSelect }) => {
 
     (async () => {
       if (!hasFolderSelection) {
-        const unique = [...new Set(selectedFiles)].sort(comparePathsNaturally);
+        const unique = [...new Set(selectedFiles)]
+          .filter((path) => !patternResult.regex || patternResult.regex.test(path))
+          .sort(comparePathsNaturally);
         if (previewRequestIdRef.current !== requestId) return;
         setSelectionPreview({
           status: 'ready',
@@ -354,7 +367,7 @@ const InAppExplorer = ({ onClose, onSelect }) => {
         emptyFolders: resolved.emptyFolders,
       });
     })();
-  }, [selectedFiles, nodesByRelPath, tree, resolveSelectionPaths]);
+  }, [selectedFiles, nodesByRelPath, tree, resolveSelectionPaths, patternResult.regex]);
 
   async function handleConfirm() {
     if (!hasItems) {
@@ -368,7 +381,7 @@ const InAppExplorer = ({ onClose, onSelect }) => {
     try {
       const resolved = await resolveSelectionPaths(selectedFiles);
       if (selectedFiles.length > 0 && resolved.paths.length === 0) {
-        setSelectionError('No files found inside the selected folder(s).');
+        setSelectionError(filePattern.trim() ? 'No files match the regular expression in the selection.' : 'No files found inside the selected folder(s).');
         return;
       }
 
@@ -408,7 +421,7 @@ const InAppExplorer = ({ onClose, onSelect }) => {
   const previewHasNoFiles = selectedFiles.length > 0
     && selectionPreview.status === 'ready'
     && selectionPreview.totalFiles === 0;
-  const confirmDisabled = expandingSelection || !hasItems || previewHasNoFiles;
+  const confirmDisabled = expandingSelection || !hasItems || previewHasNoFiles || Boolean(patternResult.error) || selectionPreview.status === 'loading';
   const confirmTooltipText = previewHasNoFiles
     ? 'Selected folders contain no files'
     : (expandingSelection ? 'Expanding selected folders...' : 'Confirm selection and close');
@@ -470,6 +483,13 @@ const InAppExplorer = ({ onClose, onSelect }) => {
               {expandingSelection ? 'Expanding...' : 'OK'}
             </TooltipButton>
           </div>
+        </div>
+
+        <div className="border-b border-gray-200 py-2">
+          <label htmlFor="file-pattern" className="text-sm font-medium text-gray-700">Filter selected files by regular expression (optional)</label>
+          <input id="file-pattern" type="text" value={filePattern} onChange={(event) => setFilePattern(event.target.value)} placeholder="e.g. gator_sensor_1_fm\.csv$" className="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm" />
+          <p className="mt-1 text-xs text-gray-500">Matches dataset-relative paths, including files in selected folders and their subfolders. Case insensitive.</p>
+          {patternResult.error && <p role="alert" className="mt-1 text-xs text-red-700">{patternResult.error}</p>}
         </div>
 
         {!hasItems ? (

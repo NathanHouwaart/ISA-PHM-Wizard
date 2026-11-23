@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildConversionPayload } from '../utils/conversionPayload';
+import { validateMeasurementMetadata } from '../utils/measurementMetadataValidation';
 import { createStudyRunId } from '../utils/studyRuns';
 import { readBundledProjectArchive } from './helpers/readProjectArchive';
 
@@ -97,6 +98,27 @@ describe('conversion payload contract', () => {
     expect(payload.test_setup.sensors[0]).toMatchObject({ technologyPlatform: 'Updated model', technologyType: 'Accelerometer', quantityKindIdentifier: 'http://qudt.org/vocab/quantitykind/Acceleration' });
     expect(sensor.technologyPlatform).toBe('Old model');
     expect(sensor.quantityKindIdentifier).toBeUndefined();
+  });
+  it('exports an explicit sensor override instead of the shared definition', () => {
+    const sensor = { id: 's1', alias: 'X', sensorTypeId: 't1', definitionOverride: true, technologyPlatform: 'Local model', technologyType: 'Local technology', measurementType: 'Acceleration' };
+    const payload = buildConversionPayload({ studies: [{ id: 'study-1', name: 'Study', runCount: 1 }], selectedTestSetupId: 'setup', testSetups: [{ id: 'setup', sensorTypes: [{ id: 't1', technologyPlatform: 'Shared model', technologyType: 'Shared technology' }], sensors: [sensor] }] });
+    expect(payload.test_setup.sensors[0]).toMatchObject({ technologyPlatform: 'Local model', technologyType: 'Local technology' });
+    expect(payload.studies[0].assay_details[0].used_sensor).toMatchObject({ technologyPlatform: 'Local model', technologyType: 'Local technology' });
+  });
+  it('exports the device channel description and instance installation notes', () => {
+    const sensor = { id: 's1', alias: 'X', physicalDeviceId: 'd1', definitionOutputId: 'out', description: 'Mounted on the housing', measurementType: 'Acceleration' };
+    const setup = { id: 'setup', sensors: [sensor], physicalDevices: [{ id: 'd1', definitionId: 'def' }], deviceDefinitions: [{ id: 'def', outputs: [{ id: 'out', description: 'Piezoelectric acceleration X' }] }] };
+    const payload = buildConversionPayload({ studies: [{ id: 'study', name: 'Study', runCount: 1 }], selectedTestSetupId: 'setup', testSetups: [setup] });
+    expect(payload.studies[0].assay_details[0].used_sensor.description).toBe('Piezoelectric acceleration X\n\nMounted on the housing');
+    expect(payload.test_setup.sensors[0].description).toBe('Piezoelectric acceleration X\n\nMounted on the housing');
+    expect(sensor.description).toBe('Mounted on the housing');
+  });
+  it('does not infer a sensor model from the device model', () => {
+    const sensor = { id: 's1', alias: 'X', physicalDeviceId: 'd1', technologyType: 'Accelerometer', measurementType: 'Acceleration' };
+    const payload = buildConversionPayload({ studies: [{ id: 'study-1', name: 'Study', runCount: 1 }], selectedTestSetupId: 'setup', testSetups: [{ id: 'setup', physicalDevices: [{ id: 'd1', name: 'DAQ', model: 'S3' }], deviceDefinitions: [{ id: 'definition' }], sensors: [sensor] }] });
+    expect(payload.studies[0].assay_details[0].used_sensor.technologyPlatform).toBeFalsy();
+    expect(payload.test_setup.deviceDefinitions).toBeUndefined();
+    expect(sensor.technologyPlatform).toBeUndefined();
   });
 
   it('does not guess an ontology identifier for an ambiguous legacy quantity', () => {
@@ -526,6 +548,7 @@ describe('conversion payload contract', () => {
       studyToProcessingProtocolSelection,
     });
 
+    expect(validateMeasurementMetadata(payload)).toEqual([]);
     expect(payload.studies).toHaveLength(studies.length);
     expect(payload.study_variables).toHaveLength(studyVariables.length);
     expect(payload.processing_protocols).toHaveLength(

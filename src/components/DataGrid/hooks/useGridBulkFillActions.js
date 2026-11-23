@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { captureGridSelection } from '../dataGridHelpers';
 
 function parseFiniteNumber(rawValue) {
@@ -23,6 +23,7 @@ export default function useGridBulkFillActions({
 }) {
     const DBG = !!showDebug;
     const selectionSnapshotRef = useRef(null);
+    const [unitFillRequest, setUnitFillRequest] = useState(null);
 
     const staticColumnMap = useMemo(() => {
         const entries = Array.isArray(staticColumns) ? staticColumns : [];
@@ -163,25 +164,7 @@ export default function useGridBulkFillActions({
         };
     }, []);
 
-    const applyRowFill = useCallback(async (mode) => {
-        const selectedRows = await resolveSelectedRows();
-        if (!selectedRows.length) {
-            if (typeof window !== 'undefined') {
-                window.alert('Select a row (or range including rows) first.');
-            }
-            return;
-        }
-
-        if (!editableColumns.length) {
-            if (typeof window !== 'undefined') {
-                window.alert('No editable columns found in this grid.');
-            }
-            return;
-        }
-
-        const fillPlan = requestFillPlan(mode);
-        if (!fillPlan) return;
-
+    const applyFill = useCallback((selectedRows, fillPlan, mode) => {
         const rowDataUpdates = [];
         const mappingUpdates = [];
 
@@ -194,6 +177,7 @@ export default function useGridBulkFillActions({
 
             let sequenceIndex = 0;
             editableColumns.forEach(({ column, isStaticColumn }) => {
+                if (row.builtinKey === 'measured_unit' && (isStaticColumn || !column.prop.endsWith('_spec'))) return;
                 if (!canEditCell(row, column.prop)) {
                     return;
                 }
@@ -227,14 +211,43 @@ export default function useGridBulkFillActions({
         // Prevent stale selection reuse across unrelated actions.
         selectionSnapshotRef.current = null;
     }, [
-        resolveSelectedRows,
         editableColumns,
-        requestFillPlan,
         getRowByIndex,
         canEditCell,
         fields.rowId,
         commitGridChanges
     ]);
+
+    const applyRowFill = useCallback(async (mode) => {
+        const selectedRows = await resolveSelectedRows();
+        if (!selectedRows.length) {
+            if (typeof window !== 'undefined') {
+                window.alert('Select a row (or range including rows) first.');
+            }
+            return;
+        }
+
+        if (!editableColumns.length) {
+            if (typeof window !== 'undefined') {
+                window.alert('No editable columns found in this grid.');
+            }
+            return;
+        }
+
+        const selectedModels = selectedRows.map(getRowByIndex).filter(Boolean);
+        const measuredUnitRows = selectedModels.filter((row) => row.builtinKey === 'measured_unit');
+        if (measuredUnitRows.length && (measuredUnitRows.length !== selectedModels.length || mode !== 'constant')) {
+            window.alert('Fill the Measured Unit row separately using Fill Row.');
+            return;
+        }
+        if (measuredUnitRows.length) {
+            setUnitFillRequest({ selectedRows });
+            return;
+        }
+        const fillPlan = requestFillPlan(mode);
+        if (!fillPlan) return;
+        applyFill(selectedRows, fillPlan, mode);
+    }, [resolveSelectedRows, editableColumns, requestFillPlan, getRowByIndex, applyFill]);
 
     const bulkFillActions = useMemo(() => ([
         {
@@ -270,6 +283,12 @@ export default function useGridBulkFillActions({
     ]), [applyRowFill, snapshotSelectionBeforeClick]);
 
     return {
-        bulkFillActions
+        bulkFillActions,
+        unitFillRequest,
+        cancelUnitFill: () => setUnitFillRequest(null),
+        confirmUnitFill: (value) => {
+            if (unitFillRequest) applyFill(unitFillRequest.selectedRows, { resolveValue: () => value }, 'constant');
+            setUnitFillRequest(null);
+        }
     };
 }

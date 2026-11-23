@@ -55,7 +55,7 @@ const SensorApplicabilityChips = ({ sensors = [], protocol, onProtocolChange }) 
       <div className="flex flex-wrap gap-2 mt-1.5">
         {sensors.map((sensor) => {
           const included = isIncluded(sensor.id);
-          const label = sensor.alias || sensor.name || String(sensor.id);
+          const label = sensor.protocolLabel || sensor.alias || sensor.name || String(sensor.id);
           return (
             <button
               key={sensor.id}

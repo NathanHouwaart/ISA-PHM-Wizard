@@ -38,6 +38,7 @@ const renderIssue = (issue) => {
               {items.map((item, index) => (
                 <li key={`${issue?.id || 'issue'}-item-${index}`}>{item}</li>
               ))}
+              {Number(issue?.count || 0) > items.length ? <li>And {issue.count - items.length} more.</li> : null}
             </ul>
           ) : null}
         </div>

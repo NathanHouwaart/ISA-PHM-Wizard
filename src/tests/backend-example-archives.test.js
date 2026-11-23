@@ -194,6 +194,23 @@ const callConversionApi = async (payload, uploads) => {
 };
 
 integrationDescribe('Backend integration with bundled project archives', () => {
+  it('exports separate device and linked sensor models', async () => {
+    const fixture = await readBundledProjectArchive('public/examples/xjtu-sy-bearing-datasets.isa-phm.zip');
+    const setup = fixture.selectedTestSetup;
+    const sensor = setup.sensors[0];
+    setup.physicalDevices = [{ id: 'test-device', name: 'Test device', model: 'Demo S3', definitionId: 'saved-definition', datasheet: { notAvailable: true } }];
+    setup.deviceDefinitions = [{ id: 'saved-definition', name: 'Demo', model: 'Demo S3', outputs: [{ id: 'output-x', name: 'X' }] }];
+    sensor.physicalDeviceId = 'test-device';
+    sensor.definitionOutputId = 'output-x';
+    sensor.sensorTypeId = '';
+    sensor.technologyPlatform = 'Sensor model X';
+    const { payload, uploads } = buildPayloadFromExport(fixture);
+    const output = await callConversionApi(payload, uploads);
+    const assays = output.studies.flatMap((study) => study.assays || []);
+    expect(assays.some((assay) => assay.technologyPlatform === 'Sensor model X' && (assay.comments || []).some((comment) => comment.name === 'physical device model' && comment.value === 'Demo S3'))).toBe(true);
+    expect(payload.test_setup.deviceDefinitions).toBeUndefined();
+  }, 30000);
+
   it.each(FIXTURE_CASES)('converts $name and preserves study/assay intent', async ({ archivePath }) => {
     const fixture = await readBundledProjectArchive(archivePath);
 

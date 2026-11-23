@@ -174,6 +174,11 @@ npm run deploy      # Push dist/ to GitHub Pages
 
 The export step sends project data to the ISA-PHM backend, which converts it to a structured ISA-PHM JSON file.
 
+For the device and sensor definition workflow, including instance overrides,
+datasheets and current limits, see [Sensor workflow](docs/sensor-workflow-redesign.md). The
+[Pipeline integration status](docs/pipeline-integration.md) describes the
+cross-repository integration and current validation limits.
+
 After conversion, the questionnaire shows the Backend's selected draft
 Specification checks and includes their report in the downloaded ZIP. The
 report states when validation is unavailable and does not claim conformance.

@@ -141,4 +141,41 @@ describe('InAppExplorer', () => {
     fireEvent.click(confirmButton);
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it('filters recursively by path and assigns matching files in natural window order', async () => {
+    const onSelect = vi.fn();
+    const windowNode = (number) => ({
+      name: `window_${number}`, relPath: `study/window_${number}`, isDirectory: true, children: [
+        { name: 'gator_sensor_1_fm.csv', relPath: `study/window_${number}/gator_sensor_1_fm.csv` },
+        { name: 'gator_sensor_2_fm.csv', relPath: `study/window_${number}/gator_sensor_2_fm.csv` },
+      ],
+    });
+    useProjectData.mockReturnValue({ selectedDataset: { rootName: 'Dataset', tree: [
+      { name: 'study', relPath: 'study', isDirectory: true, children: [windowNode('10'), windowNode('2')] },
+    ] } });
+    render(<InAppExplorer onClose={vi.fn()} onSelect={onSelect} />);
+    fireEvent.click(screen.getByText('study'));
+    fireEvent.change(screen.getByLabelText(/Filter selected files/), { target: { value: 'gator_sensor_1_fm\\.csv$' } });
+    await waitFor(() => expect(screen.getByText('Preview: 2 files will be assigned.')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    await waitFor(() => expect(onSelect).toHaveBeenCalledWith([
+      { name: 'gator_sensor_1_fm.csv', webkitRelativePath: './study/window_2/gator_sensor_1_fm.csv' },
+      { name: 'gator_sensor_1_fm.csv', webkitRelativePath: './study/window_10/gator_sensor_1_fm.csv' },
+    ]));
+  });
+
+  it('blocks assignment for invalid or unmatched expressions', async () => {
+    useProjectData.mockReturnValue({ selectedDataset: { rootName: 'Dataset', tree: [
+      { name: 'sample.csv', relPath: 'sample.csv', isDirectory: false },
+    ] } });
+    render(<InAppExplorer onClose={vi.fn()} onSelect={vi.fn()} />);
+    fireEvent.click(screen.getByText('sample.csv'));
+    const input = screen.getByLabelText(/Filter selected files/);
+    fireEvent.change(input, { target: { value: '[' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid regular expression');
+    expect(screen.getByRole('button', { name: 'OK' })).toBeDisabled();
+    fireEvent.change(input, { target: { value: 'absent' } });
+    await waitFor(() => expect(screen.getByText('Preview: 0 files will be assigned.')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'OK' })).toBeDisabled();
+  });
 });

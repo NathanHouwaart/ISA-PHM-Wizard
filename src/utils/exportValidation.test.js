@@ -53,6 +53,24 @@ const makeBaseInput = () => ({
 });
 
 describe('buildExportValidationReport', () => {
+  it('reports missing measured-unit identifiers once per protocol and sensor', () => {
+    const input = makeBaseInput();
+    input.studies.push({ id: 'study-2', name: 'Study 2', measurementProtocolId: 'mp' });
+    input.studyToMeasurementProtocolSelection = [{ studyId: 'study-1', protocolId: 'mp' }];
+    input.testSetups[0].measurementProtocols = [{ id: 'mp', name: 'FBG measurement', parameters: [
+      { id: 'rate', builtinKey: 'sampling_rate' }, { id: 'unit', builtinKey: 'measured_unit' },
+    ] }];
+    input.testSetups[0].sensorToMeasurementProtocolMapping = ['sensor-1', 'sensor-2'].flatMap((id) => [
+      { sourceId: id, targetId: 'rate', protocolId: 'mp', value: ['19', 'kHz'] },
+      { sourceId: id, targetId: 'unit', protocolId: 'mp', value: ['nm', ''], ...(id === 'sensor-1' ? { valueIdentifier: 'http://qudt.org/vocab/unit/NanoM' } : {}) },
+    ]);
+    const issue = buildExportValidationReport(input).blockingIssues.find((item) => item.id === 'invalid-measurement-metadata');
+    expect(issue.count).toBe(1);
+    expect(issue.items[0]).toContain('FBG measurement / S2 / Measured Unit');
+    expect(issue.items[0]).toContain('Specification cell');
+    input.testSetups[0].sensorToMeasurementProtocolMapping[3].valueIdentifier = 'http://qudt.org/vocab/unit/NanoM';
+    expect(buildExportValidationReport(input).blockingIssues.some((item) => item.id === 'invalid-measurement-metadata')).toBe(false);
+  });
   it('warns on explicit mass units for acceleration without blocking', () => {
     const input = makeBaseInput();
     input.testSetups[0].sensors = [{ id: 'sensor-1', alias: 'S1', quantityKindIdentifier: 'http://qudt.org/vocab/quantitykind/Acceleration' }];

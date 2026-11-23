@@ -11,13 +11,20 @@ import { resolveUnambiguousQuantity } from './quantityCatalogue';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
-const resolveSensorMetadata = (sensor, sensorTypes) => {
+const resolveSensorMetadata = (sensor, sensorTypes, devices, definitions) => {
   const type = sensor.sensorTypeId && asArray(sensorTypes).find((item) => item.id === sensor.sensorTypeId);
+  const device = asArray(devices).find((item) => item.id === sensor.physicalDeviceId);
+  const definition = asArray(definitions).find((item) => item.id === device?.definitionId);
+  const output = asArray(definition?.outputs).find((item) => item.id === sensor.definitionOutputId);
+  const channelDescription = output?.description ?? sensor.channelDescription ?? '';
+  const installationNotes = sensor.description || '';
+  const description = [channelDescription, installationNotes !== channelDescription ? installationNotes : ''].filter(Boolean).join('\n\n');
   const quantity = !sensor.quantityKindIdentifier && resolveUnambiguousQuantity(sensor.measurementType);
   return {
     ...sensor,
-    ...(type?.technologyPlatform?.trim() ? { technologyPlatform: type.technologyPlatform } : {}),
-    ...(type?.technologyType?.trim() ? { technologyType: type.technologyType } : {}),
+    ...(description ? { description } : {}),
+    ...(!sensor.definitionOutputId && !sensor.definitionOverride && type?.technologyPlatform?.trim() ? { technologyPlatform: type.technologyPlatform } : {}),
+    ...(!sensor.definitionOutputId && !sensor.definitionOverride && type?.technologyType?.trim() ? { technologyType: type.technologyType } : {}),
     ...(quantity ? { quantityKindIdentifier: quantity.identifier } : {}),
   };
 };
@@ -214,10 +221,11 @@ export const buildConversionPayload = ({
   const payloadConfigurationTypes = asArray(configurationTypes).filter(
     (type) => replaceableCharacteristicIds.has(type?.replaceableCharacteristicId)
   );
+  const { deviceDefinitions: _deviceDefinitions, ...exportableSetup } = selectedSetup || {};
   const payloadTestSetup = selectedSetup
     ? {
-      ...selectedSetup,
-      sensors: asArray(selectedSetup.sensors).map((sensor) => resolveSensorMetadata(sensor, selectedSetup.sensorTypes)),
+      ...exportableSetup,
+      sensors: asArray(selectedSetup.sensors).map((sensor) => resolveSensorMetadata(sensor, selectedSetup.sensorTypes, selectedSetup.physicalDevices, selectedSetup.deviceDefinitions)),
       configurations: payloadConfigurations,
       configurationTypes: payloadConfigurationTypes,
     }

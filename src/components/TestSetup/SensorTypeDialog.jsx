@@ -9,8 +9,10 @@ import Paragraph from '../Typography/Paragraph';
 import TooltipButton from '../Widgets/TooltipButton';
 import DatasheetField from '../Form/fields/DatasheetField';
 import QuantityKindField from '../Form/fields/QuantityKindField';
+import SensorModelField from '../Form/fields/SensorModelField';
 import { SENSOR_USAGE_DATASET_OUTPUT } from '../../utils/sensorUsage';
 import { missingSensorTypeFields } from '../../utils/sensorTypeValidation';
+import { quantityNeedsMappingReview } from '../../utils/deviceDefinitions';
 import { useProjectData } from '../../contexts/GlobalDataContext';
 import {
   cleanupUnreferencedAttachmentRefs,
@@ -28,7 +30,7 @@ const createEmptySensorType = () => ({
   measurementType: ''
 });
 
-const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChange, onDevicesChange, onSensorsChange, onClose, typesOnly = false }) => {
+const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChange, onDevicesChange, onSensorsChange, onClose, typesOnly = false, initialTypeId = '' }) => {
   const { testSetups = [], configurationTypes = [] } = useProjectData();
   const [selectedId, setSelectedId] = useState(null);
   const [draft, setDraft] = useState(createEmptySensorType);
@@ -40,6 +42,7 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
   const [channelTypeId, setChannelTypeId] = useState('');
   const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [pendingTypeUpdate, setPendingTypeUpdate] = useState(null);
   const wasOpenRef = useRef(false);
   const seenDraftRefs = useRef(collectAttachmentRefs(types));
 
@@ -54,7 +57,7 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
     }
     if (wasOpenRef.current) return;
     wasOpenRef.current = true;
-    const firstType = types[0];
+    const firstType = types.find((type) => type.id === initialTypeId) || types[0];
     setWorkingTypes(types.map((type) => ({ ...type })));
     setWorkingDevices(devices.map((device) => ({ ...device })));
     setSelectedDeviceId(devices[0]?.id || null);
@@ -65,7 +68,7 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
     setDraft(firstType ? { ...firstType } : createEmptySensorType());
     seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([types, devices]));
     setError('');
-  }, [open, types, devices, typesOnly]);
+  }, [open, types, devices, typesOnly, initialTypeId]);
 
   const cleanupUnsavedDrafts = async (nextTypes = types, nextDevices = devices) => {
     const stagedRefs = subtractAttachmentRefs(
@@ -117,6 +120,39 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
     setError('');
   };
 
+  const commitTypes = async (nextTypes) => {
+    const retainedIds = new Set(nextTypes.map((type) => type.id));
+    const nextSensors = [...sensors, ...newOutputs].map((sensor) => {
+      if (!sensor.sensorTypeId) return sensor;
+      const previous = types.find((type) => type.id === sensor.sensorTypeId);
+      if (!previous) return sensor;
+      if (retainedIds.has(sensor.sensorTypeId)) {
+        if (sensor.definitionOutputId || sensor.definitionOverride) return sensor;
+        const next = nextTypes.find((type) => type.id === sensor.sensorTypeId);
+        const matchesOld = sensor.measurementType === previous.measurementType
+          && (sensor.quantityKindIdentifier || '') === (previous.quantityKindIdentifier || '');
+        const changed = next.measurementType !== previous.measurementType
+          || (next.quantityKindIdentifier || '') !== (previous.quantityKindIdentifier || '');
+        return matchesOld && changed ? { ...sensor, measurementType: next.measurementType, quantityKindIdentifier: next.quantityKindIdentifier || '', mappingReviewRequired: sensor.mappingReviewRequired || quantityNeedsMappingReview(previous.measurementType, previous.quantityKindIdentifier, next.measurementType, next.quantityKindIdentifier) } : sensor;
+      }
+      if (sensor.definitionOutputId) return { ...sensor, sensorTypeId: '', ...(!sensor.datasheet && previous.datasheet ? { datasheet: previous.datasheet } : {}) };
+      return { ...sensor, sensorTypeId: '',
+        technologyPlatform: previous.technologyPlatform || sensor.technologyPlatform || '',
+        technologyType: previous.technologyType || sensor.technologyType || '',
+        measurementType: sensor.measurementType || previous.measurementType || '',
+        quantityKindIdentifier: sensor.quantityKindIdentifier || (!sensor.measurementType ? previous.quantityKindIdentifier : '') || '',
+        ...(!sensor.datasheet && previous.datasheet ? { datasheet: previous.datasheet } : {}),
+      };
+    });
+    onChange(nextTypes);
+    onDevicesChange?.(workingDevices);
+    if (newOutputs.length || nextSensors.some((sensor, index) => sensor !== sensors[index])) onSensorsChange?.(nextSensors);
+    await cleanupUnsavedDrafts(nextTypes, workingDevices);
+    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([nextTypes, workingDevices]));
+    setError('');
+    onClose?.();
+  };
+
   const saveTypes = async () => {
     const nextTypes = stagedTypes().map((type) => ({
       ...type,
@@ -131,17 +167,20 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
       setActiveTab('types');
       return;
     }
-    onChange(nextTypes);
-    onDevicesChange?.(workingDevices);
-    if (newOutputs.length) onSensorsChange?.([...sensors, ...newOutputs]);
-    await cleanupUnsavedDrafts(nextTypes, workingDevices);
-    seenDraftRefs.current = cloneAttachmentRefs(collectAttachmentRefs([nextTypes, workingDevices]));
-    setError('');
-    onClose?.();
+    const affected = sensors.filter((sensor) => {
+      if (sensor.definitionOutputId || sensor.definitionOverride) return false;
+      const old = types.find((type) => type.id === sensor.sensorTypeId);
+      const next = nextTypes.find((type) => type.id === sensor.sensorTypeId);
+      return old && next && sensor.measurementType === old.measurementType
+        && (sensor.quantityKindIdentifier || '') === (old.quantityKindIdentifier || '')
+        && (old.measurementType !== next.measurementType || (old.quantityKindIdentifier || '') !== (next.quantityKindIdentifier || ''));
+    });
+    if (affected.length) { setPendingTypeUpdate({ nextTypes, names: affected.map((sensor) => sensor.alias || sensor.id) }); return; }
+    await commitTypes(nextTypes);
   };
 
   const confirmDelete = async () => {
-    if (!pendingDelete || referencedCount > 0) return;
+    if (!pendingDelete) return;
     const remaining = stagedTypes().filter((type) => type.id !== pendingDelete.id);
     const nextSelected = remaining[0] || null;
     setWorkingTypes(remaining);
@@ -157,10 +196,10 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={typesOnly ? 'Manage sensor types' : 'Manage sensors'}>
-      <div className="flex max-h-[calc(100vh-4rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label={typesOnly ? 'Manage sensor definitions' : 'Manage sensors'}>
+      <div className="flex h-[min(80vh,48rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <Heading3 className="text-xl">{typesOnly ? 'Manage sensor types' : 'Manage sensors'}</Heading3>
+          <Heading3 className="text-xl">{typesOnly ? 'Manage sensor definitions' : 'Manage sensors'}</Heading3>
           <TooltipButton onClick={closeDialog} tooltipText="Close" aria-label="Close" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg"><X className="h-5 w-5" /></TooltipButton>
         </div>
         {!typesOnly && <div className="flex gap-2 border-b border-gray-200 px-6" role="tablist" aria-label="Sensor management">
@@ -200,15 +239,15 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
         ) : <div className="flex min-h-80 overflow-hidden">
         <aside className="w-64 shrink-0 border-r border-gray-200 bg-gray-50 p-4">
           <div className="mb-4 flex items-center justify-between">
-            <Heading3 className="text-base">Sensor Types</Heading3>
-            <TooltipButton onClick={startNewType} tooltipText="Create sensor type" className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md">
+            <Heading3 className="text-base">{typesOnly ? 'Sensor definitions' : 'Sensor Types'}</Heading3>
+            <TooltipButton onClick={startNewType} tooltipText={typesOnly ? 'Create sensor definition' : 'Create sensor type'} aria-label={typesOnly ? 'Add sensor definition' : 'Add sensor type'} className="p-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md">
               <Plus className="h-4 w-4" />
             </TooltipButton>
           </div>
           <div className="space-y-1 overflow-y-auto">
             {isCreating && (
               <div className="rounded-md bg-blue-100 px-3 py-2 text-sm text-blue-800">
-                {draft.name || 'New sensor type'}
+                {draft.name || (typesOnly ? 'New sensor definition' : 'New sensor type')}
               </div>
             )}
             {workingTypes.map((type) => (
@@ -223,12 +262,13 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
 
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-            <Heading3 className="text-xl">{selectedType ? 'Edit Sensor Type' : 'Create Sensor Type'}</Heading3>
+            <Heading3 className="text-xl">{typesOnly ? (selectedType ? 'Edit sensor definition' : 'Create sensor definition') : (selectedType ? 'Edit Sensor Type' : 'Create Sensor Type')}</Heading3>
+            {typesOnly && selectedType && <Paragraph className="text-sm text-gray-600">Linked sensors in this test setup: {sensors.filter((sensor) => sensor.sensorTypeId === selectedType.id).map((sensor) => sensor.alias || 'Unnamed sensor').join(', ') || 'none'}. Changes to shared details can affect linked sensors.</Paragraph>}
           </div>
           <div className="space-y-4 p-6">
-            <FormField label="Sensor Type Name" name="sensor-type-name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} required placeholder="e.g. Wilcoxon 786B-10 vibration channel" />
+            <FormField label={typesOnly ? 'Definition name' : 'Sensor Type Name'} name="sensor-type-name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} required placeholder="e.g. Wilcoxon 786B-10 vibration channel" />
             <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="Sensor Model" name="sensor-type-model" value={draft.technologyPlatform} onChange={(event) => setDraft((current) => ({ ...current, technologyPlatform: event.target.value }))} required placeholder="e.g. Wilcoxon 786B-10" />
+              <SensorModelField name="sensor-type-model" value={draft.technologyPlatform} onChange={(value) => setDraft((current) => ({ ...current, technologyPlatform: value }))} placeholder="e.g. Wilcoxon 786B-10" />
               <FormField label="Technology Type" name="sensor-type-technology" value={draft.technologyType} onChange={(event) => setDraft((current) => ({ ...current, technologyType: event.target.value }))} required placeholder="e.g. Accelerometer" />
               <QuantityKindField label="Default measured quantity" required value={draft.measurementType} identifier={draft.quantityKindIdentifier} onChange={({ name, identifier }) => setDraft((current) => ({ ...current, measurementType: name, quantityKindIdentifier: identifier }))} />
             </div>
@@ -256,15 +296,20 @@ const SensorTypeDialog = ({ open, types = [], devices = [], sensors = [], onChan
       <AlertDecisionDialog
         open={Boolean(pendingDelete)}
         tone={referencedCount > 0 ? 'warning' : 'danger'}
-        title={referencedCount > 0 ? 'Sensor type is in use' : `Delete ${pendingDelete?.name || 'sensor type'}?`}
-        message={referencedCount > 0 ? `This sensor type is used by ${referencedCount} sensor${referencedCount === 1 ? '' : 's'} and cannot be deleted.` : 'The deletion will be applied when you save all changes.'}
-        confirmLabel={referencedCount > 0 ? 'OK' : 'Delete'}
+        title={`Delete ${pendingDelete?.name || 'sensor definition'}?`}
+        message={referencedCount > 0 ? `This definition is used by ${referencedCount} sensor${referencedCount === 1 ? '' : 's'}. They will keep their current details and mappings independently when you save.` : 'The deletion will be applied when you save all changes.'}
+        confirmLabel="Delete"
         cancelLabel="Cancel"
-        showCancel={referencedCount === 0}
-        onConfirm={() => referencedCount > 0 ? setPendingDelete(null) : confirmDelete()}
+        showCancel
+        onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
-        confirmButtonProps={{ className: referencedCount > 0 ? '' : 'bg-rose-600 hover:bg-rose-700' }}
+        confirmButtonProps={{ className: 'bg-rose-600 hover:bg-rose-700' }}
       />
+      <AlertDecisionDialog open={Boolean(pendingTypeUpdate)} tone="warning" title="Apply quantity changes?"
+        message={`Affected sensors: ${(pendingTypeUpdate?.names || []).join(', ')}. Their existing file mappings will be kept for review.`}
+        confirmLabel="Apply changes" cancelLabel="Cancel"
+        onConfirm={() => { const next = pendingTypeUpdate?.nextTypes; setPendingTypeUpdate(null); if (next) commitTypes(next); }}
+        onCancel={() => setPendingTypeUpdate(null)} />
     </div>,
     document.body
   );

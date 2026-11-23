@@ -17,6 +17,7 @@ import useGridImperativeApi from './hooks/useGridImperativeApi';
 import useGridBulkFillActions from './hooks/useGridBulkFillActions';
 import DataGridControls from './components/DataGridControls';
 import DataGridViewport from './components/DataGridViewport';
+import UnitField from '../Form/fields/UnitField';
 import "./DataGrid.css";
 
 const EMPTY_LIST = Object.freeze([]);
@@ -381,13 +382,15 @@ const DataGrid = forwardRef(({
         handleBeforeEdit,
         handleAfterEdit,
         handleBeforeRangeEdit,
-        handleAfterRangeEdit
+        handleAfterRangeEdit,
+        handleBeforeAutofill
     } = useGridEditSession({
         isStandaloneGrid,
         staticColumns,
         isEditableColumn,
         canEditCell,
         getRowByIndex: remappedGetRowByIndex,
+        getGridRowByIndex: (index) => visibleGridData[index],
         resolveEditValue,
         stableColumnDefsRef: stableColumnDefs,
         fields,
@@ -461,7 +464,8 @@ const DataGrid = forwardRef(({
         showDebug
     });
 
-    const { bulkFillActions } = useGridBulkFillActions({
+    const [bulkUnit, setBulkUnit] = useState({ value: '', identifier: '' });
+    const { bulkFillActions, unitFillRequest, confirmUnitFill, cancelUnitFill } = useGridBulkFillActions({
         showDebug: DBG,
         gridRef,
         translateRangeCoordinates,
@@ -484,6 +488,18 @@ const DataGrid = forwardRef(({
     // Render the complete data grid with controls and debug view
     return (
         <div className={`data-grid ${className} flex flex-col`} style={{ height }}>
+            {unitFillRequest && <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30" role="dialog" aria-modal="true" aria-label="Fill measured unit">
+                <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-lg">
+                    <h3 className="mb-3 text-lg font-semibold">Fill measured unit</h3>
+                    <UnitField label="Measured unit" value={bulkUnit.value} identifier={bulkUnit.identifier} onChange={setBulkUnit} />
+                    <div className="mt-4 flex flex-wrap justify-end gap-2">
+                        <button type="button" className="rounded bg-gray-200 px-3 py-2" onClick={() => { cancelUnitFill(); setBulkUnit({ value: '', identifier: '' }); }}>Cancel</button>
+                        <button type="button" className="rounded bg-gray-100 px-3 py-2" onClick={() => { confirmUnitFill('Unknown'); setBulkUnit({ value: '', identifier: '' }); }}>Unknown</button>
+                        <button type="button" className="rounded bg-gray-100 px-3 py-2" onClick={() => { confirmUnitFill('Not applicable'); setBulkUnit({ value: '', identifier: '' }); }}>Not applicable</button>
+                        <button type="button" disabled={!bulkUnit.identifier} className="rounded bg-blue-600 px-3 py-2 text-white disabled:opacity-40" onClick={() => { confirmUnitFill({ value: bulkUnit.value, valueIdentifier: bulkUnit.identifier }); setBulkUnit({ value: '', identifier: '' }); }}>Fill row</button>
+                    </div>
+                </div>
+            </div>}
             <DataGridControls
                 title={title}
                 showControls={showControls}
@@ -531,6 +547,7 @@ const DataGrid = forwardRef(({
                 handleAfterEdit={handleAfterEdit}
                 handleBeforeRangeEdit={handleBeforeRangeEdit}
                 handleAfterRangeEdit={handleAfterRangeEdit}
+                handleBeforeAutofill={handleBeforeAutofill}
                 showDebug={DBG}
                 handlePasteRegion={handlePasteRegion}
                 handleClearRegion={handleClearRegion}
